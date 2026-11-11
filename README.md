@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <b>Versione attuale: 0.6.0</b>
+  <b>Versione attuale: 0.8.1</b>
 </p>
 
 ---
@@ -55,6 +55,7 @@ Quando serve una pedina, si tiene premuto il simbolo al centro e la si chiede a 
 ### Punti vita
 - Un tocco dà ±1. Tenendo premuto ripete ±1 oppure salta di ±10, a scelta nelle impostazioni.
 - Numeri grandi, effetto pressione marcato e accumulo delle variazioni (es. «−7») per qualche secondo.
+- Spie in stile cruscotto: tassa, esperienza, radiazioni, veleno, energia e danni da comandante in alto; monarca, benedizione e iniziativa su un lato; turno e nome sull'altro, sempre rivolti verso il simbolo centrale (i pannelli si specchiano a seconda della posizione). Si accendono solo quando servono.
 - Ogni giocatore ha lo storico delle variazioni di vita.
 
 ### Danni da comandante
@@ -69,7 +70,7 @@ Quando serve una pedina, si tiene premuto il simbolo al centro e la si chiede a 
 - Nome, colore e immagine del comandante (presa da Scryfall) come sfondo del pannello.
 
 ### Strumenti
-- Contatore turni con timer di partita: chi è di turno ha il bordo dorato.
+- Contatore turni con timer di partita: chi è di turno ha il bordo dorato e la spia ⌛ con turno e tempo; toccandola passa il turno.
 - «Chi inizia?» con estrazione casuale.
 - Dadi da d4 a d100, anche più di uno insieme, e moneta.
 
@@ -113,7 +114,7 @@ L'app si apre a schermo intero come un'app normale e tiene lo schermo acceso dur
 | Trascinare un nome sul pannello di un avversario | Danni da comandante |
 | Tocco sul simbolo centrale | Pagina pedine (e da lì il menu) |
 | Pressione lunga sul simbolo centrale | Richiesta vocale della pedina |
-| Tocco sul turno al centro | Passa al giocatore successivo |
+| Tocco sulla propria spia ⌛ (chi è di turno) | Passa il turno al giocatore successivo |
 | Tasto indietro di Android | Chiude un pannello alla volta; sul tavolo serve una seconda pressione per uscire |
 
 **Indicatore stampante:** dentro l'anello dorato del simbolo, un alone grigio fermo significa stampante non collegata. Un alone blu che pulsa, con puntini di energia che girano, significa stampante collegata.
@@ -223,6 +224,9 @@ Se una pedina con tutte le caratteristiche richieste non esiste, l'app allarga l
 
 | Versione | Novità principali |
 |---|---|
+| 0.8.1 | Il simbolo centrale si posiziona sempre sull'incrocio dei pannelli e non copre più cifre né spie (verificato da 2 a 6 giocatori su tre misure di telefono); il turno passa toccando la propria spia ⌛; nei pannelli piccoli le spie accese si mettono in fila senza sovrapporsi |
+| 0.8.0 | Layout del pannello allineato su una griglia del 10%; numero dei punti vita più grande del 15%; pannelli specchiati in modo che nome e spie del turno guardino sempre verso il simbolo centrale |
+| 0.7.0 | Nuovo layout del pannello giocatore disegnato sul banco di prova: numero più grande, spie che si accendono solo quando servono, spia del turno; nei due giocatori il simbolo centrale passa sul bordo sinistro |
 | 0.6.0 | Verifica aggiornamenti integrata nella versione; alone Bluetooth dentro l'anello dorato; ricollegamento automatico della stampante; README |
 | 0.5.0 | Nuovo nome Magic Play&Print e nuova icona; menu spostato nella pagina pedine; alone e puntini di energia per la stampante collegata |
 | 0.4.0 | Avvio guidato (formato e giocatori); riprendi partita; finestra della vittoria con sfondi a tema; finestrella dei danni da comandante sul pannello di chi subisce; numeri più grandi |

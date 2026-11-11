@@ -43,16 +43,17 @@ input,select{font:inherit}
 .half.minus{left:0;justify-content:flex-start;padding-left:6%}
 .half.plus{right:0;justify-content:flex-end;padding-right:6%}
 .half.pressed{background:radial-gradient(ellipse at center,rgba(255,255,255,.34),rgba(255,255,255,.12) 55%,rgba(255,255,255,.04));color:var(--pt);transition:none}
-.life{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-family:var(--num);font-weight:900;font-size:64cqmin;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-.delta{position:absolute;right:7%;top:6%;font-family:var(--num);font-weight:800;font-size:13cqmin;opacity:0;transition:opacity .25s;pointer-events:none}
+.life{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--num);font-weight:900;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.delta{position:absolute;transform:translate(-50%,-50%);font-family:var(--num);font-weight:800;opacity:0;transition:opacity .25s;pointer-events:none}
 .delta.show{opacity:.9}
-.pname{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);padding:.35em .9em;border-radius:99px;background:rgba(0,0,0,.18);font-size:max(13px,6.5cqmin);font-weight:600;white-space:nowrap;max-width:80%;overflow:hidden;text-overflow:ellipsis}
-.badges{position:absolute;top:8%;left:50%;transform:translateX(-50%);display:flex;gap:.6em;font-size:max(12px,5.5cqmin);font-weight:700;pointer-events:none}
-.badges span{padding:.15em .6em;border-radius:99px;background:rgba(0,0,0,.22)}
+.pname{position:absolute;transform:translateY(-50%);padding:.35em .9em;border-radius:99px;background:rgba(0,0,0,.18);font-weight:600;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+.spia{position:absolute;transform:translate(-50%,-50%);padding:.15em .6em;border-radius:99px;background:rgba(0,0,0,.24);font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;scale:.6;transition:opacity .25s,scale .25s}
+.spia.on{opacity:1;scale:1}
+
 
 /* ---------- Hub centrale ---------- */
 #hub{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;z-index:5}
-#board.n2 ~ #hub{flex-direction:row}
+.spia.on[data-s=turn]{pointer-events:auto;cursor:pointer}
 #hub.col{flex-direction:column}
 #tokenBtn{width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#F2D58C,var(--gold) 55%,#A9842E);color:var(--gold-ink);box-shadow:0 0 0 5px var(--bg),0 6px 18px rgba(0,0,0,.45);display:grid;place-items:center;transition:transform .12s}
 #tokenBtn:active{transform:scale(.93)}
@@ -430,7 +431,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.6.0';
+const VERSION = '0.8.1';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -516,6 +517,98 @@ function isOut(p){
   if(p.out || p.life <= 0 || (p.counters.poison || 0) >= 10) return true;
   return S.cmdDamage && Object.values(p.cmd).some(v => v >= 21);
 }
+// Layout del pannello, dalla bozza del banco di prova allineata su una griglia del 10%:
+// [orizzontale %, verticale %, grandezza in % del lato corto]
+const LAYOUT = {
+  life:[50,57,92], delta:[80,10,13], name:[90,90,6.5],
+  tax:[20,10,5.5], exp:[30,10,5.5], rad:[40,10,5.5], poison:[50,10,5.5], energy:[60,10,5.5], cmd:[70,10,5.5],
+  monarch:[10,70,5.5], blessing:[10,80,5.5], initiative:[10,90,5.5],
+  turn:[90,80,5.5],
+};
+const SPIE = ['tax','exp','rad','poison','energy','cmd','monarch','blessing','initiative','turn'];
+const SPIA_ICON = {tax:'T', exp:'✦', rad:'☢', poison:'☠', energy:'⚡', cmd:'⚔', monarch:'♛', blessing:'✧', initiative:'⚑', turn:'⌛ Turno'};
+// grandezza: % del lato corto, con un tetto sul lato lungo per i pannelli quasi quadrati
+const fz = (z, min, k=.55) => { const f = `min(${z}cqmin,${(z*k).toFixed(2)}cqmax)`; return min ? `max(${min}px,${f})` : f };
+const MINPX = {life:0, delta:0, name:13};
+// posiziona un elemento; vicino ai bordi si appoggia al bordo invece di uscire
+function placeEl(el, k, mir, hub){
+  let [x, y, z] = LAYOUT[k]; if(mir) x = 100 - x;
+  // se il simbolo centrale coprirebbe l'elemento, lo faccio scendere di una riga (o due)
+  if(hub && k !== 'life' && k !== 'name'){
+    const near = yy => Math.hypot((x - hub.x) / 100 * hub.w, (yy - hub.y) / 100 * hub.h) < hub.r + 22;
+    if(near(y)){ for(const yy of [24, 38]){ if(!near(yy)){ y = yy; break } } }
+  }
+  const st = el.style;
+  // colonne in basso: almeno 24 px tra una riga e l'altra anche nei pannelli piccoli
+  const STEP = {monarch:2, blessing:1, turn:1};
+  st.top = (k in STEP && y >= 60) ? `calc(90% - ${STEP[k]} * max(10%, 24px))` : y + '%';
+  if(k !== 'life') st.fontSize = fz(z, MINPX[k] ?? 12);
+  if(x > 80){ st.left = 'auto'; st.right = Math.max(3, 100 - x - 6) + '%'; st.transform = 'translateY(-50%)' }
+  else if(x < 20){ st.right = 'auto'; st.left = Math.max(3, x - 6) + '%'; st.transform = 'translateY(-50%)' }
+  else { st.right = 'auto'; st.left = x + '%'; st.transform = 'translate(-50%,-50%)' }
+}
+// il lato destro del layout guarda sempre verso il simbolo centrale: i pannelli che lo hanno dall'altra parte vengono specchiati
+function cellMirror(cell){
+  const r = cell.getBoundingClientRect(), h = $('#tokenBtn').getBoundingClientRect();
+  const dx = (h.left + h.width/2) - (r.left + r.width/2), dy = (h.top + h.height/2) - (r.top + r.height/2);
+  const fx = {r0:[1,0], r90:[0,1], r180:[-1,0], r270:[0,-1]}[ROT[S.count][+cell.dataset.i]];
+  return fx[0]*dx + fx[1]*dy < -1;
+}
+// posizione del simbolo centrale nelle coordinate del pannello (in %, come il layout)
+function hubInFrame(cell, mir){
+  const r = cell.getBoundingClientRect(), h = $('#tokenBtn').getBoundingClientRect();
+  const dx = (h.left + h.width/2) - (r.left + r.width/2), dy = (h.top + h.height/2) - (r.top + r.height/2);
+  const rot = ROT[S.count][+cell.dataset.i], side = rot === 'r90' || rot === 'r270';
+  const w = side ? r.height : r.width, hh = side ? r.width : r.height;
+  const [fx, fy] = {r0:[dx, dy], r90:[dy, -dx], r180:[-dx, -dy], r270:[-dy, dx]}[rot];
+  // coordinate "reali" del pannello: gli elementi specchiati vengono confrontati dopo lo specchio
+  return {x:50 + fx / w * 100, y:50 + fy / hh * 100, w, h:hh, r:h.width/2 + 8};
+}
+// riga in alto: nei pannelli piccoli le spie accese si mettono in fila una accanto all'altra, nello stesso ordine
+const ROW = ['tax','exp','rad','poison','energy','cmd'];
+function packRow(cell){
+  const frame = cell.querySelector('.frame'), W = frame.offsetWidth, H = frame.offsetHeight;
+  if(W * .10 >= 44) return;
+  const mir = cell.classList.contains('mir');
+  const all = ROW.map(k => cell.querySelector(`.spia[data-s="${k}"]`));
+  let els = all.filter(e => e.classList.contains('on'));
+  if(mir) els = els.reverse();
+  if(!els.length) return;
+  const gap = 4, lo = W * (mir ? .29 : .06), hi = W * (mir ? .94 : .71);
+  all.forEach(e => e.style.fontSize = fz(LAYOUT[e.dataset.s][2], 12));
+  const width = () => els.reduce((a,e)=>a + e.offsetWidth, 0) + gap * (els.length - 1);
+  // se non ci stanno, rimpiccioliscono quanto basta (mai sotto i 9 px)
+  let tot = width();
+  if(tot > hi - lo){
+    const f = parseFloat(getComputedStyle(els[0]).fontSize), nf = Math.max(9, f * (hi - lo) / tot);
+    els.forEach(e => e.style.fontSize = nf + 'px'); tot = width();
+  }
+  let left = Math.max(lo, Math.min(hi - tot, W * (mir ? .615 : .385) - tot / 2));
+  // se il simbolo centrale è sopra la fila, la fila scende di una riga (o due)
+  const hub = hubInFrame(cell, mir), eh = els[0].offsetHeight;
+  const clear = yy => { const cy = yy / 100 * H, hx = hub.x / 100 * W, hy = hub.y / 100 * H;
+    const nx = Math.max(left, Math.min(hx, left + tot)), ny = Math.max(cy - eh/2, Math.min(hy, cy + eh/2));
+    return Math.hypot(nx - hx, ny - hy) > hub.r + 4 };
+  const y = [10, 24, 38].find(clear) ?? 10;
+  els.forEach(e=>{ e.style.top = y + '%'; e.style.right = 'auto'; e.style.left = left + 'px'; e.style.transform = 'translateY(-50%)'; left += e.offsetWidth + gap });
+}
+function placeAll(){
+  document.querySelectorAll('#board .cell').forEach(cell=>{
+    const mir = cellMirror(cell);
+    cell.classList.toggle('mir', mir);
+    const hub = hubInFrame(cell, mir);
+    cell.querySelectorAll('[data-k]').forEach(el => placeEl(el, el.dataset.k, mir, hub));
+    packRow(cell);
+  });
+}
+function placeHub(){
+  const hub = $('#hub'), c0 = document.querySelector('#board .cell');
+  if(!c0) return;
+  if(S.count === 2){ hub.style.left = '54px'; hub.style.top = '50%'; return }
+  const r = c0.getBoundingClientRect();
+  hub.style.left = (r.right + 2) + 'px'; hub.style.top = (r.bottom + 2) + 'px';
+}
+window.addEventListener('resize', ()=>{ placeHub(); placeAll() });
 function renderBoard(){
   const b = $('#board');
   b.className = 'n' + S.count;
@@ -526,25 +619,37 @@ function renderBoard(){
       <div class="frame${p.art ? ' hasart' : ''}"${p.art ? ` style="background-image:url('${esc(p.art)}')"` : ''}>
         <div class="half minus" data-d="-1">−</div>
         <div class="half plus" data-d="1">+</div>
-        <div class="badges"></div>
-        <div class="delta"></div>
-        <div class="life"></div>
-        <button class="pname">${esc(p.name)}</button>
+        ${SPIE.map(k=>`<span class="spia" data-s="${k}" data-k="${k}"></span>`).join('')}
+        <div class="delta" data-k="delta"></div>
+        <div class="life" data-k="life"></div>
+        <button class="pname" data-k="name">${esc(p.name)}</button>
       </div></div>`;
   }).join('');
+  placeHub(); placeAll();
   S.players.forEach((_,i)=>updateCell(i));
   updateTurnUI();
 }
 function updateCell(i){
   const p = S.players[i], cell = $(`.cell[data-i="${i}"]`);
   if(!cell) return;
-  cell.querySelector('.life').textContent = p.life;
+  const lf = cell.querySelector('.life'); lf.textContent = p.life;
+  // tre cifre (o un negativo a due) rimpiccioliscono il numero per restare nel pannello
+  const big = String(p.life).length >= 3;
+  lf.style.fontSize = big ? `calc(${fz(LAYOUT.life[2], 0, .6)} * .72)` : fz(LAYOUT.life[2], 0, .6);
   cell.classList.toggle('out', isOut(p));
   cell.classList.toggle('active', S.turn.on && S.turn.active === i);
-  let bd = FLAGS.filter(f => p.flags[f.k]).map(f => `<span>${f.icon}</span>`).join('');
-  for(const c of COUNTERS){ const v = p.counters[c.k]; if(v) bd += `<span>${c.icon} ${v}</span>` }
-  if(S.cmdDamage){ const m = Math.max(0, ...Object.values(p.cmd)); if(m) bd += `<span>⚔ ${m}</span>` }
-  cell.querySelector('.badges').innerHTML = bd;
+  // spie: si accendono solo quando servono
+  const val = {
+    tax:p.counters.tax || 0, exp:p.counters.exp || 0, rad:p.counters.rad || 0, poison:p.counters.poison || 0, energy:p.counters.energy || 0,
+    cmd:S.cmdDamage ? Math.max(0, ...Object.values(p.cmd)) : 0,
+    monarch:p.flags.monarch, blessing:p.flags.blessing, initiative:p.flags.initiative, turn:S.turn.on && S.turn.active === i,
+  };
+  cell.querySelectorAll('.spia').forEach(el=>{
+    const k = el.dataset.s, v = val[k];
+    el.classList.toggle('on', !!v);
+    if(v) el.textContent = k === 'turn' ? turnLabel() : typeof v === 'number' ? `${SPIA_ICON[k]} ${v}` : SPIA_ICON[k];
+  });
+  packRow(cell);
   checkWinner();
 }
 function addHist(i, d){
@@ -564,7 +669,7 @@ function changeLife(i, d){
   el.classList.add('show');
   clearTimeout(st.t);
   st.t = setTimeout(()=>{ el.classList.remove('show'); st.v = 0 }, 1600);
-  cell.querySelector('.life').animate([{transform:'scale(1)'},{transform:'scale(' + (d > 0 ? 1.07 : .94) + ')'},{transform:'scale(1)'}], {duration:200});
+  cell.querySelector('.life').animate([{scale:1},{scale:d > 0 ? 1.07 : .94},{scale:1}], {duration:200});
 }
 
 // tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)
@@ -654,10 +759,13 @@ function fmtTime(ms){
   const s = Math.max(0, Math.floor(ms/1000)), h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
   return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0');
 }
+function turnLabel(){ return `⌛ ${S.turn.n} · ${fmtTime(Date.now() - S.turn.started)}` }
 function updateTurnUI(){
-  const p = $('#turnPill'); p.hidden = !S.turn.on;
-  if(S.turn.on) p.innerHTML = `<b>Turno ${S.turn.n}</b>${fmtTime(Date.now() - S.turn.started)}`;
+  $('#turnPill').hidden = true;
+  const el = S.turn.on && document.querySelector(`.cell[data-i="${S.turn.active}"] .spia[data-s="turn"]`);
+  if(el) el.textContent = turnLabel();
 }
+$('#board').addEventListener('click', e=>{ if(e.target.closest('.spia[data-s="turn"].on')) nextTurn() });
 setInterval(()=>{ if(S.turn.on) updateTurnUI() }, 1000);
 function nextTurn(){
   snap();
@@ -742,7 +850,7 @@ function renderMenu(){
   </div>
   <div class="sec"><h3>Turni</h3>
     <div class="row"><span class="lbl">Contatore turni e timer</span>${tog('turn', S.turn.on)}</div>
-    <p class="note">Tocca il turno al centro del tavolo per passare al giocatore successivo. Chi è di turno ha il bordo dorato.</p>
+    <p class="note">Chi è di turno ha il bordo dorato e la spia ⌛ con numero del turno e tempo di partita: toccandola passa il turno al giocatore successivo.</p>
   </div>
   <div class="sec"><h3>Comandi</h3>
     <div class="row"><span class="lbl">Tenendo premuto</span><div class="chips">
