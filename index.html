@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#22252B">
-<title>Segnapunti MTG</title>
+<title>Magic Play&amp;Print</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -152,10 +153,21 @@ input.txt{user-select:text;-webkit-user-select:text}
 #sugMic.listening{animation:pulse 1s infinite}
 
 /* ---------- v0.3 ---------- */
-#tokenBtn{--ring:#5C616B;background:radial-gradient(circle at 50% 40%,#3A3530,#1E1C1A 70%);box-shadow:0 0 0 3px var(--gold),0 0 0 6px var(--bg),0 0 0 10px var(--ring),0 0 0 13px var(--bg),0 6px 18px rgba(0,0,0,.45);transition:transform .12s,box-shadow .4s}
-#tokenBtn.pr-on{--ring:#3D8BFF;animation:ringGlow 2.4s ease-in-out infinite}
-@keyframes ringGlow{50%{box-shadow:0 0 0 3px var(--gold),0 0 0 6px var(--bg),0 0 0 10px var(--ring),0 0 0 13px var(--bg),0 0 22px 10px rgba(61,139,255,.45)}}
-#tokenBtn.listening.pr-on{animation:pulse 1s infinite}
+#tokenBtn{position:relative;background:radial-gradient(circle at 50% 40%,#3A3530,#1E1C1A 70%);box-shadow:0 0 0 3px var(--gold),0 0 0 6px var(--bg),0 6px 18px rgba(0,0,0,.45);transition:transform .12s}
+#tokenBtn::before{content:'';position:absolute;inset:-26px;border-radius:50%;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle,rgba(150,150,160,.28) 30%,rgba(150,150,160,0) 68%)}
+#tokenBtn.pr-on::before{background:radial-gradient(circle,rgba(61,139,255,.75) 28%,rgba(61,139,255,.25) 50%,rgba(61,139,255,0) 70%);animation:haloPulse 2.2s ease-in-out infinite}
+@keyframes haloPulse{50%{transform:scale(1.22);opacity:.65}}
+.orbit{position:absolute;inset:-16px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .4s}
+#tokenBtn.pr-on .orbit{opacity:1;animation:orbit 5s linear infinite}
+.orbit i{position:absolute;width:5px;height:5px;border-radius:50%;background:#BFE0FF;box-shadow:0 0 8px 3px rgba(80,160,255,.9);animation:twinkle 1.6s ease-in-out infinite}
+.orbit i:nth-child(1){top:0;left:50%}
+.orbit i:nth-child(2){top:50%;right:0;animation-delay:.4s}
+.orbit i:nth-child(3){bottom:0;left:30%;animation-delay:.8s}
+.orbit i:nth-child(4){top:28%;left:2%;animation-delay:1.2s}
+@keyframes orbit{to{transform:rotate(360deg)}}
+@keyframes twinkle{50%{opacity:.25;transform:scale(.6)}}
+@media (prefers-reduced-motion:reduce){#tokenBtn.pr-on::before,#tokenBtn.pr-on .orbit,.orbit i{animation:none}}
 #tokenBtn img{width:50px;height:50px;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 0 6px rgba(255,80,20,.45))}
 .pname{touch-action:none}
 .cell.dropT{box-shadow:inset 0 0 0 5px #fff;filter:brightness(1.15)}
@@ -240,10 +252,8 @@ input.txt{user-select:text;-webkit-user-select:text}
 <div id="board"></div>
 <div id="hub">
   <button id="tokenBtn" aria-label="Pedine: tocca per aprire, tieni premuto per parlare">
+    <span class="orbit" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <img src="emblema.png" alt="" draggable="false">
-  </button>
-  <button id="menuBtn" class="smallBtn" aria-label="Menu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
   </button>
   <button id="turnPill" hidden></button>
 </div>
@@ -273,7 +283,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 <section class="ov" id="ov-menu">
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h2>Segnapunti MTG <span class="ver" id="verLbl"></span></h2>
+    <h2>Magic Play&amp;Print <span class="ver" id="verLbl"></span></h2>
   </div>
   <div class="ovBody" id="menuBody"></div>
 </section>
@@ -292,6 +302,7 @@ input.txt{user-select:text;-webkit-user-select:text}
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <h2>Pedine</h2>
+    <button class="back" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <button class="chip" id="tkPrinter" style="padding:8px 12px;font-size:14px">Stampante</button>
   </div>
   <div class="ovBody">
@@ -371,7 +382,7 @@ input.txt{user-select:text;-webkit-user-select:text}
   <div class="wzBg" id="wzBg"><i></i></div>
   <div class="wzScroll" id="wzScroll">
     <div class="wzStep" id="wzStep1">
-      <div class="wzBrand">Segnapunti MTG <span class="ver" id="wzVer"></span></div>
+      <div class="wzBrand">Magic Play&amp;Print <span class="ver" id="wzVer"></span></div>
       <h1>A cosa vuoi giocare?</h1>
       <div class="wzOpts" id="wzFormats"></div>
     </div>
@@ -411,7 +422,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 document.getElementById('verLbl').textContent = 'v' + VERSION;
 
 /* ================= Stato ================= */
@@ -701,7 +712,7 @@ window.addEventListener('popstate', ()=>{
 
 /* ================= Menu ================= */
 const tog = (act, on, v='') => `<button class="tog ${on ? 'on' : ''}" data-act="${act}" data-v="${v}" aria-pressed="${on}"></button>`;
-$('#menuBtn').addEventListener('click', ()=>{ renderMenu(); openOv('menu') });
+$('#menuBtn').addEventListener('click', ()=>{ renderMenu(); swapOv('menu') });
 function renderMenu(){
   $('#menuBody').innerHTML = `
   <div class="sec"><h3>Partita</h3>
@@ -1176,17 +1187,17 @@ $('#sugSave').addEventListener('click', ()=>{
 });
 async function exportVlog(){
   if(!VLOG.length){ toast('Non ci sono ancora dati da esportare'); return }
-  const name = 'segnapunti-mtg-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
+  const name = 'magic-play-print-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
   const entries = [];
   for(const en of VLOG){
     if(!en.clip){ entries.push(en); continue }
     const b = await clipGet(en.t);
     entries.push(b ? Object.assign({}, en, {audio:await blobToDataURL(b)}) : en);
   }
-  const blob = new Blob([JSON.stringify({app:'Segnapunti MTG', version:VERSION, exported:new Date().toISOString(), entries}, null, 1)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries}, null, 1)], {type:'application/json'});
   const file = new File([blob], name, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[file]})){
-    try{ await navigator.share({files:[file], title:'Dati Segnapunti MTG'}); return }catch(e){ if(e.name === 'AbortError') return }
+    try{ await navigator.share({files:[file], title:'Dati Magic Play&Print'}); return }catch(e){ if(e.name === 'AbortError') return }
   }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
