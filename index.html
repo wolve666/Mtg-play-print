@@ -152,17 +152,56 @@ select.txt{appearance:auto}
 textarea.txt{min-height:120px;resize:vertical;user-select:text;-webkit-user-select:text}
 input.txt{user-select:text;-webkit-user-select:text}
 #sugMic.listening{animation:pulse 1s infinite}
+
+/* ---------- v0.3 ---------- */
+#tokenBtn{background:radial-gradient(circle at 50% 40%,#3A3530,#1E1C1A 70%);box-shadow:0 0 0 3px var(--gold),0 0 0 7px var(--bg),0 6px 18px rgba(0,0,0,.45)}
+#tokenBtn img{width:50px;height:50px;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 0 6px rgba(255,80,20,.45))}
+.pname{touch-action:none}
+.cell.dropT{box-shadow:inset 0 0 0 5px #fff;filter:brightness(1.15)}
+#dragLine{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:15;display:none}
+#dragLine.on{display:block}
+#dragLine line{stroke:var(--gold);stroke-width:5;stroke-linecap:round;stroke-dasharray:2 12}
+#dragLine circle{fill:var(--gold)}
+.pchip{display:inline-block;padding:.2em .7em;border-radius:99px;font-weight:700}
+.cqWho{text-align:center;font-size:18px;margin:4px 0 6px;line-height:2}
+
+.tkm{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .25s}
+.tkm.open{pointer-events:auto;opacity:1}
+.tkmBack{position:absolute;inset:0;background:rgba(10,9,14,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.tkmStage{position:relative;height:78vh;width:92vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.halo{position:absolute;top:44%;left:50%;width:min(130vw,78vh);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);
+  background:conic-gradient(from 0deg,rgba(217,180,90,0),rgba(217,180,90,.6),rgba(255,110,50,.45),rgba(130,170,255,.4),rgba(190,120,255,.35),rgba(217,180,90,0));
+  filter:blur(46px);opacity:.85;animation:spin 7s linear infinite}
+.tkm.loading .halo{animation:spin 7s linear infinite,breathe 1.4s ease-in-out infinite}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes breathe{50%{opacity:.45}}
+.sparks{position:absolute;inset:0;pointer-events:none}
+.spark{position:absolute;left:50%;top:44%;width:6px;height:6px;border-radius:50%;background:#FFE9A8;box-shadow:0 0 10px 3px rgba(255,205,110,.8);opacity:0;animation:float var(--d) ease-in-out var(--dl) infinite}
+@keyframes float{0%{transform:translate(var(--x0),var(--y0)) scale(.3);opacity:0}25%{opacity:1}100%{transform:translate(var(--x1),var(--y1)) scale(1);opacity:0}}
+.tkmCard{position:relative;height:min(60vh,120vw);aspect-ratio:480/680;border-radius:4.6%/3.3%;overflow:hidden;background:#15131a;
+  transform:scale(.8) translateY(14px);opacity:0;transition:transform .5s cubic-bezier(.2,1.35,.4,1),opacity .3s;box-shadow:0 0 0 2px rgba(255,230,160,.35),0 0 50px rgba(217,180,90,.45)}
+.tkm.show .tkmCard{transform:none;opacity:1}
+.tkmCard img,.tkmCard canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tkmCard canvas{background:#fff;image-rendering:pixelated;clip-path:inset(0 0 100% 0)}
+.scan{position:absolute;left:-5%;right:-5%;top:0;height:18px;margin-top:-9px;background:linear-gradient(transparent,rgba(255,225,140,.95),transparent);filter:blur(2px);opacity:0}
+.tkm.printing .scan{opacity:1}
+.qtyBadge{position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:99px;background:var(--gold);color:var(--gold-ink);font-family:var(--num);font-weight:900;font-size:26px}
+.qtyBadge:empty{display:none}
+.tkmName{position:relative;font-size:19px;font-weight:700;min-height:24px;text-align:center}
+.tkmBar{position:relative;width:min(62vw,320px);height:6px;border-radius:9px;background:rgba(255,255,255,.16);overflow:hidden}
+.tkmBar i{display:block;height:100%;width:0;background:var(--gold)}
+.tkmCap{position:relative;color:var(--muted);font-size:15px;min-height:20px;text-align:center}
+#tmConnect{position:relative;width:auto;padding:14px 22px}
+#tmConnect[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.halo,.spark{animation:none}.spark{display:none}}
 </style>
 </head>
 <body>
 
 <div id="board"></div>
 <div id="hub">
-  <button id="undoBtn" class="smallBtn" aria-label="Annulla">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
-  </button>
   <button id="tokenBtn" aria-label="Pedine: tocca per aprire, tieni premuto per parlare">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7l-2.5-1.5L12 21l-2.5-1.5L7 21z"/></svg>
+    <img src="emblema.png" alt="" draggable="false">
     <span id="prDot"></span>
   </button>
   <button id="menuBtn" class="smallBtn" aria-label="Menu">
@@ -171,6 +210,26 @@ input.txt{user-select:text;-webkit-user-select:text}
   <button id="turnPill" hidden></button>
 </div>
 <div id="ptt"></div>
+<svg id="dragLine" aria-hidden="true"><line x1="0" y1="0" x2="0" y2="0"/><circle r="10" cx="0" cy="0"/></svg>
+
+<!-- Pedina rapida (tieni premuto il simbolo) -->
+<div id="ov-modal" class="tkm">
+  <div class="tkmBack"></div>
+  <div class="tkmStage">
+    <div class="halo"></div>
+    <div class="sparks" id="tmSparks"></div>
+    <div class="tkmCard" id="tmCard">
+      <img id="tmImg" alt="">
+      <canvas id="tmBits"></canvas>
+      <div class="scan" id="tmScan"></div>
+      <div class="qtyBadge" id="tmQty"></div>
+    </div>
+    <div class="tkmName" id="tmName"></div>
+    <div class="tkmBar"><i id="tmBar"></i></div>
+    <div class="tkmCap" id="tmCap"></div>
+    <button class="btn primary" id="tmConnect" hidden>Collega la stampante e stampa</button>
+  </div>
+</div>
 
 <!-- Menu -->
 <section class="ov" id="ov-menu">
@@ -269,11 +328,20 @@ input.txt{user-select:text;-webkit-user-select:text}
   </div>
 </section>
 
+<!-- Danni da comandante rapidi -->
+<section class="ov" id="ov-cmdq">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Danni da comandante</h2>
+  </div>
+  <div class="ovBody" id="cmdqBody"></div>
+</section>
+
 <div id="toast"></div>
 
 <script>
 'use strict';
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 document.getElementById('verLbl').textContent = 'v' + VERSION;
 
 /* ================= Stato ================= */
@@ -318,7 +386,7 @@ if(!S || !S.players){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
-let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true}, load(SKEY) || {});
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
@@ -347,7 +415,6 @@ function undo(){
   if(stack[stack.length-1] === 'player') renderPlayer();
   toast('Annullato'); buzz(15);
 }
-$('#undoBtn').addEventListener('click', undo);
 
 /* ================= Tavolo ================= */
 const ROT = {
@@ -425,8 +492,59 @@ $('#board').addEventListener('pointerdown', e=>{
 });
 ['pointerup','pointercancel'].forEach(ev => window.addEventListener(ev, ()=>{ if(hold){ clearTimeout(hold.t); hold = null } }));
 $('#board').addEventListener('contextmenu', e=>e.preventDefault());
-$('#board').addEventListener('click', e=>{
-  const n = e.target.closest('.pname'); if(n) openPlayer(+n.closest('.cell').dataset.i);
+// nome: tocco = scheda giocatore; trascinato sul pannello di un avversario = danni da comandante
+let drag = null;
+const clearDrop = () => document.querySelectorAll('.cell.dropT').forEach(c=>c.classList.remove('dropT'));
+function dragLine(x1, y1, x2, y2){
+  const sv = $('#dragLine'), l = sv.querySelector('line'), c = sv.querySelector('circle');
+  if(x1 === null){ sv.classList.remove('on'); return }
+  l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+  c.setAttribute('cx', x2); c.setAttribute('cy', y2); sv.classList.add('on');
+}
+$('#board').addEventListener('pointerdown', e=>{
+  const n = e.target.closest('.pname'); if(!n) return;
+  e.preventDefault();
+  drag = {i:+n.closest('.cell').dataset.i, x:e.clientX, y:e.clientY, moved:false, target:null};
+});
+window.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  if(!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 18) return;
+  drag.moved = true;
+  dragLine(drag.x, drag.y, e.clientX, e.clientY);
+  const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell');
+  const j = el ? +el.dataset.i : null;
+  if(j !== drag.target){ clearDrop(); drag.target = j; if(j !== null && j !== drag.i){ el.classList.add('dropT'); buzz(6) } }
+});
+window.addEventListener('pointerup', ()=>{
+  if(!drag) return;
+  const d = drag; drag = null; dragLine(null); clearDrop();
+  if(!d.moved){ openPlayer(d.i); return }
+  if(d.target === null || d.target === d.i) return;
+  if(!S.cmdDamage){ toast('Attiva «Danni da comandante» nel menu'); return }
+  openCmdQuick(d.i, d.target);
+});
+window.addEventListener('pointercancel', ()=>{ if(drag){ drag = null; dragLine(null); clearDrop() } });
+
+let cq = {a:0, v:0};
+function openCmdQuick(a, v){ cq = {a, v}; renderCmdQ(); openOv('cmdq'); buzz(20) }
+function pchip(p){ const c = COLORS[p.color]; return `<span class="pchip" style="background:${c.bg};color:${c.fg}">${esc(p.name)}</span>` }
+function renderCmdQ(){
+  const A = S.players[cq.a], V = S.players[cq.v];
+  const keys = [[String(cq.a), A.partner ? 'Primo comandante' : '']];
+  if(A.partner) keys.push([cq.a + 'b', 'Secondo comandante']);
+  $('#cmdqBody').innerHTML = `<p class="cqWho">${pchip(A)} colpisce ${pchip(V)}</p>
+    <p class="note" style="text-align:center;margin-bottom:16px">Vita di ${esc(V.name)}: <b>${V.life}</b></p>` +
+    keys.map(([k,l])=>`<div class="sec">${l ? `<h3>${l}</h3>` : ''}<div class="bigLife">${V.cmd[k] || 0}</div>
+      <div class="quick">${[-1,1,2,3,4,5].map(x=>`<button data-act="cq" data-k="${k}" data-v="${x}">${x>0?'+':'−'}${Math.abs(x)}</button>`).join('')}</div></div>`).join('') +
+    `<button class="btn primary" data-act="cqdone">Fatto</button>`;
+}
+$('#cmdqBody').addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  if(b.dataset.act === 'cqdone'){ history.back(); return }
+  const V = S.players[cq.v], k = b.dataset.k, before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
+  if(after === before) return;
+  snap(); V.cmd[k] = after; V.life -= (after - before); addHist(cq.v, before - after);
+  save(); buzz(); renderCmdQ(); updateCell(cq.v);
 });
 
 /* ================= Turni e timer ================= */
@@ -474,6 +592,7 @@ function closeTop(){
   const id = stack.pop(); if(!id) return;
   $('#ov-' + id).classList.remove('open');
   if(id === 'player') renderBoard();
+  if(id === 'modal') tmCleanup();
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
 let lastBack = 0;
@@ -504,6 +623,7 @@ function renderMenu(){
     <div class="chips">${Object.entries(FORMATS).map(([k,f])=>`<button class="chip ${k===S.format?'sel':''}" data-act="fmt" data-v="${k}">${f.label}</button>`).join('')}</div>
     <div class="row"><span class="lbl">Vita iniziale</span><div class="stepper"><button data-act="sl" data-v="-5">−</button><output>${S.startLife}</output><button data-act="sl" data-v="5">+</button></div></div>
     <div class="row"><span class="lbl">Danni da comandante</span>${tog('cmd', S.cmdDamage)}</div>
+    <p class="note">Scorciatoia: trascina il nome di chi attacca sul pannello di chi subisce.</p>
     <p class="note">Cambiare giocatori, formato o vita iniziale fa ripartire la partita. Nomi, colori e immagini restano.</p>
   </div>
   <div class="sec"><h3>Contatori nella scheda giocatore</h3>
@@ -520,6 +640,7 @@ function renderMenu(){
       <button class="chip ${SET.holdMode==='ten'?'sel':''}" data-act="hold" data-v="ten">±10</button></div></div>
     <div class="row"><span class="lbl">Vibrazione</span>${tog('vib', SET.vibrate)}</div>
     <div class="row"><span class="lbl">Schermo sempre acceso</span>${tog('wake', SET.wake)}</div>
+    <div class="row"><span class="lbl">Suoni</span>${tog('sound', SET.sound)}</div>
   </div>
   <div class="sec"><h3>Stampante</h3>
     <div class="row"><span class="lbl" id="prStatus"></span></div>
@@ -532,6 +653,7 @@ function renderMenu(){
   </div>
   <div class="sec"><h3>Voce e miglioramento dell'app</h3>
     <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
+    <div class="row"><span class="lbl">Salva anche l'audio delle richieste</span>${tog('clips', SET.clips)}</div>
     <p class="note">Il microfono si accende solo mentre tieni premuto. Salvo cosa è stato sentito, cosa ho capito, cosa hai scelto e le correzioni scritte: ${VLOG.length} voci sul telefono, finché non le esporti.</p>
     <div style="height:10px"></div>
     <button class="btn" data-act="suggest">Lascia un suggerimento</button>
@@ -570,7 +692,9 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'prconnect': await connectPrinter(); break;
     case 'prtest': await testPrint(); break;
     case 'vlog': SET.voiceLog = !SET.voiceLog; saveSet(); break;
-    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); toast('Dati cancellati') } break;
+    case 'sound': SET.sound = !SET.sound; saveSet(); if(SET.sound) sfx('found'); break;
+    case 'clips': SET.clips = !SET.clips; saveSet(); break;
+    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
   }
   renderMenu();
 });
@@ -698,7 +822,9 @@ const DICT = [
 ];
 const COLW = [['bianc[oaie]|bianche','W'],['blu','U'],['ner[oaie]','B'],['ross[oaie]','R'],['verd[ei]','G'],['incolor[ei]','C']];
 const KW = [['volant[ei]|volare','flying'],['travolgere','trample'],['cautela','vigilance'],['legame vitale','lifelink'],
-            ['tocco letale','deathtouch'],['rapidita','haste'],['raggiungere','reach'],['minacci[ao]','menace']];
+            ['tocco letale','deathtouch'],['rapidita','haste'],['raggiungere','reach'],['minacci[ao]|minaccia','menace'],
+            ['doppio attacco','double strike'],['attacco improvviso','first strike'],['difensore','defender'],
+            ['indistruttibil[ei]','indestructible'],['anti ?malocchio','hexproof'],['velenoso','toxic'],['prodezza','prowess']];
 const FILLER = /\b(stampa(mi|re)?|mi|serve(no)?|vorrei|dammi|fai|fammi|crea|una?|uno|le|la|il|lo|i|gli|di|del|della|dei|delle|da|con|e|pedin[ae]|token|segnalin[oi]|copi[ae]|creatura|creature|artefatt[oi]|per|favore|grazie)\b/g;
 
 function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9/ ]/g,' ').replace(/\s+/g,' ').trim() }
@@ -712,9 +838,11 @@ function parseRequest(raw){
   let m = s.match(/\b(\d+)\s+(pedin[ae]|copi[ae]|token|segnalin[oi])\b/);
   if(m){ out.qty = +m[1]; s = s.replace(m[0], ' ') }
   // forza/costituzione esplicita: "1/1", "1 su 1"
-  m = s.match(/\b(\d+)\s*(?:\/|su)\s*(\d+)\b/);
+  m = s.match(/\b(\d+)\s*(?:\/|su|e|x)\s*(\d+)\b/);
   if(m){ out.pow = +m[1]; out.tou = +m[2]; s = s.replace(m[0], ' ') }
   // numeri sciolti: 3 = quantità + F/C, 2 = F/C, 1 = quantità
+  // "55" detto di fila = 5/5 (il riconoscimento vocale attacca le cifre)
+  if(out.pow === null){ const mm = s.match(/\b([1-9])([1-9])\b/); if(mm){ out.pow = +mm[1]; out.tou = +mm[2]; s = s.replace(mm[0], ' ') } }
   const nums = (s.match(/\b\d+\b/g) || []).map(Number);
   if(out.pow === null && nums.length >= 3){ out.qty = nums[0]; out.pow = nums[nums.length-2]; out.tou = nums[nums.length-1] }
   else if(out.pow === null && nums.length === 2){ out.pow = nums[0]; out.tou = nums[1] }
@@ -733,7 +861,7 @@ function describe(r){
   let s = r.type ? r.typeIt.charAt(0).toUpperCase() + r.typeIt.slice(1) : (r.free ? '«' + r.free + '»' : 'pedina');
   if(r.pow !== null) s += ' ' + r.pow + '/' + r.tou;
   if(r.colors.length) s += ' ' + r.colors.map(c=>cn[c]).join(' e ');
-  if(r.kwIt.length) s += ', ' + r.kwIt.join(', ');
+  if(r.kwIt.length) s += ', ' + r.kwIt.join(', ').replace(/rapidita/g, 'rapidità');
   return s + (r.qty > 1 ? ', ' + r.qty + ' copie' : '');
 }
 function buildQueries(r){
@@ -771,12 +899,30 @@ function faceOf(card, type){
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 function showPTT(t){ const b = $('#ptt'); b.textContent = t; b.classList.add('show') }
 function hidePTT(){ $('#ptt').classList.remove('show') }
-function startCapture(btn){
+let pendingClip = null;
+function startClip(){
+  if(!SET.clips || !navigator.mediaDevices || !window.MediaRecorder) return null;
+  const chunks = []; let mr = null, stream = null, stopped = false;
+  const ready = navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{
+    stream = st; if(stopped){ st.getTracks().forEach(t=>t.stop()); return }
+    mr = new MediaRecorder(st); mr.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data) }; mr.start();
+  }).catch(()=>{});
+  return {
+    stop(){ stopped = true;
+      return ready.then(()=>new Promise(res=>{
+        if(!mr || mr.state === 'inactive'){ stream && stream.getTracks().forEach(t=>t.stop()); res(null); return }
+        mr.onstop = ()=>{ stream.getTracks().forEach(t=>t.stop()); res(chunks.length ? new Blob(chunks, {type:mr.mimeType}) : null) };
+        mr.stop();
+      }));
+    }
+  };
+}
+function startCapture(btn, silent){
   if(!SR){ toast('Riconoscimento vocale non disponibile: scrivi la richiesta'); return null }
   const finals = []; let interim = '', ended = false, cb = null, cancelled = false;
-  const rec = new SR();
+  const rec = new SR(), clip = startClip();
   rec.lang = 'it-IT'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;
-  btn.classList.add('listening'); showPTT('Ti ascolto… rilascia per inviare'); buzz(15);
+  btn.classList.add('listening'); if(!silent) showPTT('Ti ascolto… rilascia per inviare'); buzz(15); sfx('listen');
   rec.onresult = e=>{
     interim = '';
     for(let i=e.resultIndex; i<e.results.length; i++){
@@ -784,13 +930,14 @@ function startCapture(btn){
       if(r.isFinal) finals.push(Array.from(r).map(a=>a.transcript.trim()));
       else interim += r[0].transcript;
     }
-    showPTT([...finals.map(f=>f[0]), interim].join(' ').trim() || 'Ti ascolto…');
+    if(!silent) showPTT([...finals.map(f=>f[0]), interim].join(' ').trim() || 'Ti ascolto…');
   };
   rec.onerror = e=>{ if(e.error === 'not-allowed') toast('Consenti il microfono per dettare le richieste') };
   rec.onend = ()=>{ ended = true; btn.classList.remove('listening'); if(cb) deliver() };
   function deliver(){
     hidePTT(); if(cancelled || !cb) return;
     const c = cb; cb = null;
+    pendingClip = clip ? clip.stop() : null;
     let alts = finals.length === 1 ? finals[0] : finals.length ? [finals.map(f=>f[0]).join(' ')] : (interim.trim() ? [interim.trim()] : []);
     if(!alts.length){ toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
     c(alts);
@@ -798,16 +945,16 @@ function startCapture(btn){
   try{ rec.start() }catch(e){}
   return {
     finish(f){ cb = f; if(ended) deliver(); else { try{ rec.stop() }catch(e){ deliver() } } },
-    cancel(){ cancelled = true; try{ rec.abort() }catch(e){} hidePTT(); btn.classList.remove('listening') }
+    cancel(){ cancelled = true; try{ rec.abort() }catch(e){} clip && clip.stop(); hidePTT(); btn.classList.remove('listening') }
   };
 }
 // tocco breve = onTap, pressione lunga = detta finché tieni premuto
-function attachPTT(btn, {onTap, onText}){
+function attachPTT(btn, {onTap, onText, silent}){
   let down = false, held = false, timer = null, sess = null;
   btn.addEventListener('pointerdown', e=>{
     down = true; held = false;
     try{ btn.setPointerCapture(e.pointerId) }catch(_){}
-    timer = setTimeout(()=>{ held = true; sess = startCapture(btn) }, 230);
+    timer = setTimeout(()=>{ held = true; sess = startCapture(btn, silent) }, 230);
   });
   btn.addEventListener('pointerup', ()=>{
     if(!down) return; down = false; clearTimeout(timer);
@@ -826,10 +973,7 @@ function openTokens(){
   $('#heard').textContent = ''; $('#understood').textContent = ''; $('#tkInput').value = '';
   renderRecent(); openOv('tokens'); updatePrinterUI();
 }
-attachPTT($('#tokenBtn'), {
-  onTap: openTokens,
-  onText: alts => { if(stack[stack.length-1] !== 'tokens') openTokens(); $('#tkInput').value = alts[0]; runRequest(alts, 'voce') }
-});
+attachPTT($('#tokenBtn'), {onTap:openTokens, onText:quickToken, silent:true});
 attachPTT($('#micBtn'), {
   onTap: ()=>toast('Tieni premuto il microfono mentre parli'),
   onText: alts => { $('#tkInput').value = alts[0]; runRequest(alts, 'voce') }
@@ -840,7 +984,7 @@ $('#tkInput').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.target.b
 function renderRecent(){
   $('#tkResults').innerHTML = RECENT.length
     ? `<div class="sec"><h3>Stampate di recente</h3><div class="recent">${RECENT.map((t,i)=>`<button data-r="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`
-    : `<p class="empty">Tieni premuto il microfono (o il tasto dorato sul tavolo) e chiedi una pedina, ad esempio «due tesori» o «tre goblin uno uno rossi». Puoi anche scriverla qui sopra.</p>`;
+    : `<p class="empty">Tieni premuto il microfono e chiedi una pedina, ad esempio «due tesori» o «tre goblin uno uno rossi». Puoi anche scriverla qui sopra.</p>`;
 }
 $('#tkResults').addEventListener('click', e=>{
   const r = e.target.closest('[data-r]'); if(r){ curEntry = null; openDetail(RECENT[+r.dataset.r], 1); return }
@@ -854,6 +998,7 @@ function logRequest(source, alts, req, query, found, note){
   const en = {t:now, kind:'richiesta', source, heard:alts, understood:req && (req.type || req.free) ? describe(req) : null,
               parsed:req ? {type:req.type, word:req.typeIt, qty:req.qty, pow:req.pow, tou:req.tou, colors:req.colors, kw:req.kw, free:req.free} : null,
               query, found, relaxed:note || null};
+  if(source === 'voce' && pendingClip){ const pc = pendingClip; pendingClip = null; en.clip = true; pc.then(b=>{ if(b) clipPut(en.t, b); else { en.clip = false; saveVlog() } }) }
   VLOG.push(en); if(source === 'voce') lastVoice = en; saveVlog();
   return en;
 }
@@ -940,7 +1085,13 @@ $('#sugSave').addEventListener('click', ()=>{
 async function exportVlog(){
   if(!VLOG.length){ toast('Non ci sono ancora dati da esportare'); return }
   const name = 'segnapunti-mtg-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
-  const blob = new Blob([JSON.stringify({app:'Segnapunti MTG', version:VERSION, exported:new Date().toISOString(), entries:VLOG}, null, 1)], {type:'application/json'});
+  const entries = [];
+  for(const en of VLOG){
+    if(!en.clip){ entries.push(en); continue }
+    const b = await clipGet(en.t);
+    entries.push(b ? Object.assign({}, en, {audio:await blobToDataURL(b)}) : en);
+  }
+  const blob = new Blob([JSON.stringify({app:'Segnapunti MTG', version:VERSION, exported:new Date().toISOString(), entries}, null, 1)], {type:'application/json'});
   const file = new File([blob], name, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[file]})){
     try{ await navigator.share({files:[file], title:'Dati Segnapunti MTG'}); return }catch(e){ if(e.name === 'AbortError') return }
@@ -948,6 +1099,135 @@ async function exportVlog(){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
 }
+
+/* ================= Pedina rapida: tieni premuto, mostra, stampa da sola ================= */
+const TM = {seq:0, phase:'idle', timer:null, entry:null};
+function pickFirst(data, type){
+  const ok = data.filter(c => (c.lang || 'en') === 'en');
+  const pool = ok.length ? ok : data;
+  const card = pool.find(c => c.image_uris) || pool[0];
+  const f = card && faceOf(card, type);
+  return f && {id:card.id, name:f.name, type_line:f.type_line, set:card.set_name, small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large};
+}
+function makeSparks(){
+  const box = $('#tmSparks'); if(box.childElementCount) return;
+  let h = '';
+  for(let k=0; k<30; k++){
+    const a = Math.random()*Math.PI*2, r0 = 8 + Math.random()*14, r1 = 30 + Math.random()*22;
+    h += `<span class="spark" style="--x0:${(Math.cos(a)*r0).toFixed(1)}vmin;--y0:${(Math.sin(a)*r0).toFixed(1)}vmin;--x1:${(Math.cos(a)*r1).toFixed(1)}vmin;--y1:${(Math.sin(a)*r1).toFixed(1)}vmin;--d:${(2.2+Math.random()*2.4).toFixed(2)}s;--dl:${(-Math.random()*4).toFixed(2)}s"></span>`;
+  }
+  box.innerHTML = h;
+}
+function tmSet(cls, cap, name){
+  const m = $('#ov-modal');
+  ['loading','show','printing'].forEach(c => m.classList.toggle(c, cls.includes(c)));
+  if(cap !== undefined) $('#tmCap').textContent = cap;
+  if(name !== undefined) $('#tmName').textContent = name;
+}
+function tmBar(p, ms){ const b = $('#tmBar'); b.style.transition = ms ? `width ${ms}ms linear` : 'none'; b.style.width = (p*100) + '%' }
+function tmReveal(p){ $('#tmBits').style.clipPath = `inset(0 0 ${(100 - p*100).toFixed(1)}% 0)`; $('#tmScan').style.top = (p*100) + '%' }
+function tmClose(){ if(stack[stack.length-1] === 'modal') history.back() }
+function tmCleanup(){
+  clearTimeout(TM.timer);
+  if(TM.phase === 'count'){ if(TM.entry){ TM.entry.cancelled = true; saveVlog() } sfx('cancel'); buzz([20,40,20]); toast('Pedina annullata') }
+  TM.phase = 'idle'; TM.seq++;
+  $('#ov-modal').className = 'tkm';
+}
+$('#ov-modal').addEventListener('click', e=>{
+  if(e.target.closest('#tmConnect')) return;
+  if(TM.phase === 'count' || TM.phase === 'msg' || TM.phase === 'search' || TM.phase === 'wait') tmClose();
+});
+async function quickToken(alts){
+  alts = alts.filter(a => a && a.trim()); if(!alts.length) return;
+  const seq = ++TM.seq; TM.phase = 'search'; TM.entry = null;
+  makeSparks(); tmBar(0); tmReveal(0); $('#tmQty').textContent = ''; $('#tmConnect').hidden = true; $('#tmImg').removeAttribute('src');
+  $('#ov-modal').classList.add('open'); stack.push('modal'); history.pushState({ov:'modal'}, '');
+  tmSet('loading', 'Cerco la pedina…', '«' + alts[0] + '»');
+  let req = null;
+  for(const a of alts){ const p = parseRequest(a); if(p.type){ req = p; break } }
+  if(!req) req = parseRequest(alts[0]);
+  const fail = msg => { if(seq !== TM.seq) return; TM.phase = 'msg'; tmSet('', msg); sfx('cancel'); TM.timer = setTimeout(()=>{ if(seq === TM.seq) tmClose() }, 2600) };
+  if(!req.type && !req.free){ TM.entry = logRequest('voce', alts, req, null, 0); fail('Non ho capito quale pedina. Tocca per chiudere.'); return }
+  let data = [], used = '', note = '';
+  try{
+    for(const t of buildQueries(req)){ used = t.q.join(' '); data = await scry(used); if(data.length){ note = t.note; break } await new Promise(r=>setTimeout(r,100)) }
+  }catch(e){ fail('Scryfall non risponde. Controlla la connessione.'); return }
+  if(seq !== TM.seq) return;
+  const tk = pickFirst(data, req.type);
+  TM.entry = logRequest('voce', alts, req, used, data.length, note);
+  if(!tk){ fail('Nessuna pedina trovata per «' + describe(req) + '».'); return }
+  if(TM.entry){ TM.entry.chosen = {id:tk.id, name:tk.name, set:tk.set, auto:true}; saveVlog() }
+  const qn = req.qty;
+  const bitsP = makeBits(tk.print).catch(()=>null);
+  await new Promise(res=>{ const im = $('#tmImg'); im.onload = im.onerror = res; im.src = tk.large || tk.print });
+  if(seq !== TM.seq) return;
+  $('#tmQty').textContent = qn > 1 ? '×' + qn : '';
+  TM.phase = 'count'; sfx('found'); buzz(30);
+  tmSet('show', 'Stampa tra 3 secondi. Tocca per annullare.', describe(req));
+  requestAnimationFrame(()=>tmBar(1, 3000));
+  TM.timer = setTimeout(async ()=>{
+    if(seq !== TM.seq) return;
+    TM.phase = 'printing';
+    const bits = await bitsP;
+    if(!bits){ fail('Immagine non disponibile.'); return }
+    drawBits($('#tmBits'), bits);
+    if(!(await printer.ensure())){
+      if(seq !== TM.seq) return;
+      TM.phase = 'wait'; tmSet('show', 'Stampante non collegata.');
+      const btn = $('#tmConnect'); btn.hidden = false;
+      btn.onclick = async ()=>{ await connectPrinter(); if(printer.ch && seq === TM.seq){ btn.hidden = true; TM.phase = 'printing'; tmPrint(seq, tk, bits, qn) } };
+      return;
+    }
+    tmPrint(seq, tk, bits, qn);
+  }, 3000);
+}
+async function tmPrint(seq, tk, bits, qn){
+  tmSet('show printing', qn > 1 ? `Stampa 1 di ${qn}…` : 'Stampa in corso…');
+  sfx('print'); buzz([40,60,40]);
+  const data = escposRaster(bits);
+  try{
+    for(let k=0; k<qn; k++){
+      if(qn > 1) $('#tmCap').textContent = `Stampa ${k+1} di ${qn}…`;
+      await printer.write(data, p => tmReveal((k + p) / qn));
+    }
+  }catch(e){ if(seq === TM.seq){ TM.phase = 'msg'; tmSet('show', 'Stampa interrotta: ' + (e.message || e)); TM.timer = setTimeout(()=>{ if(seq === TM.seq) tmClose() }, 3500) } return }
+  tmReveal(1);
+  RECENT = [tk, ...RECENT.filter(r => r.id !== tk.id)].slice(0, 12); saveRecent();
+  if(TM.entry){ TM.entry.printed = qn; saveVlog() }
+  logEv('Stampata pedina ' + tk.name + (qn > 1 ? ' ×' + qn : ''));
+  if(seq !== TM.seq) return;
+  TM.phase = 'done'; tmSet('show', qn > 1 ? qn + ' pedine stampate' : 'Pedina stampata'); sfx('done');
+  TM.timer = setTimeout(()=>{ if(seq === TM.seq){ TM.phase = 'msg'; tmClose() } }, 1300);
+}
+
+/* ================= Suoni ================= */
+let actx = null;
+function sfx(kind){
+  if(!SET.sound) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    const t = actx.currentTime;
+    const tone = (f, at, dur, type='sine', g=.14) => {
+      const o = actx.createOscillator(), a = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t+at);
+      a.gain.setValueAtTime(0, t+at); a.gain.linearRampToValueAtTime(g, t+at+.02); a.gain.exponentialRampToValueAtTime(.001, t+at+dur);
+      o.connect(a).connect(actx.destination); o.start(t+at); o.stop(t+at+dur+.05);
+    };
+    if(kind === 'listen') tone(740, 0, .12, 'sine', .1);
+    if(kind === 'found') [784, 988, 1319].forEach((f,i)=>tone(f, i*.08, .55, 'triangle', .11));
+    if(kind === 'print') [523, 659, 784, 1047, 1319].forEach((f,i)=>tone(f, i*.06, .4, 'sine', .09));
+    if(kind === 'done') { tone(1175, 0, .7, 'triangle', .09); tone(1568, .1, .8, 'sine', .06) }
+    if(kind === 'cancel') { tone(392, 0, .18, 'sine', .12); tone(262, .12, .3, 'sine', .1) }
+  }catch(e){}
+}
+
+/* ================= Archivio clip audio (IndexedDB) ================= */
+function idb(){ return new Promise((ok, ko)=>{ const r = indexedDB.open('smtg-clips', 1); r.onupgradeneeded = ()=>r.result.createObjectStore('clips'); r.onsuccess = ()=>ok(r.result); r.onerror = ko }) }
+async function clipPut(k, blob){ try{ const db = await idb(); db.transaction('clips','readwrite').objectStore('clips').put(blob, k) }catch(e){} }
+async function clipGet(k){ try{ const db = await idb(); return await new Promise(ok=>{ const r = db.transaction('clips').objectStore('clips').get(k); r.onsuccess = ()=>ok(r.result || null); r.onerror = ()=>ok(null) }) }catch(e){ return null } }
+async function clipClear(){ try{ const db = await idb(); db.transaction('clips','readwrite').objectStore('clips').clear() }catch(e){} }
+const blobToDataURL = b => new Promise(ok=>{ const r = new FileReader(); r.onload = ()=>ok(r.result); r.readAsDataURL(b) });
 
 /* ================= Installazione ================= */
 let installEvt = null;
@@ -1011,31 +1291,45 @@ const PR_SERVICES = [
 ];
 const printer = {
   dev:null, ch:null,
-  async write(bytes){
+  async write(bytes, onProg){
     const size = SET.chunk;
     for(let i=0; i<bytes.length; i+=size){
       const part = bytes.slice(i, i+size);
       if(this.ch.properties.writeWithoutResponse){ await this.ch.writeValueWithoutResponse(part); await new Promise(r=>setTimeout(r, 6)) }
       else await this.ch.writeValue(part);
+      if(onProg) onProg(Math.min(1, (i + part.length) / bytes.length));
     }
+  },
+  // ricollega da solo la stampante già usata in questa sessione
+  async ensure(){
+    if(this.ch) return true;
+    if(this.dev){ try{ await setupDevice(this.dev); return true }catch(e){} }
+    return false;
   }
 };
+async function setupDevice(dev){
+  const server = await dev.gatt.connect();
+  let found = null;
+  for(const s of await server.getPrimaryServices()){
+    for(const c of await s.getCharacteristics()){
+      if(c.properties.writeWithoutResponse || c.properties.write){ found = c; break }
+    }
+    if(found) break;
+  }
+  if(!found) throw new Error('nessun canale di stampa trovato');
+  printer.dev = dev; printer.ch = found;
+  if(!dev._smtg){ dev._smtg = true; dev.addEventListener('gattserverdisconnected', ()=>{ printer.ch = null; updatePrinterUI() }) }
+  updatePrinterUI();
+}
+if(navigator.bluetooth && navigator.bluetooth.getDevices){
+  navigator.bluetooth.getDevices().then(ds=>{ if(ds && ds[0] && !printer.dev) printer.dev = ds[0] }).catch(()=>{});
+}
 async function connectPrinter(){
   if(!navigator.bluetooth){ toast('Bluetooth non disponibile: usa Chrome su Android', 3000); return }
   try{
     const dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true, optionalServices:PR_SERVICES});
-    $('#prStatus').textContent = 'Collegamento…';
-    const server = await dev.gatt.connect();
-    let found = null;
-    for(const s of await server.getPrimaryServices()){
-      for(const c of await s.getCharacteristics()){
-        if(c.properties.writeWithoutResponse || c.properties.write){ found = c; break }
-      }
-      if(found) break;
-    }
-    if(!found) throw new Error('nessun canale di stampa trovato');
-    printer.dev = dev; printer.ch = found;
-    dev.addEventListener('gattserverdisconnected', ()=>{ printer.ch = null; updatePrinterUI(); toast('Stampante scollegata') });
+    const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
+    await setupDevice(dev);
     toast('Collegata a ' + (dev.name || 'stampante'));
   }catch(e){
     if(e.name !== 'NotFoundError') toast('Collegamento non riuscito: ' + e.message, 3500);
