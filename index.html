@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#22252B">
+<title>Segnapunti MTG</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#22252B; --surface:#2C3038; --surface2:#363B45; --line:#454B57;
+  --text:#EEF0F3; --muted:#A3A9B5; --gold:#D9B45A; --gold-ink:#2A2213; --danger:#E0604A; --ok:#5DB37A;
+  --num:'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --ui:'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--ui);overflow:hidden;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select{font:inherit}
+
+/* ---------- Tavolo ---------- */
+#board{position:fixed;inset:0;display:grid;gap:4px;padding:calc(4px + env(safe-area-inset-top)) 4px calc(4px + env(safe-area-inset-bottom))}
+#board.n2{grid-template:1fr 1fr / 1fr}
+#board.n3{grid-template:1.4fr 1fr / 1fr 1fr}
+#board.n3 .cell:nth-child(3){grid-column:1 / 3}
+#board.n4{grid-template:1fr 1fr / 1fr 1fr}
+#board.n5{grid-template:1fr 1fr .9fr / 1fr 1fr}
+#board.n5 .cell:nth-child(5){grid-column:1 / 3}
+#board.n6{grid-template:1fr 1fr 1fr / 1fr 1fr}
+
+.cell{position:relative;container-type:size;overflow:hidden;border-radius:14px;background:var(--pc);color:var(--pt);transition:filter .3s}
+.cell.out{filter:saturate(.15) brightness(.55)}
+.frame{position:absolute;left:50%;top:50%;width:100cqw;height:100cqh;transform:translate(-50%,-50%)}
+.r90 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(90deg)}
+.r270 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
+.r180 .frame{transform:translate(-50%,-50%) rotate(180deg)}
+.half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:12cqmin;font-weight:600;opacity:.35;touch-action:none}
+.half.minus{left:0;justify-content:flex-start;padding-left:6%}
+.half.plus{right:0;justify-content:flex-end;padding-right:6%}
+.half:active{background:rgba(255,255,255,.06)}
+.life{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-family:var(--num);font-weight:900;font-size:44cqmin;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.delta{position:absolute;left:50%;top:14%;transform:translateX(-50%);font-family:var(--num);font-weight:700;font-size:11cqmin;opacity:0;transition:opacity .25s;pointer-events:none}
+.delta.show{opacity:.9}
+.pname{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);padding:.35em .9em;border-radius:99px;background:rgba(0,0,0,.18);font-size:max(13px,6.5cqmin);font-weight:600;white-space:nowrap;max-width:80%;overflow:hidden;text-overflow:ellipsis}
+.badges{position:absolute;top:8%;left:50%;transform:translateX(-50%);display:flex;gap:.6em;font-size:max(12px,5.5cqmin);font-weight:700;pointer-events:none}
+.badges span{padding:.15em .6em;border-radius:99px;background:rgba(0,0,0,.22)}
+
+/* ---------- Hub centrale ---------- */
+#hub{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;z-index:5}
+#board.n2 ~ #hub{flex-direction:row}
+#hub.col{flex-direction:column}
+#tokenBtn{width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#F2D58C,var(--gold) 55%,#A9842E);color:var(--gold-ink);box-shadow:0 0 0 5px var(--bg),0 6px 18px rgba(0,0,0,.45);display:grid;place-items:center;transition:transform .12s}
+#tokenBtn:active{transform:scale(.93)}
+#tokenBtn svg{width:40px;height:40px}
+.smallBtn{width:44px;height:44px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 4px var(--bg);display:grid;place-items:center}
+.smallBtn svg{width:22px;height:22px}
+#prDot{position:absolute;top:4px;right:4px;width:14px;height:14px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 3px var(--bg)}
+#prDot.on{background:var(--ok)}
+
+/* ---------- Pannelli sovrapposti ---------- */
+.ov{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.ov.open{transform:none}
+@media (prefers-reduced-motion:reduce){.ov{transition:none}}
+.ovHead{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.ovHead h2{margin:0;font-size:20px;font-weight:700;flex:1;display:flex;align-items:baseline;gap:8px}
+.ver{font-size:13px;font-weight:500;color:var(--muted)}
+.back{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--surface)}
+.back svg{width:22px;height:22px}
+.ovBody{flex:1;overflow-y:auto;padding:16px 16px 28px;-webkit-overflow-scrolling:touch}
+.sec{margin-bottom:24px}
+.sec h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-width:48px;padding:10px 16px;border-radius:12px;background:var(--surface);font-weight:600}
+.chip.sel{background:var(--gold);color:var(--gold-ink)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;background:var(--surface);font-weight:600;margin-bottom:8px}
+.btn.primary{background:var(--gold);color:var(--gold-ink)}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row .lbl{flex:1}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:40px;height:40px;border-radius:10px;background:var(--surface);font-size:22px;font-weight:600}
+.stepper output{min-width:42px;text-align:center;font-family:var(--num);font-size:26px;font-weight:700}
+.txt{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+select.txt{appearance:auto}
+.note{font-size:14px;color:var(--muted);line-height:1.45;margin:6px 0 0}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:42px;height:42px;border-radius:50%;border:3px solid transparent}
+.sw.sel{border-color:var(--text)}
+
+/* ---------- Pedine ---------- */
+.voiceBar{display:flex;gap:10px;align-items:center}
+#micBtn{flex:none;width:58px;height:58px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center}
+#micBtn svg{width:28px;height:28px}
+#micBtn.listening{animation:pulse 1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(217,180,90,.6)}100%{box-shadow:0 0 0 16px rgba(217,180,90,0)}}
+#heard{min-height:22px;margin:12px 2px 4px;font-size:15px;color:var(--muted)}
+#understood{margin:0 2px 14px;font-size:17px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+.grid button{border-radius:8px;overflow:hidden;background:var(--surface);aspect-ratio:146/204;padding:0}
+.grid img{width:100%;height:100%;object-fit:cover;display:block}
+.recent{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.recent button{flex:none;width:86px;border-radius:7px;overflow:hidden;padding:0;aspect-ratio:146/204;background:var(--surface)}
+.recent img{width:100%;height:100%;object-fit:cover;display:block}
+.empty{padding:24px 6px;color:var(--muted);line-height:1.5}
+.detailImgs{display:flex;gap:12px;justify-content:center;margin-bottom:14px}
+.detailImgs figure{margin:0;flex:1;max-width:240px;text-align:center}
+.detailImgs img,.detailImgs canvas{width:100%;border-radius:8px;display:block;background:#fff}
+.detailImgs canvas{image-rendering:pixelated}
+.detailImgs figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+.tl{font-size:14px;color:var(--muted);text-align:center;margin:-4px 0 14px}
+
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--surface2);color:var(--text);padding:12px 18px;border-radius:12px;font-weight:500;z-index:50;opacity:0;pointer-events:none;transition:all .25s;max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#dice{font-family:var(--num);font-size:96px;font-weight:900;text-align:center;margin:8px 0}
+
+/* ---------- v0.2 ---------- */
+.cell.withart{--pt:#fff;box-shadow:inset 0 0 0 3px var(--pc)}
+.frame.hasart{background-size:cover;background-position:center}
+.frame.hasart::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.62));pointer-events:none}
+.cell.active{box-shadow:inset 0 0 0 4px var(--gold)}
+#turnPill{padding:9px 14px;border-radius:99px;background:var(--surface);box-shadow:0 0 0 4px var(--bg);font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#turnPill b{font-weight:700;margin-right:6px}
+#tokenBtn.listening{animation:pulse 1s infinite}
+#ptt{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,-160%);z-index:60;background:var(--gold);color:var(--gold-ink);padding:12px 18px;border-radius:14px;font-weight:600;max-width:90vw;text-align:center;transition:transform .2s;pointer-events:none}
+#ptt.show{transform:translate(-50%,0)}
+.tog{position:relative;width:52px;height:30px;border-radius:99px;background:var(--surface2);flex:none;transition:background .2s}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--text);transition:transform .2s}
+.tog.on{background:var(--ok)}
+.tog.on::after{transform:translateX(22px)}
+.bigLife{font-family:var(--num);font-size:76px;font-weight:900;text-align:center;line-height:1;margin:2px 0 12px}
+.quick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:24px}
+.quick button{padding:13px 0;border-radius:10px;background:var(--surface);font-weight:700;font-size:17px}
+.hist{font-size:15px}
+.hist div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.hist .pos{color:var(--ok)} .hist .neg{color:var(--danger)}
+.hist time{color:var(--muted);flex:none}
+.artCur{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.artCur img{width:110px;aspect-ratio:4/3;object-fit:cover;border-radius:8px}
+.artGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.artGrid button{padding:0;border-radius:8px;overflow:hidden;aspect-ratio:4/3;background:var(--surface)}
+.artGrid img{width:100%;height:100%;object-fit:cover;display:block}
+.diceRes{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 18px;min-height:120px;margin:4px 0 6px}
+.die{font-family:var(--num);font-size:64px;font-weight:900;min-width:70px;text-align:center}
+.diceSum{text-align:center;color:var(--muted);min-height:22px;margin-bottom:12px}
+.diceBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.diceBtns button{padding:16px 0;border-radius:12px;background:var(--surface);font-weight:700;font-size:17px}
+textarea.txt{min-height:120px;resize:vertical;user-select:text;-webkit-user-select:text}
+input.txt{user-select:text;-webkit-user-select:text}
+#sugMic.listening{animation:pulse 1s infinite}
+</style>
+</head>
+<body>
+
+<div id="board"></div>
+<div id="hub">
+  <button id="undoBtn" class="smallBtn" aria-label="Annulla">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+  </button>
+  <button id="tokenBtn" aria-label="Pedine: tocca per aprire, tieni premuto per parlare">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7l-2.5-1.5L12 21l-2.5-1.5L7 21z"/></svg>
+    <span id="prDot"></span>
+  </button>
+  <button id="menuBtn" class="smallBtn" aria-label="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <button id="turnPill" hidden></button>
+</div>
+<div id="ptt"></div>
+
+<!-- Menu -->
+<section class="ov" id="ov-menu">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Segnapunti MTG <span class="ver" id="verLbl"></span></h2>
+  </div>
+  <div class="ovBody" id="menuBody"></div>
+</section>
+
+<!-- Giocatore -->
+<section class="ov" id="ov-player">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2 id="plTitle">Giocatore</h2>
+  </div>
+  <div class="ovBody" id="plBody"></div>
+</section>
+
+<!-- Pedine: ricerca -->
+<section class="ov" id="ov-tokens">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Pedine</h2>
+    <button class="chip" id="tkPrinter" style="padding:8px 12px;font-size:14px">Stampante</button>
+  </div>
+  <div class="ovBody">
+    <div class="voiceBar">
+      <button id="micBtn" aria-label="Tieni premuto per parlare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <input class="txt" id="tkInput" placeholder="Es. tre goblin 1/1 rossi" enterkeyhint="search" autocomplete="off">
+    </div>
+    <div id="heard"></div>
+    <div id="understood"></div>
+    <div id="tkResults"></div>
+  </div>
+</section>
+
+<!-- Pedine: dettaglio -->
+<section class="ov" id="ov-detail">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2 id="dtTitle">Pedina</h2>
+  </div>
+  <div class="ovBody">
+    <div class="detailImgs">
+      <figure><img id="dtImg" alt=""><figcaption>Originale</figcaption></figure>
+      <figure><canvas id="dtPrev"></canvas><figcaption>Come uscirà</figcaption></figure>
+    </div>
+    <p class="tl" id="dtType"></p>
+    <div class="row"><span class="lbl">Copie</span><div class="stepper"><button id="qMinus">−</button><output id="qOut">1</output><button id="qPlus">+</button></div></div>
+    <div style="height:14px"></div>
+    <button class="btn primary" id="dtPrint">Stampa</button>
+  </div>
+</section>
+
+<!-- Dadi -->
+<section class="ov" id="ov-dice">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Dadi e moneta</h2>
+  </div>
+  <div class="ovBody">
+    <div class="diceRes" id="diceRes"></div>
+    <div class="diceSum" id="diceSum"></div>
+    <div class="row"><span class="lbl">Quanti</span><div class="stepper"><button id="dnMinus">−</button><output id="dnOut">1</output><button id="dnPlus">+</button></div></div>
+    <div class="diceBtns" id="diceBtns">
+      <button data-f="4">d4</button><button data-f="6">d6</button><button data-f="8">d8</button><button data-f="10">d10</button>
+      <button data-f="12">d12</button><button data-f="20">d20</button><button data-f="100">d100</button><button data-f="coin">Moneta</button>
+    </div>
+  </div>
+</section>
+
+<!-- Registro -->
+<section class="ov" id="ov-log">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Registro partita</h2>
+  </div>
+  <div class="ovBody" id="logBody"></div>
+</section>
+
+<!-- Suggerimento -->
+<section class="ov" id="ov-suggest">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Suggerimento</h2>
+  </div>
+  <div class="ovBody">
+    <p class="note" style="margin:0 0 14px">Tieni premuto il microfono e racconta cosa miglioreresti, oppure scrivilo. Finisce nei dati da esportare.</p>
+    <div class="voiceBar" style="align-items:flex-start">
+      <button id="sugMic" class="micLike" aria-label="Tieni premuto per parlare" style="flex:none;width:58px;height:58px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <textarea class="txt" id="sugTxt" placeholder="Es. vorrei vedere chi ha iniziato la partita"></textarea>
+    </div>
+    <div style="height:14px"></div>
+    <button class="btn primary" id="sugSave">Salva suggerimento</button>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+const VERSION = '0.2.0';
+document.getElementById('verLbl').textContent = 'v' + VERSION;
+
+/* ================= Stato ================= */
+const COLORS = [
+  {id:'R', bg:'#C4462E', fg:'#FFF4EE'},
+  {id:'U', bg:'#2F6FB0', fg:'#F0F6FF'},
+  {id:'G', bg:'#3E7D4A', fg:'#EFFAF0'},
+  {id:'W', bg:'#E6DDBF', fg:'#2B2614'},
+  {id:'B', bg:'#4A3F55', fg:'#F3EEF8'},
+  {id:'C', bg:'#7D838C', fg:'#FFFFFF'},
+];
+const FORMATS = {
+  standard:{label:'Standard', life:20, cmd:false},
+  commander:{label:'Commander', life:40, cmd:true},
+  brawl:{label:'Brawl', life:25, cmd:false},
+  oathbreaker:{label:'Oathbreaker', life:20, cmd:false},
+};
+const COUNTERS = [
+  {k:'poison', label:'Veleno', icon:'☠', step:1},
+  {k:'energy', label:'Energia', icon:'⚡', step:1},
+  {k:'exp', label:'Esperienza', icon:'✦', step:1},
+  {k:'rad', label:'Radiazioni', icon:'☢', step:1},
+  {k:'tax', label:'Tassa del comandante', icon:'Tassa', step:2},
+];
+const FLAGS = [
+  {k:'monarch', label:'Monarca', icon:'♛', unique:true},
+  {k:'initiative', label:'Iniziativa', icon:'⚑', unique:true},
+  {k:'blessing', label:'Benedizione della città', icon:'✧'},
+];
+const KEY = 'smtg-state-v2', SKEY = 'smtg-settings', RKEY = 'smtg-recent', VKEY = 'smtg-voicelog';
+
+function newPlayer(i, life, o){
+  return {name:o?.name || 'Giocatore ' + (i+1), color:o?.color ?? i % COLORS.length, art:o?.art || null, artName:o?.artName || '',
+          partner:!!o?.partner, life, counters:{}, cmd:{}, flags:{}, out:false, hist:[]};
+}
+function freshPlayers(n, life, old){ return Array.from({length:n}, (_,i)=>newPlayer(i, life, old?.[i])) }
+function freshTurn(on){ return {on:!!on, n:1, active:0, first:0, started:Date.now(), turnStart:Date.now()} }
+
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)) }catch(e){ return null } }
+let S = load(KEY);
+if(!S || !S.players){
+  S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
+  S.players = freshPlayers(4, 40);
+}
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true}, load(SKEY) || {});
+SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
+let RECENT = load(RKEY) || [];
+let VLOG = load(VKEY) || [];
+
+let saveT;
+function save(){ clearTimeout(saveT); saveT = setTimeout(()=>{ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }, 250) }
+function saveSet(){ try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
+function saveRecent(){ try{ localStorage.setItem(RKEY, JSON.stringify(RECENT)) }catch(e){} }
+function saveVlog(){ if(VLOG.length > 500) VLOG = VLOG.slice(-500); try{ localStorage.setItem(VKEY, JSON.stringify(VLOG)) }catch(e){} }
+
+const $ = s => document.querySelector(s);
+function toast(msg, ms=2200){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'), ms) }
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hhmm = t => new Date(t).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+function buzz(ms=8){ if(SET.vibrate && navigator.vibrate) navigator.vibrate(ms) }
+function logEv(txt){ S.log.push({t:Date.now(), txt}); if(S.log.length > 300) S.log.shift(); save() }
+
+/* ================= Annulla ================= */
+const undoStack = [];
+function snap(){ undoStack.push(JSON.stringify({players:S.players, turn:S.turn})); if(undoStack.length > 60) undoStack.shift() }
+function undo(){
+  const s = undoStack.pop();
+  if(!s){ toast('Niente da annullare'); return }
+  const o = JSON.parse(s); S.players = o.players; S.turn = o.turn;
+  save(); renderBoard();
+  if(stack[stack.length-1] === 'player') renderPlayer();
+  toast('Annullato'); buzz(15);
+}
+$('#undoBtn').addEventListener('click', undo);
+
+/* ================= Tavolo ================= */
+const ROT = {
+  2:['r180','r0'],
+  3:['r90','r270','r0'],
+  4:['r90','r270','r90','r270'],
+  5:['r90','r270','r90','r270','r0'],
+  6:['r90','r270','r90','r270','r90','r270'],
+};
+function isOut(p){
+  if(p.out || p.life <= 0 || (p.counters.poison || 0) >= 10) return true;
+  return S.cmdDamage && Object.values(p.cmd).some(v => v >= 21);
+}
+function renderBoard(){
+  const b = $('#board');
+  b.className = 'n' + S.count;
+  $('#hub').classList.toggle('col', S.count > 2);
+  b.innerHTML = S.players.map((p,i)=>{
+    const c = COLORS[p.color];
+    return `<div class="cell ${ROT[S.count][i]}${p.art ? ' withart' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}">
+      <div class="frame${p.art ? ' hasart' : ''}"${p.art ? ` style="background-image:url('${esc(p.art)}')"` : ''}>
+        <div class="half minus" data-d="-1">−</div>
+        <div class="half plus" data-d="1">+</div>
+        <div class="badges"></div>
+        <div class="delta"></div>
+        <div class="life"></div>
+        <button class="pname">${esc(p.name)}</button>
+      </div></div>`;
+  }).join('');
+  S.players.forEach((_,i)=>updateCell(i));
+  updateTurnUI();
+}
+function updateCell(i){
+  const p = S.players[i], cell = $(`.cell[data-i="${i}"]`);
+  if(!cell) return;
+  cell.querySelector('.life').textContent = p.life;
+  cell.classList.toggle('out', isOut(p));
+  cell.classList.toggle('active', S.turn.on && S.turn.active === i);
+  let bd = FLAGS.filter(f => p.flags[f.k]).map(f => `<span>${f.icon}</span>`).join('');
+  for(const c of COUNTERS){ const v = p.counters[c.k]; if(v) bd += `<span>${c.icon} ${v}</span>` }
+  if(S.cmdDamage){ const m = Math.max(0, ...Object.values(p.cmd)); if(m) bd += `<span>⚔ ${m}</span>` }
+  cell.querySelector('.badges').innerHTML = bd;
+}
+function addHist(i, d){
+  const p = S.players[i], h = p.hist, last = h[h.length-1], now = Date.now();
+  if(last && now - last.t < 3000){ last.d += d; last.life = p.life; last.t = now; if(!last.d) h.pop() }
+  else h.push({t:now, d, life:p.life});
+  if(h.length > 200) h.shift();
+}
+const deltas = {};
+function changeLife(i, d){
+  S.players[i].life += d;
+  addHist(i, d); updateCell(i); save();
+  const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
+  const el = cell.querySelector('.delta'), st = deltas[i] || (deltas[i] = {v:0});
+  st.v += d;
+  el.textContent = (st.v > 0 ? '+' : '') + st.v;
+  el.classList.add('show');
+  clearTimeout(st.t);
+  st.t = setTimeout(()=>{ el.classList.remove('show'); st.v = 0 }, 1600);
+}
+
+// tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)
+let hold = null;
+$('#board').addEventListener('pointerdown', e=>{
+  const h = e.target.closest('.half'); if(!h) return;
+  const i = +h.closest('.cell').dataset.i, d = +h.dataset.d;
+  snap(); changeLife(i, d); buzz();
+  hold = {first:true};
+  if(SET.holdMode === 'ten'){
+    hold.t = setTimeout(function rep(){ changeLife(i, d * (hold.first ? 9 : 10)); hold.first = false; buzz(20); hold.t = setTimeout(rep, 700) }, 480);
+  } else {
+    hold.t = setTimeout(function rep(){ changeLife(i, d); hold.t = setTimeout(rep, 110) }, 480);
+  }
+});
+['pointerup','pointercancel'].forEach(ev => window.addEventListener(ev, ()=>{ if(hold){ clearTimeout(hold.t); hold = null } }));
+$('#board').addEventListener('contextmenu', e=>e.preventDefault());
+$('#board').addEventListener('click', e=>{
+  const n = e.target.closest('.pname'); if(n) openPlayer(+n.closest('.cell').dataset.i);
+});
+
+/* ================= Turni e timer ================= */
+function fmtTime(ms){
+  const s = Math.max(0, Math.floor(ms/1000)), h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0');
+}
+function updateTurnUI(){
+  const p = $('#turnPill'); p.hidden = !S.turn.on;
+  if(S.turn.on) p.innerHTML = `<b>Turno ${S.turn.n}</b>${fmtTime(Date.now() - S.turn.started)}`;
+}
+setInterval(()=>{ if(S.turn.on) updateTurnUI() }, 1000);
+function nextTurn(){
+  snap();
+  const t = S.turn, n = S.count, dist = x => (x - t.first + n) % n;
+  let a = t.active;
+  for(let k=0; k<n; k++){ a = (a + 1) % n; if(!isOut(S.players[a])) break }
+  if(dist(a) <= dist(t.active)){ t.n++; logEv('Inizia il turno ' + t.n) }
+  t.active = a; t.turnStart = Date.now();
+  save(); S.players.forEach((_,i)=>updateCell(i)); updateTurnUI(); buzz(15);
+}
+$('#turnPill').addEventListener('click', nextTurn);
+function whoStarts(){
+  const alive = S.players.map((p,i)=>i).filter(i=>!isOut(S.players[i]));
+  const i = alive[Math.floor(Math.random()*alive.length)];
+  S.turn.first = S.turn.active = i; S.turn.n = 1; S.turn.started = S.turn.turnStart = Date.now();
+  logEv('Inizia ' + S.players[i].name); renderBoard();
+  $(`.cell[data-i="${i}"]`).animate([{filter:'brightness(1)'},{filter:'brightness(1.6)'},{filter:'brightness(1)'}], {duration:500, iterations:3});
+  toast('Inizia ' + S.players[i].name, 3000);
+}
+function resetGame(){
+  S.players = freshPlayers(S.count, S.startLife, S.players);
+  S.turn = freshTurn(S.turn.on); S.log = []; undoStack.length = 0;
+  save(); renderBoard();
+}
+
+/* ================= Pannelli + tasto indietro ================= */
+const stack = [];
+function openOv(id){
+  $('#ov-' + id).classList.add('open');
+  stack.push(id);
+  history.pushState({ov:id}, '');
+}
+function closeTop(){
+  const id = stack.pop(); if(!id) return;
+  $('#ov-' + id).classList.remove('open');
+  if(id === 'player') renderBoard();
+}
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
+let lastBack = 0;
+history.replaceState({base:true}, '');
+history.pushState({guard:true}, '');
+window.addEventListener('popstate', ()=>{
+  if(stack.length){ closeTop(); return }
+  const now = Date.now();
+  if(now - lastBack < 2000){ history.back(); return }
+  lastBack = now;
+  toast('Premi di nuovo indietro per uscire');
+  history.pushState({guard:true}, '');
+});
+
+/* ================= Menu ================= */
+const tog = (act, on, v='') => `<button class="tog ${on ? 'on' : ''}" data-act="${act}" data-v="${v}" aria-pressed="${on}"></button>`;
+$('#menuBtn').addEventListener('click', ()=>{ renderMenu(); openOv('menu') });
+function renderMenu(){
+  $('#menuBody').innerHTML = `
+  <div class="sec"><h3>Partita</h3>
+    <button class="btn primary" data-act="new">Nuova partita</button>
+    <button class="btn" data-act="starts">Chi inizia?</button>
+    <button class="btn" data-act="dice">Dadi e moneta</button>
+    <button class="btn" data-act="log">Registro partita</button>
+  </div>
+  <div class="sec"><h3>Giocatori</h3><div class="chips">${[2,3,4,5,6].map(n=>`<button class="chip ${n===S.count?'sel':''}" data-act="count" data-v="${n}">${n}</button>`).join('')}</div></div>
+  <div class="sec"><h3>Formato</h3>
+    <div class="chips">${Object.entries(FORMATS).map(([k,f])=>`<button class="chip ${k===S.format?'sel':''}" data-act="fmt" data-v="${k}">${f.label}</button>`).join('')}</div>
+    <div class="row"><span class="lbl">Vita iniziale</span><div class="stepper"><button data-act="sl" data-v="-5">−</button><output>${S.startLife}</output><button data-act="sl" data-v="5">+</button></div></div>
+    <div class="row"><span class="lbl">Danni da comandante</span>${tog('cmd', S.cmdDamage)}</div>
+    <p class="note">Cambiare giocatori, formato o vita iniziale fa ripartire la partita. Nomi, colori e immagini restano.</p>
+  </div>
+  <div class="sec"><h3>Contatori nella scheda giocatore</h3>
+    ${COUNTERS.map(c=>`<div class="row"><span class="lbl">${c.label}</span>${tog('show', SET.show[c.k], c.k)}</div>`).join('')}
+    <p class="note">Sul tavolo compaiono solo i contatori diversi da zero.</p>
+  </div>
+  <div class="sec"><h3>Turni</h3>
+    <div class="row"><span class="lbl">Contatore turni e timer</span>${tog('turn', S.turn.on)}</div>
+    <p class="note">Tocca il turno al centro del tavolo per passare al giocatore successivo. Chi è di turno ha il bordo dorato.</p>
+  </div>
+  <div class="sec"><h3>Comandi</h3>
+    <div class="row"><span class="lbl">Tenendo premuto</span><div class="chips">
+      <button class="chip ${SET.holdMode==='repeat'?'sel':''}" data-act="hold" data-v="repeat">ripete ±1</button>
+      <button class="chip ${SET.holdMode==='ten'?'sel':''}" data-act="hold" data-v="ten">±10</button></div></div>
+    <div class="row"><span class="lbl">Vibrazione</span>${tog('vib', SET.vibrate)}</div>
+    <div class="row"><span class="lbl">Schermo sempre acceso</span>${tog('wake', SET.wake)}</div>
+  </div>
+  <div class="sec"><h3>Stampante</h3>
+    <div class="row"><span class="lbl" id="prStatus"></span></div>
+    <button class="btn" data-act="prconnect" id="prConnect">Collega stampante</button>
+    <button class="btn" data-act="prtest">Stampa di prova</button>
+    <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
+    <div class="row"><span class="lbl">Pacchetto Bluetooth</span>
+      <select class="txt" id="chunkSel" style="width:auto">${[[20,'20 byte (lenta, sicura)'],[100,'100 byte'],[180,'180 byte (veloce)']].map(([v,l])=>`<option value="${v}" ${v===SET.chunk?'selected':''}>${l}</option>`).join('')}</select></div>
+    <p class="note">Serve una stampante termica 58 mm con Bluetooth LE (BLE) e comandi ESC/POS. Se la stampa si interrompe a metà, abbassa il pacchetto.</p>
+  </div>
+  <div class="sec"><h3>Voce e miglioramento dell'app</h3>
+    <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
+    <p class="note">Il microfono si accende solo mentre tieni premuto. Salvo cosa è stato sentito, cosa ho capito, cosa hai scelto e le correzioni scritte: ${VLOG.length} voci sul telefono, finché non le esporti.</p>
+    <div style="height:10px"></div>
+    <button class="btn" data-act="suggest">Lascia un suggerimento</button>
+    <button class="btn" data-act="export">Esporta i dati raccolti</button>
+    <button class="btn danger" data-act="clearv">Cancella i dati raccolti</button>
+  </div>
+  <div class="sec">
+    <button class="btn" data-act="install">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+      Scarica l'app
+    </button>
+  </div>`;
+  updatePrinterUI();
+}
+$('#menuBody').addEventListener('click', async e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const a = b.dataset.act, v = b.dataset.v;
+  switch(a){
+    case 'new': resetGame(); history.back(); toast('Nuova partita'); return;
+    case 'starts': history.back(); setTimeout(whoStarts, 300); return;
+    case 'dice': openDice(); return;
+    case 'log': openLog(); return;
+    case 'suggest': openSuggest(); return;
+    case 'export': exportVlog(); return;
+    case 'install': install(); return;
+    case 'count': if(+v !== S.count){ S.count = +v; resetGame(); toast(v + ' giocatori, nuova partita') } break;
+    case 'fmt': if(v !== S.format){ S.format = v; S.startLife = FORMATS[v].life; S.cmdDamage = FORMATS[v].cmd; resetGame(); toast(FORMATS[v].label + ': vita ' + S.startLife) } break;
+    case 'sl': S.startLife = Math.max(1, S.startLife + +v); resetGame(); break;
+    case 'cmd': S.cmdDamage = !S.cmdDamage; save(); renderBoard(); break;
+    case 'show': SET.show[v] = !SET.show[v]; saveSet(); break;
+    case 'turn': S.turn.on = !S.turn.on; if(S.turn.on){ S.turn.started = S.turn.turnStart = Date.now() } save(); renderBoard(); break;
+    case 'hold': SET.holdMode = v; saveSet(); break;
+    case 'vib': SET.vibrate = !SET.vibrate; saveSet(); break;
+    case 'wake': SET.wake = !SET.wake; saveSet(); SET.wake ? keepAwake() : releaseWake(); break;
+    case 'br': SET.bright = Math.max(-2, Math.min(3, SET.bright + +v)); saveSet(); break;
+    case 'prconnect': await connectPrinter(); break;
+    case 'prtest': await testPrint(); break;
+    case 'vlog': SET.voiceLog = !SET.voiceLog; saveSet(); break;
+    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); toast('Dati cancellati') } break;
+  }
+  renderMenu();
+});
+$('#menuBody').addEventListener('change', e=>{ if(e.target.id === 'chunkSel'){ SET.chunk = +e.target.value; saveSet() } });
+
+/* ================= Scheda giocatore ================= */
+let curP = 0;
+function openPlayer(i){ curP = i; renderPlayer(); openOv('player') }
+function stepper(act, k, v, step=1){
+  return `<div class="stepper"><button data-act="${act}" data-k="${k}" data-v="${-step}">−</button><output>${v}</output><button data-act="${act}" data-k="${k}" data-v="${step}">+</button></div>`;
+}
+function renderPlayer(){
+  const p = S.players[curP];
+  $('#plTitle').textContent = p.name;
+  const ctrs = COUNTERS.filter(c => SET.show[c.k] && (c.k !== 'tax' || S.format !== 'standard'));
+  let h = `<div class="bigLife">${p.life}</div>
+    <div class="quick">${[-10,-5,-1,1,5,10].map(v=>`<button data-act="life" data-v="${v}">${v>0?'+':'−'}${Math.abs(v)}</button>`).join('')}</div>`;
+  if(ctrs.length) h += `<div class="sec"><h3>Contatori</h3>${ctrs.map(c=>`<div class="row"><span class="lbl">${c.label}</span>${stepper('ctr', c.k, p.counters[c.k] || 0, c.step)}</div>`).join('')}</div>`;
+  if(S.cmdDamage){
+    h += `<div class="sec"><h3>Danni da comandante ricevuti</h3>`;
+    S.players.forEach((o,k)=>{
+      if(k === curP) return;
+      h += `<div class="row"><span class="lbl">da ${esc(o.name)}</span>${stepper('cmd', k, p.cmd[k] || 0)}</div>`;
+      if(o.partner) h += `<div class="row"><span class="lbl">da ${esc(o.name)}, secondo comandante</span>${stepper('cmd', k + 'b', p.cmd[k + 'b'] || 0)}</div>`;
+    });
+    h += `<p class="note">Il danno da comandante toglie anche i punti vita. A 21 da un solo comandante il giocatore è fuori.</p></div>`;
+  }
+  h += `<div class="sec"><h3>Stato</h3>
+    ${FLAGS.map(f=>`<div class="row"><span class="lbl">${f.icon} ${f.label}</span>${tog('flag', !!p.flags[f.k], f.k)}</div>`).join('')}
+    <div class="row"><span class="lbl">Eliminato</span>${tog('out', p.out)}</div></div>
+  <div class="sec"><h3>Nome</h3><input class="txt" id="plName" value="${esc(p.name)}" maxlength="20"></div>
+  <div class="sec"><h3>Colore</h3><div class="swatches">${COLORS.map((c,k)=>`<button class="sw ${k===p.color?'sel':''}" data-act="color" data-v="${k}" style="background:${c.bg}"></button>`).join('')}</div></div>
+  <div class="sec"><h3>Comandante</h3>
+    ${p.art ? `<div class="artCur"><img src="${esc(p.art)}" alt=""><div><div>${esc(p.artName)}</div><button class="chip" data-act="artdel" style="margin-top:8px">Togli immagine</button></div></div>` : ''}
+    <div class="voiceBar"><input class="txt" id="plArtQ" placeholder="Nome del comandante" enterkeyhint="search"><button class="chip" data-act="artsearch">Cerca</button></div>
+    <div id="artRes"></div>
+    ${S.cmdDamage ? `<div class="row"><span class="lbl">Ho due comandanti (partner)</span>${tog('partner', p.partner)}</div>` : ''}
+  </div>
+  <div class="sec"><h3>Storico vita</h3>${p.hist.length ? `<div class="hist">${p.hist.slice().reverse().slice(0,40).map(x=>`<div><span class="${x.d>0?'pos':'neg'}">${x.d>0?'+':''}${x.d} → ${x.life}</span><time>${hhmm(x.t)}</time></div>`).join('')}</div>` : '<p class="note">Nessuna variazione finora.</p>'}</div>`;
+  $('#plBody').innerHTML = h;
+}
+$('#plBody').addEventListener('input', e=>{
+  if(e.target.id !== 'plName') return;
+  S.players[curP].name = e.target.value.trim() || 'Giocatore ' + (curP+1);
+  $('#plTitle').textContent = S.players[curP].name; save();
+});
+$('#plBody').addEventListener('keydown', e=>{ if(e.target.id === 'plArtQ' && e.key === 'Enter'){ e.target.blur(); searchArt() } });
+$('#plBody').addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const p = S.players[curP], a = b.dataset.act, v = b.dataset.v, k = b.dataset.k;
+  switch(a){
+    case 'life': snap(); p.life += +v; addHist(curP, +v); break;
+    case 'ctr': snap(); p.counters[k] = Math.max(0, (p.counters[k] || 0) + +v); break;
+    case 'cmd': { snap(); const before = p.cmd[k] || 0, after = Math.max(0, before + +v);
+      p.cmd[k] = after; if(after !== before){ p.life -= (after - before); addHist(curP, before - after) } break }
+    case 'flag': { snap(); const f = FLAGS.find(x => x.k === v), on = !p.flags[v];
+      if(f.unique && on) S.players.forEach(o => o.flags[v] = false);
+      p.flags[v] = on; if(on) logEv(p.name + ': ' + f.label); break }
+    case 'out': snap(); p.out = !p.out; if(p.out) logEv(p.name + ' eliminato'); break;
+    case 'color': p.color = +v; break;
+    case 'partner': p.partner = !p.partner; break;
+    case 'artdel': p.art = null; p.artName = ''; break;
+    case 'artsearch': searchArt(); return;
+    case 'artpick': p.art = b.dataset.u; p.artName = b.dataset.n; break;
+    default: return;
+  }
+  buzz(); save(); renderPlayer(); S.players.forEach((_,i)=>updateCell(i));
+});
+async function searchArt(){
+  const q = ($('#plArtQ')?.value || '').trim(); if(!q) return;
+  const box = $('#artRes'); box.innerHTML = '<p class="note">Ricerca su Scryfall…</p>';
+  try{
+    let data = await scry(q + ' is:commander');
+    if(!data.length) data = await scry(q + ' -t:token');
+    const arts = data.map(c => { const f = c.image_uris ? c : (c.card_faces || [])[0]; return f && f.image_uris ? {u:f.image_uris.art_crop, n:c.name} : null }).filter(Boolean).slice(0, 12);
+    box.innerHTML = arts.length ? `<div class="artGrid">${arts.map(x=>`<button data-act="artpick" data-u="${esc(x.u)}" data-n="${esc(x.n)}"><img src="${esc(x.u)}" alt="${esc(x.n)}" loading="lazy"></button>`).join('')}</div>`
+                                : '<p class="note">Nessuna carta trovata con quel nome.</p>';
+  }catch(err){ box.innerHTML = '<p class="note">Scryfall non risponde. Controlla la connessione.</p>' }
+}
+
+/* ================= Dadi e moneta ================= */
+let diceN = 1;
+function openDice(){ $('#dnOut').textContent = diceN; $('#diceRes').innerHTML = ''; $('#diceSum').textContent = 'Scegli cosa lanciare'; openOv('dice') }
+$('#dnMinus').addEventListener('click', ()=>{ diceN = Math.max(1, diceN-1); $('#dnOut').textContent = diceN });
+$('#dnPlus').addEventListener('click', ()=>{ diceN = Math.min(6, diceN+1); $('#dnOut').textContent = diceN });
+$('#diceBtns').addEventListener('click', e=>{
+  const f = e.target.dataset.f; if(!f) return;
+  let res, txt;
+  if(f === 'coin'){ res = Array.from({length:diceN}, ()=>Math.random() < .5 ? 'Testa' : 'Croce'); txt = res.join(', ') }
+  else { res = Array.from({length:diceN}, ()=>1 + Math.floor(Math.random() * +f)); txt = res.join(' + ') + (diceN > 1 ? ' = ' + res.reduce((a,b)=>a+b, 0) : '') }
+  $('#diceRes').innerHTML = res.map(r=>`<div class="die" style="${f==='coin'?'font-size:44px':''}">${r}</div>`).join('');
+  $('#diceSum').textContent = diceN > 1 && f !== 'coin' ? 'Totale ' + res.reduce((a,b)=>a+b, 0) : '';
+  document.querySelectorAll('#diceRes .die').forEach((d,i)=>d.animate([{transform:'scale(.5) rotate(-25deg)',opacity:0},{transform:'none',opacity:1}], {duration:260, delay:i*60, fill:'backwards'}));
+  logEv((f === 'coin' ? 'Moneta: ' : diceN + 'd' + f + ': ') + txt); buzz(20);
+});
+
+/* ================= Registro ================= */
+function openLog(){
+  const ev = S.log.map(x=>({t:x.t, txt:x.txt, cls:''}));
+  S.players.forEach(p => p.hist.forEach(h => ev.push({t:h.t, txt:`${p.name} ${h.d>0?'+':''}${h.d} → ${h.life}`, cls:h.d>0?'pos':'neg'})));
+  ev.sort((a,b)=>b.t - a.t);
+  $('#logBody').innerHTML = ev.length
+    ? `<div class="hist">${ev.slice(0,300).map(x=>`<div><span class="${x.cls}">${esc(x.txt)}</span><time>${hhmm(x.t)}</time></div>`).join('')}</div>`
+    : '<p class="empty">Qui compaiono vita, turni, dadi, stati e pedine stampate, man mano che la partita va avanti.</p>';
+  openOv('log');
+}
+
+/* ================= Riconoscimento della richiesta ================= */
+const NUMW = {zero:0,un:1,uno:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7,otto:8,nove:9,dieci:10,undici:11,dodici:12,venti:20};
+// italiano -> tipo inglese su Scryfall
+const DICT = [
+  ['tesor[oi]','Treasure'],['cib[oi]','Food'],['indizi[oi]?','Clue'],['sangue','Blood'],['mapp[ae]','Map'],['oro','Gold'],
+  ['goblin','Goblin'],['zombi(e)?','Zombie'],['soldat[oi]','Soldier'],['spirit[oi]','Spirit'],['saproling(hi|i)?','Saproling'],
+  ['besti[ae]','Beast'],['drag(o|hi)','Dragon'],['angel[oi]','Angel'],['demon[ei]','Demon'],['vampir[oi]','Vampire'],
+  ['cavalier[ei]','Knight'],['gatt[oi]','Cat'],['lup[oi]','Wolf'],['ors[oi]','Bear'],['insett[oi]','Insect'],['piant[ae]','Plant'],
+  ['elemental[ei]','Elemental'],['servitor[ei]|servo','Servo'],['totter[oi]|thopter','Thopter'],['costrutt[oi]','Construct'],
+  ['golem','Golem'],['uccell[oi]','Bird'],['serpent[ei]','Snake'],['ratt[oi]','Rat'],['pirat[ai]','Pirate'],['dinosaur[oi]','Dinosaur'],
+  ['kraken','Kraken'],['uman[oi]','Human'],['guerrier[oi]','Warrior'],['chieric[oi]|chierici','Cleric'],['mag(o|hi)','Wizard'],
+  ['pesc[ei]','Fish'],['ran[ae]','Frog'],['lucertol[ae]','Lizard'],['scheletr[oi]','Skeleton'],['fung(o|hi)','Fungus'],
+  ['germ[ei]','Germ'],['elf[oi]','Elf'],['myr','Myr'],['progenie','Spawn'],['rampoll[oi]|scion','Scion'],['eldrazi','Eldrazi'],
+  ['squal[oi]','Shark'],['scimmi[ae]','Ape'],['orch(i)?|orco','Orc'],['nan[oi]','Dwarf'],['monac[oi]|monaci','Monk'],['idr[ae]','Hydra'],
+  ['wurm','Wurm'],['fat[ae]|faerie','Faerie'],['illusion[ei]','Illusion'],['ragn[oi]','Spider'],['pipistrell[oi]','Bat'],
+  ['conigli[oi]?','Rabbit'],['scoiattol[oi]','Squirrel'],['cittadin[oi]','Citizen'],['ninja','Ninja'],['samurai','Samurai'],
+  ['avatar','Avatar'],['ondin[ae]','Merfolk'],['tritoni?|merfolk','Merfolk'],['cerv[oi]','Elk'],['ipp?ogrif[oi]','Hippogriff'],
+];
+const COLW = [['bianc[oaie]|bianche','W'],['blu','U'],['ner[oaie]','B'],['ross[oaie]','R'],['verd[ei]','G'],['incolor[ei]','C']];
+const KW = [['volant[ei]|volare','flying'],['travolgere','trample'],['cautela','vigilance'],['legame vitale','lifelink'],
+            ['tocco letale','deathtouch'],['rapidita','haste'],['raggiungere','reach'],['minacci[ao]','menace']];
+const FILLER = /\b(stampa(mi|re)?|mi|serve(no)?|vorrei|dammi|fai|fammi|crea|una?|uno|le|la|il|lo|i|gli|di|del|della|dei|delle|da|con|e|pedin[ae]|token|segnalin[oi]|copi[ae]|creatura|creature|artefatt[oi]|per|favore|grazie)\b/g;
+
+function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9/ ]/g,' ').replace(/\s+/g,' ').trim() }
+
+function parseRequest(raw){
+  let s = ' ' + norm(raw) + ' ';
+  s = s.replace(/\b([a-z]+)\b/g, w => (w in NUMW) ? String(NUMW[w]) : w);
+  const out = {qty:1, type:null, colors:[], pow:null, tou:null, kw:[], kwIt:[], typeIt:'', artifact:/artefatt/.test(s), free:''};
+
+  // quantità: numero seguito da "pedine/copie/token"
+  let m = s.match(/\b(\d+)\s+(pedin[ae]|copi[ae]|token|segnalin[oi])\b/);
+  if(m){ out.qty = +m[1]; s = s.replace(m[0], ' ') }
+  // forza/costituzione esplicita: "1/1", "1 su 1"
+  m = s.match(/\b(\d+)\s*(?:\/|su)\s*(\d+)\b/);
+  if(m){ out.pow = +m[1]; out.tou = +m[2]; s = s.replace(m[0], ' ') }
+  // numeri sciolti: 3 = quantità + F/C, 2 = F/C, 1 = quantità
+  const nums = (s.match(/\b\d+\b/g) || []).map(Number);
+  if(out.pow === null && nums.length >= 3){ out.qty = nums[0]; out.pow = nums[nums.length-2]; out.tou = nums[nums.length-1] }
+  else if(out.pow === null && nums.length === 2){ out.pow = nums[0]; out.tou = nums[1] }
+  else if(nums.length === 1){ out.qty = nums[0] }
+  s = s.replace(/\b\d+\b/g, ' ');
+
+  for(const [re, code] of COLW){ const r = new RegExp('\\b(' + re + ')\\b'); if(r.test(s)){ out.colors.push(code); s = s.replace(r,' ') } }
+  for(const [re, k] of KW){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.kw.push(k); out.kwIt.push(mm[1]); s = s.replace(r,' ') } }
+  for(const [re, en] of DICT){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.type = en; out.typeIt = mm[1]; s = s.replace(r,' '); break } }
+  out.free = s.replace(FILLER,' ').replace(/\s+/g,' ').trim();
+  out.qty = Math.max(1, Math.min(10, out.qty));
+  return out;
+}
+function describe(r){
+  const cn = {W:'bianco',U:'blu',B:'nero',R:'rosso',G:'verde',C:'incolore'};
+  let s = r.type ? r.typeIt.charAt(0).toUpperCase() + r.typeIt.slice(1) : (r.free ? '«' + r.free + '»' : 'pedina');
+  if(r.pow !== null) s += ' ' + r.pow + '/' + r.tou;
+  if(r.colors.length) s += ' ' + r.colors.map(c=>cn[c]).join(' e ');
+  if(r.kwIt.length) s += ', ' + r.kwIt.join(', ');
+  return s + (r.qty > 1 ? ', ' + r.qty + ' copie' : '');
+}
+function buildQueries(r){
+  const base = ['t:token'];
+  if(r.type) base.push('t:' + r.type.toLowerCase());
+  else if(r.free) base.push(r.free.includes(' ') ? `name:"${r.free}"` : `(t:${r.free} or name:${r.free})`);
+  if(r.artifact) base.push('t:artifact');
+  const col = r.colors.length ? ['c=' + r.colors.join('')] : [];
+  const pt = r.pow !== null ? ['pow=' + r.pow, 'tou=' + r.tou] : [];
+  const kw = r.kw.map(k => 'keyword:' + k);
+  const tries = [
+    {q:[...base, ...pt, ...col, ...kw], note:''},
+    {q:[...base, ...pt, ...kw], note:'senza filtro colore'},
+    {q:[...base, ...pt], note:'senza colore e abilità'},
+    {q:[...base], note:'mostro tutte le versioni del tipo'},
+  ];
+  const seen = new Set();
+  return tries.filter(t => { const k = t.q.join(' '); if(seen.has(k)) return false; seen.add(k); return true });
+}
+async function scry(q){
+  const url = 'https://api.scryfall.com/cards/search?include_extras=true&unique=art&order=released&dir=desc&q=' + encodeURIComponent(q);
+  const r = await fetch(url, {headers:{Accept:'application/json'}});
+  if(r.status === 404) return [];
+  if(!r.ok) throw new Error('Scryfall ' + r.status);
+  return (await r.json()).data || [];
+}
+function faceOf(card, type){
+  if(card.image_uris) return {name:card.name, type_line:card.type_line, img:card.image_uris};
+  const fs = card.card_faces || [];
+  const f = fs.find(f => type && f.type_line && f.type_line.toLowerCase().includes(type.toLowerCase())) || fs[0];
+  return f && f.image_uris ? {name:f.name, type_line:f.type_line, img:f.image_uris} : null;
+}
+
+/* ================= Microfono: solo tenendo premuto ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function showPTT(t){ const b = $('#ptt'); b.textContent = t; b.classList.add('show') }
+function hidePTT(){ $('#ptt').classList.remove('show') }
+function startCapture(btn){
+  if(!SR){ toast('Riconoscimento vocale non disponibile: scrivi la richiesta'); return null }
+  const finals = []; let interim = '', ended = false, cb = null, cancelled = false;
+  const rec = new SR();
+  rec.lang = 'it-IT'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;
+  btn.classList.add('listening'); showPTT('Ti ascolto… rilascia per inviare'); buzz(15);
+  rec.onresult = e=>{
+    interim = '';
+    for(let i=e.resultIndex; i<e.results.length; i++){
+      const r = e.results[i];
+      if(r.isFinal) finals.push(Array.from(r).map(a=>a.transcript.trim()));
+      else interim += r[0].transcript;
+    }
+    showPTT([...finals.map(f=>f[0]), interim].join(' ').trim() || 'Ti ascolto…');
+  };
+  rec.onerror = e=>{ if(e.error === 'not-allowed') toast('Consenti il microfono per dettare le richieste') };
+  rec.onend = ()=>{ ended = true; btn.classList.remove('listening'); if(cb) deliver() };
+  function deliver(){
+    hidePTT(); if(cancelled || !cb) return;
+    const c = cb; cb = null;
+    let alts = finals.length === 1 ? finals[0] : finals.length ? [finals.map(f=>f[0]).join(' ')] : (interim.trim() ? [interim.trim()] : []);
+    if(!alts.length){ toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
+    c(alts);
+  }
+  try{ rec.start() }catch(e){}
+  return {
+    finish(f){ cb = f; if(ended) deliver(); else { try{ rec.stop() }catch(e){ deliver() } } },
+    cancel(){ cancelled = true; try{ rec.abort() }catch(e){} hidePTT(); btn.classList.remove('listening') }
+  };
+}
+// tocco breve = onTap, pressione lunga = detta finché tieni premuto
+function attachPTT(btn, {onTap, onText}){
+  let down = false, held = false, timer = null, sess = null;
+  btn.addEventListener('pointerdown', e=>{
+    down = true; held = false;
+    try{ btn.setPointerCapture(e.pointerId) }catch(_){}
+    timer = setTimeout(()=>{ held = true; sess = startCapture(btn) }, 230);
+  });
+  btn.addEventListener('pointerup', ()=>{
+    if(!down) return; down = false; clearTimeout(timer);
+    if(held){ held = false; sess && sess.finish(onText) } else onTap && onTap();
+  });
+  btn.addEventListener('pointercancel', ()=>{
+    if(!down) return; down = false; clearTimeout(timer);
+    if(held){ held = false; sess && sess.cancel() }
+  });
+  btn.addEventListener('contextmenu', e=>e.preventDefault());
+}
+
+/* ================= Pedine: interfaccia ================= */
+let lastReq = null, results = [], curEntry = null, lastVoice = null;
+function openTokens(){
+  $('#heard').textContent = ''; $('#understood').textContent = ''; $('#tkInput').value = '';
+  renderRecent(); openOv('tokens'); updatePrinterUI();
+}
+attachPTT($('#tokenBtn'), {
+  onTap: openTokens,
+  onText: alts => { if(stack[stack.length-1] !== 'tokens') openTokens(); $('#tkInput').value = alts[0]; runRequest(alts, 'voce') }
+});
+attachPTT($('#micBtn'), {
+  onTap: ()=>toast('Tieni premuto il microfono mentre parli'),
+  onText: alts => { $('#tkInput').value = alts[0]; runRequest(alts, 'voce') }
+});
+$('#tkPrinter').addEventListener('click', ()=> printer.ch ? toast('Stampante collegata') : connectPrinter());
+$('#tkInput').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.target.blur(); runRequest([e.target.value], 'testo') } });
+
+function renderRecent(){
+  $('#tkResults').innerHTML = RECENT.length
+    ? `<div class="sec"><h3>Stampate di recente</h3><div class="recent">${RECENT.map((t,i)=>`<button data-r="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`
+    : `<p class="empty">Tieni premuto il microfono (o il tasto dorato sul tavolo) e chiedi una pedina, ad esempio «due tesori» o «tre goblin uno uno rossi». Puoi anche scriverla qui sopra.</p>`;
+}
+$('#tkResults').addEventListener('click', e=>{
+  const r = e.target.closest('[data-r]'); if(r){ curEntry = null; openDetail(RECENT[+r.dataset.r], 1); return }
+  const g = e.target.closest('[data-g]'); if(g) openDetail(results[+g.dataset.g], lastReq?.qty || 1);
+});
+
+function logRequest(source, alts, req, query, found, note){
+  if(!SET.voiceLog) return null;
+  const now = Date.now();
+  if(source === 'testo' && lastVoice && now - lastVoice.t < 90000 && !lastVoice.printed) lastVoice.correctedTo = alts[0];
+  const en = {t:now, kind:'richiesta', source, heard:alts, understood:req && (req.type || req.free) ? describe(req) : null,
+              parsed:req ? {type:req.type, word:req.typeIt, qty:req.qty, pow:req.pow, tou:req.tou, colors:req.colors, kw:req.kw, free:req.free} : null,
+              query, found, relaxed:note || null};
+  VLOG.push(en); if(source === 'voce') lastVoice = en; saveVlog();
+  return en;
+}
+
+async function runRequest(alternatives, source){
+  alternatives = alternatives.filter(a => a && a.trim());
+  if(!alternatives.length) return;
+  let req = null;
+  for(const a of alternatives){ const p = parseRequest(a); if(p.type){ req = p; $('#heard').textContent = '«' + a + '»'; break } }
+  if(!req){ req = parseRequest(alternatives[0]); $('#heard').textContent = '«' + alternatives[0] + '»' }
+  if(!req.type && !req.free){
+    $('#understood').textContent = 'Non ho capito quale pedina. Riprova dicendo il tipo, es. «goblin».';
+    curEntry = logRequest(source, alternatives, req, null, 0); return;
+  }
+  lastReq = req;
+  $('#understood').textContent = 'Cerco: ' + describe(req);
+  $('#tkResults').innerHTML = '<p class="empty">Ricerca su Scryfall…</p>';
+  try{
+    let data = [], note = '', used = '';
+    for(const t of buildQueries(req)){
+      used = t.q.join(' ');
+      data = await scry(used);
+      if(data.length){ note = t.note; break }
+      await new Promise(r=>setTimeout(r,100));
+    }
+    results = data.map(c => { const f = faceOf(c, req.type); return f && {
+      id:c.id, name:f.name, type_line:f.type_line, set:c.set_name,
+      small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large } }).filter(Boolean).slice(0, 60);
+    curEntry = logRequest(source, alternatives, req, used, results.length, note);
+    if(!results.length){ $('#tkResults').innerHTML = '<p class="empty">Nessuna pedina ufficiale trovata. Prova a dire solo il tipo, ad esempio «soldato».</p>'; return }
+    if(note) $('#understood').textContent += ' (' + note + ')';
+    if(results.length === 1){ renderRecent(); openDetail(results[0], req.qty); return }
+    $('#tkResults').innerHTML = `<div class="sec"><h3>${results.length} versioni ufficiali: scegli quella da stampare</h3><div class="grid">${
+      results.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
+  }catch(err){
+    $('#tkResults').innerHTML = '<p class="empty">Scryfall non risponde. Controlla la connessione e riprova.</p>';
+  }
+}
+
+/* ================= Dettaglio e anteprima di stampa ================= */
+let cur = null, qty = 1, curBits = null;
+async function openDetail(t, q){
+  cur = t; qty = q; curBits = null;
+  if(curEntry){ curEntry.chosen = {id:t.id, name:t.name, set:t.set}; saveVlog() }
+  $('#dtTitle').textContent = t.name;
+  $('#dtType').textContent = t.type_line + (t.set ? ' — ' + t.set : '');
+  $('#dtImg').src = t.large || t.print;
+  $('#qOut').textContent = qty;
+  const cv = $('#dtPrev'); cv.width = 1; cv.height = 1;
+  openOv('detail');
+  try{ curBits = await makeBits(t.print); drawBits(cv, curBits) }catch(e){ toast('Impossibile preparare l\'immagine') }
+}
+$('#qMinus').addEventListener('click', ()=>{ qty = Math.max(1, qty-1); $('#qOut').textContent = qty });
+$('#qPlus').addEventListener('click', ()=>{ qty = Math.min(10, qty+1); $('#qOut').textContent = qty });
+$('#dtPrint').addEventListener('click', async ()=>{
+  if(!curBits) return;
+  if(!printer.ch){ await connectPrinter(); if(!printer.ch) return }
+  const btn = $('#dtPrint'); btn.disabled = true;
+  try{
+    for(let k=1; k<=qty; k++){
+      btn.textContent = qty > 1 ? `Stampa ${k} di ${qty}…` : 'Stampa in corso…';
+      await printer.write(escposRaster(curBits));
+    }
+    RECENT = [cur, ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
+    if(curEntry){ curEntry.printed = qty; saveVlog() }
+    logEv('Stampata pedina ' + cur.name + (qty > 1 ? ' ×' + qty : ''));
+    toast(qty > 1 ? qty + ' pedine stampate' : 'Pedina stampata');
+  }catch(e){ toast('Stampa interrotta: ' + (e.message || e), 3500) }
+  btn.disabled = false; btn.textContent = 'Stampa';
+});
+
+/* ================= Suggerimenti ed esportazione ================= */
+function openSuggest(){ $('#sugTxt').value = ''; openOv('suggest') }
+attachPTT($('#sugMic'), {
+  onTap: ()=>toast('Tieni premuto il microfono mentre parli'),
+  onText: alts => { const t = $('#sugTxt'); t.value = (t.value ? t.value.trim() + ' ' : '') + alts[0] }
+});
+$('#sugSave').addEventListener('click', ()=>{
+  const txt = $('#sugTxt').value.trim();
+  if(!txt){ toast('Scrivi o detta il suggerimento'); return }
+  VLOG.push({t:Date.now(), kind:'suggerimento', text:txt}); saveVlog();
+  toast('Suggerimento salvato'); history.back();
+});
+async function exportVlog(){
+  if(!VLOG.length){ toast('Non ci sono ancora dati da esportare'); return }
+  const name = 'segnapunti-mtg-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
+  const blob = new Blob([JSON.stringify({app:'Segnapunti MTG', version:VERSION, exported:new Date().toISOString(), entries:VLOG}, null, 1)], {type:'application/json'});
+  const file = new File([blob], name, {type:'application/json'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], title:'Dati Segnapunti MTG'}); return }catch(e){ if(e.name === 'AbortError') return }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+
+/* ================= Installazione ================= */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e });
+async function install(){
+  if(matchMedia('(display-mode: standalone)').matches){ toast('L\'app è già installata'); return }
+  if(installEvt){ installEvt.prompt(); await installEvt.userChoice; installEvt = null; return }
+  toast('Apri il menu di Chrome (⋮) e scegli «Installa app»', 3500);
+}
+
+/* ================= Stampa termica ================= */
+const PW = 384; // 48 mm a 203 dpi
+function loadImg(src){ return new Promise((ok, ko)=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = ()=>ok(i); i.onerror = ko; i.src = src }) }
+async function makeBits(src){
+  const img = await loadImg(src);
+  const w = PW, h = Math.round(PW * img.naturalHeight / img.naturalWidth);
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,w,h); cx.drawImage(img, 0, 0, w, h);
+  const d = cx.getImageData(0,0,w,h).data;
+  const g = new Float32Array(w*h), gamma = Math.pow(0.82, SET.bright);
+  for(let i=0;i<w*h;i++){
+    let v = (0.299*d[i*4] + 0.587*d[i*4+1] + 0.114*d[i*4+2]) / 255;
+    v = Math.pow(v, gamma); v = (v - .5) * 1.12 + .5;
+    g[i] = Math.max(0, Math.min(1, v)) * 255;
+  }
+  // dithering di Atkinson: più pulito sulle termiche
+  const bits = new Uint8Array(w*h);
+  const add = (x,y,e)=>{ if(x>=0 && x<w && y<h) g[y*w+x] += e };
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const i = y*w+x, o = g[i], n = o < 128 ? 0 : 255, e = (o - n) / 8;
+    bits[i] = n === 0 ? 1 : 0;
+    add(x+1,y,e); add(x+2,y,e); add(x-1,y+1,e); add(x,y+1,e); add(x+1,y+1,e); add(x,y+2,e);
+  }
+  return {w, h, bits};
+}
+function drawBits(cv, b){
+  cv.width = b.w; cv.height = b.h;
+  const cx = cv.getContext('2d'), id = cx.createImageData(b.w, b.h);
+  for(let i=0;i<b.bits.length;i++){ const v = b.bits[i] ? 20 : 255; id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v; id.data[i*4+3]=255 }
+  cx.putImageData(id, 0, 0);
+}
+function escposRaster(b){
+  const wb = b.w / 8, out = [0x1B, 0x40];
+  for(let y0=0; y0<b.h; y0+=128){
+    const hh = Math.min(128, b.h - y0);
+    out.push(0x1D, 0x76, 0x30, 0x00, wb & 255, wb >> 8, hh & 255, hh >> 8);
+    for(let y=y0; y<y0+hh; y++) for(let xb=0; xb<wb; xb++){
+      let byte = 0;
+      for(let k=0;k<8;k++) if(b.bits[y*b.w + xb*8 + k]) byte |= 0x80 >> k;
+      out.push(byte);
+    }
+  }
+  out.push(0x1B, 0x64, 0x04); // avanza 4 righe per lo strappo
+  return new Uint8Array(out);
+}
+
+/* ================= Stampante Bluetooth LE ================= */
+const PR_SERVICES = [
+  '000018f0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb',
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2','49535343-fe7d-4ae5-8fa9-9fafd205e455','0000fee7-0000-1000-8000-00805f9b34fb',
+];
+const printer = {
+  dev:null, ch:null,
+  async write(bytes){
+    const size = SET.chunk;
+    for(let i=0; i<bytes.length; i+=size){
+      const part = bytes.slice(i, i+size);
+      if(this.ch.properties.writeWithoutResponse){ await this.ch.writeValueWithoutResponse(part); await new Promise(r=>setTimeout(r, 6)) }
+      else await this.ch.writeValue(part);
+    }
+  }
+};
+async function connectPrinter(){
+  if(!navigator.bluetooth){ toast('Bluetooth non disponibile: usa Chrome su Android', 3000); return }
+  try{
+    const dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true, optionalServices:PR_SERVICES});
+    $('#prStatus').textContent = 'Collegamento…';
+    const server = await dev.gatt.connect();
+    let found = null;
+    for(const s of await server.getPrimaryServices()){
+      for(const c of await s.getCharacteristics()){
+        if(c.properties.writeWithoutResponse || c.properties.write){ found = c; break }
+      }
+      if(found) break;
+    }
+    if(!found) throw new Error('nessun canale di stampa trovato');
+    printer.dev = dev; printer.ch = found;
+    dev.addEventListener('gattserverdisconnected', ()=>{ printer.ch = null; updatePrinterUI(); toast('Stampante scollegata') });
+    toast('Collegata a ' + (dev.name || 'stampante'));
+  }catch(e){
+    if(e.name !== 'NotFoundError') toast('Collegamento non riuscito: ' + e.message, 3500);
+  }
+  updatePrinterUI();
+}
+function updatePrinterUI(){
+  const on = !!printer.ch, name = on ? (printer.dev.name || 'stampante') : '';
+  $('#prDot').classList.toggle('on', on);
+  $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega stampante';
+  const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name : 'Non collegata';
+  const cb = $('#prConnect'); if(cb) cb.textContent = on ? 'Cambia stampante' : 'Collega stampante';
+}
+async function testPrint(){
+  if(!printer.ch){ await connectPrinter(); if(!printer.ch) return }
+  // scala di grigi + scacchiera per tarare luminosità e velocità
+  const w = PW, h = 160, bits = new Uint8Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    if(y < 80){ const lvl = Math.floor(x / (w/6)) / 5; bits[y*w+x] = ((x*7 + y*13) % 100) / 100 < lvl ? 1 : 0 }
+    else bits[y*w+x] = ((x >> 4) + (y >> 4)) % 2;
+  }
+  try{ await printer.write(escposRaster({w,h,bits})); toast('Prova inviata') }catch(e){ toast('Errore: ' + e.message, 3500) }
+}
+
+/* ================= Schermo sempre acceso ================= */
+let lock = null;
+async function keepAwake(){ try{ if(SET.wake && 'wakeLock' in navigator && document.visibilityState === 'visible') lock = await navigator.wakeLock.request('screen') }catch(e){} }
+function releaseWake(){ try{ lock && lock.release() }catch(e){} lock = null }
+document.addEventListener('visibilitychange', keepAwake);
+keepAwake();
+
+/* ================= Avvio ================= */
+renderBoard();
+updatePrinterUI();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
