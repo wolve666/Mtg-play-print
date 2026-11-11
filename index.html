@@ -38,12 +38,12 @@ input,select{font:inherit}
 .r90 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(90deg)}
 .r270 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
 .r180 .frame{transform:translate(-50%,-50%) rotate(180deg)}
-.half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:12cqmin;font-weight:600;opacity:.35;touch-action:none}
+.half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:16cqmin;font-weight:600;color:color-mix(in srgb,var(--pt) 45%,transparent);touch-action:none;transition:background .3s}
 .half.minus{left:0;justify-content:flex-start;padding-left:6%}
 .half.plus{right:0;justify-content:flex-end;padding-right:6%}
-.half:active{background:rgba(255,255,255,.06)}
-.life{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-family:var(--num);font-weight:900;font-size:44cqmin;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-.delta{position:absolute;left:50%;top:14%;transform:translateX(-50%);font-family:var(--num);font-weight:700;font-size:11cqmin;opacity:0;transition:opacity .25s;pointer-events:none}
+.half.pressed{background:radial-gradient(ellipse at center,rgba(255,255,255,.34),rgba(255,255,255,.12) 55%,rgba(255,255,255,.04));color:var(--pt);transition:none}
+.life{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-family:var(--num);font-weight:900;font-size:64cqmin;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.delta{position:absolute;right:7%;top:6%;font-family:var(--num);font-weight:800;font-size:13cqmin;opacity:0;transition:opacity .25s;pointer-events:none}
 .delta.show{opacity:.9}
 .pname{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);padding:.35em .9em;border-radius:99px;background:rgba(0,0,0,.18);font-size:max(13px,6.5cqmin);font-weight:600;white-space:nowrap;max-width:80%;overflow:hidden;text-overflow:ellipsis}
 .badges{position:absolute;top:8%;left:50%;transform:translateX(-50%);display:flex;gap:.6em;font-size:max(12px,5.5cqmin);font-weight:700;pointer-events:none}
@@ -58,8 +58,6 @@ input,select{font:inherit}
 #tokenBtn svg{width:40px;height:40px}
 .smallBtn{width:44px;height:44px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 4px var(--bg);display:grid;place-items:center}
 .smallBtn svg{width:22px;height:22px}
-#prDot{position:absolute;top:4px;right:4px;width:14px;height:14px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 3px var(--bg)}
-#prDot.on{background:var(--ok)}
 
 /* ---------- Pannelli sovrapposti ---------- */
 .ov{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
@@ -126,8 +124,8 @@ select.txt{appearance:auto}
 #turnPill{padding:9px 14px;border-radius:99px;background:var(--surface);box-shadow:0 0 0 4px var(--bg);font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
 #turnPill b{font-weight:700;margin-right:6px}
 #tokenBtn.listening{animation:pulse 1s infinite}
-#ptt{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,-160%);z-index:60;background:var(--gold);color:var(--gold-ink);padding:12px 18px;border-radius:14px;font-weight:600;max-width:90vw;text-align:center;transition:transform .2s;pointer-events:none}
-#ptt.show{transform:translate(-50%,0)}
+#ptt{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,calc(-100% - 60px));visibility:hidden;z-index:60;background:var(--gold);color:var(--gold-ink);padding:12px 18px;border-radius:14px;font-weight:600;max-width:90vw;text-align:center;transition:transform .2s;pointer-events:none}
+#ptt.show{transform:translate(-50%,0);visibility:visible}
 .tog{position:relative;width:52px;height:30px;border-radius:99px;background:var(--surface2);flex:none;transition:background .2s}
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--text);transition:transform .2s}
 .tog.on{background:var(--ok)}
@@ -154,7 +152,10 @@ input.txt{user-select:text;-webkit-user-select:text}
 #sugMic.listening{animation:pulse 1s infinite}
 
 /* ---------- v0.3 ---------- */
-#tokenBtn{background:radial-gradient(circle at 50% 40%,#3A3530,#1E1C1A 70%);box-shadow:0 0 0 3px var(--gold),0 0 0 7px var(--bg),0 6px 18px rgba(0,0,0,.45)}
+#tokenBtn{--ring:#5C616B;background:radial-gradient(circle at 50% 40%,#3A3530,#1E1C1A 70%);box-shadow:0 0 0 3px var(--gold),0 0 0 6px var(--bg),0 0 0 10px var(--ring),0 0 0 13px var(--bg),0 6px 18px rgba(0,0,0,.45);transition:transform .12s,box-shadow .4s}
+#tokenBtn.pr-on{--ring:#3D8BFF;animation:ringGlow 2.4s ease-in-out infinite}
+@keyframes ringGlow{50%{box-shadow:0 0 0 3px var(--gold),0 0 0 6px var(--bg),0 0 0 10px var(--ring),0 0 0 13px var(--bg),0 0 22px 10px rgba(61,139,255,.45)}}
+#tokenBtn.listening.pr-on{animation:pulse 1s infinite}
 #tokenBtn img{width:50px;height:50px;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 0 6px rgba(255,80,20,.45))}
 .pname{touch-action:none}
 .cell.dropT{box-shadow:inset 0 0 0 5px #fff;filter:brightness(1.15)}
@@ -194,6 +195,44 @@ input.txt{user-select:text;-webkit-user-select:text}
 #tmConnect{position:relative;width:auto;padding:14px 22px}
 #tmConnect[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){.halo,.spark{animation:none}.spark{display:none}}
+
+/* ---------- v0.4 ---------- */
+.cqPop{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;width:min(94%,340px);padding:10px 12px 12px;border-radius:16px;background:rgba(14,13,19,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:popIn .2s ease-out;font-size:14px;touch-action:none}
+@keyframes popIn{from{transform:translate(-50%,-50%) scale(.85);opacity:0}}
+.cqT{text-align:center;margin-bottom:4px;font-weight:600;line-height:1.9}
+.cqRow{display:flex;align-items:center;justify-content:center;gap:10px}
+.cqRow button,.cqQuick button{min-width:44px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);font-weight:700;font-size:18px;color:#fff}
+.cqRow output{font-family:var(--num);font-size:40px;font-weight:900;min-width:56px;text-align:center}
+.cqL{color:#bbb;font-size:13px}
+.cqQuick{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.cqQuick .ok{background:var(--gold);color:var(--gold-ink);padding:0 14px}
+
+.wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;transition:opacity .35s;padding-top:env(safe-area-inset-top)}
+.wz.open,.dlg.open{opacity:1;pointer-events:auto}
+.wzBg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 30% 20%,#3a2c52,#14121a 70%)}
+.wzBg i{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1s;animation:kb 26s ease-in-out infinite alternate}
+.wzBg i.in{opacity:1}
+.wzBg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,12,20,.5),rgba(14,12,20,.9))}
+@keyframes kb{to{transform:scale(1.12) translate(-2%,-2%)}}
+.wzScroll{position:relative;flex:1;overflow:hidden}
+.wzStep{height:100%;display:flex;flex-direction:column;justify-content:center;padding:24px 22px calc(28px + env(safe-area-inset-bottom));gap:22px}
+.wz h1,.dlg h1{font-family:var(--num);font-weight:900;font-size:clamp(46px,14vw,78px);line-height:.92;margin:0;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.5)}
+.wzBrand{font-weight:600;color:var(--gold);display:flex;align-items:baseline;gap:8px}
+.wzBrand .ver{color:rgba(255,255,255,.6)}
+.wzOpts{display:flex;flex-direction:column;gap:10px}
+.wzOpt{padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);text-align:left;border:1px solid rgba(255,255,255,.15);transition:background .15s,transform .15s}
+.wzOpt b{display:block;font-size:22px}
+.wzOpt span{color:rgba(255,255,255,.65);font-size:15px}
+.wzOpt:active{background:rgba(217,180,90,.4);transform:scale(.98)}
+.wzOpts.nums{flex-direction:row;flex-wrap:wrap}
+.wzOpts.nums .wzOpt{flex:1 0 28%;text-align:center;font-family:var(--num);font-size:54px;font-weight:900;padding:16px 0}
+.wzBack{align-self:flex-start;color:rgba(255,255,255,.7);padding:8px 0;font-weight:600}
+.dlgCard{position:relative;margin:auto;width:min(88vw,420px);padding:30px 22px 22px;border-radius:22px;background:rgba(18,16,24,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);text-align:center;display:flex;flex-direction:column;gap:10px}
+.dlg h1{font-size:clamp(40px,12vw,64px)}
+.dlg p{margin:0 0 10px;color:rgba(255,255,255,.75);line-height:1.45}
+.winName{font-family:var(--num);font-weight:900;font-size:clamp(40px,12vw,64px);line-height:1;margin:4px 0 2px;color:var(--gold)}
+.dlg.win .dlgCard{animation:winIn .6s cubic-bezier(.2,1.3,.4,1)}
+@keyframes winIn{from{transform:scale(.7);opacity:0}}
 </style>
 </head>
 <body>
@@ -202,7 +241,6 @@ input.txt{user-select:text;-webkit-user-select:text}
 <div id="hub">
   <button id="tokenBtn" aria-label="Pedine: tocca per aprire, tieni premuto per parlare">
     <img src="emblema.png" alt="" draggable="false">
-    <span id="prDot"></span>
   </button>
   <button id="menuBtn" class="smallBtn" aria-label="Menu">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -328,20 +366,52 @@ input.txt{user-select:text;-webkit-user-select:text}
   </div>
 </section>
 
-<!-- Danni da comandante rapidi -->
-<section class="ov" id="ov-cmdq">
-  <div class="ovHead">
-    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h2>Danni da comandante</h2>
+<!-- Avvio: formato e giocatori -->
+<section id="ov-wizard" class="wz">
+  <div class="wzBg" id="wzBg"><i></i></div>
+  <div class="wzScroll" id="wzScroll">
+    <div class="wzStep" id="wzStep1">
+      <div class="wzBrand">Segnapunti MTG <span class="ver" id="wzVer"></span></div>
+      <h1>A cosa vuoi giocare?</h1>
+      <div class="wzOpts" id="wzFormats"></div>
+    </div>
+    <div class="wzStep" id="wzStep2">
+      <button class="wzBack" id="wzBack">‹ Cambia formato</button>
+      <h1>In quanti siete a giocare?</h1>
+      <div class="wzOpts nums" id="wzCounts"></div>
+    </div>
   </div>
-  <div class="ovBody" id="cmdqBody"></div>
+</section>
+
+<!-- Riprendi la partita -->
+<section id="ov-resume" class="dlg">
+  <div class="wzBg" id="rsBg"><i></i></div>
+  <div class="dlgCard">
+    <h1>Vuoi continuare la partita?</h1>
+    <p id="rsInfo"></p>
+    <button class="btn primary" id="rsGo">Continua</button>
+    <button class="btn" id="rsNew">Nuova partita</button>
+  </div>
+</section>
+
+<!-- Vincitore -->
+<section id="ov-win" class="dlg win">
+  <div class="wzBg" id="wnBg"><i></i></div>
+  <div class="dlgCard">
+    <h1>Vittoria</h1>
+    <div class="winName" id="wnName"></div>
+    <p id="wnInfo"></p>
+    <button class="btn primary" id="wnAgain">Rivincita</button>
+    <button class="btn" id="wnNew">Nuova partita</button>
+    <button class="btn" id="wnBack">Torna al tavolo</button>
+  </div>
 </section>
 
 <div id="toast"></div>
 
 <script>
 'use strict';
-const VERSION = '0.3.0';
+const VERSION = '0.4.0';
 document.getElementById('verLbl').textContent = 'v' + VERSION;
 
 /* ================= Stato ================= */
@@ -457,6 +527,7 @@ function updateCell(i){
   for(const c of COUNTERS){ const v = p.counters[c.k]; if(v) bd += `<span>${c.icon} ${v}</span>` }
   if(S.cmdDamage){ const m = Math.max(0, ...Object.values(p.cmd)); if(m) bd += `<span>⚔ ${m}</span>` }
   cell.querySelector('.badges').innerHTML = bd;
+  checkWinner();
 }
 function addHist(i, d){
   const p = S.players[i], h = p.hist, last = h[h.length-1], now = Date.now();
@@ -475,6 +546,7 @@ function changeLife(i, d){
   el.classList.add('show');
   clearTimeout(st.t);
   st.t = setTimeout(()=>{ el.classList.remove('show'); st.v = 0 }, 1600);
+  cell.querySelector('.life').animate([{transform:'scale(1)'},{transform:'scale(' + (d > 0 ? 1.07 : .94) + ')'},{transform:'scale(1)'}], {duration:200});
 }
 
 // tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)
@@ -483,14 +555,15 @@ $('#board').addEventListener('pointerdown', e=>{
   const h = e.target.closest('.half'); if(!h) return;
   const i = +h.closest('.cell').dataset.i, d = +h.dataset.d;
   snap(); changeLife(i, d); buzz();
-  hold = {first:true};
+  h.classList.add('pressed');
+  hold = {first:true, h};
   if(SET.holdMode === 'ten'){
     hold.t = setTimeout(function rep(){ changeLife(i, d * (hold.first ? 9 : 10)); hold.first = false; buzz(20); hold.t = setTimeout(rep, 700) }, 480);
   } else {
     hold.t = setTimeout(function rep(){ changeLife(i, d); hold.t = setTimeout(rep, 110) }, 480);
   }
 });
-['pointerup','pointercancel'].forEach(ev => window.addEventListener(ev, ()=>{ if(hold){ clearTimeout(hold.t); hold = null } }));
+['pointerup','pointercancel'].forEach(ev => window.addEventListener(ev, ()=>{ if(hold){ clearTimeout(hold.t); hold.h.classList.remove('pressed'); hold = null } }));
 $('#board').addEventListener('contextmenu', e=>e.preventDefault());
 // nome: tocco = scheda giocatore; trascinato sul pannello di un avversario = danni da comandante
 let drag = null;
@@ -525,27 +598,38 @@ window.addEventListener('pointerup', ()=>{
 });
 window.addEventListener('pointercancel', ()=>{ if(drag){ drag = null; dragLine(null); clearDrop() } });
 
-let cq = {a:0, v:0};
-function openCmdQuick(a, v){ cq = {a, v}; renderCmdQ(); openOv('cmdq'); buzz(20) }
 function pchip(p){ const c = COLORS[p.color]; return `<span class="pchip" style="background:${c.bg};color:${c.fg}">${esc(p.name)}</span>` }
-function renderCmdQ(){
-  const A = S.players[cq.a], V = S.players[cq.v];
-  const keys = [[String(cq.a), A.partner ? 'Primo comandante' : '']];
-  if(A.partner) keys.push([cq.a + 'b', 'Secondo comandante']);
-  $('#cmdqBody').innerHTML = `<p class="cqWho">${pchip(A)} colpisce ${pchip(V)}</p>
-    <p class="note" style="text-align:center;margin-bottom:16px">Vita di ${esc(V.name)}: <b>${V.life}</b></p>` +
-    keys.map(([k,l])=>`<div class="sec">${l ? `<h3>${l}</h3>` : ''}<div class="bigLife">${V.cmd[k] || 0}</div>
-      <div class="quick">${[-1,1,2,3,4,5].map(x=>`<button data-act="cq" data-k="${k}" data-v="${x}">${x>0?'+':'−'}${Math.abs(x)}</button>`).join('')}</div></div>`).join('') +
-    `<button class="btn primary" data-act="cqdone">Fatto</button>`;
+// finestrella semitrasparente sul pannello di chi subisce, girata verso di lui
+let cqp = null;
+function openCmdQuick(a, v){
+  closeCqPop();
+  const fr = $(`.cell[data-i="${v}"] .frame`); if(!fr) return;
+  const el = document.createElement('div'); el.className = 'cqPop';
+  fr.appendChild(el); cqp = {a, v, el};
+  renderCqPop(); armCqPop(); buzz(20);
+  el.addEventListener('pointerdown', e=>e.stopPropagation());
+  el.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    if(b.hasAttribute('data-ok')){ closeCqPop(); return }
+    const V = S.players[cqp.v], k = b.dataset.k, before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
+    if(after !== before){ snap(); V.cmd[k] = after; changeLife(cqp.v, before - after); buzz() }
+    renderCqPop(); armCqPop();
+  });
 }
-$('#cmdqBody').addEventListener('click', e=>{
-  const b = e.target.closest('[data-act]'); if(!b) return;
-  if(b.dataset.act === 'cqdone'){ history.back(); return }
-  const V = S.players[cq.v], k = b.dataset.k, before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
-  if(after === before) return;
-  snap(); V.cmd[k] = after; V.life -= (after - before); addHist(cq.v, before - after);
-  save(); buzz(); renderCmdQ(); updateCell(cq.v);
-});
+function renderCqPop(){
+  const A = S.players[cqp.a], V = S.players[cqp.v];
+  const keys = [[String(cqp.a), A.partner ? '1° comandante' : '']];
+  if(A.partner) keys.push([cqp.a + 'b', '2° comandante']);
+  cqp.el.innerHTML = `<div class="cqT">Danni dal comandante di ${pchip(A)}</div>` +
+    keys.map(([k,l])=>`<div class="cqRow">${l ? `<span class="cqL">${l}</span>` : ''}<button data-k="${k}" data-v="-1">−</button><output>${V.cmd[k] || 0}</output><button data-k="${k}" data-v="1">+</button></div>`).join('') +
+    `<div class="cqQuick">${[2,3,4,5].map(x=>`<button data-k="${keys[0][0]}" data-v="${x}">+${x}</button>`).join('')}<button class="ok" data-ok>OK</button></div>`;
+}
+function armCqPop(){ clearTimeout(cqp.t); cqp.t = setTimeout(closeCqPop, 6000) }
+function closeCqPop(){ if(!cqp) return; clearTimeout(cqp.t); cqp.el.remove(); cqp = null }
+// un tocco fuori dalla finestrella la chiude senza toccare i punti vita
+document.addEventListener('pointerdown', e=>{
+  if(cqp && !cqp.el.contains(e.target)){ e.stopPropagation(); e.preventDefault(); closeCqPop() }
+}, true);
 
 /* ================= Turni e timer ================= */
 function fmtTime(ms){
@@ -578,7 +662,8 @@ function whoStarts(){
 function resetGame(){
   S.players = freshPlayers(S.count, S.startLife, S.players);
   S.turn = freshTurn(S.turn.on); S.log = []; undoStack.length = 0;
-  save(); renderBoard();
+  S.over = false; S.gameStart = Date.now();
+  closeCqPop(); save(); renderBoard();
 }
 
 /* ================= Pannelli + tasto indietro ================= */
@@ -588,11 +673,18 @@ function openOv(id){
   stack.push(id);
   history.pushState({ov:id}, '');
 }
+// chiude il pannello in cima e apre il successivo nello stesso passo di cronologia
+function swapOv(id){
+  const top = stack.pop(); if(top) $('#ov-' + top).classList.remove('open');
+  $('#ov-' + id).classList.add('open'); stack.push(id);
+  history.replaceState({ov:id}, '');
+}
 function closeTop(){
   const id = stack.pop(); if(!id) return;
   $('#ov-' + id).classList.remove('open');
   if(id === 'player') renderBoard();
   if(id === 'modal') tmCleanup();
+  if(id === 'wizard' && WZ.step === 2){ wzStep(1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
 let lastBack = 0;
@@ -672,7 +764,7 @@ $('#menuBody').addEventListener('click', async e=>{
   const b = e.target.closest('[data-act]'); if(!b) return;
   const a = b.dataset.act, v = b.dataset.v;
   switch(a){
-    case 'new': resetGame(); history.back(); toast('Nuova partita'); return;
+    case 'new': openWizard(true); return;
     case 'starts': history.back(); setTimeout(whoStarts, 300); return;
     case 'dice': openDice(); return;
     case 'log': openLog(); return;
@@ -1338,7 +1430,7 @@ async function connectPrinter(){
 }
 function updatePrinterUI(){
   const on = !!printer.ch, name = on ? (printer.dev.name || 'stampante') : '';
-  $('#prDot').classList.toggle('on', on);
+  $('#tokenBtn').classList.toggle('pr-on', on);
   $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega stampante';
   const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name : 'Non collegata';
   const cb = $('#prConnect'); if(cb) cb.textContent = on ? 'Cambia stampante' : 'Collega stampante';
@@ -1361,8 +1453,91 @@ function releaseWake(){ try{ lock && lock.release() }catch(e){} lock = null }
 document.addEventListener('visibilitychange', keepAwake);
 keepAwake();
 
-/* ================= Avvio ================= */
+/* ================= Avvio, riprendi, vincitore ================= */
+const WZ = {step:1};
+const ART_Q = {
+  wizard:'(t:planeswalker or (t:legendary t:dragon)) -is:digital',
+  resume:'t:legendary t:creature -is:digital',
+  win:'o:"you win the game" -is:digital',
+};
+async function themeBg(box, q, url){
+  const i = box.querySelector('i'); i.classList.remove('in');
+  try{
+    if(!url){
+      const r = await fetch('https://api.scryfall.com/cards/random?q=' + encodeURIComponent(q));
+      const c = await r.json(); const f = c.image_uris || (c.card_faces && c.card_faces[0].image_uris);
+      url = f && f.art_crop;
+    }
+    if(!url) return;
+    const im = new Image(); im.onload = ()=>{ i.style.backgroundImage = `url('${url}')`; i.classList.add('in') }; im.src = url;
+  }catch(e){}
+}
+function wzStep(n){
+  WZ.step = n;
+  $(n === 1 ? '#wzStep1' : '#wzStep2').scrollIntoView({behavior: n === 2 ? 'smooth' : 'instant', block:'start'});
+}
+function openWizard(swap){
+  $('#wzVer').textContent = 'v' + VERSION;
+  $('#wzFormats').innerHTML = [
+    ['standard','Standard','20 punti vita, testa a testa'],
+    ['commander','Commander','40 punti vita, danni da comandante'],
+    ['brawl','Brawl','25 punti vita in due, 30 in più giocatori'],
+    ['oathbreaker','Oathbreaker','20 punti vita'],
+  ].map(([k,l,d])=>`<button class="wzOpt" data-f="${k}"><b>${l}</b><span>${d}</span></button>`).join('');
+  $('#wzCounts').innerHTML = [2,3,4,5,6].map(n=>`<button class="wzOpt" data-n="${n}">${n}</button>`).join('');
+  themeBg($('#wzBg'), ART_Q.wizard);
+  swap ? swapOv('wizard') : openOv('wizard');
+  requestAnimationFrame(()=>wzStep(1));
+}
+$('#wzFormats').addEventListener('click', e=>{
+  const b = e.target.closest('[data-f]'); if(!b) return;
+  WZ.fmt = b.dataset.f; buzz(15);
+  if(WZ.fmt === 'standard') startGame('standard', 2); else wzStep(2);
+});
+$('#wzCounts').addEventListener('click', e=>{ const b = e.target.closest('[data-n]'); if(b){ buzz(15); startGame(WZ.fmt, +b.dataset.n) } });
+$('#wzBack').addEventListener('click', ()=>wzStep(1));
+function startGame(fmt, n){
+  S.format = fmt; S.count = n; S.cmdDamage = FORMATS[fmt].cmd;
+  S.startLife = fmt === 'brawl' && n > 2 ? 30 : FORMATS[fmt].life;
+  resetGame();
+  WZ.step = 0; history.back();
+  toast(FORMATS[fmt].label + ', ' + n + ' giocatori, ' + S.startLife + ' punti vita');
+}
+function inProgress(){ return !S.over && (S.players.some(p=>p.hist.length) || S.turn.n > 1) }
+function openResume(){
+  const st = S.gameStart || (S.players.flatMap(p=>p.hist.map(h=>h.t)).sort()[0]);
+  $('#rsInfo').textContent = `${FORMATS[S.format].label}, ${S.count} giocatori` + (st ? `, iniziata alle ${hhmm(st)}` : '') + '.';
+  themeBg($('#rsBg'), ART_Q.resume);
+  openOv('resume');
+}
+$('#rsGo').addEventListener('click', ()=>history.back());
+$('#rsNew').addEventListener('click', ()=>openWizard(true));
+
+let winT = null;
+function checkWinner(){
+  clearTimeout(winT);
+  winT = setTimeout(()=>{
+    const alive = S.players.map((p,i)=>i).filter(i=>!isOut(S.players[i]));
+    if(alive.length === 1 && S.count > 1){ if(!S.over){ S.over = true; save(); showWinner(alive[0]) } }
+    else if(alive.length > 1 && S.over){ S.over = false; save() }
+  }, 900);
+}
+function showWinner(i){
+  const p = S.players[i];
+  $('#wnName').textContent = p.name;
+  const mins = S.gameStart ? Math.max(1, Math.round((Date.now() - S.gameStart) / 60000)) : 0;
+  $('#wnInfo').textContent = [mins ? `Partita durata ${mins} minut${mins === 1 ? 'o' : 'i'}` : '', S.turn.on ? `al turno ${S.turn.n}` : ''].filter(Boolean).join(', ') + (mins || S.turn.on ? '.' : '');
+  themeBg($('#wnBg'), ART_Q.win, p.art);
+  logEv('Vince ' + p.name);
+  sfx('done'); buzz([60,80,60,80,120]);
+  closeCqPop(); openOv('win');
+}
+$('#wnAgain').addEventListener('click', ()=>{ resetGame(); history.back(); toast('Rivincita!') });
+$('#wnNew').addEventListener('click', ()=>openWizard(true));
+$('#wnBack').addEventListener('click', ()=>history.back());
+
 renderBoard();
+if(inProgress()) openResume(); else openWizard();
 updatePrinterUI();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
