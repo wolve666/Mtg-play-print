@@ -154,20 +154,28 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 /* ---------- v0.3 ---------- */
 #tokenBtn{position:relative;background:radial-gradient(circle at 50% 40%,#3A3530,#1E1C1A 70%);box-shadow:0 0 0 3px var(--gold),0 0 0 6px var(--bg),0 6px 18px rgba(0,0,0,.45);transition:transform .12s}
-#tokenBtn::before{content:'';position:absolute;inset:-26px;border-radius:50%;z-index:-1;pointer-events:none;
-  background:radial-gradient(circle,rgba(150,150,160,.28) 30%,rgba(150,150,160,0) 68%)}
-#tokenBtn.pr-on::before{background:radial-gradient(circle,rgba(61,139,255,.75) 28%,rgba(61,139,255,.25) 50%,rgba(61,139,255,0) 70%);animation:haloPulse 2.2s ease-in-out infinite}
-@keyframes haloPulse{50%{transform:scale(1.22);opacity:.65}}
-.orbit{position:absolute;inset:-16px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .4s}
+#tokenBtn{overflow:hidden}
+#tokenBtn img{position:relative;z-index:1}
+#tokenBtn::before{content:'';position:absolute;inset:6px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(150,150,160,.16) 45%,rgba(150,150,160,0) 72%)}
+#tokenBtn.pr-on::before{background:radial-gradient(circle,rgba(61,139,255,.9) 22%,rgba(61,139,255,.38) 50%,rgba(61,139,255,0) 72%);animation:haloPulse 2.2s ease-in-out infinite}
+@keyframes haloPulse{0%,100%{transform:scale(.86);opacity:.75}50%{transform:scale(1.06);opacity:1}}
+.orbit{position:absolute;inset:7px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .4s}
 #tokenBtn.pr-on .orbit{opacity:1;animation:orbit 5s linear infinite}
-.orbit i{position:absolute;width:5px;height:5px;border-radius:50%;background:#BFE0FF;box-shadow:0 0 8px 3px rgba(80,160,255,.9);animation:twinkle 1.6s ease-in-out infinite}
-.orbit i:nth-child(1){top:0;left:50%}
-.orbit i:nth-child(2){top:50%;right:0;animation-delay:.4s}
-.orbit i:nth-child(3){bottom:0;left:30%;animation-delay:.8s}
-.orbit i:nth-child(4){top:28%;left:2%;animation-delay:1.2s}
+.orbit i{position:absolute;width:4px;height:4px;border-radius:50%;background:#D4EAFF;box-shadow:0 0 6px 2px rgba(80,160,255,.95);animation:twinkle 1.6s ease-in-out infinite}
+.orbit i:nth-child(1){top:0;left:calc(50% - 2px)}
+.orbit i:nth-child(2){top:calc(50% - 2px);right:0;animation-delay:.4s}
+.orbit i:nth-child(3){bottom:0;left:calc(50% - 2px);animation-delay:.8s}
+.orbit i:nth-child(4){top:calc(50% - 2px);left:0;animation-delay:1.2s}
 @keyframes orbit{to{transform:rotate(360deg)}}
 @keyframes twinkle{50%{opacity:.25;transform:scale(.6)}}
 @media (prefers-reduced-motion:reduce){#tokenBtn.pr-on::before,#tokenBtn.pr-on .orbit,.orbit i{animation:none}}
+.verBtn{white-space:nowrap;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:500;color:var(--muted);background:rgba(255,255,255,.06)}
+.verBtn.upd{background:var(--gold);color:var(--gold-ink);font-weight:700;animation:verGlow 1.8s ease-in-out infinite}
+@keyframes verGlow{50%{box-shadow:0 0 0 4px rgba(217,180,90,.3)}}
+.ovHead h2{white-space:nowrap}
+.wzBrand .verBtn{color:rgba(255,255,255,.7)}
+.wzBrand .verBtn.upd{color:var(--gold-ink)}
 #tokenBtn img{width:50px;height:50px;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 0 6px rgba(255,80,20,.45))}
 .pname{touch-action:none}
 .cell.dropT{box-shadow:inset 0 0 0 5px #fff;filter:brightness(1.15)}
@@ -283,7 +291,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 <section class="ov" id="ov-menu">
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h2>Magic Play&amp;Print <span class="ver" id="verLbl"></span></h2>
+    <h2>Magic Play&amp;Print <button class="verBtn" id="verLbl"></button></h2>
   </div>
   <div class="ovBody" id="menuBody"></div>
 </section>
@@ -382,7 +390,7 @@ input.txt{user-select:text;-webkit-user-select:text}
   <div class="wzBg" id="wzBg"><i></i></div>
   <div class="wzScroll" id="wzScroll">
     <div class="wzStep" id="wzStep1">
-      <div class="wzBrand">Magic Play&amp;Print <span class="ver" id="wzVer"></span></div>
+      <div class="wzBrand">Magic Play&amp;Print <button class="verBtn" id="wzVer"></button></div>
       <h1>A cosa vuoi giocare?</h1>
       <div class="wzOpts" id="wzFormats"></div>
     </div>
@@ -422,8 +430,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.5.0';
-document.getElementById('verLbl').textContent = 'v' + VERSION;
+const VERSION = '0.6.0';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -753,6 +760,9 @@ function renderMenu(){
     <div class="row"><span class="lbl">Pacchetto Bluetooth</span>
       <select class="txt" id="chunkSel" style="width:auto">${[[20,'20 byte (lenta, sicura)'],[100,'100 byte'],[180,'180 byte (veloce)']].map(([v,l])=>`<option value="${v}" ${v===SET.chunk?'selected':''}>${l}</option>`).join('')}</select></div>
     <p class="note">Serve una stampante termica 58 mm con Bluetooth LE (BLE) e comandi ESC/POS. Se la stampa si interrompe a metà, abbassa il pacchetto.</p>
+    <p class="note">${navigator.bluetooth && navigator.bluetooth.getDevices
+      ? 'Ricollegamento automatico: dopo il primo collegamento, basta accendere la stampante e l\'app la ritrova da sola, anche dopo averla riaperta.'
+      : 'Ricollegamento automatico attivo finché l\'app resta aperta. Per averlo anche dopo averla riaperta, in Chrome apri chrome://flags e attiva «Use the new permissions backend for Web Bluetooth».'}</p>
   </div>
   <div class="sec"><h3>Voce e miglioramento dell'app</h3>
     <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
@@ -762,6 +772,10 @@ function renderMenu(){
     <button class="btn" data-act="suggest">Lascia un suggerimento</button>
     <button class="btn" data-act="export">Esporta i dati raccolti</button>
     <button class="btn danger" data-act="clearv">Cancella i dati raccolti</button>
+  </div>
+  <div class="sec"><h3>Aggiornamenti</h3>
+    <div class="row"><span class="lbl">Versione installata: v${VERSION}${UPD.remote ? `, disponibile la v${UPD.remote}` : ''}</span></div>
+    <button class="btn ${UPD.remote ? 'primary' : ''}" data-act="update">${UPD.remote ? 'Aggiorna ora alla v' + UPD.remote : 'Verifica aggiornamenti'}</button>
   </div>
   <div class="sec">
     <button class="btn" data-act="install">
@@ -782,6 +796,7 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'suggest': openSuggest(); return;
     case 'export': exportVlog(); return;
     case 'install': install(); return;
+    case 'update': UPD.remote ? applyUpdate() : checkUpdate(true); return;
     case 'count': if(+v !== S.count){ S.count = +v; resetGame(); toast(v + ' giocatori, nuova partita') } break;
     case 'fmt': if(v !== S.format){ S.format = v; S.startLife = FORMATS[v].life; S.cmdDamage = FORMATS[v].cmd; resetGame(); toast(FORMATS[v].label + ': vita ' + S.startLife) } break;
     case 'sl': S.startLife = Math.max(1, S.startLife + +v); resetGame(); break;
@@ -1421,12 +1436,37 @@ async function setupDevice(dev){
   }
   if(!found) throw new Error('nessun canale di stampa trovato');
   printer.dev = dev; printer.ch = found;
+  if(SET.prId !== dev.id){ SET.prId = dev.id; saveSet() }
+  watchAdv(dev);
   if(!dev._smtg){ dev._smtg = true; dev.addEventListener('gattserverdisconnected', ()=>{ printer.ch = null; updatePrinterUI() }) }
   updatePrinterUI();
 }
-if(navigator.bluetooth && navigator.bluetooth.getDevices){
-  navigator.bluetooth.getDevices().then(ds=>{ if(ds && ds[0] && !printer.dev) printer.dev = ds[0] }).catch(()=>{});
+// ricollegamento automatico: la stampante già usata viene ritrovata appena la accendi
+let reconnecting = false;
+async function autoReconnect(){
+  if(printer.ch || !printer.dev || reconnecting || document.visibilityState !== 'visible') return;
+  reconnecting = true;
+  try{ await setupDevice(printer.dev); toast('Stampante collegata: ' + (printer.dev.name || '')); sfx('found'); buzz(30) }catch(e){}
+  reconnecting = false;
 }
+function watchAdv(dev){
+  try{
+    if(dev.watchAdvertisements && !dev._watch){
+      dev._watch = true;
+      dev.addEventListener('advertisementreceived', autoReconnect);
+      dev.watchAdvertisements().catch(()=>{ dev._watch = false });
+    }
+  }catch(e){}
+}
+if(navigator.bluetooth && navigator.bluetooth.getDevices){
+  navigator.bluetooth.getDevices().then(ds=>{
+    if(!ds || !ds.length || printer.dev) return;
+    printer.dev = ds.find(d => d.id === SET.prId) || ds[0];
+    watchAdv(printer.dev); autoReconnect();
+  }).catch(()=>{});
+}
+setInterval(autoReconnect, 7000);
+document.addEventListener('visibilitychange', autoReconnect);
 async function connectPrinter(){
   if(!navigator.bluetooth){ toast('Bluetooth non disponibile: usa Chrome su Android', 3000); return }
   try{
@@ -1488,7 +1528,6 @@ function wzStep(n){
   $(n === 1 ? '#wzStep1' : '#wzStep2').scrollIntoView({behavior: n === 2 ? 'smooth' : 'instant', block:'start'});
 }
 function openWizard(swap){
-  $('#wzVer').textContent = 'v' + VERSION;
   $('#wzFormats').innerHTML = [
     ['standard','Standard','20 punti vita, testa a testa'],
     ['commander','Commander','40 punti vita, danni da comandante'],
@@ -1546,6 +1585,47 @@ function showWinner(i){
 $('#wnAgain').addEventListener('click', ()=>{ resetGame(); history.back(); toast('Rivincita!') });
 $('#wnNew').addEventListener('click', ()=>openWizard(true));
 $('#wnBack').addEventListener('click', ()=>history.back());
+
+/* ================= Aggiornamenti ================= */
+const UPD = {remote:null};
+function cmpVer(a, b){ const x = a.split('.').map(Number), y = b.split('.').map(Number); for(let i=0;i<3;i++){ if((x[i]||0) !== (y[i]||0)) return (x[i]||0) - (y[i]||0) } return 0 }
+function showVer(){
+  ['#verLbl','#wzVer'].forEach(id=>{
+    const el = $(id); if(!el) return;
+    el.classList.toggle('upd', !!UPD.remote);
+    el.textContent = UPD.remote ? `v${VERSION} · aggiorna` : 'v' + VERSION;
+    el.title = UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Verifica aggiornamenti';
+  });
+}
+async function checkUpdate(manual){
+  if(manual) toast('Verifico gli aggiornamenti…');
+  try{
+    const r = await fetch('index.html?check=' + Date.now(), {cache:'no-store'});
+    const m = (await r.text()).match(/const VERSION = '([\d.]+)'/);
+    if(!m) throw new Error();
+    UPD.remote = cmpVer(m[1], VERSION) > 0 ? m[1] : null;
+    if(manual) toast(UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Hai già l\'ultima versione (' + VERSION + ')');
+  }catch(e){ if(manual) toast('Impossibile verificare: controlla la connessione') }
+  showVer(); if(stack[stack.length-1] === 'menu') renderMenu();
+}
+async function applyUpdate(){
+  toast('Aggiorno…');
+  try{
+    const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+    if(reg) await reg.update();
+    const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k)));
+  }catch(e){}
+  location.reload();
+}
+['#verLbl','#wzVer'].forEach(id => $(id).addEventListener('click', ()=> UPD.remote ? applyUpdate() : checkUpdate(true)));
+(function(){
+  const last = localStorage.getItem('smtg-lastver');
+  if(last && last !== VERSION) setTimeout(()=>toast('Aggiornata alla versione ' + VERSION, 3000), 800);
+  try{ localStorage.setItem('smtg-lastver', VERSION) }catch(e){}
+})();
+showVer();
+setTimeout(()=>checkUpdate(false), 2500);
+setInterval(()=>{ if(document.visibilityState === 'visible') checkUpdate(false) }, 30*60*1000);
 
 renderBoard();
 if(inProgress()) openResume(); else openWizard();
