@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10101b">
+  <meta name="description" content="Magic Play&Print: segnapunti, dadi e ricerca pedine per Magic: The Gathering.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>Magic Play&Print</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark">✦</div>
+    <div><div class="brand-title">MAGIC <span>PLAY&PRINT</span></div><div class="brand-sub">Il tuo tavolo, sotto controllo.</div></div>
+    <button id="installBtn" class="quiet-btn hidden" type="button">Installa</button>
+  </header>
+
+  <main>
+    <section id="setupView" class="panel setup-panel">
+      <p class="eyebrow">NUOVA PARTITA</p>
+      <h1>Prepariamo il tavolo</h1>
+      <div class="setup-grid">
+        <label>Formato<select id="formatSelect"><option value="standard">Standard</option><option value="commander">Commander</option></select></label>
+        <label>Giocatori<select id="playerCount"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+      </div>
+      <div id="nameFields" class="name-fields"></div>
+      <button id="startGame" class="primary-btn full">Inizia partita <span>→</span></button>
+      <p class="muted small">I nomi e le preferenze restano su questo dispositivo.</p>
+    </section>
+
+    <section id="gameView" class="hidden">
+      <div class="game-toolbar">
+        <div><span class="eyebrow" id="gameFormatLabel">STANDARD</span><div class="muted small" id="turnLabel">Turno di…</div></div>
+        <button id="newGameBtn" class="quiet-btn">Nuova partita</button>
+      </div>
+      <div id="playersGrid" class="players-grid"></div>
+      <div class="action-bar">
+        <button id="nextTurn" class="action-btn accent">⏭ <span>Turno</span></button>
+        <button id="rollDie" class="action-btn">🎲 <span>Dado</span></button>
+        <button id="flipCoin" class="action-btn">🪙 <span>Moneta</span></button>
+        <button id="historyBtn" class="action-btn">↶ <span>Cronologia</span></button>
+      </div>
+      <div id="historyPanel" class="panel history-panel hidden"><div class="panel-heading"><h2>Cronologia</h2><button id="undoBtn" class="small-btn">Annulla ultima</button></div><ol id="historyList"></ol></div>
+    </section>
+
+    <section class="panel token-panel">
+      <div class="token-heading"><div><p class="eyebrow">PEDINE UFFICIALI</p><h2>Play & Print</h2></div><div class="printer-icon">▤</div></div>
+      <p class="muted">Cerca una pedina su Scryfall oppure chiedila a voce.</p>
+      <div class="search-row"><input id="tokenQuery" type="search" placeholder="Es. 3 pedine Tesoro, Goblin 1/1…" autocomplete="off"><button id="voiceBtn" class="voice-btn" aria-label="Cerca con la voce" title="Cerca con la voce">🎙</button></div>
+      <button id="searchTokens" class="primary-btn full">Cerca pedine</button>
+      <div id="voiceStatus" class="muted small" aria-live="polite"></div>
+      <div id="tokenResults" class="token-results"></div>
+      <div id="printPreview" class="print-preview hidden"></div>
+    </section>
+  </main>
+
+  <dialog id="utilityDialog" class="modal"><div class="modal-inner"><button class="close-btn" data-close="utilityDialog">×</button><div id="utilityContent"></div></div></dialog>
+  <dialog id="tokenDialog" class="modal"><div class="modal-inner"><button class="close-btn" data-close="tokenDialog">×</button><div id="tokenDetail"></div></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
