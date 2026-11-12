@@ -475,7 +475,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.9.0';
+const VERSION = '0.10.0';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -519,7 +519,7 @@ if(!S || !S.players){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
-let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true}, load(SKEY) || {});
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'max', heat:false}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
@@ -914,12 +914,21 @@ function renderMenu(){
     <button class="btn" data-act="prconnect" id="prConnect">Collega stampante</button>
     <button class="btn" data-act="prtest">Stampa di prova</button>
     <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
-    <div class="row"><span class="lbl">Pacchetto Bluetooth</span>
-      <select class="txt" id="chunkSel" style="width:auto">${[[20,'20 byte (lenta, sicura)'],[100,'100 byte'],[180,'180 byte (veloce)']].map(([v,l])=>`<option value="${v}" ${v===SET.chunk?'selected':''}>${l}</option>`).join('')}</select></div>
-    <p class="note">Serve una stampante termica 58 mm con Bluetooth LE (BLE) e comandi ESC/POS. Se la stampa si interrompe a metà, abbassa il pacchetto.</p>
+    <div class="row"><span class="lbl">Modello</span>
+      <select class="txt" id="prModelSel" style="width:auto"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+    <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Riscaldamento lento</span>${tog('heat', SET.heat)}</div>
+    <p class="note">«Qualità massima» manda l'immagine a fasce sottili e con calma: la stampante non si ferma più a metà lasciando strisce bianche. «Riscaldamento lento» rende il nero più pieno sulle stampanti che lo supportano: se la stampa di prova esce con simboli strani, spegnilo.</p>
+    <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
     <p class="note">${navigator.bluetooth && navigator.bluetooth.getDevices
       ? 'Ricollegamento automatico: dopo il primo collegamento, basta accendere la stampante e l\'app la ritrova da sola, anche dopo averla riaperta.'
       : 'Ricollegamento automatico attivo finché l\'app resta aperta. Per averlo anche dopo averla riaperta, in Chrome apri chrome://flags e attiva «Use the new permissions backend for Web Bluetooth».'}</p>
+  </div>
+  <div class="sec"><h3>Archivio offline</h3>
+    <div class="row"><span class="lbl" id="arcStat">${esc(arcStatus())}</span></div>
+    <button class="btn ${ARC.list.length ? '' : 'primary'}" data-act="arcdl" ${ARC.busy ? 'disabled' : ''}>${ARC.list.length ? (ARC.meta.complete ? 'Controlla pedine nuove' : 'Completa lo scaricamento') : 'Scarica l\'archivio'}</button>
+    ${ARC.list.length && !ARC.busy ? '<button class="btn danger" data-act="arcdel">Elimina l\'archivio</button>' : ''}
+    <p class="note">Tutte le pedine ufficiali e gli emblemi, solo l'ultima versione di ognuno: poco meno di mille carte. Si scaricano circa 80-100 MB, meglio col Wi-Fi, e sul telefono ne restano circa 30-40. Senza rete l'app cerca e stampa dall'archivio; con la rete controlla una volta al giorno le pedine nuove e scarica solo quelle.</p>
   </div>
   <div class="sec"><h3>Voce e miglioramento dell'app</h3>
     <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
@@ -971,11 +980,15 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'sound': SET.sound = !SET.sound; saveSet(); if(SET.sound) sfx('found'); break;
     case 'clips': SET.clips = !SET.clips; saveSet(); break;
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
+    case 'speed': SET.speed = v; saveSet(); break;
+    case 'heat': SET.heat = !SET.heat; saveSet(); break;
+    case 'arcdl': arcSync(); break;
+    case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
     case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
   }
   renderMenu();
 });
-$('#menuBody').addEventListener('change', e=>{ if(e.target.id === 'chunkSel'){ SET.chunk = +e.target.value; saveSet() } });
+$('#menuBody').addEventListener('change', e=>{ if(e.target.id === 'prModelSel'){ SET.prModel = e.target.value; printer.size = 0; saveSet() } });
 
 /* ================= Scheda giocatore ================= */
 let curP = 0;
@@ -1195,8 +1208,8 @@ function startClip(){
   };
 }
 function startCapture(btn, silent){
-  if(!SR){ toast('Riconoscimento vocale non disponibile: scrivi la richiesta'); return null }
-  const finals = []; let interim = '', ended = false, cb = null, cancelled = false;
+  if(!SR){ kbFallback('Riconoscimento vocale non disponibile: scrivi la pedina'); return null }
+  const finals = []; let interim = '', ended = false, cb = null, cancelled = false, netErr = false;
   const rec = new SR(), clip = startClip();
   rec.lang = 'it-IT'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;
   btn.classList.add('listening'); if(!silent) showPTT('Ti ascolto… rilascia per inviare'); buzz(15); sfx('listen');
@@ -1209,14 +1222,14 @@ function startCapture(btn, silent){
     }
     if(!silent) showPTT([...finals.map(f=>f[0]), interim].join(' ').trim() || 'Ti ascolto…');
   };
-  rec.onerror = e=>{ if(e.error === 'not-allowed') toast('Consenti il microfono per dettare le richieste') };
+  rec.onerror = e=>{ if(e.error === 'not-allowed') toast('Consenti il microfono per dettare le richieste'); if(['network','service-not-allowed','language-not-supported'].includes(e.error)) netErr = true };
   rec.onend = ()=>{ ended = true; btn.classList.remove('listening'); if(cb) deliver() };
   function deliver(){
     hidePTT(); if(cancelled || !cb) return;
     const c = cb; cb = null;
     pendingClip = clip ? clip.stop() : null;
     let alts = finals.length === 1 ? finals[0] : finals.length ? [finals.map(f=>f[0]).join(' ')] : (interim.trim() ? [interim.trim()] : []);
-    if(!alts.length){ toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
+    if(!alts.length){ if(netErr || !navigator.onLine) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
     c(alts);
   }
   try{ rec.start() }catch(e){}
@@ -1244,6 +1257,10 @@ function attachPTT(btn, {onTap, onText, silent}){
   btn.addEventListener('contextmenu', e=>e.preventDefault());
 }
 
+function kbFallback(msg){
+  if(stack[stack.length-1] !== 'tokens'){ if(stack[stack.length-1] === 'modal') tmClose(); setTimeout(openTokens, 60) }
+  setTimeout(()=>{ const i = $('#tkInput'); i.focus(); toast(msg, 3200) }, 360);
+}
 /* ================= Pedine: interfaccia ================= */
 let lastReq = null, results = [], curEntry = null, lastVoice = null;
 function openTokens(){
@@ -1259,6 +1276,8 @@ $('#tkPrinter').addEventListener('click', ()=> printer.ch ? toast('Stampante col
 $('#tkInput').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.target.blur(); runRequest([e.target.value], 'testo') } });
 
 function renderRecent(){
+  if(!navigator.onLine && ARC.ready) setTimeout(()=>document.querySelectorAll('#tkResults .recent img').forEach(async (im, i)=>{
+    const t = RECENT[i], e = t && (ARC.list.find(x => x.id === t.id) || ARC.list.find(x => x.n === t.name)); if(e && e.ok) im.src = await arcUrl(e.id, 's') }), 0);
   $('#tkResults').innerHTML = RECENT.length
     ? `<div class="sec"><h3>Stampate di recente</h3><div class="recent">${RECENT.map((t,i)=>`<button data-r="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`
     : `<p class="empty">Tieni premuto il microfono e chiedi una pedina, ad esempio «due tesori» o «tre goblin uno uno rossi». Puoi anche scriverla qui sopra.</p>`;
@@ -1292,7 +1311,18 @@ async function runRequest(alternatives, source){
   }
   lastReq = req;
   $('#understood').textContent = 'Cerco: ' + describe(req);
-  $('#tkResults').innerHTML = '<p class="empty">Ricerca su Scryfall…</p>';
+  $('#tkResults').innerHTML = '<p class="empty">Ricerca…</p>';
+  const offline = async () => {
+    const L = arcSearch(req);
+    results = await Promise.all(L.res.slice(0, 60).map(arcTk));
+    curEntry = logRequest(source, alternatives, req, '[archivio]', results.length, L.note);
+    if(!results.length){ $('#tkResults').innerHTML = '<p class="empty">Nessuna pedina nell\'archivio offline. Prova a dire solo il tipo, ad esempio «soldato».</p>'; return }
+    $('#understood').textContent += ' (senza rete: dall\'archivio' + (L.note ? ', ' + L.note : '') + ')';
+    if(results.length === 1){ renderRecent(); openDetail(results[0], req.qty); return }
+    $('#tkResults').innerHTML = `<div class="sec"><h3>${results.length} pedine nell'archivio: scegli quella da stampare</h3><div class="grid">${
+      results.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
+  };
+  if(!navigator.onLine && ARC.ready){ await offline(); return }
   try{
     let data = [], note = '', used = '';
     for(const t of buildQueries(req)){
@@ -1311,13 +1341,15 @@ async function runRequest(alternatives, source){
     $('#tkResults').innerHTML = `<div class="sec"><h3>${results.length} versioni ufficiali: scegli quella da stampare</h3><div class="grid">${
       results.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
   }catch(err){
-    $('#tkResults').innerHTML = '<p class="empty">Scryfall non risponde. Controlla la connessione e riprova.</p>';
+    if(ARC.ready){ await offline(); return }
+    $('#tkResults').innerHTML = '<p class="empty">Scryfall non risponde e l\'archivio offline non è scaricato: puoi scaricarlo dal MENU.</p>';
   }
 }
 
 /* ================= Dettaglio e anteprima di stampa ================= */
 let cur = null, qty = 1, curBits = null;
 async function openDetail(t, q){
+  t = await arcResolve(t);
   cur = t; qty = q; curBits = null;
   if(curEntry){ curEntry.chosen = {id:t.id, name:t.name, set:t.set}; saveVlog() }
   $('#dtTitle').textContent = t.name;
@@ -1339,7 +1371,7 @@ $('#dtPrint').addEventListener('click', async ()=>{
       btn.textContent = qty > 1 ? `Stampa ${k} di ${qty}…` : 'Stampa in corso…';
       await printer.write(escposRaster(curBits));
     }
-    RECENT = [cur, ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
+    RECENT = [recentOf(cur), ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
     if(curEntry){ curEntry.printed = qty; saveVlog() }
     logEv('Stampata pedina ' + cur.name + (qty > 1 ? ' ×' + qty : ''));
     toast(qty > 1 ? qty + ' pedine stampate' : 'Pedina stampata');
@@ -1425,18 +1457,22 @@ async function quickToken(alts){
   if(!req) req = parseRequest(alts[0]);
   const fail = msg => { if(seq !== TM.seq) return; TM.phase = 'msg'; tmSet('', msg); sfx('cancel'); TM.timer = setTimeout(()=>{ if(seq === TM.seq) tmClose() }, 2600) };
   if(!req.type && !req.free){ TM.entry = logRequest('voce', alts, req, null, 0); fail('Non ho capito quale pedina. Tocca per chiudere.'); return }
-  let data = [], used = '', note = '';
-  try{
-    for(const t of buildQueries(req)){ used = t.q.join(' '); data = await scry(used); if(data.length){ note = t.note; break } await new Promise(r=>setTimeout(r,100)) }
-  }catch(e){ fail('Scryfall non risponde. Controlla la connessione.'); return }
+  let data = [], used = '', note = '', tk = null;
+  // prima l'archivio sul telefono (istantaneo, anche senza rete), poi Scryfall
+  if(ARC.ready){ const L = arcSearch(req); if(L.res.length){ tk = await arcTk(L.res[0]); data = L.res; used = '[archivio]'; note = L.note } }
+  if(!tk){
+    try{
+      for(const t of buildQueries(req)){ used = t.q.join(' '); data = await scry(used); if(data.length){ note = t.note; break } await new Promise(r=>setTimeout(r,100)) }
+    }catch(e){ fail(ARC.ready ? 'Nessuna pedina trovata nell\'archivio offline.' : 'Senza rete: scarica l\'archivio offline dal MENU.'); return }
+    tk = pickFirst(data, req.type);
+  }
   if(seq !== TM.seq) return;
-  const tk = pickFirst(data, req.type);
   TM.entry = logRequest('voce', alts, req, used, data.length, note);
   if(!tk){ fail('Nessuna pedina trovata per «' + describe(req) + '».'); return }
   if(TM.entry){ TM.entry.chosen = {id:tk.id, name:tk.name, set:tk.set, auto:true}; saveVlog() }
   const qn = req.qty;
   const bitsP = makeBits(tk.print).catch(()=>null);
-  await new Promise(res=>{ const im = $('#tmImg'); im.onload = im.onerror = res; im.src = tk.large || tk.print });
+  await new Promise(res=>{ const im = $('#tmImg'); im.onload = res; im.onerror = ()=>{ if(tk.small && !im.src.startsWith('blob:')) im.src = tk.small; else res() }; im.src = tk.large || tk.print });
   if(seq !== TM.seq) return;
   $('#tmQty').textContent = qn > 1 ? '×' + qn : '';
   TM.phase = 'count'; sfx('found'); buzz(30);
@@ -1469,7 +1505,7 @@ async function tmPrint(seq, tk, bits, qn){
     }
   }catch(e){ if(seq === TM.seq){ TM.phase = 'msg'; tmSet('show', 'Stampa interrotta: ' + (e.message || e)); TM.timer = setTimeout(()=>{ if(seq === TM.seq) tmClose() }, 3500) } return }
   tmReveal(1);
-  RECENT = [tk, ...RECENT.filter(r => r.id !== tk.id)].slice(0, 12); saveRecent();
+  RECENT = [recentOf(tk), ...RECENT.filter(r => r.id !== tk.id)].slice(0, 12); saveRecent();
   if(TM.entry){ TM.entry.printed = qn; saveVlog() }
   logEv('Stampata pedina ' + tk.name + (qn > 1 ? ' ×' + qn : ''));
   if(seq !== TM.seq) return;
@@ -1516,11 +1552,23 @@ async function install(){
 }
 
 /* ================= Stampa termica ================= */
-const PW = 384; // 48 mm a 203 dpi
+// archivio stampanti: impostazioni di partenza per modello (la velocità e il riscaldamento si scelgono nel menu)
+const PRINTERS = [
+  {id:'netum', name:'NetumScan NS1809DD', re:/ns-?18|netum/i, w:384, chunk:180},
+  {id:'pt210', name:'Goojprt PT-210 / MTP-II', re:/pt-?210|mtp-?ii|goojprt/i, w:384, chunk:100},
+  {id:'xp', name:'Xprinter XP-P300 / P323B', re:/xp-?p\d|xprinter/i, w:384, chunk:100},
+  {id:'g58', name:'Generica 58 mm ESC/POS', w:384, chunk:100},
+  {id:'g80', name:'Generica 80 mm ESC/POS', w:576, chunk:180},
+];
+// fasce sottili + invio più calmo = la stampante non resta mai a secco a metà immagine
+const SPEEDS = {max:{band:24, pace:22, label:'Qualità massima'}, norm:{band:48, pace:12, label:'Normale'}, fast:{band:128, pace:6, label:'Veloce'}};
+function prAuto(){ const n = printer.dev?.name || ''; return PRINTERS.find(p => p.re && p.re.test(n)) || PRINTERS[3] }
+function prProf(){ return (SET.prModel !== 'auto' && PRINTERS.find(p => p.id === SET.prModel)) || prAuto() }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 function loadImg(src){ return new Promise((ok, ko)=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = ()=>ok(i); i.onerror = ko; i.src = src }) }
 async function makeBits(src){
   const img = await loadImg(src);
-  const w = PW, h = Math.round(PW * img.naturalHeight / img.naturalWidth);
+  const W0 = prProf().w, w = W0, h = Math.round(W0 * img.naturalHeight / img.naturalWidth);
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,w,h); cx.drawImage(img, 0, 0, w, h);
   const d = cx.getImageData(0,0,w,h).data;
@@ -1547,9 +1595,10 @@ function drawBits(cv, b){
   cx.putImageData(id, 0, 0);
 }
 function escposRaster(b){
-  const wb = b.w / 8, out = [0x1B, 0x40];
-  for(let y0=0; y0<b.h; y0+=128){
-    const hh = Math.min(128, b.h - y0);
+  const wb = b.w / 8, out = [0x1B, 0x40], band = (SPEEDS[SET.speed] || SPEEDS.max).band;
+  if(SET.heat) out.push(0x1B, 0x37, 5, 140, 30); // riscaldamento lento: meno punti alla volta, nero più pieno
+  for(let y0=0; y0<b.h; y0+=band){
+    const hh = Math.min(band, b.h - y0);
     out.push(0x1D, 0x76, 0x30, 0x00, wb & 255, wb >> 8, hh & 255, hh >> 8);
     for(let y=y0; y<y0+hh; y++) for(let xb=0; xb<wb; xb++){
       let byte = 0;
@@ -1569,12 +1618,20 @@ const PR_SERVICES = [
 const printer = {
   dev:null, ch:null,
   async write(bytes, onProg){
-    const size = SET.chunk;
-    for(let i=0; i<bytes.length; i+=size){
+    let size = this.size || prProf().chunk;
+    const pace = (SPEEDS[SET.speed] || SPEEDS.max).pace, wwr = this.ch.properties.writeWithoutResponse;
+    for(let i=0; i<bytes.length;){
       const part = bytes.slice(i, i+size);
-      if(this.ch.properties.writeWithoutResponse){ await this.ch.writeValueWithoutResponse(part); await new Promise(r=>setTimeout(r, 6)) }
-      else await this.ch.writeValue(part);
-      if(onProg) onProg(Math.min(1, (i + part.length) / bytes.length));
+      try{
+        if(wwr){ await this.ch.writeValueWithoutResponse(part); await sleep(pace) }
+        else await this.ch.writeValue(part);
+      }catch(e){
+        // pacchetto troppo grande per questa stampante: riprovo più piccolo e me lo ricordo
+        if(size > 20 && this.ch){ size = size > 100 ? 100 : 20; this.size = size; await sleep(60); continue }
+        throw e;
+      }
+      i += part.length;
+      if(onProg) onProg(Math.min(1, i / bytes.length));
     }
   },
   // ricollega da solo la stampante già usata in questa sessione
@@ -1594,7 +1651,7 @@ async function setupDevice(dev){
     if(found) break;
   }
   if(!found) throw new Error('nessun canale di stampa trovato');
-  printer.dev = dev; printer.ch = found;
+  printer.dev = dev; printer.ch = found; printer.size = 0;
   if(SET.prId !== dev.id){ SET.prId = dev.id; saveSet() }
   watchAdv(dev);
   if(!dev._smtg){ dev._smtg = true; dev.addEventListener('gattserverdisconnected', ()=>{ printer.ch = null; updatePrinterUI() }) }
@@ -1648,7 +1705,7 @@ function updatePrinterUI(){
 async function testPrint(){
   if(!printer.ch){ await connectPrinter(); if(!printer.ch) return }
   // scala di grigi + scacchiera per tarare luminosità e velocità
-  const w = PW, h = 160, bits = new Uint8Array(w*h);
+  const w = prProf().w, h = 160, bits = new Uint8Array(w*h);
   for(let y=0;y<h;y++) for(let x=0;x<w;x++){
     if(y < 80){ const lvl = Math.floor(x / (w/6)) / 5; bits[y*w+x] = ((x*7 + y*13) % 100) / 100 < lvl ? 1 : 0 }
     else bits[y*w+x] = ((x >> 4) + (y >> 4)) % 2;
@@ -1745,6 +1802,139 @@ function showWinner(i){
 $('#wnAgain').addEventListener('click', ()=>{ resetGame(); history.back(); toast('Rivincita!') });
 $('#wnNew').addEventListener('click', ()=>openWizard(true));
 $('#wnBack').addEventListener('click', ()=>history.back());
+
+/* ================= Archivio offline delle pedine ================= */
+const ARC = {list:[], meta:{}, ready:false, busy:false, prog:'', urls:new Map()};
+let _adb;
+function adb(){ return _adb || (_adb = new Promise((ok, ko)=>{ const r = indexedDB.open('smtg-arc', 1); r.onupgradeneeded = ()=>{ r.result.createObjectStore('kv'); r.result.createObjectStore('img') }; r.onsuccess = ()=>ok(r.result); r.onerror = ()=>ko(r.error) })) }
+async function aop(store, mode, fn){ const db = await adb(); return new Promise((ok, ko)=>{ const tx = db.transaction(store, mode), rq = fn(tx.objectStore(store)); tx.oncomplete = ()=>ok(rq && rq.result); tx.onerror = ()=>ko(tx.error) }) }
+const kvGet = k => aop('kv', 'readonly', s => s.get(k)), kvSet = (k, v) => aop('kv', 'readwrite', s => s.put(v, k));
+const imgGet = k => aop('img', 'readonly', s => s.get(k)), imgPut = (k, v) => aop('img', 'readwrite', s => s.put(v, k)), imgDel = k => aop('img', 'readwrite', s => s.delete(k));
+async function arcLoad(){
+  try{ ARC.list = await kvGet('idx') || []; ARC.meta = await kvGet('meta') || {} }catch(e){ ARC.list = []; ARC.meta = {} }
+  ARC.ready = ARC.list.some(e => e.ok);
+}
+async function arcSave(){ await kvSet('idx', ARC.list); await kvSet('meta', ARC.meta) }
+function arcStatus(){
+  if(ARC.busy) return ARC.prog;
+  if(!ARC.list.length) return 'Non scaricato';
+  const ok = ARC.list.filter(e => e.ok).length, d = ARC.meta.checked ? new Date(ARC.meta.checked).toLocaleDateString('it-IT') : '';
+  return ok + (ok < ARC.list.length ? ' pedine su ' + ARC.list.length : ' pedine') + (d ? ', controllato il ' + d : '');
+}
+function arcProg(t){ ARC.prog = t; const el = $('#arcStat'); if(el) el.textContent = t }
+async function arcUrl(id, k){ const key = id + ':' + k; if(ARC.urls.has(key)) return ARC.urls.get(key); const b = await imgGet(key); const u = b ? URL.createObjectURL(b) : ''; ARC.urls.set(key, u); return u }
+async function arcTk(e){
+  const small = await arcUrl(e.id, 's');
+  return {id:e.id, name:e.n, type_line:e.t, set:e.s, small, large:navigator.onLine ? e.L : small, print:await arcUrl(e.id, 'g'), local:true, rs:e.S, rl:e.L, rp:e.src};
+}
+// una pedina di Scryfall già nell'archivio stampa dal telefono (più veloce); senza rete la cerco anche per nome
+async function arcResolve(t){
+  if(!t || t.local || !ARC.ready) return t;
+  const e = ARC.list.find(x => x.id === t.id && x.ok) || (!navigator.onLine && ARC.list.find(x => x.n === t.name && x.ok));
+  if(!e) return t;
+  return navigator.onLine ? {...t, print:await arcUrl(e.id, 'g')} : arcTk(e);
+}
+const recentOf = t => t.local ? {...t, small:t.rs, large:t.rl, print:t.rp, local:false} : t;
+function arcSearch(r){
+  const tl = e => e.t.toLowerCase(), fr = (r.free || '').toLowerCase();
+  const typeOk = r.type ? (re => e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? e => e.n.toLowerCase().includes(fr) || tl(e).includes(fr) : () => true;
+  const cols = r.colors.filter(c => c !== 'C').sort().join(''), colorless = r.colors.includes('C') && !cols;
+  const pt = e => r.pow === null || (e.p === String(r.pow) && e.o === String(r.tou));
+  const col = e => !r.colors.length || (colorless ? e.c === '' : e.c === cols);
+  const kw = e => r.kw.every(k => e.k.includes(k));
+  const base = e => e.ok && typeOk(e) && (!r.artifact || /artifact/.test(tl(e)));
+  const tries = [[[pt, col, kw], ''], [[pt, kw], 'senza filtro colore'], [[pt], 'senza colore e abilità'], [[], 'tutte le pedine del tipo']];
+  for(const [fs, note] of tries){
+    const res = ARC.list.filter(e => base(e) && fs.every(f => f(e)));
+    if(res.length) return {res:res.sort((a, b) => (/token/i.test(b.t) - /token/i.test(a.t)) || (b.r || '').localeCompare(a.r || '')), note};
+  }
+  return {res:[], note:''};
+}
+const arcJunk = c => (c.type_line || '').split('//').every(p => ['Card', ''].includes(p.trim()));
+function arcEntries(c){
+  const faces = c.image_uris ? [c] : (c.card_faces || []).filter(f => f.image_uris), multi = faces.length > 1;
+  // la stessa pedina compare in tante carte fronte/retro: la riconosco da nome, tipo, F/C, colori e testo
+  return faces.map((f, k) => ({id:c.id + (multi ? '#' + k : ''), oid:[f.name, f.type_line || c.type_line, f.power ?? c.power, f.toughness ?? c.toughness, (f.colors || c.colors || []).slice().sort().join(''), f.oracle_text ?? c.oracle_text ?? ''].join('|'), n:f.name, t:f.type_line || c.type_line || '',
+    p:f.power ?? c.power ?? null, o:f.toughness ?? c.toughness ?? null, c:(f.colors || c.colors || []).slice().sort().join(''),
+    k:(c.keywords || []).map(x => x.toLowerCase()), s:c.set_name, r:c.released_at, S:f.image_uris.small, L:f.image_uris.large,
+    src:f.image_uris.border_crop || f.image_uris.large, ok:false}));
+}
+async function arcFetchList(extra){
+  const out = [];
+  for(const q of ['is:token game:paper prefer:newest', 't:emblem game:paper prefer:newest']){
+    let url = 'https://api.scryfall.com/cards/search?unique=cards&q=' + encodeURIComponent(q + extra);
+    while(url){
+      const r = await fetch(url, {headers:{Accept:'application/json'}});
+      if(r.status === 404) break;
+      if(!r.ok) throw new Error('Scryfall ' + r.status);
+      const d = await r.json(); out.push(...d.data.filter(c => !arcJunk(c))); url = d.has_more ? d.next_page : null;
+      await sleep(120);
+    }
+  }
+  return out;
+}
+// una sola immagine scaricata per pedina: ne ricavo l'anteprima a colori e la versione in grigio per la stampa
+async function arcImg(e){
+  const r = await fetch(e.src); if(!r.ok) throw new Error('immagine ' + r.status);
+  const bmp = await createImageBitmap(await r.blob());
+  const mk = (w, gray, q) => new Promise(ok => {
+    const h = Math.round(w * bmp.height / bmp.width), cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const cx = cv.getContext('2d', {willReadFrequently:gray}); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(bmp, 0, 0, w, h);
+    if(gray){ const id = cx.getImageData(0, 0, w, h), d = id.data; for(let i=0;i<d.length;i+=4){ const v = .299*d[i] + .587*d[i+1] + .114*d[i+2]; d[i] = d[i+1] = d[i+2] = v } cx.putImageData(id, 0, 0) }
+    cv.toBlob(ok, 'image/webp', q);
+  });
+  const g = await mk(384, true, .7), sm = await mk(220, false, .75);
+  await imgPut(e.id + ':g', g); await imgPut(e.id + ':s', sm); e.ok = true;
+}
+async function arcSync(quiet){
+  if(ARC.busy) return;
+  if(!navigator.onLine){ if(!quiet) toast('Serve la connessione per scaricare l\'archivio'); return }
+  ARC.busy = true; arcProg('Scarico la lista delle pedine…'); if(stack[stack.length-1] === 'menu') renderMenu();
+  try{ navigator.storage && navigator.storage.persist && navigator.storage.persist() }catch(e){}
+  try{
+    const since = ARC.meta.complete && ARC.meta.since;
+    const best = new Map();
+    for(const e of (await arcFetchList(since ? ' date>=' + since : '')).flatMap(arcEntries)){ const o = best.get(e.oid); if(!o || (e.r || '') > (o.r || '')) best.set(e.oid, e) }
+    const fresh = [...best.values()];
+    const byId = new Map(ARC.list.map(e => [e.id, e]));
+    if(!since){
+      // lista completa: tengo le immagini già scaricate, tolgo le versioni superate
+      const keep = new Set(fresh.map(e => e.id));
+      for(const e of ARC.list) if(!keep.has(e.id) && e.ok){ await imgDel(e.id + ':g'); await imgDel(e.id + ':s') }
+      ARC.list = fresh.map(e => byId.get(e.id) || e);
+    } else {
+      for(const e of fresh){
+        if(byId.has(e.id)) continue;
+        const i = ARC.list.findIndex(x => x.oid === e.oid);
+        if(i >= 0){ const old = ARC.list[i]; if((old.r || '') > (e.r || '')) continue; if(old.ok){ await imgDel(old.id + ':g'); await imgDel(old.id + ':s') } ARC.list[i] = e } else ARC.list.push(e);
+      }
+    }
+    await arcSave();
+    const todo = ARC.list.filter(e => !e.ok); let done = 0, fails = 0;
+    if(todo.length) arcProg(`Scarico le immagini: 0 di ${todo.length}`);
+    const worker = async () => { while(todo.length){ const e = todo.shift();
+      try{ await arcImg(e) }catch(err){ fails++ }
+      done++; arcProg(`Scarico le immagini: ${done} di ${done + todo.length}`);
+      if(done % 25 === 0) await arcSave(); ARC.ready = ARC.ready || e.ok } };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    ARC.meta.complete = ARC.list.every(e => e.ok);
+    if(ARC.meta.complete) ARC.meta.since = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    ARC.meta.checked = Date.now(); await arcSave(); ARC.ready = ARC.list.some(e => e.ok);
+    if(!quiet || done) toast(fails ? `Archivio aggiornato, ${fails} immagini da riprovare` : done ? `Archivio pronto: ${ARC.list.length} pedine` : 'Nessuna pedina nuova', 3000);
+  }catch(e){ if(!quiet) toast('Scaricamento interrotto: ' + (e.message || e), 3500) }
+  ARC.busy = false; if(stack[stack.length-1] === 'menu') renderMenu();
+}
+async function arcClear(){
+  await aop('img', 'readwrite', s => s.clear()); await aop('kv', 'readwrite', s => s.clear());
+  ARC.urls.forEach(u => u && URL.revokeObjectURL(u)); ARC.urls.clear(); ARC.list = []; ARC.meta = {}; ARC.ready = false;
+}
+// all'avvio: controllo giornaliero delle pedine nuove; uno scaricamento lasciato a metà riprende se non si è sul traffico dati
+arcLoad().then(()=>setTimeout(()=>{
+  if(!ARC.list.length || !navigator.onLine) return;
+  const cell = navigator.connection && navigator.connection.type === 'cellular';
+  if(!ARC.meta.complete){ if(!cell) arcSync(true) }
+  else if(Date.now() - (ARC.meta.checked || 0) > 20 * 3600e3) arcSync(true);
+}, 6000));
 
 /* ================= Effetti: particelle ================= */
 const FX = {P:[], on:false};
