@@ -475,7 +475,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.10.0';
+const VERSION = '0.10.1';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -519,7 +519,7 @@ if(!S || !S.players){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
-let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'max', heat:false}, load(SKEY) || {});
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'flow', heat:false}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
@@ -918,7 +918,7 @@ function renderMenu(){
       <select class="txt" id="prModelSel" style="width:auto"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
     <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Riscaldamento lento</span>${tog('heat', SET.heat)}</div>
-    <p class="note">«Qualità massima» manda l'immagine a fasce sottili e con calma: la stampante non si ferma più a metà lasciando strisce bianche. «Riscaldamento lento» rende il nero più pieno sulle stampanti che lo supportano: se la stampa di prova esce con simboli strani, spegnilo.</p>
+    <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Riscaldamento lento» rende il nero più pieno sulle stampanti che lo supportano: se la stampa di prova esce con simboli strani, spegnilo.</p>
     <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
     <p class="note">${navigator.bluetooth && navigator.bluetooth.getDevices
       ? 'Ricollegamento automatico: dopo il primo collegamento, basta accendere la stampante e l\'app la ritrova da sola, anche dopo averla riaperta.'
@@ -1560,8 +1560,9 @@ const PRINTERS = [
   {id:'g58', name:'Generica 58 mm ESC/POS', w:384, chunk:100},
   {id:'g80', name:'Generica 80 mm ESC/POS', w:576, chunk:180},
 ];
-// fasce sottili + invio più calmo = la stampante non resta mai a secco a metà immagine
-const SPEEDS = {max:{band:24, pace:22, label:'Qualità massima'}, norm:{band:48, pace:12, label:'Normale'}, fast:{band:128, pace:6, label:'Veloce'}};
+// immagine in un unico blocco (ogni blocco separato fermava il motore = una riga); cambia solo il ritmo d'invio dei dati
+const SPEEDS = {flow:{pace:0, label:'Fluida'}, bal:{pace:4, label:'Bilanciata'}, safe:{pace:10, label:'Prudente'}};
+if(!SPEEDS[SET.speed]) SET.speed = 'flow';
 function prAuto(){ const n = printer.dev?.name || ''; return PRINTERS.find(p => p.re && p.re.test(n)) || PRINTERS[3] }
 function prProf(){ return (SET.prModel !== 'auto' && PRINTERS.find(p => p.id === SET.prModel)) || prAuto() }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1595,16 +1596,13 @@ function drawBits(cv, b){
   cx.putImageData(id, 0, 0);
 }
 function escposRaster(b){
-  const wb = b.w / 8, out = [0x1B, 0x40], band = (SPEEDS[SET.speed] || SPEEDS.max).band;
+  const wb = b.w / 8, out = [0x1B, 0x40];
   if(SET.heat) out.push(0x1B, 0x37, 5, 140, 30); // riscaldamento lento: meno punti alla volta, nero più pieno
-  for(let y0=0; y0<b.h; y0+=band){
-    const hh = Math.min(band, b.h - y0);
-    out.push(0x1D, 0x76, 0x30, 0x00, wb & 255, wb >> 8, hh & 255, hh >> 8);
-    for(let y=y0; y<y0+hh; y++) for(let xb=0; xb<wb; xb++){
-      let byte = 0;
-      for(let k=0;k<8;k++) if(b.bits[y*b.w + xb*8 + k]) byte |= 0x80 >> k;
-      out.push(byte);
-    }
+  out.push(0x1D, 0x76, 0x30, 0x00, wb & 255, wb >> 8, b.h & 255, b.h >> 8);
+  for(let y=0; y<b.h; y++) for(let xb=0; xb<wb; xb++){
+    let byte = 0;
+    for(let k=0;k<8;k++) if(b.bits[y*b.w + xb*8 + k]) byte |= 0x80 >> k;
+    out.push(byte);
   }
   out.push(0x1B, 0x64, 0x04); // avanza 4 righe per lo strappo
   return new Uint8Array(out);
@@ -1619,11 +1617,11 @@ const printer = {
   dev:null, ch:null,
   async write(bytes, onProg){
     let size = this.size || prProf().chunk;
-    const pace = (SPEEDS[SET.speed] || SPEEDS.max).pace, wwr = this.ch.properties.writeWithoutResponse;
+    const pace = (SPEEDS[SET.speed] || SPEEDS.flow).pace, wwr = this.ch.properties.writeWithoutResponse;
     for(let i=0; i<bytes.length;){
       const part = bytes.slice(i, i+size);
       try{
-        if(wwr){ await this.ch.writeValueWithoutResponse(part); await sleep(pace) }
+        if(wwr){ await this.ch.writeValueWithoutResponse(part); if(pace) await sleep(pace) }
         else await this.ch.writeValue(part);
       }catch(e){
         // pacchetto troppo grande per questa stampante: riprovo più piccolo e me lo ricordo
