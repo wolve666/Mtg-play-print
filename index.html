@@ -475,7 +475,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.10.2';
+const VERSION = '0.10.3';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -519,7 +519,7 @@ if(!S || !S.players){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
-let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'flow', heat:false}, load(SKEY) || {});
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
@@ -915,11 +915,10 @@ function renderMenu(){
     <button class="btn" data-act="prtest">Stampa di prova</button>
     <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
     <div class="row"><span class="lbl">Modello</span>
-      <select class="txt" id="prModelSel" style="width:auto"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+      <select class="txt" id="prModelSel" style="width:auto;max-width:58%;min-width:0;text-overflow:ellipsis"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
     <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
-    <div class="row"><span class="lbl">Riscaldamento</span><div class="chips">${HEATS.map((h,i)=>`<button class="chip ${(+SET.heat||0)===i?'sel':''}" data-act="heat" data-v="${i}">${h.label}</button>`).join('')}</div></div>
-    <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,244,509].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
-    <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Riscaldamento» medio o lento rallenta la testina: nero più pieno e la stampante non resta a secco di dati (se esce con simboli strani, spegnilo). «Pacchetto» più grande = dati più veloci via Bluetooth. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
+    <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,60,100,180].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
+    <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Pacchetto» è la dimensione dei blocchi Bluetooth: Auto usa quella del modello scelto. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
     <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
     <p class="note">${navigator.bluetooth && navigator.bluetooth.getDevices
       ? 'Ricollegamento automatico: dopo il primo collegamento, basta accendere la stampante e l\'app la ritrova da sola, anche dopo averla riaperta.'
@@ -982,7 +981,6 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'clips': SET.clips = !SET.clips; saveSet(); break;
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
     case 'speed': SET.speed = v; saveSet(); break;
-    case 'heat': SET.heat = +v; saveSet(); break;
     case 'pkt': SET.pkt = +v; printer.size = 0; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
@@ -1556,17 +1554,16 @@ async function install(){
 /* ================= Stampa termica ================= */
 // archivio stampanti: impostazioni di partenza per modello (la velocità e il riscaldamento si scelgono nel menu)
 const PRINTERS = [
-  {id:'netum', name:'NetumScan NS1809DD', re:/ns-?18|netum/i, w:384, chunk:180},
+  {id:'netum', name:'NetumScan NS1809DD', re:/ns-?18|netum/i, w:384, chunk:100},
   {id:'pt210', name:'Goojprt PT-210 / MTP-II', re:/pt-?210|mtp-?ii|goojprt/i, w:384, chunk:100},
   {id:'xp', name:'Xprinter XP-P300 / P323B', re:/xp-?p\d|xprinter/i, w:384, chunk:100},
   {id:'g58', name:'Generica 58 mm ESC/POS', w:384, chunk:100},
   {id:'g80', name:'Generica 80 mm ESC/POS', w:576, chunk:180},
 ];
 // immagine in un unico blocco (ogni blocco separato fermava il motore = una riga); cambia solo il ritmo d'invio dei dati
-const SPEEDS = {flow:{pace:0, label:'Fluida'}, bal:{pace:4, label:'Bilanciata'}, safe:{pace:10, label:'Prudente'}};
-if(!SPEEDS[SET.speed]) SET.speed = 'flow';
-// ESC 7 [n1 punti/scarica, n2 tempo ×10µs, n3 pausa ×10µs]: più lento = la testina non supera mai i dati in arrivo via BLE
-const HEATS = [{label:'Spento'}, {label:'Medio', cmd:[5,140,40]}, {label:'Lento', cmd:[3,160,120]}];
+const SPEEDS = {flow:{pace:4, label:'Fluida'}, bal:{pace:6, label:'Bilanciata'}, safe:{pace:9, label:'Prudente'}};
+if(!SPEEDS[SET.speed]) SET.speed = 'bal';
+if(SET.pkt && ![60,100,180].includes(SET.pkt)) SET.pkt = 0;
 function prAuto(){ const n = printer.dev?.name || ''; return PRINTERS.find(p => p.re && p.re.test(n)) || PRINTERS[3] }
 function prProf(){ return (SET.prModel !== 'auto' && PRINTERS.find(p => p.id === SET.prModel)) || prAuto() }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1601,7 +1598,6 @@ function drawBits(cv, b){
 }
 function escposRaster(b){
   const wb = b.w / 8, out = [0x1B, 0x40];
-  const ht = HEATS[+SET.heat||0]; if(ht.cmd) out.push(0x1B, 0x37, ...ht.cmd); // ESC 7: punti per scarica, tempo, pausa → testina più lenta
   out.push(0x1D, 0x76, 0x30, 0x00, wb & 255, wb >> 8, b.h & 255, b.h >> 8);
   for(let y=0; y<b.h; y++) for(let xb=0; xb<wb; xb++){
     let byte = 0;
