@@ -48,7 +48,7 @@ public class SpeechPlugin extends Plugin {
                     public void onBufferReceived(byte[] b) {}
                     public void onEndOfSpeech() {}
                     public void onEvent(int t, Bundle b) {}
-                    public void onError(int e) { JSObject o = new JSObject(); o.put("code", e); notifyListeners("error", o); }
+                    public void onError(int e) { JSObject o = new JSObject(); o.put("code", e); notifyListeners("error", o); if (e != 8) free(); }
                     public void onPartialResults(Bundle b) {
                         ArrayList<String> m = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                         if (m != null && !m.isEmpty()) { JSObject o = new JSObject(); o.put("text", m.get(0)); notifyListeners("partial", o); }
@@ -58,6 +58,7 @@ public class SpeechPlugin extends Plugin {
                         JSArray a = new JSArray(); if (m != null) for (String x : m) a.put(x);
                         JSObject o = new JSObject(); o.put("matches", a);
                         notifyListeners("result", o);
+                        free(); // libero il riconoscitore: altrimenti la richiesta dopo trova il microfono occupato
                     }
                 });
                 Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -73,6 +74,11 @@ public class SpeechPlugin extends Plugin {
                 c.resolve();
             } catch (Exception e) { c.reject(e.getMessage()); }
         });
+    }
+
+    private void free() {
+        final SpeechRecognizer old = sr; sr = null;
+        if (old != null) getActivity().runOnUiThread(() -> { try { old.destroy(); } catch (Exception ignored) {} });
     }
 
     @PluginMethod

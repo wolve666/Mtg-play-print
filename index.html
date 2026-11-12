@@ -488,7 +488,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.3';
+const VERSION = '0.12.4';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1142,7 +1142,21 @@ const DICT = [
   ['squal[oi]','Shark'],['scimmi[ae]','Ape'],['orch(i)?|orco','Orc'],['nan[oi]','Dwarf'],['monac[oi]|monaci','Monk'],['idr[ae]','Hydra'],
   ['wurm','Wurm'],['fat[ae]|faerie','Faerie'],['illusion[ei]','Illusion'],['ragn[oi]','Spider'],['pipistrell[oi]','Bat'],
   ['conigli[oi]?','Rabbit'],['scoiattol[oi]','Squirrel'],['cittadin[oi]','Citizen'],['ninja','Ninja'],['samurai','Samurai'],
-  ['avatar','Avatar'],['ondin[ae]','Merfolk'],['tritoni?|merfolk','Merfolk'],['cerv[oi]','Elk'],['ipp?ogrif[oi]','Hippogriff'],
+  ['avatar','Avatar'],['ondin[ae]','Merfolk'],['tritoni?|merfolk','Merfolk'],['cerv[oi]|alc[ei]','Elk'],['ipp?ogrif[oi]','Hippogriff'],
+  ['emblem[ai]','Emblem'],['pietr[ae] del potere|powerstone','Powerstone'],['incubator[ei]','Incubator'],['frammento|shard','Shard'],
+  ['cianfrusagli[ae]|junk','Junk'],['ruol[oi]','Role'],['veicol[oi]','Vehicle'],['equipaggiament[oi]','Equipment'],
+  ['orror[ei]','Horror'],['bu[ei]|buoi','Ox'],['capr[ae]','Goat'],['pecor[ae]','Sheep'],['cinghial[ei]','Boar'],['can[ei]','Dog'],
+  ['segugi?[oi]','Hound'],['cavall[oi]','Horse'],['top[oi]','Mouse'],['lontr[ae]','Otter'],['procion[ei]','Raccoon'],['volp[ei]','Fox'],
+  ['elefant[ei]','Elephant'],['rinoceront[ei]','Rhino'],['polp[oi]|piovr[ae]','Octopus'],['granch[io]|granchi','Crab'],['anguill[ae]','Eel'],
+  ['tartarug[ae]|tartarughe','Turtle'],['mur[oi]|muri','Wall'],['gnom[oi]','Gnome'],['gigant[ei]','Giant'],['ogre|orch[ei]ssa','Ogre'],
+  ['troll','Troll'],['minotaur[oi]','Minotaur'],['centaur[oi]','Centaur'],['satir[oi]','Satyr'],['ninf[ae]','Nymph'],['sfing[ei]','Sphinx'],
+  ['fenic[ei]','Phoenix'],['phyrexian[oi]|ferexian[oi]','Phyrexian'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
+  ['ombr[ae]','Shade'],['diavol[oi]','Devil'],['diavolett[oi]|imp','Imp'],['melm[ae]|ooze','Ooze'],['mutant[ei]','Mutant'],['robot','Robot'],
+  ['mercenari[oi]?','Mercenary'],['furfant[ei]','Rogue'],['mutaform[ae]','Shapeshifter'],['verm[ei]','Worm'],['calamar[oi]|seppi[ae]','Squid'],
+  ['stell[ae] marin[ae]','Starfish'],['aquil[ae]','Bird'],['vigliacc[oi]|codard[oi]','Coward'],['sopravvissut[oi]','Survivor'],
+  ['detective','Detective'],['assassin[oi]','Assassin'],['consiglier[ei]','Advisor'],['contadin[oi]','Peasant'],['nobil[ei]','Noble'],
+  ['incub[oi]|incubi','Nightmare'],['eroe|eroi','Hero'],['acar[oi]|mite','Mite'],['uov[oa]','Egg'],['energia','Energy'],
+  ['copi[ae]','Copy','n'],
 ];
 const COLW = [['bianc[oaie]|bianche','W'],['blu','U'],['ner[oaie]','B'],['ross[oaie]','R'],['verd[ei]','G'],['incolor[ei]','C']];
 const KW = [['volant[ei]|volare','flying'],['travolgere','trample'],['cautela','vigilance'],['legame vitale','lifelink'],
@@ -1156,7 +1170,7 @@ function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036
 function parseRequest(raw){
   let s = ' ' + norm(raw) + ' ';
   s = s.replace(/\b([a-z]+)\b/g, w => (w in NUMW) ? String(NUMW[w]) : w);
-  const out = {qty:1, type:null, colors:[], pow:null, tou:null, kw:[], kwIt:[], typeIt:'', artifact:/artefatt/.test(s), free:''};
+  const out = {qty:1, byName:false, type:null, colors:[], pow:null, tou:null, kw:[], kwIt:[], typeIt:'', artifact:/artefatt/.test(s), free:''};
 
   // quantità: numero seguito da "pedine/copie/token"
   let m = s.match(/\b(\d+)\s+(pedin[ae]|copi[ae]|token|segnalin[oi])\b/);
@@ -1175,7 +1189,7 @@ function parseRequest(raw){
 
   for(const [re, code] of COLW){ const r = new RegExp('\\b(' + re + ')\\b'); if(r.test(s)){ out.colors.push(code); s = s.replace(r,' ') } }
   for(const [re, k] of KW){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.kw.push(k); out.kwIt.push(mm[1]); s = s.replace(r,' ') } }
-  for(const [re, en] of DICT){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.type = en; out.typeIt = mm[1]; s = s.replace(r,' '); break } }
+  for(const [re, en, how] of DICT){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.type = en; out.typeIt = mm[1]; out.byName = how === 'n'; s = s.replace(r,' '); break } }
   out.free = s.replace(FILLER,' ').replace(/\s+/g,' ').trim();
   out.qty = Math.max(1, Math.min(10, out.qty));
   return out;
@@ -1189,8 +1203,10 @@ function describe(r){
   return s + (r.qty > 1 ? ', ' + r.qty + ' copie' : '');
 }
 function buildQueries(r){
-  const base = ['t:token'];
-  if(r.type) base.push('t:' + r.type.toLowerCase());
+  const base = r.type === 'Emblem' ? [] : ['t:token']; // gli emblemi su Scryfall non sono «token»
+  if(r.type && r.byName) base.push('name:' + r.type.toLowerCase());
+  else if(r.type) base.push('t:' + r.type.toLowerCase());
+  if(r.type === 'Emblem' && r.free) base.push('t:' + r.free.split(' ')[0]); // «emblema di Elspeth»
   else if(r.free) base.push(r.free.includes(' ') ? `name:"${r.free}"` : `(t:${r.free} or name:${r.free})`);
   if(r.artifact) base.push('t:artifact');
   const col = r.colors.length ? ['c=' + r.colors.join('')] : [];
@@ -1249,7 +1265,11 @@ function startCaptureNat(btn, silent){
   const end = () => { if(ended) return; ended = true; btn.classList.remove('listening'); hs.forEach(h => Promise.resolve(h).then(x => x.remove()).catch(()=>{})); if(cb) deliver() };
   hs.push(SP.addListener('partial', d => { interim = d.text || ''; if(!silent) showPTT(interim || 'Ti ascolto…') }));
   hs.push(SP.addListener('result', d => { matches = d.matches || []; end() }));
-  hs.push(SP.addListener('error', d => { err = d.code; end() }));
+  const t0 = Date.now(); let retried = false;
+  hs.push(SP.addListener('error', d => {
+    // 5, 8, 11 = riconoscitore ancora impegnato con la richiesta di prima: riparto una volta
+    if(!retried && [5,8,11].includes(d.code) && Date.now() - t0 < 1500 && !cb){ retried = true; setTimeout(()=>SP.start({lang:'it-IT'}).catch(()=>{}), 250); return }
+    err = d.code; end() }));
   SP.start({lang:'it-IT'}).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
   function deliver(){
     hidePTT(); if(cancelled || !cb) return;
@@ -2029,7 +2049,7 @@ async function arcResolve(t){
 const recentOf = t => t.local ? {...t, small:t.rs, large:t.rl, print:t.rp, local:false} : t;
 function arcSearch(r){
   const tl = e => e.t.toLowerCase(), fr = (r.free || '').toLowerCase();
-  const typeOk = r.type ? (re => e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? e => e.n.toLowerCase().includes(fr) || tl(e).includes(fr) : () => true;
+  const typeOk = r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : r.type === 'Emblem' && fr ? e => re.test(tl(e)) && tl(e).includes(fr.split(' ')[0]) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? e => e.n.toLowerCase().includes(fr) || tl(e).includes(fr) : () => true;
   const cols = r.colors.filter(c => c !== 'C').sort().join(''), colorless = r.colors.includes('C') && !cols;
   const pt = e => r.pow === null || (e.p === String(r.pow) && e.o === String(r.tou));
   const col = e => !r.colors.length || (colorless ? e.c === '' : e.c === cols);
