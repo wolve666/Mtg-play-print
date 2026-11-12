@@ -475,7 +475,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.10.4';
+const VERSION = '0.10.5';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -519,7 +519,7 @@ if(!S || !S.players){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
-let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0}, load(SKEY) || {});
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
@@ -918,6 +918,8 @@ function renderMenu(){
     <div class="row"><span class="lbl">Modello</span>
       <select class="txt" id="prModelSel" style="width:auto;max-width:58%;min-width:0;text-overflow:ellipsis"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
     <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Dimensione pedina</span><div class="chips">${[100,85,75].map(n=>`<button class="chip ${(SET.scale||100)===n?'sel':''}" data-act="scale" data-v="${n}">${n}%</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Doppia altezza (metà dati)</span>${tog('dh', SET.dh)}</div>
     <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,60,100,180].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
     <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Pacchetto» è la dimensione dei blocchi Bluetooth: Auto usa quella del modello scelto. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
     <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
@@ -983,6 +985,8 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
     case 'speed': SET.speed = v; saveSet(); break;
     case 'pkt': SET.pkt = +v; printer.size = 0; saveSet(); break;
+    case 'scale': SET.scale = +v; saveSet(); break;
+    case 'dh': SET.dh = !SET.dh; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
     case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
@@ -1571,7 +1575,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function loadImg(src){ return new Promise((ok, ko)=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = ()=>ok(i); i.onerror = ko; i.src = src }) }
 async function makeBits(src){
   const img = await loadImg(src);
-  const W0 = prProf().w, w = W0, h = Math.round(W0 * img.naturalHeight / img.naturalWidth);
+  // meno dati = meno pause: pedina ridotta e/o doppia altezza (la stampante raddoppia ogni riga da sola)
+  const W0 = prProf().w, w = Math.round(W0 * (SET.scale||100) / 800) * 8, dh = !!SET.dh;
+  const h = Math.round(w * img.naturalHeight / img.naturalWidth / (dh ? 2 : 1));
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,w,h); cx.drawImage(img, 0, 0, w, h);
   const d = cx.getImageData(0,0,w,h).data;
@@ -1589,17 +1595,19 @@ async function makeBits(src){
     bits[i] = n === 0 ? 1 : 0;
     add(x+1,y,e); add(x+2,y,e); add(x-1,y+1,e); add(x,y+1,e); add(x+1,y+1,e); add(x,y+2,e);
   }
-  return {w, h, bits};
+  return {w, h, bits, dh};
 }
 function drawBits(cv, b){
-  cv.width = b.w; cv.height = b.h;
-  const cx = cv.getContext('2d'), id = cx.createImageData(b.w, b.h);
-  for(let i=0;i<b.bits.length;i++){ const v = b.bits[i] ? 20 : 255; id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v; id.data[i*4+3]=255 }
+  const k = b.dh ? 2 : 1, H = b.h * k;
+  cv.width = b.w; cv.height = H;
+  const cx = cv.getContext('2d'), id = cx.createImageData(b.w, H);
+  for(let i=0;i<b.w*H;i++){ const y = Math.floor(i / b.w / k), v = b.bits[y*b.w + i % b.w] ? 20 : 255; id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v; id.data[i*4+3]=255 }
   cx.putImageData(id, 0, 0);
 }
 function escposRaster(b){
   const wb = b.w / 8, out = [0x1B, 0x40];
-  out.push(0x1D, 0x76, 0x30, 0x00, wb & 255, wb >> 8, b.h & 255, b.h >> 8);
+  out.push(0x1B, 0x61, 1); // centrata (serve quando la pedina è ridotta)
+  out.push(0x1D, 0x76, 0x30, b.dh ? 2 : 0, wb & 255, wb >> 8, b.h & 255, b.h >> 8);
   for(let y=0; y<b.h; y++) for(let xb=0; xb<wb; xb++){
     let byte = 0;
     for(let k=0;k<8;k++) if(b.bits[y*b.w + xb*8 + k]) byte |= 0x80 >> k;
