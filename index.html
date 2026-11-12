@@ -414,6 +414,13 @@ input.txt{user-select:text;-webkit-user-select:text}
 </section>
 
 <!-- Suggerimento -->
+<section class="ov" id="ov-bt">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Cerca stampante</h2>
+  </div>
+  <div class="ovBody"><div id="btList"></div></div>
+</section>
 <section class="ov" id="ov-suggest">
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -480,7 +487,7 @@ const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.is
 const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.11.1';
+const VERSION = '0.11.2';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -861,6 +868,7 @@ function closeTop(){
   $('#ov-' + id).classList.remove('open');
   if(id === 'player') renderBoard();
   if(id === 'modal') tmCleanup();
+  if(id === 'bt') btStop();
   if(id === 'wizard' && WZ.step === 2){ wzStep(1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
@@ -926,6 +934,7 @@ function renderMenu(){
     <div class="row"><span class="lbl">Dimensione pedina</span><div class="chips">${[100,85,75].map(n=>`<button class="chip ${(SET.scale||100)===n?'sel':''}" data-act="scale" data-v="${n}">${n}%</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Doppia altezza (metà dati)</span>${tog('dh', SET.dh)}</div>
     <div class="row"><span class="lbl">Stampa in un colpo (sperimentale)</span>${tog('page', SET.page)}</div>
+    ${NATIVE ? `<div class="row"><span class="lbl">Collegamento veloce</span>${tog('prio', !SET.noPrio)}</div>` : ''}
     <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,60,100,180].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
     <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Pacchetto» è la dimensione dei blocchi Bluetooth: Auto usa quella del modello scelto. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
     <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
@@ -994,6 +1003,7 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'scale': SET.scale = +v; saveSet(); break;
     case 'dh': SET.dh = !SET.dh; saveSet(); break;
     case 'page': SET.page = !SET.page; saveSet(); break;
+    case 'prio': SET.noPrio = !SET.noPrio; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
     case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
@@ -1696,7 +1706,7 @@ async function setupDevice(dev){
 // ricollegamento automatico: la stampante già usata viene ritrovata appena la accendi
 let reconnecting = false;
 async function autoReconnect(){
-  if(printer.ch || !printer.dev || reconnecting || document.visibilityState !== 'visible') return;
+  if(printer.ch || !printer.dev || reconnecting || btScanning || document.visibilityState !== 'visible') return;
   reconnecting = true;
   try{ await setupDevice(printer.dev); toast('Stampante collegata: ' + (printer.dev.name || '')); sfx('found'); buzz(30) }catch(e){}
   reconnecting = false;
@@ -1723,10 +1733,15 @@ document.addEventListener('visibilitychange', autoReconnect);
 const toHex = d => Array.from(d, b => (b < 16 ? '0' : '') + b.toString(16)).join('');
 let bleReady = null;
 const bleInit = () => bleReady || (bleReady = BLE.initialize({androidNeverForLocation:false}) /* senza il permesso posizione Android 12+ nasconde tutti i dispositivi trovati */.catch(e => { bleReady = null; throw e }));
-async function nativeSetup(id, name){
+// un collegamento alla volta: due connect sovrapposti fanno chiudere il primo (collega/scollega)
+let bleLock = Promise.resolve(), prioAt = 0;
+function nativeSetup(id, name){ const p = bleLock.then(()=>nativeSetup0(id, name)); bleLock = p.catch(()=>{}); return p }
+async function nativeSetup0(id, name){
+  if(printer.ch && printer.dev && printer.dev.id === id) return;
   await bleInit();
   await BLE.connect({deviceId:id, timeout:10000});
-  try{ await BLE.requestConnectionPriority({deviceId:id, connectionPriority:1}) }catch(e){}
+  // collegamento veloce: se la stampante cade subito dopo, lo disattivo da solo
+  if(!SET.noPrio){ await sleep(600); try{ await BLE.requestConnectionPriority({deviceId:id, connectionPriority:1}); prioAt = Date.now() }catch(e){} }
   const {services} = await BLE.getServices({deviceId:id});
   let svc = null, chr = null;
   for(const s of services){ for(const c of s.characteristics){ if(c.properties.writeWithoutResponse || c.properties.write){ svc = s.uuid; chr = c; break } } if(chr) break }
@@ -1736,22 +1751,54 @@ async function nativeSetup(id, name){
   printer.dev = {id, name};
   printer.ch = {properties:chr.properties, writeValueWithoutResponse: d => w('writeWithoutResponse', d), writeValue: d => w('write', d)};
   printer.size = Math.max(20, Math.min(509, mtu - 3));
+  printer.info = `MTU ${mtu}${SET.noPrio ? '' : ' · veloce'}`;
   if(!SET.prNat || SET.prNat.id !== id){ SET.prNat = {id, name}; saveSet() }
   if(!nativeSetup.l) nativeSetup.l = {};
-  if(!nativeSetup.l[id]){ nativeSetup.l[id] = true; BLE.addListener('disconnected|' + id, ()=>{ printer.ch = null; updatePrinterUI() }) }
+  if(!nativeSetup.l[id]){ nativeSetup.l[id] = true; BLE.addListener('disconnected|' + id, ()=>{
+    printer.ch = null; updatePrinterUI();
+    if(!SET.noPrio && Date.now() - prioAt < 5000){ SET.noPrio = true; saveSet(); toast('La stampante non regge il collegamento veloce: l\'ho disattivato, ricollegala', 4500) }
+  }) }
   updatePrinterUI();
 }
 if(NATIVE && SET.prNat) printer.dev = SET.prNat;
+// ricerca nostra: solo dispositivi con nome, stampanti note in cima, più vicine prima
+let btScanning = false, btSeen = {};
+const isKnownPr = n => PRINTERS.some(p => p.re && p.re.test(n || ''));
+async function btPick(){
+  await bleInit();
+  btSeen = {}; openOv('bt');
+  try{ await BLE.stopLEScan() }catch(e){}
+  if(!btPick.l){ btPick.l = true; BLE.addListener('onScanResult', r => {
+    const d = r.device || {}, name = d.name || r.localName; if(!name || !d.deviceId) return;
+    btSeen[d.deviceId] = {id:d.deviceId, name, rssi:r.rssi}; renderBt();
+  }) }
+  btScanning = true; renderBt();
+  try{ await BLE.requestLEScan({allowDuplicates:false, scanMode:2}) }
+  catch(e){ btScanning = false; renderBt(); toast('Ricerca non riuscita: ' + (e.message || e) + ' (posizione accesa?)', 4000); return }
+  clearTimeout(btPick.t); btPick.t = setTimeout(btStop, 15000);
+}
+function btStop(){ clearTimeout(btPick.t); if(btScanning){ btScanning = false; BLE.stopLEScan().catch(()=>{}) } renderBt() }
+function renderBt(){
+  const el = $('#btList'); if(!el) return;
+  const ds = Object.values(btSeen).sort((a, b) => (isKnownPr(b.name) - isKnownPr(a.name)) || (b.rssi - a.rssi));
+  el.innerHTML = ds.map(d => `<button class="btn ${isKnownPr(d.name) ? 'primary' : ''}" data-bt="${esc(d.id)}" style="justify-content:space-between">${esc(d.name)}<small style="opacity:.6">${d.rssi} dBm</small></button>`).join('')
+    + `<p class="note">${btScanning ? 'Ricerca in corso… Se la stampante non compare, spegnila e riaccendila.' : (ds.length ? 'Ricerca finita.' : 'Nessun dispositivo trovato.')}</p>`
+    + (btScanning ? '' : '<button class="btn" data-bt="again">Cerca di nuovo</button>');
+}
+$('#btList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-bt]'); if(!b) return;
+  if(b.dataset.bt === 'again'){ btSeen = {}; btScanning = true; renderBt(); try{ await BLE.requestLEScan({allowDuplicates:false, scanMode:2}); btPick.t = setTimeout(btStop, 15000) }catch(err){ btStop() } return }
+  const d = btSeen[b.dataset.bt]; if(!d) return;
+  btStop(); history.back();
+  const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
+  try{ await nativeSetup(d.id, d.name); toast('Collegata a ' + d.name); sfx('found'); buzz(30) }
+  catch(err){ toast('Collegamento non riuscito: ' + (err.message || err), 3500) }
+  updatePrinterUI();
+});
 async function connectPrinter(){
   if(NATIVE){
-    try{
-      await bleInit();
-      const d = await BLE.requestDevice({});
-      const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
-      await nativeSetup(d.deviceId, d.name || 'stampante');
-      toast('Collegata a ' + (d.name || 'stampante'));
-    }catch(e){ if(!/cancel|No device/i.test(e.message || '')) toast('Collegamento non riuscito: ' + (e.message || e), 3500) }
-    updatePrinterUI(); return;
+    try{ await btPick() }catch(e){ toast('Bluetooth non disponibile: ' + (e.message || e), 3500) }
+    return;
   }
   if(!navigator.bluetooth){ toast('Bluetooth non disponibile: usa Chrome su Android', 3000); return }
   try{
@@ -1768,7 +1815,7 @@ function updatePrinterUI(){
   const on = !!printer.ch, name = on ? (printer.dev.name || 'stampante') : '';
   $('#tokenBtn').classList.toggle('pr-on', on);
   $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega stampante';
-  const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name : 'Non collegata';
+  const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name + (printer.info ? ` (${printer.info})` : '') : 'Non collegata';
   const cb = $('#prConnect'); if(cb) cb.textContent = on ? 'Cambia stampante' : 'Collega stampante';
 }
 async function testPrint(){
