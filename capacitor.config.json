@@ -1,0 +1,6 @@
+{
+  "appId": "it.educk.magicplayprint",
+  "appName": "Magic Play and Print",
+  "webDir": "www",
+  "android": { "allowMixedContent": false }
+}

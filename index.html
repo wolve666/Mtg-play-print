@@ -473,9 +473,14 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <div id="toast"></div>
 
+<script src="app-config.js"></script>
 <script>
+// app Android (Capacitor): Bluetooth nativo veloce al posto di Web Bluetooth
+const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
+const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.10.6';
+const VERSION = '0.11.0';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -866,7 +871,7 @@ window.addEventListener('popstate', ()=>{
   if(TUT){ endTut(); history.pushState({guard:true}, ''); return }
   if(stack.length){ closeTop(); return }
   const now = Date.now();
-  if(now - lastBack < 2000){ history.back(); return }
+  if(now - lastBack < 2000){ if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.exitApp(); else history.back(); return }
   lastBack = now;
   toast('Premi di nuovo indietro per uscire');
   history.pushState({guard:true}, '');
@@ -1553,6 +1558,7 @@ const blobToDataURL = b => new Promise(ok=>{ const r = new FileReader(); r.onloa
 let installEvt = null;
 window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e });
 async function install(){
+  if(NATIVE){ if(APK_URL){ toast('Scarico l\'APK da condividere o reinstallare', 3000); location.href = APK_URL } return }
   if(matchMedia('(display-mode: standalone)').matches){ toast('L\'app è già installata'); return }
   if(installEvt){ installEvt.prompt(); await installEvt.userChoice; installEvt = null; return }
   toast('Apri il menu di Chrome (⋮) e scegli «Installa app»', 3500);
@@ -1647,7 +1653,7 @@ const printer = {
   dev:null, ch:null,
   async write(bytes, onProg){
     let size = this.size || SET.pkt || prProf().chunk; const t0 = performance.now();
-    const pace = (SPEEDS[SET.speed] || SPEEDS.flow).pace, wwr = this.ch.properties.writeWithoutResponse;
+    const pace = NATIVE ? 0 : (SPEEDS[SET.speed] || SPEEDS.flow).pace, wwr = this.ch.properties.writeWithoutResponse;
     for(let i=0; i<bytes.length;){
       const part = bytes.slice(i, i+size);
       try{
@@ -1671,6 +1677,7 @@ const printer = {
   }
 };
 async function setupDevice(dev){
+  if(NATIVE) return nativeSetup(dev.id, dev.name);
   const server = await dev.gatt.connect();
   let found = null;
   for(const s of await server.getPrimaryServices()){
@@ -1712,7 +1719,40 @@ if(navigator.bluetooth && navigator.bluetooth.getDevices){
 }
 setInterval(autoReconnect, 7000);
 document.addEventListener('visibilitychange', autoReconnect);
+// --- Bluetooth nativo: priorità alta + pacchetti grandi (MTU fino a 512) = dati più veloci della testina ---
+const toHex = d => Array.from(d, b => (b < 16 ? '0' : '') + b.toString(16)).join('');
+let bleReady = null;
+const bleInit = () => bleReady || (bleReady = BLE.initialize({androidNeverForLocation:true}).catch(e => { bleReady = null; throw e }));
+async function nativeSetup(id, name){
+  await bleInit();
+  await BLE.connect({deviceId:id, timeout:10000});
+  try{ await BLE.requestConnectionPriority({deviceId:id, connectionPriority:1}) }catch(e){}
+  const {services} = await BLE.getServices({deviceId:id});
+  let svc = null, chr = null;
+  for(const s of services){ for(const c of s.characteristics){ if(c.properties.writeWithoutResponse || c.properties.write){ svc = s.uuid; chr = c; break } } if(chr) break }
+  if(!chr) throw new Error('nessun canale di stampa trovato');
+  let mtu = 23; try{ mtu = (await BLE.getMtu({deviceId:id})).value || 23 }catch(e){}
+  const w = (fn, d) => BLE[fn]({deviceId:id, service:svc, characteristic:chr.uuid, value:toHex(d)});
+  printer.dev = {id, name};
+  printer.ch = {properties:chr.properties, writeValueWithoutResponse: d => w('writeWithoutResponse', d), writeValue: d => w('write', d)};
+  printer.size = Math.max(20, Math.min(509, mtu - 3));
+  if(!SET.prNat || SET.prNat.id !== id){ SET.prNat = {id, name}; saveSet() }
+  if(!nativeSetup.l) nativeSetup.l = {};
+  if(!nativeSetup.l[id]){ nativeSetup.l[id] = true; BLE.addListener('disconnected|' + id, ()=>{ printer.ch = null; updatePrinterUI() }) }
+  updatePrinterUI();
+}
+if(NATIVE && SET.prNat) printer.dev = SET.prNat;
 async function connectPrinter(){
+  if(NATIVE){
+    try{
+      await bleInit();
+      const d = await BLE.requestDevice({});
+      const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
+      await nativeSetup(d.deviceId, d.name || 'stampante');
+      toast('Collegata a ' + (d.name || 'stampante'));
+    }catch(e){ if(!/cancel|No device/i.test(e.message || '')) toast('Collegamento non riuscito: ' + (e.message || e), 3500) }
+    updatePrinterUI(); return;
+  }
   if(!navigator.bluetooth){ toast('Bluetooth non disponibile: usa Chrome su Android', 3000); return }
   try{
     const dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true, optionalServices:PR_SERVICES});
@@ -2093,8 +2133,14 @@ function showVer(){
 async function checkUpdate(manual){
   if(manual) toast('Verifico gli aggiornamenti…');
   try{
-    const r = await fetch('index.html?check=' + Date.now(), {cache:'no-store'});
-    const m = (await r.text()).match(/const VERSION = '([\d.]+)'/);
+    let m;
+    if(NATIVE){ // l'app controlla l'ultima release su GitHub
+      const r = await fetch(`https://api.github.com/repos/${window.APP_REPO}/releases/latest`, {cache:'no-store'});
+      m = [0, ((await r.json()).tag_name || '').replace(/^v/, '')]; if(!m[1]) throw new Error();
+    }else{
+      const r = await fetch('index.html?check=' + Date.now(), {cache:'no-store'});
+      m = (await r.text()).match(/const VERSION = '([\d.]+)'/);
+    }
     if(!m) throw new Error();
     UPD.remote = cmpVer(m[1], VERSION) > 0 ? m[1] : null;
     if(manual) toast(UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Hai già l\'ultima versione (' + VERSION + ')');
@@ -2102,6 +2148,7 @@ async function checkUpdate(manual){
   showVer(); if(stack[stack.length-1] === 'menu') renderMenu();
 }
 async function applyUpdate(){
+  if(NATIVE){ toast('Scarico la nuova versione: aprila per installarla', 4000); location.href = APK_URL; return }
   toast('Aggiorno…');
   try{
     const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
@@ -2123,7 +2170,7 @@ setInterval(()=>{ if(document.visibilityState === 'visible') checkUpdate(false) 
 renderBoard();
 if(inProgress()) openResume(); else openWizard();
 updatePrinterUI();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(!NATIVE && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
