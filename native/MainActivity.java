@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(BtSerialPlugin.class); // stampa via Bluetooth classico (SPP)
+        registerPlugin(SpeechPlugin.class); // dettatura con il riconoscimento vocale di Android
         super.onCreate(savedInstanceState);
     }
 }

@@ -488,7 +488,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.2';
+const VERSION = '0.12.3';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1241,7 +1241,30 @@ function startClip(){
     }
   };
 }
+// nell'app: riconoscimento vocale nativo di Android
+function startCaptureNat(btn, silent){
+  const SP = Capacitor.Plugins.Speech, hs = [];
+  let interim = '', matches = null, ended = false, cb = null, cancelled = false, err = null;
+  btn.classList.add('listening'); if(!silent) showPTT('Ti ascolto… rilascia per inviare'); buzz(15); sfx('listen');
+  const end = () => { if(ended) return; ended = true; btn.classList.remove('listening'); hs.forEach(h => Promise.resolve(h).then(x => x.remove()).catch(()=>{})); if(cb) deliver() };
+  hs.push(SP.addListener('partial', d => { interim = d.text || ''; if(!silent) showPTT(interim || 'Ti ascolto…') }));
+  hs.push(SP.addListener('result', d => { matches = d.matches || []; end() }));
+  hs.push(SP.addListener('error', d => { err = d.code; end() }));
+  SP.start({lang:'it-IT'}).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
+  function deliver(){
+    hidePTT(); if(cancelled || !cb) return;
+    const c = cb; cb = null;
+    const alts = matches && matches.length ? matches : (interim.trim() ? [interim.trim()] : []);
+    if(!alts.length){ if([1,2,4,12,13].includes(err) || !navigator.onLine) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
+    c(alts);
+  }
+  return {
+    finish(f){ cb = f; if(ended) deliver(); else { SP.stop().catch(()=>{}); setTimeout(end, 3000) } },
+    cancel(){ cancelled = true; SP.cancel().catch(()=>{}); hidePTT(); end() }
+  };
+}
 function startCapture(btn, silent){
+  if(NATIVE && Capacitor.Plugins.Speech) return startCaptureNat(btn, silent);
   if(!SR){ kbFallback('Riconoscimento vocale non disponibile: scrivi la pedina'); return null }
   const finals = []; let interim = '', ended = false, cb = null, cancelled = false, netErr = false;
   const rec = new SR(), clip = startClip();
@@ -1798,6 +1821,7 @@ async function nativeSetup0(id, name){
   }) }
   updatePrinterUI();
 }
+if(NATIVE && SET.prNat && !SET.prNat.spp){ delete SET.prNat; saveSet() } // vecchio collegamento LE: lo dimentico, si ricollega in classico
 if(NATIVE && SET.prNat) printer.dev = SET.prNat;
 // ricerca nostra: solo dispositivi con nome, stampanti note in cima, più vicine prima
 let btScanning = false, btSeen = {};
@@ -1806,7 +1830,7 @@ let btPaired = [];
 async function btPick(){
   btPaired = []; btSeen = {}; openOv('bt');
   try{ btPaired = ((await SPP.list()).devices || []).filter(d => d.type !== 2) }catch(e){}
-  renderBt();
+  renderBt(); return; // solo Bluetooth classico: in LE la NetumScan si interrompe
   await bleInit();
   try{ await BLE.stopLEScan() }catch(e){}
   if(!btPick.l){ btPick.l = true; BLE.addListener('onScanResult', r => {
@@ -1823,13 +1847,10 @@ function renderBt(){
   const el = $('#btList'); if(!el) return;
   const ds = Object.values(btSeen).sort((a, b) => (isKnownPr(b.name) - isKnownPr(a.name)) || (b.rssi - a.rssi));
   const pr = btPaired.slice().sort((a, b) => isKnownPr(b.name) - isKnownPr(a.name));
-  el.innerHTML = `<h3 style="margin:4px 0 8px">Bluetooth classico (consigliato)</h3>`
+  el.innerHTML = `<h3 style="margin:4px 0 8px">Stampanti accoppiate</h3>`
     + (pr.length ? pr.map(d => `<button class="btn ${isKnownPr(d.name) ? 'primary' : ''}" data-spp="${esc(d.address)}" data-n="${esc(d.name || '')}">${esc(d.name || d.address)}</button>`).join('')
       : '<p class="note">Nessuna stampante accoppiata. Accoppiala da Impostazioni → Bluetooth di Android (PIN di solito 0000 o 1234), poi torna qui.</p>')
-    + `<h3 style="margin:16px 0 8px">Bluetooth LE</h3>`
-    + ds.map(d => `<button class="btn ${isKnownPr(d.name) ? 'primary' : ''}" data-bt="${esc(d.id)}" style="justify-content:space-between">${esc(d.name)}<small style="opacity:.6">${d.rssi} dBm</small></button>`).join('')
-    + `<p class="note">${btScanning ? 'Ricerca in corso… Se la stampante non compare, spegnila e riaccendila.' : (ds.length ? 'Ricerca finita.' : 'Nessun dispositivo trovato.')}</p>`
-    + (btScanning ? '' : '<button class="btn" data-bt="again">Cerca di nuovo</button>');
+    + '<button class="btn" data-bt="again" style="margin-top:12px">Aggiorna elenco</button>';
 }
 $('#btList').addEventListener('click', async e => {
   const sb = e.target.closest('[data-spp]');
@@ -1841,7 +1862,8 @@ $('#btList').addEventListener('click', async e => {
     updatePrinterUI(); return;
   }
   const b = e.target.closest('[data-bt]'); if(!b) return;
-  if(b.dataset.bt === 'again'){ btSeen = {}; btScanning = true; renderBt(); try{ await BLE.requestLEScan({allowDuplicates:false, scanMode:2}); btPick.t = setTimeout(btStop, 15000) }catch(err){ btStop() } return }
+  if(b.dataset.bt === 'again'){ try{ btPaired = ((await SPP.list()).devices || []).filter(d => d.type !== 2) }catch(err){} renderBt(); return }
+  if(b.dataset.bt === 'again-le'){ btSeen = {}; btScanning = true; renderBt(); try{ await BLE.requestLEScan({allowDuplicates:false, scanMode:2}); btPick.t = setTimeout(btStop, 15000) }catch(err){ btStop() } return }
   const d = btSeen[b.dataset.bt]; if(!d) return;
   btStop(); history.back();
   const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
