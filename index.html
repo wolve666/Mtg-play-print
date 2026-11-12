@@ -488,7 +488,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.0';
+const VERSION = '0.12.1';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1744,8 +1744,9 @@ function nativeSetup(id, name, spp){ const p = bleLock.then(()=> spp ? sppSetup(
 const toB64 = d => { let s = ''; for(let i = 0; i < d.length; i += 8192) s += String.fromCharCode.apply(null, d.subarray(i, i + 8192)); return btoa(s) };
 async function sppSetup(addr, name){
   if(printer.ch && printer.dev && printer.dev.id === addr) return;
-  await SPP.connect({address:addr});
-  printer.dev = {id:addr, name, spp:true}; printer.spp = true; printer.size = 4096; printer.info = 'Bluetooth classico';
+  try{ await BLE.disconnect({deviceId:addr}) }catch(e){} // se è collegata anche in LE, la libero
+  const cr = await SPP.connect({address:addr});
+  printer.dev = {id:addr, name, spp:true}; printer.spp = true; printer.size = 4096; printer.info = 'Bluetooth classico · ' + ((cr && cr.how) || '');
   printer.ch = {properties:{write:true}, writeValue: d => SPP.write({data: toB64(d)})};
   if(!sppSetup.l){ sppSetup.l = true; SPP.addListener('disconnected', ()=>{ if(printer.spp){ printer.ch = null; updatePrinterUI() } }) }
   if(!SET.prNat || SET.prNat.id !== addr){ SET.prNat = {id:addr, name, spp:true}; saveSet() }
