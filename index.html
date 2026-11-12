@@ -475,7 +475,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.10.3';
+const VERSION = '0.10.4';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -913,6 +913,7 @@ function renderMenu(){
     <div class="row"><span class="lbl" id="prStatus"></span></div>
     <button class="btn" data-act="prconnect" id="prConnect">Collega stampante</button>
     <button class="btn" data-act="prtest">Stampa di prova</button>
+    <div class="row"><span class="lbl">Ultima stampa</span><span class="note" style="margin:0;text-align:right">${printer.last ? esc(printer.last) : '—'}</span></div>
     <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
     <div class="row"><span class="lbl">Modello</span>
       <select class="txt" id="prModelSel" style="width:auto;max-width:58%;min-width:0;text-overflow:ellipsis"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
@@ -1631,7 +1632,7 @@ const printer = {
       i += part.length;
       if(onProg) onProg(Math.min(1, i / bytes.length));
     }
-    if(bytes.length > 2000) toast(`Dati: ${(bytes.length / (performance.now() - t0)).toFixed(1)} KB/s · pacchetto ${size}`, 4000);
+    if(bytes.length > 2000){ const ms = performance.now() - t0; this.last = `${(bytes.length / ms).toFixed(1)} KB/s · ${(bytes.length/1024).toFixed(1)} KB in ${(ms/1000).toFixed(1)} s · pacchetto ${size}` }
   },
   // ricollega da solo la stampante già usata in questa sessione
   async ensure(){
@@ -1709,7 +1710,7 @@ async function testPrint(){
     if(y < 80){ const lvl = Math.floor(x / (w/6)) / 5; bits[y*w+x] = ((x*7 + y*13) % 100) / 100 < lvl ? 1 : 0 }
     else bits[y*w+x] = ((x >> 4) + (y >> 4)) % 2;
   }
-  try{ await printer.write(escposRaster({w,h,bits})); toast('Prova inviata') }catch(e){ toast('Errore: ' + e.message, 3500) }
+  try{ await printer.write(escposRaster({w,h,bits})); toast('Prova inviata · ' + (printer.last || ''), 6000) }catch(e){ toast('Errore: ' + e.message, 3500) }
 }
 
 /* ================= Schermo sempre acceso ================= */
