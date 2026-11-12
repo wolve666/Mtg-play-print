@@ -480,7 +480,7 @@ const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.is
 const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.11.0';
+const VERSION = '0.11.1';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1722,7 +1722,7 @@ document.addEventListener('visibilitychange', autoReconnect);
 // --- Bluetooth nativo: priorità alta + pacchetti grandi (MTU fino a 512) = dati più veloci della testina ---
 const toHex = d => Array.from(d, b => (b < 16 ? '0' : '') + b.toString(16)).join('');
 let bleReady = null;
-const bleInit = () => bleReady || (bleReady = BLE.initialize({androidNeverForLocation:true}).catch(e => { bleReady = null; throw e }));
+const bleInit = () => bleReady || (bleReady = BLE.initialize({androidNeverForLocation:false}) /* senza il permesso posizione Android 12+ nasconde tutti i dispositivi trovati */.catch(e => { bleReady = null; throw e }));
 async function nativeSetup(id, name){
   await bleInit();
   await BLE.connect({deviceId:id, timeout:10000});
