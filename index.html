@@ -485,9 +485,10 @@ input.txt{user-select:text;-webkit-user-select:text}
 // app Android (Capacitor): Bluetooth nativo veloce al posto di Web Bluetooth
 const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
 const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
+const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.11.3';
+const VERSION = '0.12.0';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1662,7 +1663,7 @@ const PR_SERVICES = [
 const printer = {
   dev:null, ch:null,
   async write(bytes, onProg){
-    let size = (NATIVE && SET.pkt) || this.size || SET.pkt || prProf().chunk; const t0 = performance.now();
+    let size = this.spp ? 4096 : (NATIVE && SET.pkt) || this.size || SET.pkt || prProf().chunk; const t0 = performance.now();
     const pace = NATIVE ? 0 : (SPEEDS[SET.speed] || SPEEDS.flow).pace, wwr = this.ch.properties.writeWithoutResponse;
     for(let i=0; i<bytes.length;){
       const part = bytes.slice(i, i+size);
@@ -1688,7 +1689,7 @@ const printer = {
   }
 };
 async function setupDevice(dev){
-  if(NATIVE) return nativeSetup(dev.id, dev.name);
+  if(NATIVE) return nativeSetup(dev.id, dev.name, dev.spp);
   const server = await dev.gatt.connect();
   let found = null;
   for(const s of await server.getPrimaryServices()){
@@ -1739,9 +1740,20 @@ let bleLock = Promise.resolve(), prioAt = 0;
 // livelli di sicurezza: se la stampante cade mentre stampa, scendo di un gradino (pacchetti più piccoli, poi niente priorità)
 const NAT_LVLS = [{pkt:240, prio:true}, {pkt:180, prio:true}, {pkt:100, prio:true}, {pkt:100, prio:false}];
 const natLvl = () => NAT_LVLS[Math.min(3, SET.natLvl || 0)];
-function nativeSetup(id, name){ const p = bleLock.then(()=>nativeSetup0(id, name)); bleLock = p.catch(()=>{}); return p }
+function nativeSetup(id, name, spp){ const p = bleLock.then(()=> spp ? sppSetup(id, name) : nativeSetup0(id, name)); bleLock = p.catch(()=>{}); return p }
+const toB64 = d => { let s = ''; for(let i = 0; i < d.length; i += 8192) s += String.fromCharCode.apply(null, d.subarray(i, i + 8192)); return btoa(s) };
+async function sppSetup(addr, name){
+  if(printer.ch && printer.dev && printer.dev.id === addr) return;
+  await SPP.connect({address:addr});
+  printer.dev = {id:addr, name, spp:true}; printer.spp = true; printer.size = 4096; printer.info = 'Bluetooth classico';
+  printer.ch = {properties:{write:true}, writeValue: d => SPP.write({data: toB64(d)})};
+  if(!sppSetup.l){ sppSetup.l = true; SPP.addListener('disconnected', ()=>{ if(printer.spp){ printer.ch = null; updatePrinterUI() } }) }
+  if(!SET.prNat || SET.prNat.id !== addr){ SET.prNat = {id:addr, name, spp:true}; saveSet() }
+  updatePrinterUI();
+}
 async function nativeSetup0(id, name){
   if(printer.ch && printer.dev && printer.dev.id === id) return;
+  printer.spp = false;
   await bleInit();
   await BLE.connect({deviceId:id, timeout:10000});
   // collegamento veloce: se la stampante cade subito dopo, lo disattivo da solo
@@ -1759,6 +1771,7 @@ async function nativeSetup0(id, name){
   if(!SET.prNat || SET.prNat.id !== id){ SET.prNat = {id, name}; saveSet() }
   if(!nativeSetup.l) nativeSetup.l = {};
   if(!nativeSetup.l[id]){ nativeSetup.l[id] = true; BLE.addListener('disconnected|' + id, ()=>{
+    if(printer.spp) return;
     printer.ch = null; updatePrinterUI();
     if(Date.now() - (printer.wAt || 0) < 3000 && (SET.natLvl || 0) < 3){
       SET.natLvl = (SET.natLvl || 0) + 1; saveSet(); printer.wAt = 0;
@@ -1773,9 +1786,12 @@ if(NATIVE && SET.prNat) printer.dev = SET.prNat;
 // ricerca nostra: solo dispositivi con nome, stampanti note in cima, più vicine prima
 let btScanning = false, btSeen = {};
 const isKnownPr = n => PRINTERS.some(p => p.re && p.re.test(n || ''));
+let btPaired = [];
 async function btPick(){
+  btPaired = []; btSeen = {}; openOv('bt');
+  try{ btPaired = ((await SPP.list()).devices || []).filter(d => d.type !== 2) }catch(e){}
+  renderBt();
   await bleInit();
-  btSeen = {}; openOv('bt');
   try{ await BLE.stopLEScan() }catch(e){}
   if(!btPick.l){ btPick.l = true; BLE.addListener('onScanResult', r => {
     const d = r.device || {}, name = d.name || r.localName; if(!name || !d.deviceId) return;
@@ -1790,11 +1806,24 @@ function btStop(){ clearTimeout(btPick.t); if(btScanning){ btScanning = false; B
 function renderBt(){
   const el = $('#btList'); if(!el) return;
   const ds = Object.values(btSeen).sort((a, b) => (isKnownPr(b.name) - isKnownPr(a.name)) || (b.rssi - a.rssi));
-  el.innerHTML = ds.map(d => `<button class="btn ${isKnownPr(d.name) ? 'primary' : ''}" data-bt="${esc(d.id)}" style="justify-content:space-between">${esc(d.name)}<small style="opacity:.6">${d.rssi} dBm</small></button>`).join('')
+  const pr = btPaired.slice().sort((a, b) => isKnownPr(b.name) - isKnownPr(a.name));
+  el.innerHTML = `<h3 style="margin:4px 0 8px">Bluetooth classico (consigliato)</h3>`
+    + (pr.length ? pr.map(d => `<button class="btn ${isKnownPr(d.name) ? 'primary' : ''}" data-spp="${esc(d.address)}" data-n="${esc(d.name || '')}">${esc(d.name || d.address)}</button>`).join('')
+      : '<p class="note">Nessuna stampante accoppiata. Accoppiala da Impostazioni → Bluetooth di Android (PIN di solito 0000 o 1234), poi torna qui.</p>')
+    + `<h3 style="margin:16px 0 8px">Bluetooth LE</h3>`
+    + ds.map(d => `<button class="btn ${isKnownPr(d.name) ? 'primary' : ''}" data-bt="${esc(d.id)}" style="justify-content:space-between">${esc(d.name)}<small style="opacity:.6">${d.rssi} dBm</small></button>`).join('')
     + `<p class="note">${btScanning ? 'Ricerca in corso… Se la stampante non compare, spegnila e riaccendila.' : (ds.length ? 'Ricerca finita.' : 'Nessun dispositivo trovato.')}</p>`
     + (btScanning ? '' : '<button class="btn" data-bt="again">Cerca di nuovo</button>');
 }
 $('#btList').addEventListener('click', async e => {
+  const sb = e.target.closest('[data-spp]');
+  if(sb){
+    btStop(); history.back();
+    const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
+    try{ await nativeSetup(sb.dataset.spp, sb.dataset.n || 'stampante', true); toast('Collegata a ' + (sb.dataset.n || 'stampante')); sfx('found'); buzz(30) }
+    catch(err){ toast((err.message || err) + ' — è accesa e accoppiata?', 4000) }
+    updatePrinterUI(); return;
+  }
   const b = e.target.closest('[data-bt]'); if(!b) return;
   if(b.dataset.bt === 'again'){ btSeen = {}; btScanning = true; renderBt(); try{ await BLE.requestLEScan({allowDuplicates:false, scanMode:2}); btPick.t = setTimeout(btStop, 15000) }catch(err){ btStop() } return }
   const d = btSeen[b.dataset.bt]; if(!d) return;
