@@ -487,7 +487,7 @@ const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.is
 const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.11.2';
+const VERSION = '0.11.3';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1003,7 +1003,7 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'scale': SET.scale = +v; saveSet(); break;
     case 'dh': SET.dh = !SET.dh; saveSet(); break;
     case 'page': SET.page = !SET.page; saveSet(); break;
-    case 'prio': SET.noPrio = !SET.noPrio; saveSet(); break;
+    case 'prio': SET.noPrio = !SET.noPrio; if(!SET.noPrio) SET.natLvl = 0; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
     case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
@@ -1662,16 +1662,17 @@ const PR_SERVICES = [
 const printer = {
   dev:null, ch:null,
   async write(bytes, onProg){
-    let size = this.size || SET.pkt || prProf().chunk; const t0 = performance.now();
+    let size = (NATIVE && SET.pkt) || this.size || SET.pkt || prProf().chunk; const t0 = performance.now();
     const pace = NATIVE ? 0 : (SPEEDS[SET.speed] || SPEEDS.flow).pace, wwr = this.ch.properties.writeWithoutResponse;
     for(let i=0; i<bytes.length;){
       const part = bytes.slice(i, i+size);
       try{
+        this.wAt = Date.now();
         if(wwr){ await this.ch.writeValueWithoutResponse(part); if(pace) await sleep(pace) }
         else await this.ch.writeValue(part);
       }catch(e){
         // pacchetto troppo grande per questa stampante: riprovo più piccolo e me lo ricordo
-        if(size > 20 && this.ch){ size = size > 180 ? 180 : size > 100 ? 100 : 20; this.size = size; await sleep(60); continue }
+        if(size > 20 && this.ch && !NATIVE){ size = size > 180 ? 180 : size > 100 ? 100 : 20; this.size = size; await sleep(60); continue }
         throw e;
       }
       i += part.length;
@@ -1735,13 +1736,16 @@ let bleReady = null;
 const bleInit = () => bleReady || (bleReady = BLE.initialize({androidNeverForLocation:false}) /* senza il permesso posizione Android 12+ nasconde tutti i dispositivi trovati */.catch(e => { bleReady = null; throw e }));
 // un collegamento alla volta: due connect sovrapposti fanno chiudere il primo (collega/scollega)
 let bleLock = Promise.resolve(), prioAt = 0;
+// livelli di sicurezza: se la stampante cade mentre stampa, scendo di un gradino (pacchetti più piccoli, poi niente priorità)
+const NAT_LVLS = [{pkt:240, prio:true}, {pkt:180, prio:true}, {pkt:100, prio:true}, {pkt:100, prio:false}];
+const natLvl = () => NAT_LVLS[Math.min(3, SET.natLvl || 0)];
 function nativeSetup(id, name){ const p = bleLock.then(()=>nativeSetup0(id, name)); bleLock = p.catch(()=>{}); return p }
 async function nativeSetup0(id, name){
   if(printer.ch && printer.dev && printer.dev.id === id) return;
   await bleInit();
   await BLE.connect({deviceId:id, timeout:10000});
   // collegamento veloce: se la stampante cade subito dopo, lo disattivo da solo
-  if(!SET.noPrio){ await sleep(600); try{ await BLE.requestConnectionPriority({deviceId:id, connectionPriority:1}); prioAt = Date.now() }catch(e){} }
+  if(!SET.noPrio && natLvl().prio){ await sleep(600); try{ await BLE.requestConnectionPriority({deviceId:id, connectionPriority:1}); prioAt = Date.now() }catch(e){} }
   const {services} = await BLE.getServices({deviceId:id});
   let svc = null, chr = null;
   for(const s of services){ for(const c of s.characteristics){ if(c.properties.writeWithoutResponse || c.properties.write){ svc = s.uuid; chr = c; break } } if(chr) break }
@@ -1750,12 +1754,17 @@ async function nativeSetup0(id, name){
   const w = (fn, d) => BLE[fn]({deviceId:id, service:svc, characteristic:chr.uuid, value:toHex(d)});
   printer.dev = {id, name};
   printer.ch = {properties:chr.properties, writeValueWithoutResponse: d => w('writeWithoutResponse', d), writeValue: d => w('write', d)};
-  printer.size = Math.max(20, Math.min(509, mtu - 3));
-  printer.info = `MTU ${mtu}${SET.noPrio ? '' : ' · veloce'}`;
+  printer.size = Math.max(20, Math.min(natLvl().pkt, mtu - 3));
+  printer.info = `MTU ${mtu} · pacchetto ${printer.size} · ${!SET.noPrio && natLvl().prio ? 'veloce' : 'normale'} · livello ${(SET.natLvl || 0) + 1}/4`;
   if(!SET.prNat || SET.prNat.id !== id){ SET.prNat = {id, name}; saveSet() }
   if(!nativeSetup.l) nativeSetup.l = {};
   if(!nativeSetup.l[id]){ nativeSetup.l[id] = true; BLE.addListener('disconnected|' + id, ()=>{
     printer.ch = null; updatePrinterUI();
+    if(Date.now() - (printer.wAt || 0) < 3000 && (SET.natLvl || 0) < 3){
+      SET.natLvl = (SET.natLvl || 0) + 1; saveSet(); printer.wAt = 0;
+      toast(`La stampante è caduta durante la stampa: passo al livello ${SET.natLvl + 1}/4 e la ricollego. Poi riprova.`, 5000);
+      setTimeout(autoReconnect, 1500); return;
+    }
     if(!SET.noPrio && Date.now() - prioAt < 5000){ SET.noPrio = true; saveSet(); toast('La stampante non regge il collegamento veloce: l\'ho disattivato, ricollegala', 4500) }
   }) }
   updatePrinterUI();
