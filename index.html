@@ -475,7 +475,7 @@ input.txt{user-select:text;-webkit-user-select:text}
 
 <script>
 'use strict';
-const VERSION = '0.10.5';
+const VERSION = '0.10.6';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -519,7 +519,7 @@ if(!S || !S.players){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
-let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false}, load(SKEY) || {});
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false, page:false}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
@@ -920,6 +920,7 @@ function renderMenu(){
     <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Dimensione pedina</span><div class="chips">${[100,85,75].map(n=>`<button class="chip ${(SET.scale||100)===n?'sel':''}" data-act="scale" data-v="${n}">${n}%</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Doppia altezza (metà dati)</span>${tog('dh', SET.dh)}</div>
+    <div class="row"><span class="lbl">Stampa in un colpo (sperimentale)</span>${tog('page', SET.page)}</div>
     <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,60,100,180].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
     <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Pacchetto» è la dimensione dei blocchi Bluetooth: Auto usa quella del modello scelto. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
     <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
@@ -987,6 +988,7 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'pkt': SET.pkt = +v; printer.size = 0; saveSet(); break;
     case 'scale': SET.scale = +v; saveSet(); break;
     case 'dh': SET.dh = !SET.dh; saveSet(); break;
+    case 'page': SET.page = !SET.page; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
     case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
@@ -1374,7 +1376,7 @@ $('#dtPrint').addEventListener('click', async ()=>{
   try{
     for(let k=1; k<=qty; k++){
       btn.textContent = qty > 1 ? `Stampa ${k} di ${qty}…` : 'Stampa in corso…';
-      await printer.write(escposRaster(curBits));
+      await printer.write(escposImg(curBits));
     }
     RECENT = [recentOf(cur), ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
     if(curEntry){ curEntry.printed = qty; saveVlog() }
@@ -1502,7 +1504,7 @@ async function quickToken(alts){
 async function tmPrint(seq, tk, bits, qn){
   tmSet('show printing', qn > 1 ? `Stampa 1 di ${qn}…` : 'Stampa in corso…');
   sfx('print'); buzz([40,60,40]);
-  const data = escposRaster(bits);
+  const data = escposImg(bits);
   try{
     for(let k=0; k<qn; k++){
       if(qn > 1) $('#tmCap').textContent = `Stampa ${k+1} di ${qn}…`;
@@ -1604,6 +1606,25 @@ function drawBits(cv, b){
   for(let i=0;i<b.w*H;i++){ const y = Math.floor(i / b.w / k), v = b.bits[y*b.w + i % b.w] ? 20 : 255; id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v; id.data[i*4+3]=255 }
   cx.putImageData(id, 0, 0);
 }
+// "Stampa in un colpo": modalità pagina ESC/POS. La stampante riceve tutta l'immagine in memoria
+// e la stampa solo al comando finale (FF), quindi non può restare a secco di dati a metà.
+function escposPage(b){
+  const W0 = prProf().w, k = b.dh ? 2 : 1, H = b.h * k, Hp = Math.ceil(H / 24) * 24, x0 = (W0 - b.w) >> 1;
+  const px = (x, y) => y < H ? b.bits[Math.floor(y / k) * b.w + x] : 0;
+  const out = [0x1B, 0x40, 0x1B, 0x4C, 0x1B, 0x57, x0 & 255, x0 >> 8, 0, 0, b.w & 255, b.w >> 8, Hp & 255, Hp >> 8, 0x1B, 0x33, 24];
+  for(let y0 = 0; y0 < Hp; y0 += 24){
+    out.push(0x1B, 0x2A, 33, b.w & 255, b.w >> 8);
+    for(let x = 0; x < b.w; x++) for(let j = 0; j < 3; j++){
+      let byte = 0;
+      for(let q = 0; q < 8; q++) if(px(x, y0 + j*8 + q)) byte |= 0x80 >> q;
+      out.push(byte);
+    }
+    out.push(0x0A);
+  }
+  out.push(0x0C, 0x1B, 0x32, 0x1B, 0x64, 0x04); // FF = stampa la pagina, poi interlinea normale e avanzamento
+  return new Uint8Array(out);
+}
+const escposImg = b => SET.page ? escposPage(b) : escposRaster(b);
 function escposRaster(b){
   const wb = b.w / 8, out = [0x1B, 0x40];
   out.push(0x1B, 0x61, 1); // centrata (serve quando la pedina è ridotta)
@@ -1718,7 +1739,7 @@ async function testPrint(){
     if(y < 80){ const lvl = Math.floor(x / (w/6)) / 5; bits[y*w+x] = ((x*7 + y*13) % 100) / 100 < lvl ? 1 : 0 }
     else bits[y*w+x] = ((x >> 4) + (y >> 4)) % 2;
   }
-  try{ await printer.write(escposRaster({w,h,bits})); toast('Prova inviata · ' + (printer.last || ''), 6000) }catch(e){ toast('Errore: ' + e.message, 3500) }
+  try{ await printer.write(escposImg({w,h,bits})); toast('Prova inviata · ' + (printer.last || ''), 6000) }catch(e){ toast('Errore: ' + e.message, 3500) }
 }
 
 /* ================= Schermo sempre acceso ================= */
