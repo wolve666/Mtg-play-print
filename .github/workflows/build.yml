@@ -1,1 +1,56 @@
-
+name: Compila APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Leggo la versione da index.html
+        id: v
+        run: echo "ver=$(grep -oP "const VERSION = '\K[\d.]+" index.html)" >> $GITHUB_OUTPUT
+      - name: Preparo i file dell'app (gli stessi della web app)
+        run: |
+          mkdir -p www
+          cp index.html www/
+          for f in *.png *.jpg *.svg *.webmanifest *.json *.js *.mp3 *.ogg *.wav; do
+            case "$f" in package*.json|capacitor.config.json) ;; *) [ -f "$f" ] && cp "$f" www/ ;; esac
+          done
+          [ -d assets ] && cp -r assets www/ || true
+      - name: Collego gli aggiornamenti a questo repository
+        run: echo "window.APP_REPO='${{ github.repository }}';" > www/app-config.js
+      - run: npm install
+      - run: npx cap add android
+      - name: Icona (se presente assets/icon.png)
+        run: if [ -f icon-512.png ]; then mkdir -p assets && cp icon-512.png assets/icon.png; fi; if [ -f assets/icon.png ]; then npx --yes @capacitor/assets generate --android; fi
+      - name: Nome, versione
+        run: |
+          sed -i 's/Magic Play and Print/Magic Play\&amp;Print/g' android/app/src/main/res/values/strings.xml
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"${{ steps.v.outputs.ver }}\"/" android/app/build.gradle
+      - run: npx cap sync android
+      - name: Compilo
+        run: cd android && ./gradlew assembleRelease --no-daemon
+      - name: Firmo
+        run: |
+          echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > ks.jks
+          BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+          $BT/zipalign -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+          $BT/apksigner sign --ks ks.jks --ks-pass "pass:${{ secrets.KEYSTORE_PASS }}" --out MagicPlayPrint.apk aligned.apk
+      - name: Pubblico la release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.ver }}
+          name: Magic Play&Print v${{ steps.v.outputs.ver }}
+          files: MagicPlayPrint.apk
+          make_latest: true
