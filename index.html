@@ -488,7 +488,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.1';
+const VERSION = '0.12.2';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -876,6 +876,17 @@ document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click'
 let lastBack = 0;
 history.replaceState({base:true}, '');
 history.pushState({guard:true}, '');
+const backExit = () => {
+  const now = Date.now();
+  if(now - lastBack < 2000){ Capacitor.Plugins.App.exitApp(); return }
+  lastBack = now; toast('Premi di nuovo indietro per uscire');
+};
+// nell'app il tasto indietro del telefono lo gestisco io: chiude finestre e menu, al doppio tocco esce
+if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.addListener('backButton', ()=>{
+  if(TUT){ endTut(); return }
+  if(stack.length){ history.back(); return }
+  backExit();
+});
 window.addEventListener('popstate', ()=>{
   if(TUT){ endTut(); history.pushState({guard:true}, ''); return }
   if(stack.length){ closeTop(); return }
@@ -1743,8 +1754,11 @@ const natLvl = () => NAT_LVLS[Math.min(3, SET.natLvl || 0)];
 function nativeSetup(id, name, spp){ const p = bleLock.then(()=> spp ? sppSetup(id, name) : nativeSetup0(id, name)); bleLock = p.catch(()=>{}); return p }
 const toB64 = d => { let s = ''; for(let i = 0; i < d.length; i += 8192) s += String.fromCharCode.apply(null, d.subarray(i, i + 8192)); return btoa(s) };
 async function sppSetup(addr, name){
-  if(printer.ch && printer.dev && printer.dev.id === addr) return;
-  try{ await BLE.disconnect({deviceId:addr}) }catch(e){} // se è collegata anche in LE, la libero
+  if(printer.ch && printer.spp && printer.dev && printer.dev.id === addr) return;
+  // stesso indirizzo in LE e in classico: se era collegata in LE, la stacco prima, altrimenti si continuava a stampare in LE
+  printer.ch = null; printer.spp = true;
+  try{ await BLE.disconnect({deviceId:addr}) }catch(e){}
+  await sleep(300);
   const cr = await SPP.connect({address:addr});
   printer.dev = {id:addr, name, spp:true}; printer.spp = true; printer.size = 4096; printer.info = 'Bluetooth classico · ' + ((cr && cr.how) || '');
   printer.ch = {properties:{write:true}, writeValue: d => SPP.write({data: toB64(d)})};
@@ -1753,7 +1767,8 @@ async function sppSetup(addr, name){
   updatePrinterUI();
 }
 async function nativeSetup0(id, name){
-  if(printer.ch && printer.dev && printer.dev.id === id) return;
+  if(printer.ch && !printer.spp && printer.dev && printer.dev.id === id) return;
+  if(printer.spp){ printer.ch = null; try{ await SPP.disconnect() }catch(e){} }
   printer.spp = false;
   await bleInit();
   await BLE.connect({deviceId:id, timeout:10000});
