@@ -36,6 +36,7 @@ public class SpeechPlugin extends Plugin {
 
     private void start0(PluginCall c) {
         final String lang = c.getString("lang", "it-IT");
+        final int sid = c.getInt("sid", 0); // ogni evento porta il numero della sua richiesta: quelli vecchi l'app li ignora
         getActivity().runOnUiThread(() -> {
             try {
                 if (!SpeechRecognizer.isRecognitionAvailable(getContext())) { c.reject("nessun servizio di riconoscimento vocale"); return; }
@@ -48,15 +49,15 @@ public class SpeechPlugin extends Plugin {
                     public void onBufferReceived(byte[] b) {}
                     public void onEndOfSpeech() {}
                     public void onEvent(int t, Bundle b) {}
-                    public void onError(int e) { JSObject o = new JSObject(); o.put("code", e); notifyListeners("error", o); if (e != 8) free(); }
+                    public void onError(int e) { JSObject o = new JSObject(); o.put("code", e); o.put("sid", sid); notifyListeners("error", o); if (e != 8) free(); }
                     public void onPartialResults(Bundle b) {
                         ArrayList<String> m = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                        if (m != null && !m.isEmpty()) { JSObject o = new JSObject(); o.put("text", m.get(0)); notifyListeners("partial", o); }
+                        if (m != null && !m.isEmpty()) { JSObject o = new JSObject(); o.put("text", m.get(0)); o.put("sid", sid); notifyListeners("partial", o); }
                     }
                     public void onResults(Bundle b) {
                         ArrayList<String> m = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                         JSArray a = new JSArray(); if (m != null) for (String x : m) a.put(x);
-                        JSObject o = new JSObject(); o.put("matches", a);
+                        JSObject o = new JSObject(); o.put("matches", a); o.put("sid", sid);
                         notifyListeners("result", o);
                         free(); // libero il riconoscitore: altrimenti la richiesta dopo trova il microfono occupato
                     }

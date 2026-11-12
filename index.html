@@ -179,6 +179,8 @@ input.txt{user-select:text;-webkit-user-select:text}
 .wzBrand .verBtn.upd{color:var(--gold-ink)}
 #tokenBtn img{width:50px;height:50px;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 0 6px rgba(255,80,20,.45))}
 .pname{touch-action:none}
+/* tenere premuto il microfono: niente gesti del telefono che annullano la pressione */
+#tokenBtn,#micBtn,#sugMic{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell.dropT{box-shadow:inset 0 0 0 5px #fff;filter:brightness(1.15)}
 #dragLine{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:15;display:none}
 #dragLine.on{display:block}
@@ -488,7 +490,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.4';
+const VERSION = '0.12.5';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1259,18 +1261,19 @@ function startClip(){
 }
 // nell'app: riconoscimento vocale nativo di Android
 function startCaptureNat(btn, silent){
-  const SP = Capacitor.Plugins.Speech, hs = [];
+  const SP = Capacitor.Plugins.Speech, hs = [], sid = (startCaptureNat.n = (startCaptureNat.n || 0) + 1), mine = d => d.sid === sid;
   let interim = '', matches = null, ended = false, cb = null, cancelled = false, err = null;
   btn.classList.add('listening'); if(!silent) showPTT('Ti ascolto… rilascia per inviare'); buzz(15); sfx('listen');
   const end = () => { if(ended) return; ended = true; btn.classList.remove('listening'); hs.forEach(h => Promise.resolve(h).then(x => x.remove()).catch(()=>{})); if(cb) deliver() };
-  hs.push(SP.addListener('partial', d => { interim = d.text || ''; if(!silent) showPTT(interim || 'Ti ascolto…') }));
-  hs.push(SP.addListener('result', d => { matches = d.matches || []; end() }));
+  hs.push(SP.addListener('partial', d => { if(!mine(d)) return; interim = d.text || ''; if(!silent) showPTT(interim || 'Ti ascolto…') }));
+  hs.push(SP.addListener('result', d => { if(!mine(d)) return; matches = d.matches || []; end() }));
   const t0 = Date.now(); let retried = false;
   hs.push(SP.addListener('error', d => {
+    if(!mine(d)) return;
     // 5, 8, 11 = riconoscitore ancora impegnato con la richiesta di prima: riparto una volta
-    if(!retried && [5,8,11].includes(d.code) && Date.now() - t0 < 1500 && !cb){ retried = true; setTimeout(()=>SP.start({lang:'it-IT'}).catch(()=>{}), 250); return }
+    if(!retried && [5,8,11].includes(d.code) && Date.now() - t0 < 1500 && !cb){ retried = true; setTimeout(()=>SP.start({lang:'it-IT', sid}).catch(()=>{}), 250); return }
     err = d.code; end() }));
-  SP.start({lang:'it-IT'}).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
+  SP.start({lang:'it-IT', sid}).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
   function deliver(){
     hidePTT(); if(cancelled || !cb) return;
     const c = cb; cb = null;
@@ -1279,7 +1282,7 @@ function startCaptureNat(btn, silent){
     c(alts);
   }
   return {
-    finish(f){ cb = f; if(ended) deliver(); else { SP.stop().catch(()=>{}); setTimeout(end, 3000) } },
+    finish(f){ cb = f; if(ended) deliver(); else { SP.stop().catch(()=>{}); setTimeout(end, 1800) } },
     cancel(){ cancelled = true; SP.cancel().catch(()=>{}); hidePTT(); end() }
   };
 }
