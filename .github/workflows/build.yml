@@ -19,7 +19,7 @@ jobs:
           java-version: 21
       - name: Leggo la versione da index.html
         id: v
-        run: echo "ver=$(grep -oP "const VERSION = '\K[\d.]+" index.html)" >> $GITHUB_OUTPUT
+        run: echo "ver=$(grep -oP "var APPV = '\K[\d.]+" index.html)" >> $GITHUB_OUTPUT
       - name: Preparo i file dell'app (gli stessi della web app)
         run: |
           mkdir -p www
