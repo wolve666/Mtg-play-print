@@ -2,6 +2,29 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
+<script>
+// versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
+var APPV = '0.12.8', APPN = 1;
+// aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
+(function(){
+  if(window.__LIVE) return;
+  window.BUNDLEV = APPV; window.BUNDLEN = APPN;
+  try{
+    var L = localStorage, h = L.getItem('smtg-live'), v = L.getItem('smtg-livever'), n = +L.getItem('smtg-liven') || 1;
+    var newer = function(a, b){ a = a.split('.'); b = b.split('.'); for(var i = 0; i < 3; i++){ if((+a[i]||0) !== (+b[i]||0)) return (+a[i]||0) > (+b[i]||0) } return false };
+    if(!h || !v) return;
+    if(!newer(v, APPV) || n > APPN || L.getItem('smtg-liveok') === '0'){
+      // superata dall'APK, incompatibile o andata in errore all'avvio precedente: la scarto
+      if(L.getItem('smtg-liveok') === '0') L.setItem('smtg-livefail', v);
+      ['smtg-live','smtg-livever','smtg-liven','smtg-liveok'].forEach(function(k){ L.removeItem(k) });
+      return;
+    }
+    L.setItem('smtg-liveok', '0');
+    window.__LIVE = v;
+    document.write(h + '<plaintext style="display:none">');
+  }catch(e){}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#22252B">
 <title>Magic Play&amp;Print</title>
@@ -264,6 +287,11 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .spia .mi{font-size:1.15em;margin-right:.15em}
 #menuBtn.menuBig{height:44px;padding:0 16px;border-radius:12px;background:#F2C230;color:#2A2000;font-weight:700;font-size:16px;letter-spacing:1px;display:flex;align-items:center;gap:6px}
 #menuBtn.menuBig svg{width:20px;height:20px}
+#tkDrop{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+#tkDrop.open{grid-template-rows:1fr}
+#tkDrop>.in{overflow:hidden;min-height:0}
+#tkDrop.open>.in{padding-bottom:14px}
+#tkMenu{border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:4px}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:14}
 #introSkip{position:fixed;inset:0;z-index:16}
 #dragLine line{animation:dashMove .45s linear infinite;filter:drop-shadow(0 0 6px rgba(255,200,90,.95))}
@@ -341,7 +369,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 <section class="ov" id="ov-menu">
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h2>Magic Play&amp;Print <button class="verBtn" id="verLbl"></button></h2>
+    <h2>Stampa <button class="verBtn" id="verLbl"></button></h2>
   </div>
   <div class="ovBody" id="menuBody"></div>
 </section>
@@ -359,8 +387,8 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 <section class="ov" id="ov-tokens">
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h2>Pedine</h2>
-    <button class="menuBig" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>MENU</button>
+    <h2>Menu <button class="verBtn" id="verLbl2"></button></h2>
+    <button class="menuBig" id="menuBtn" aria-label="Impostazioni di stampa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>STAMPA</button>
     <button class="chip" id="tkPrinter" style="padding:8px 12px;font-size:14px">Stampante</button>
   </div>
   <div class="ovBody">
@@ -370,7 +398,9 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
     </div>
     <div id="heard"></div>
     <div id="understood"></div>
-    <div id="tkResults"></div>
+    <div id="tkRecent"></div>
+    <div id="tkDrop"><div class="in"><div id="tkResults"></div><button class="btn" id="tkClose">Chiudi</button></div></div>
+    <div id="tkMenu"></div>
   </div>
 </section>
 
@@ -493,7 +523,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.7';
+const VERSION = APPV, NATIVE_REV = APPN;
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -933,6 +963,34 @@ const tog = (act, on, v='') => `<button class="tog ${on ? 'on' : ''}" data-act="
 $('#menuBtn').addEventListener('click', ()=>{ renderMenu(); swapOv('menu') });
 function renderMenu(){
   $('#menuBody').innerHTML = `
+  <div class="sec"><h3>Stampante</h3>
+    <div class="row"><span class="lbl" id="prStatus"></span></div>
+    <button class="btn" data-act="prconnect" id="prConnect">Collega stampante</button>
+    <button class="btn" data-act="prtest">Stampa di prova</button>
+    <div class="row"><span class="lbl">Ultima stampa</span><span class="note" style="margin:0;text-align:right">${printer.last ? esc(printer.last) : '—'}</span></div>
+    <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
+    <div class="row"><span class="lbl">Modello</span>
+      <select class="txt" id="prModelSel" style="width:auto;max-width:58%;min-width:0;text-overflow:ellipsis"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+    <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Dimensione pedina</span><div class="chips">${[100,85,75].map(n=>`<button class="chip ${(SET.scale||100)===n?'sel':''}" data-act="scale" data-v="${n}">${n}%</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Doppia altezza (metà dati)</span>${tog('dh', SET.dh)}</div>
+    <div class="row"><span class="lbl">Stampa in un colpo (sperimentale)</span>${tog('page', SET.page)}</div>
+    ${NATIVE ? `<div class="row"><span class="lbl">Collegamento veloce</span>${tog('prio', !SET.noPrio)}</div>` : ''}
+    <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,60,100,180].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
+    <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Pacchetto» è la dimensione dei blocchi Bluetooth: Auto usa quella del modello scelto. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
+    <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
+    <p class="note">${navigator.bluetooth && navigator.bluetooth.getDevices
+      ? 'Ricollegamento automatico: dopo il primo collegamento, basta accendere la stampante e l\'app la ritrova da sola, anche dopo averla riaperta.'
+      : 'Ricollegamento automatico attivo finché l\'app resta aperta. Per averlo anche dopo averla riaperta, in Chrome apri chrome://flags e attiva «Use the new permissions backend for Web Bluetooth».'}</p>
+  </div>
+  <div class="sec"><h3>Archivio offline</h3>
+    <div class="row"><span class="lbl" id="arcStat">${esc(arcStatus())}</span></div>
+    <button class="btn ${ARC.list.length ? '' : 'primary'}" data-act="arcdl" ${ARC.busy ? 'disabled' : ''}>${ARC.list.length ? (ARC.meta.complete ? 'Controlla pedine nuove' : 'Completa lo scaricamento') : 'Scarica l\'archivio'}</button>
+    ${ARC.list.length && !ARC.busy ? '<button class="btn danger" data-act="arcdel">Elimina l\'archivio</button>' : ''}
+    <p class="note">Tutte le pedine ufficiali e gli emblemi, solo l'ultima versione di ognuno: poco meno di mille carte. Si scaricano circa 80-100 MB, meglio col Wi-Fi, e sul telefono ne restano circa 30-40. Senza rete l'app cerca e stampa dall'archivio; con la rete controlla una volta al giorno le pedine nuove e scarica solo quelle.</p>
+  </div>
+`;
+  $('#tkMenu').innerHTML = `
   <div class="sec"><h3>Partita</h3>
     <button class="btn primary" data-act="new">Nuova partita</button>
     <button class="btn" data-act="starts">Chi inizia?</button>
@@ -965,32 +1023,6 @@ function renderMenu(){
     <div class="row"><span class="lbl">Animazione di inizio partita</span>${tog('intro', SET.intro)}</div>
     <button class="btn" data-act="guide">Guida alle funzioni</button>
   </div>
-  <div class="sec"><h3>Stampante</h3>
-    <div class="row"><span class="lbl" id="prStatus"></span></div>
-    <button class="btn" data-act="prconnect" id="prConnect">Collega stampante</button>
-    <button class="btn" data-act="prtest">Stampa di prova</button>
-    <div class="row"><span class="lbl">Ultima stampa</span><span class="note" style="margin:0;text-align:right">${printer.last ? esc(printer.last) : '—'}</span></div>
-    <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
-    <div class="row"><span class="lbl">Modello</span>
-      <select class="txt" id="prModelSel" style="width:auto;max-width:58%;min-width:0;text-overflow:ellipsis"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
-    <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
-    <div class="row"><span class="lbl">Dimensione pedina</span><div class="chips">${[100,85,75].map(n=>`<button class="chip ${(SET.scale||100)===n?'sel':''}" data-act="scale" data-v="${n}">${n}%</button>`).join('')}</div></div>
-    <div class="row"><span class="lbl">Doppia altezza (metà dati)</span>${tog('dh', SET.dh)}</div>
-    <div class="row"><span class="lbl">Stampa in un colpo (sperimentale)</span>${tog('page', SET.page)}</div>
-    ${NATIVE ? `<div class="row"><span class="lbl">Collegamento veloce</span>${tog('prio', !SET.noPrio)}</div>` : ''}
-    <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,60,100,180].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
-    <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Pacchetto» è la dimensione dei blocchi Bluetooth: Auto usa quella del modello scelto. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
-    <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
-    <p class="note">${navigator.bluetooth && navigator.bluetooth.getDevices
-      ? 'Ricollegamento automatico: dopo il primo collegamento, basta accendere la stampante e l\'app la ritrova da sola, anche dopo averla riaperta.'
-      : 'Ricollegamento automatico attivo finché l\'app resta aperta. Per averlo anche dopo averla riaperta, in Chrome apri chrome://flags e attiva «Use the new permissions backend for Web Bluetooth».'}</p>
-  </div>
-  <div class="sec"><h3>Archivio offline</h3>
-    <div class="row"><span class="lbl" id="arcStat">${esc(arcStatus())}</span></div>
-    <button class="btn ${ARC.list.length ? '' : 'primary'}" data-act="arcdl" ${ARC.busy ? 'disabled' : ''}>${ARC.list.length ? (ARC.meta.complete ? 'Controlla pedine nuove' : 'Completa lo scaricamento') : 'Scarica l\'archivio'}</button>
-    ${ARC.list.length && !ARC.busy ? '<button class="btn danger" data-act="arcdel">Elimina l\'archivio</button>' : ''}
-    <p class="note">Tutte le pedine ufficiali e gli emblemi, solo l'ultima versione di ognuno: poco meno di mille carte. Si scaricano circa 80-100 MB, meglio col Wi-Fi, e sul telefono ne restano circa 30-40. Senza rete l'app cerca e stampa dall'archivio; con la rete controlla una volta al giorno le pedine nuove e scarica solo quelle.</p>
-  </div>
   <div class="sec"><h3>Voce e miglioramento dell'app</h3>
     <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
     <div class="row"><span class="lbl">Salva anche l'audio delle richieste</span>${tog('clips', SET.clips)}</div>
@@ -1012,7 +1044,7 @@ function renderMenu(){
   </div>`;
   updatePrinterUI();
 }
-$('#menuBody').addEventListener('click', async e=>{
+async function menuClick(e){
   const b = e.target.closest('[data-act]'); if(!b) return;
   const a = b.dataset.act, v = b.dataset.v;
   switch(a){
@@ -1052,7 +1084,9 @@ $('#menuBody').addEventListener('click', async e=>{
     case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
   }
   renderMenu();
-});
+}
+$('#menuBody').addEventListener('click', menuClick);
+$('#tkMenu').addEventListener('click', menuClick);
 $('#menuBody').addEventListener('change', e=>{ if(e.target.id === 'prModelSel'){ SET.prModel = e.target.value; printer.size = 0; saveSet() } });
 
 /* ================= Scheda giocatore ================= */
@@ -1392,7 +1426,7 @@ function kbFallback(msg){
 let lastReq = null, results = [], curEntry = null, lastVoice = null;
 function openTokens(){
   $('#heard').textContent = ''; $('#understood').textContent = ''; $('#tkInput').value = '';
-  renderRecent(); openOv('tokens'); updatePrinterUI();
+  tkCollapse(true); renderRecent(); renderMenu(); openOv('tokens'); updatePrinterUI();
 }
 attachPTT($('#tokenBtn'), {onTap:openTokens, onText:quickToken, silent:true, drag:hubDrag});
 attachPTT($('#micBtn'), {
@@ -1403,16 +1437,26 @@ $('#tkPrinter').addEventListener('click', ()=> printer.ch ? toast('Stampante col
 $('#tkInput').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.target.blur(); runRequest([e.target.value], 'testo') } });
 
 function renderRecent(){
-  if(ARC.ready) setTimeout(()=>document.querySelectorAll('#tkResults .recent img').forEach(async (im, i)=>{
+  if(ARC.ready) setTimeout(()=>document.querySelectorAll('#tkRecent .recent img').forEach(async (im, i)=>{
     const t = RECENT[i], e = t && (ARC.list.find(x => x.id === t.id) || ARC.list.find(x => x.n === t.name)); if(e && e.ok) im.src = await arcUrl(e.id, 's') }), 0);
-  $('#tkResults').innerHTML = RECENT.length
+  $('#tkRecent').innerHTML = RECENT.length
     ? `<div class="sec"><h3>Stampate di recente</h3><div class="recent">${RECENT.map((t,i)=>`<button data-r="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`
     : `<p class="empty">Tieni premuto il microfono e chiedi una pedina, ad esempio «due tesori» o «tre goblin uno uno rossi». Puoi anche scriverla qui sopra.</p>`;
 }
+$('#tkRecent').addEventListener('click', e=>{
+  const r = e.target.closest('[data-r]'); if(r){ curEntry = null; openDetail(RECENT[+r.dataset.r], 1) }
+});
 $('#tkResults').addEventListener('click', e=>{
-  const r = e.target.closest('[data-r]'); if(r){ curEntry = null; openDetail(RECENT[+r.dataset.r], 1); return }
   const g = e.target.closest('[data-g]'); if(g) openDetail(results[+g.dataset.g], lastReq?.qty || 1);
 });
+// tendina dei risultati: si apre quando c'è qualcosa da mostrare e spinge giù il menu; si richiude a scelta fatta o con «Chiudi»
+new MutationObserver(()=> $('#tkDrop').classList.toggle('open', $('#tkResults').innerHTML.trim() !== '')).observe($('#tkResults'), {childList:true});
+function tkCollapse(now){
+  $('#tkDrop').classList.remove('open');
+  if(now){ $('#tkResults').innerHTML = ''; return }
+  setTimeout(()=>{ if(!$('#tkDrop').classList.contains('open')) $('#tkResults').innerHTML = '' }, 320);
+}
+$('#tkClose').addEventListener('click', ()=>tkCollapse());
 
 function logRequest(source, alts, req, query, found, note){
   if(!SET.voiceLog) return null;
@@ -1469,13 +1513,14 @@ async function runRequest(alternatives, source){
       results.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
   }catch(err){
     if(ARC.ready){ await offline(); return }
-    $('#tkResults').innerHTML = '<p class="empty">Scryfall non risponde e l\'archivio offline non è scaricato: puoi scaricarlo dal MENU.</p>';
+    $('#tkResults').innerHTML = '<p class="empty">Scryfall non risponde e l\'archivio offline non è scaricato: puoi scaricarlo da STAMPA.</p>';
   }
 }
 
 /* ================= Dettaglio e anteprima di stampa ================= */
 let cur = null, qty = 1, curBits = null;
 async function openDetail(t, q){
+  tkCollapse();
   t = await arcResolve(t);
   cur = t; qty = q; curBits = null;
   if(curEntry){ curEntry.chosen = {id:t.id, name:t.name, set:t.set}; saveVlog() }
@@ -1590,7 +1635,7 @@ async function quickToken(alts){
   if(!tk){
     try{
       for(const t of buildQueries(req)){ used = t.q.join(' '); data = await scry(used); if(data.length){ note = t.note; break } await new Promise(r=>setTimeout(r,100)) }
-    }catch(e){ fail(ARC.ready ? 'Nessuna pedina trovata nell\'archivio offline.' : 'Senza rete: scarica l\'archivio offline dal MENU.'); return }
+    }catch(e){ fail(ARC.ready ? 'Nessuna pedina trovata nell\'archivio offline.' : 'Senza rete: scarica l\'archivio offline da STAMPA.'); return }
     tk = pickFirst(data, req.type);
   }
   if(seq !== TM.seq) return;
@@ -2152,7 +2197,7 @@ async function arcImg(e){
 async function arcSync(quiet){
   if(ARC.busy) return;
   if(!online()){ if(!quiet) toast('Serve la connessione per scaricare l\'archivio'); return }
-  ARC.busy = true; arcProg('Scarico la lista delle pedine…'); if(stack[stack.length-1] === 'menu') renderMenu();
+  ARC.busy = true; arcProg('Scarico la lista delle pedine…'); if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist() }catch(e){}
   try{
     const since = ARC.meta.complete && ARC.meta.since;
@@ -2185,7 +2230,7 @@ async function arcSync(quiet){
     ARC.meta.checked = Date.now(); await arcSave(); ARC.ready = ARC.list.some(e => e.ok);
     if(!quiet || done) toast(fails ? `Archivio aggiornato, ${fails} immagini da riprovare` : done ? `Archivio pronto: ${ARC.list.length} pedine` : 'Nessuna pedina nuova', 3000);
   }catch(e){ if(!quiet) toast('Scaricamento interrotto: ' + (e.message || e), 3500) }
-  ARC.busy = false; if(stack[stack.length-1] === 'menu') renderMenu();
+  ARC.busy = false; if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
 }
 async function arcClear(){
   await aop('img', 'readwrite', s => s.clear()); await aop('kv', 'readwrite', s => s.clear());
@@ -2266,13 +2311,13 @@ function maybeTut(){ let seen = null; try{ seen = localStorage.getItem('smtg-tut
 function tutSteps(){
   const n = S.count, me = $(`.cell[data-i="${n-1}"]`), other = $(`.cell[data-i="${n > 1 ? n-2 : 0}"]`);
   return [
-    {t:'Benvenuto!', p:'Ti mostro in un minuto le funzioni principali di Magic Play&Print. Puoi rivedere questa guida quando vuoi dal MENU.'},
-    {el:me, t:'Punti vita', p:'Tocca la metà con il + per aggiungere un punto e quella con il − per toglierlo. Tenendo premuto il conteggio scorre (o salta di 10, lo scegli nel MENU).', g:'tap', at:me?.querySelector('.half.plus')},
+    {t:'Benvenuto!', p:'Ti mostro in un minuto le funzioni principali di Magic Play&Print. Puoi rivedere questa guida quando vuoi dal Menu, sotto le pedine.'},
+    {el:me, t:'Punti vita', p:'Tocca la metà con il + per aggiungere un punto e quella con il − per toglierlo. Tenendo premuto il conteggio scorre (o salta di 10, lo scegli nel Menu).', g:'tap', at:me?.querySelector('.half.plus')},
     {el:me?.querySelector('.pname'), t:'Scheda giocatore', p:'Tocca il nome per aprire la scheda: nome, colore, immagine di sfondo, veleno, contatori, monarca e iniziativa.', g:'tap'},
     {el:me?.querySelector('.pname'), t:'Danni da comandante', p:'Trascina il nome di chi attacca sul pannello di chi subisce, poi scegli quanti danni. Vengono tolti anche dai punti vita.', g:'drag', to:other},
     {el:$('#tokenBtn'), t:'Pedine', p:'Tocca il simbolo centrale per cercare le pedine. Tienilo premuto e di\' la pedina, per esempio «drago 5/5 volare»: la trova e dopo 3 secondi la stampa. Toccala per annullare. Trascinalo per spostarlo dove ti è più comodo.', g:'hold'},
     {el:$('#tokenBtn'), t:'Stampante', p:'Quando sotto il simbolo c\'è un alone blu pulsante con le scintille, la stampante è collegata. Se è grigio, collegala dalla pagina Pedine.'},
-    {el:$('#tokenBtn'), t:'MENU', p:'Il tasto giallo MENU è in alto nella pagina Pedine: lì trovi nuova partita, dadi, impostazioni e questa guida.', g:'tap'},
+    {el:$('#tokenBtn'), t:'Menu', p:'Toccando il simbolo si apre la pagina delle pedine: sotto le pedine recenti c\'è il Menu con nuova partita, dadi, impostazioni e questa guida. Il tasto giallo STAMPA in alto apre le impostazioni della stampante.', g:'tap'},
     {t:'Tutto qui!', p:'Buona partita. Che il mazzo sia con te.'},
   ];
 }
@@ -2316,10 +2361,10 @@ function tutGo(i){
 function endTut(){ if(!TUT) return; TUT.el.remove(); TUT = null; try{ localStorage.setItem('smtg-tut', '1') }catch(e){} }
 
 /* ================= Aggiornamenti ================= */
-const UPD = {remote:null};
+const UPD = {remote:null, html:null, native:false};
 function cmpVer(a, b){ const x = a.split('.').map(Number), y = b.split('.').map(Number); for(let i=0;i<3;i++){ if((x[i]||0) !== (y[i]||0)) return (x[i]||0) - (y[i]||0) } return 0 }
 function showVer(){
-  ['#verLbl','#wzVer'].forEach(id=>{
+  ['#verLbl','#verLbl2','#wzVer'].forEach(id=>{
     const el = $(id); if(!el) return;
     el.classList.toggle('upd', !!UPD.remote);
     el.textContent = UPD.remote ? `v${VERSION} · aggiorna` : 'v' + VERSION;
@@ -2333,18 +2378,34 @@ async function checkUpdate(manual){
     if(NATIVE){ // l'app controlla l'ultima release su GitHub
       const r = await fetch(`https://api.github.com/repos/${window.APP_REPO}/releases/latest`, {cache:'no-store'});
       m = [0, ((await r.json()).tag_name || '').replace(/^v/, '')]; if(!m[1]) throw new Error();
+      UPD.html = null; UPD.native = false;
+      if(cmpVer(m[1], VERSION) > 0){
+        // scarico solo la pagina dell'app (circa 150 kB): se la parte nativa non cambia, niente APK
+        try{
+          const h = await (await fetch(`https://raw.githubusercontent.com/${window.APP_REPO}/v${m[1]}/index.html`, {cache:'no-store'})).text();
+          const hv = h.match(/var APPV = '([\d.]+)', APPN = (\d+)/) || [];
+          if(hv[1] === m[1] && +hv[2] <= window.BUNDLEN) UPD.html = h; else UPD.native = true;
+        }catch(e){ UPD.native = true }
+      }
     }else{
       const r = await fetch('index.html?check=' + Date.now(), {cache:'no-store'});
-      m = (await r.text()).match(/const VERSION = '([\d.]+)'/);
+      m = (await r.text()).match(/var APPV = '([\d.]+)'/);
     }
     if(!m) throw new Error();
     UPD.remote = cmpVer(m[1], VERSION) > 0 ? m[1] : null;
     if(manual) toast(UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Hai già l\'ultima versione (' + VERSION + ')');
   }catch(e){ if(manual) toast('Impossibile verificare: controlla la connessione') }
-  showVer(); if(stack[stack.length-1] === 'menu') renderMenu();
+  showVer(); if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
 }
 async function applyUpdate(){
-  if(NATIVE){ toast('Scarico la nuova versione: aprila per installarla', 4000); location.href = APK_URL; return }
+  if(NATIVE && UPD.html){
+    try{
+      localStorage.setItem('smtg-live', UPD.html); localStorage.setItem('smtg-livever', UPD.remote);
+      localStorage.setItem('smtg-liven', String(window.BUNDLEN)); localStorage.removeItem('smtg-liveok');
+      toast('Aggiorno…'); setTimeout(()=>location.reload(), 400); return;
+    }catch(e){ /* memoria piena: passo all'APK */ }
+  }
+  if(NATIVE){ toast('Questa versione cambia anche la parte nativa: scarico l\'APK da installare', 4500); location.href = APK_URL; return }
   toast('Aggiorno…');
   try{
     const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
@@ -2353,8 +2414,12 @@ async function applyUpdate(){
   }catch(e){}
   location.reload();
 }
-['#verLbl','#wzVer'].forEach(id => $(id).addEventListener('click', ()=> UPD.remote ? applyUpdate() : checkUpdate(true)));
+['#verLbl','#verLbl2','#wzVer'].forEach(id => $(id).addEventListener('click', ()=> UPD.remote ? applyUpdate() : checkUpdate(true)));
 (function(){
+  // avvio riuscito: la versione scaricata in app è buona
+  setTimeout(()=>{ try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){} }, 4000);
+  const fail = localStorage.getItem('smtg-livefail');
+  if(fail){ localStorage.removeItem('smtg-livefail'); setTimeout(()=>toast('La v' + fail + ' non è partita: torno alla versione installata', 4000), 900) }
   const last = localStorage.getItem('smtg-lastver');
   if(last && last !== VERSION) setTimeout(()=>toast('Aggiornata alla versione ' + VERSION, 3000), 800);
   try{ localStorage.setItem('smtg-lastver', VERSION) }catch(e){}
