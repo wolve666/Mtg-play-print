@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.12.8', APPN = 1;
+var APPV = '0.12.9', APPN = 1;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -285,8 +285,14 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 @font-face{font-family:'ManaSub';src:url(data:font/woff;base64,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) format('woff');font-display:block}
 .mi{font-family:'ManaSub';font-style:normal;font-weight:400;display:inline-block;line-height:1;vertical-align:-.12em;background:linear-gradient(180deg,#FFF3CC,#E8B94F 55%,#A9762A);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6)) drop-shadow(0 0 3px rgba(0,0,0,.35))}
 .spia .mi{font-size:1.15em;margin-right:.15em}
-#menuBtn.menuBig{height:44px;padding:0 16px;border-radius:12px;background:#F2C230;color:#2A2000;font-weight:700;font-size:16px;letter-spacing:1px;display:flex;align-items:center;gap:6px}
-#menuBtn.menuBig svg{width:20px;height:20px}
+#menuBtn.menuBig{width:44px;height:44px;padding:0;flex-shrink:0;border-radius:12px;background:#F2C230;color:#2A2000;display:flex;align-items:center;justify-content:center}
+#menuBtn.menuBig svg{width:24px;height:24px}
+#tkPrinter{white-space:nowrap;flex-shrink:0}
+#updBar{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));z-index:90;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#F2C230;color:#2A2000;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.45);transform:translateY(-140%);transition:transform .35s}
+#updBar.show{transform:none}
+#updBar span{flex:1}
+#updBar button{padding:8px 12px;border-radius:10px;font-weight:700;background:rgba(0,0,0,.12);color:inherit}
+#updBar button.go{background:#2A2000;color:#F2C230}
 #tkDrop{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
 #tkDrop.open{grid-template-rows:1fr}
 #tkDrop>.in{overflow:hidden;min-height:0}
@@ -388,7 +394,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <h2>Menu <button class="verBtn" id="verLbl2"></button></h2>
-    <button class="menuBig" id="menuBtn" aria-label="Impostazioni di stampa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>STAMPA</button>
+    <button class="menuBig" id="menuBtn" aria-label="Impostazioni di stampa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></button>
     <button class="chip" id="tkPrinter" style="padding:8px 12px;font-size:14px">Stampante</button>
   </div>
   <div class="ovBody">
@@ -477,6 +483,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
   <div class="wzBg" id="wzBg"><i></i></div>
   <div class="wzScroll" id="wzScroll">
     <div class="wzStep" id="wzStep1">
+      <button class="wzBack" id="wzClose" hidden>‹ Indietro</button>
       <div class="wzBrand">Magic Play&amp;Print <button class="verBtn" id="wzVer"></button></div>
       <h1>A cosa vuoi giocare?</h1>
       <div class="wzOpts" id="wzFormats"></div>
@@ -925,6 +932,12 @@ function swapOv(id){
   $('#ov-' + id).classList.add('open'); stack.push(id);
   history.replaceState({ov:id}, '');
 }
+// chiude tutti i pannelli aperti e torna al tavolo in un colpo solo
+function closeAllOv(){
+  const n = stack.length; if(!n) return;
+  stack.splice(0, n - 1).forEach(id => $('#ov-' + id).classList.remove('open'));
+  history.go(-n);
+}
 function closeTop(){
   const id = stack.pop(); if(!id) return;
   $('#ov-' + id).classList.remove('open');
@@ -960,7 +973,7 @@ window.addEventListener('popstate', ()=>{
 
 /* ================= Menu ================= */
 const tog = (act, on, v='') => `<button class="tog ${on ? 'on' : ''}" data-act="${act}" data-v="${v}" aria-pressed="${on}"></button>`;
-$('#menuBtn').addEventListener('click', ()=>{ renderMenu(); swapOv('menu') });
+$('#menuBtn').addEventListener('click', ()=>{ renderMenu(); openOv('menu') });
 function renderMenu(){
   $('#menuBody').innerHTML = `
   <div class="sec"><h3>Stampante</h3>
@@ -2005,7 +2018,7 @@ async function connectPrinter(){
 function updatePrinterUI(){
   const on = !!printer.ch, name = on ? (printer.dev.name || 'stampante') : '';
   $('#tokenBtn').classList.toggle('pr-on', on);
-  $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega stampante';
+  $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega';
   const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name + (printer.info ? ` (${printer.info})` : '') : 'Non collegata';
   const cb = $('#prConnect'); if(cb) cb.textContent = on ? 'Cambia stampante' : 'Collega stampante';
 }
@@ -2059,7 +2072,8 @@ function openWizard(swap){
   ].map(([k,l,d])=>`<button class="wzOpt" data-f="${k}"><b>${l}</b><span>${d}</span></button>`).join('');
   $('#wzCounts').innerHTML = [2,3,4,5,6].map(n=>`<button class="wzOpt" data-n="${n}">${n}</button>`).join('');
   themeBg($('#wzBg'), ART_Q.wizard);
-  swap ? swapOv('wizard') : openOv('wizard');
+  $('#wzClose').hidden = !swap;
+  openOv('wizard');
   requestAnimationFrame(()=>wzStep(1));
 }
 $('#wzFormats').addEventListener('click', e=>{
@@ -2069,12 +2083,13 @@ $('#wzFormats').addEventListener('click', e=>{
 });
 $('#wzCounts').addEventListener('click', e=>{ const b = e.target.closest('[data-n]'); if(b){ buzz(15); startGame(WZ.fmt, +b.dataset.n) } });
 $('#wzBack').addEventListener('click', ()=>wzStep(1));
+$('#wzClose').addEventListener('click', ()=>history.back());
 function startGame(fmt, n){
   S.format = fmt; S.count = n; S.cmdDamage = FORMATS[fmt].cmd;
   S.startLife = fmt === 'brawl' && n > 2 ? 30 : FORMATS[fmt].life;
   if(SET.intro && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.body.classList.add('preintro');
   resetGame();
-  WZ.step = 0; history.back();
+  WZ.step = 0; closeAllOv();
   toast(FORMATS[fmt].label + ', ' + n + ' giocatori, ' + S.startLife + ' punti vita');
   setTimeout(()=>{ if(SET.intro) playIntro(); else maybeTut() }, 320);
 }
@@ -2393,9 +2408,20 @@ async function checkUpdate(manual){
     }
     if(!m) throw new Error();
     UPD.remote = cmpVer(m[1], VERSION) > 0 ? m[1] : null;
+    if(!manual && UPD.remote) updNotice();
     if(manual) toast(UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Hai già l\'ultima versione (' + VERSION + ')');
   }catch(e){ if(manual) toast('Impossibile verificare: controlla la connessione') }
   showVer(); if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
+}
+// avviso automatico: una volta per ogni nuova versione, tocchi Aggiorna o Dopo
+function updNotice(){
+  if(localStorage.getItem('smtg-updseen') === UPD.remote || $('#updBar')) return;
+  const b = document.createElement('div'); b.id = 'updBar';
+  b.innerHTML = `<span>Nuova versione ${esc(UPD.remote)} disponibile</span><button>Dopo</button><button class="go">Aggiorna</button>`;
+  document.body.appendChild(b); requestAnimationFrame(()=>b.classList.add('show')); sfx('found'); buzz(30);
+  const hide = () => { try{ localStorage.setItem('smtg-updseen', UPD.remote) }catch(e){} b.classList.remove('show'); setTimeout(()=>b.remove(), 400) };
+  b.querySelector('button').onclick = hide;
+  b.querySelector('.go').onclick = () => { hide(); applyUpdate() };
 }
 async function applyUpdate(){
   if(NATIVE && UPD.html){
@@ -2427,6 +2453,9 @@ async function applyUpdate(){
 showVer();
 setTimeout(()=>checkUpdate(false), 2500);
 setInterval(()=>{ if(document.visibilityState === 'visible') checkUpdate(false) }, 30*60*1000);
+// controllo anche quando riapri l'app dallo sfondo (al massimo ogni 10 minuti)
+let lastChk = Date.now();
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && Date.now() - lastChk > 10*60*1000){ lastChk = Date.now(); checkUpdate(false) } });
 
 renderBoard();
 if(inProgress()) openResume(); else openWizard();
