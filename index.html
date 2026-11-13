@@ -180,6 +180,9 @@ input.txt{user-select:text;-webkit-user-select:text}
 #tokenBtn img{width:50px;height:50px;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 0 6px rgba(255,80,20,.45))}
 .pname{touch-action:none}
 /* tenere premuto il microfono: niente gesti del telefono che annullano la pressione */
+body.preintro #board .cell,body.preintro #hub{opacity:0}
+.hubSlot{position:fixed;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid var(--gold);background:rgba(217,180,90,.25);z-index:4;pointer-events:none;animation:popIn .2s ease-out}
+#hub.moving{transition:left .25s ease-out,top .25s ease-out}
 #tokenBtn,#micBtn,#sugMic{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell.dropT{box-shadow:inset 0 0 0 5px #fff;filter:brightness(1.15)}
 #dragLine{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:15;display:none}
@@ -490,7 +493,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.6';
+const VERSION = '0.12.7';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -661,13 +664,39 @@ function placeAll(){
     packRow(cell);
   });
 }
-function placeHub(){
-  const hub = $('#hub'), c0 = document.querySelector('#board .cell');
-  if(!c0) return;
-  if(S.count === 2){ hub.style.left = '54px'; hub.style.top = '50%'; return }
-  const r = c0.getBoundingClientRect();
-  hub.style.left = (r.right + 2) + 'px'; hub.style.top = (r.bottom + 2) + 'px';
+// posizioni possibili del simbolo: in 2 a sinistra, al centro o a destra; da 3 in su gli incroci tra i pannelli
+function hubSlots(){
+  const cs = [...document.querySelectorAll('#board .cell')].map(c => c.getBoundingClientRect());
+  if(!cs.length) return [];
+  if(S.count === 2) return [[54, innerHeight/2], [innerWidth/2, innerHeight/2], [innerWidth - 54, innerHeight/2]];
+  const pts = [];
+  cs.forEach(r => [[r.left, r.top], [r.right, r.top], [r.left, r.bottom], [r.right, r.bottom]].forEach(([x, y]) => {
+    if(x < 20 || y < 20 || x > innerWidth - 20 || y > innerHeight - 20) return; // bordi dello schermo: no
+    x += x === r.left ? -2 : 2; y += y === r.top ? -2 : 2;
+    if(!pts.some(q => Math.hypot(q[0]-x, q[1]-y) < 14)) pts.push([x, y]);
+  }));
+  return pts.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
 }
+function placeHub(){
+  const hub = $('#hub'), sl = hubSlots();
+  if(!sl.length) return;
+  const pos = (SET.hubPos || {})[S.count], def = S.count === 2 ? 0 : 0;
+  const [x, y] = sl[pos ?? def] || sl[def];
+  hub.style.left = x + 'px'; hub.style.top = y + 'px';
+}
+// trascinamento del simbolo: segue il dito e al rilascio scatta sulla posizione più vicina
+const hubDrag = {
+  start(){ this.dots = hubSlots().map(([x, y]) => { const d = document.createElement('div'); d.className = 'hubSlot'; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); return d }); buzz(10) },
+  move(x, y){ const h = $('#hub'); h.style.left = x + 'px'; h.style.top = y + 'px' },
+  end(x, y){
+    (this.dots || []).forEach(d => d.remove());
+    const sl = hubSlots(); let k = 0;
+    sl.forEach((p, i) => { if(Math.hypot(p[0]-x, p[1]-y) < Math.hypot(sl[k][0]-x, sl[k][1]-y)) k = i });
+    SET.hubPos = Object.assign({}, SET.hubPos, {[S.count]:k}); saveSet();
+    const h = $('#hub'); h.classList.add('moving'); placeHub(); buzz(15);
+    setTimeout(()=>{ h.classList.remove('moving'); placeAll() }, 260);
+  }
+};
 window.addEventListener('resize', ()=>{ placeHub(); placeAll() });
 function renderBoard(){
   const b = $('#board');
@@ -1328,19 +1357,28 @@ function startCapture(btn, silent){
   };
 }
 // tocco breve = onTap, pressione lunga = detta finché tieni premuto
-function attachPTT(btn, {onTap, onText, silent}){
-  let down = false, held = false, timer = null, sess = null;
+function attachPTT(btn, {onTap, onText, silent, drag}){
+  let down = false, held = false, timer = null, sess = null, x0 = 0, y0 = 0, dragging = false;
+  if(drag){
+    btn.addEventListener('pointermove', e=>{
+      if(!down || held) return;
+      if(!dragging && Math.hypot(e.clientX - x0, e.clientY - y0) > 16){ dragging = true; clearTimeout(timer); drag.start() }
+      if(dragging) drag.move(e.clientX, e.clientY);
+    });
+  }
   btn.addEventListener('pointerdown', e=>{
-    down = true; held = false;
+    down = true; held = false; dragging = false; x0 = e.clientX; y0 = e.clientY;
     try{ btn.setPointerCapture(e.pointerId) }catch(_){}
     timer = setTimeout(()=>{ held = true; sess = startCapture(btn, silent) }, 230);
   });
-  btn.addEventListener('pointerup', ()=>{
+  btn.addEventListener('pointerup', e=>{
     if(!down) return; down = false; clearTimeout(timer);
+    if(dragging){ dragging = false; drag.end(e.clientX, e.clientY); return }
     if(held){ held = false; sess && sess.finish(onText) } else onTap && onTap();
   });
   btn.addEventListener('pointercancel', ()=>{
     if(!down) return; down = false; clearTimeout(timer);
+    if(dragging){ dragging = false; const h = $('#hub').getBoundingClientRect(); drag.end(h.left + h.width/2, h.top + h.height/2); return }
     if(held){ held = false; sess && sess.cancel() }
   });
   btn.addEventListener('contextmenu', e=>e.preventDefault());
@@ -1356,7 +1394,7 @@ function openTokens(){
   $('#heard').textContent = ''; $('#understood').textContent = ''; $('#tkInput').value = '';
   renderRecent(); openOv('tokens'); updatePrinterUI();
 }
-attachPTT($('#tokenBtn'), {onTap:openTokens, onText:quickToken, silent:true});
+attachPTT($('#tokenBtn'), {onTap:openTokens, onText:quickToken, silent:true, drag:hubDrag});
 attachPTT($('#micBtn'), {
   onTap: ()=>toast('Tieni premuto il microfono mentre parli'),
   onText: alts => { $('#tkInput').value = alts[0]; runRequest(alts, 'voce') }
@@ -1989,6 +2027,7 @@ $('#wzBack').addEventListener('click', ()=>wzStep(1));
 function startGame(fmt, n){
   S.format = fmt; S.count = n; S.cmdDamage = FORMATS[fmt].cmd;
   S.startLife = fmt === 'brawl' && n > 2 ? 30 : FORMATS[fmt].life;
+  if(SET.intro && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.body.classList.add('preintro');
   resetGame();
   WZ.step = 0; history.back();
   toast(FORMATS[fmt].label + ', ' + n + ' giocatori, ' + S.startLife + ' punti vita');
@@ -2184,15 +2223,17 @@ window.addEventListener('resize', ()=>{ if(FX.on) fxSize() });
 /* ================= Animazione di inizio partita ================= */
 let INTRO = null;
 function playIntro(){
+  document.body.classList.remove('preintro');
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){ maybeTut(); return }
   const hub = $('#tokenBtn'), cells = [...document.querySelectorAll('#board .cell')];
   const hr = hub.getBoundingClientRect(), cx = hr.left + hr.width/2, cy = hr.top + hr.height/2;
   const skip = document.createElement('div'); skip.id = 'introSkip'; document.body.appendChild(skip);
   const anims = [], T = [];
-  cells.forEach(c => c.style.opacity = 0);
+  cells.forEach(c => c.style.opacity = 0); hub.style.opacity = 0;
   const done = () => { if(!INTRO) return; INTRO = null; T.forEach(clearTimeout); anims.forEach(a=>{ try{ a.finish() }catch(e){} }); cells.forEach(c => c.style.opacity = ''); skip.remove(); maybeTut() };
   INTRO = {done};
   skip.addEventListener('pointerdown', e=>{ e.preventDefault(); FX.P = []; done() });
+  hub.style.opacity = '';
   const a = hub.animate([{transform:'scale(7)', opacity:0}, {opacity:1, offset:.35}, {transform:'scale(1)', opacity:1}], {duration:520, easing:'cubic-bezier(.55,0,1,.45)'});
   anims.push(a);
   a.onfinish = () => { if(!INTRO) return;
@@ -2229,7 +2270,7 @@ function tutSteps(){
     {el:me, t:'Punti vita', p:'Tocca la metà con il + per aggiungere un punto e quella con il − per toglierlo. Tenendo premuto il conteggio scorre (o salta di 10, lo scegli nel MENU).', g:'tap', at:me?.querySelector('.half.plus')},
     {el:me?.querySelector('.pname'), t:'Scheda giocatore', p:'Tocca il nome per aprire la scheda: nome, colore, immagine di sfondo, veleno, contatori, monarca e iniziativa.', g:'tap'},
     {el:me?.querySelector('.pname'), t:'Danni da comandante', p:'Trascina il nome di chi attacca sul pannello di chi subisce, poi scegli quanti danni. Vengono tolti anche dai punti vita.', g:'drag', to:other},
-    {el:$('#tokenBtn'), t:'Pedine', p:'Tocca il simbolo centrale per cercare le pedine. Tienilo premuto e di\' la pedina, per esempio «drago 5/5 volare»: la trova e dopo 3 secondi la stampa. Toccala per annullare.', g:'hold'},
+    {el:$('#tokenBtn'), t:'Pedine', p:'Tocca il simbolo centrale per cercare le pedine. Tienilo premuto e di\' la pedina, per esempio «drago 5/5 volare»: la trova e dopo 3 secondi la stampa. Toccala per annullare. Trascinalo per spostarlo dove ti è più comodo.', g:'hold'},
     {el:$('#tokenBtn'), t:'Stampante', p:'Quando sotto il simbolo c\'è un alone blu pulsante con le scintille, la stampante è collegata. Se è grigio, collegala dalla pagina Pedine.'},
     {el:$('#tokenBtn'), t:'MENU', p:'Il tasto giallo MENU è in alto nella pagina Pedine: lì trovi nuova partita, dadi, impostazioni e questa guida.', g:'tap'},
     {t:'Tutto qui!', p:'Buona partita. Che il mazzo sia con te.'},
