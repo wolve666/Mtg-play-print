@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.12.9', APPN = 1;
+var APPV = '0.12.10', APPN = 1;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -620,7 +620,7 @@ function isOut(p){
 // [orizzontale %, verticale %, grandezza in % del lato corto]
 const LAYOUT = {
   life:[50,57,92], delta:[80,10,13], name:[90,90,6.5],
-  tax:[20,10,5.5], exp:[30,10,5.5], rad:[40,10,5.5], poison:[50,10,5.5], energy:[60,10,5.5], cmd:[70,10,5.5],
+  tax:[20,13,11], exp:[30,13,11], rad:[40,13,11], poison:[50,13,11], energy:[60,13,11], cmd:[70,13,11],
   monarch:[10,70,5.5], blessing:[10,80,5.5], initiative:[10,90,5.5],
   turn:[90,80,5.5],
 };
@@ -642,7 +642,7 @@ function placeEl(el, k, mir, hub){
   // colonne in basso: almeno 24 px tra una riga e l'altra anche nei pannelli piccoli
   const STEP = {monarch:2, blessing:1, turn:1};
   st.top = (k in STEP && y >= 60) ? `calc(90% - ${STEP[k]} * max(10%, 24px))` : y + '%';
-  if(k !== 'life') st.fontSize = fz(z, MINPX[k] ?? 12);
+  if(k !== 'life') st.fontSize = fz(z, MINPX[k] ?? 12, ROW.includes(k) ? .9 : .55);
   if(x > 80){ st.left = 'auto'; st.right = Math.max(3, 100 - x - 6) + '%'; st.transform = 'translateY(-50%)' }
   else if(x < 20){ st.right = 'auto'; st.left = Math.max(3, x - 6) + '%'; st.transform = 'translateY(-50%)' }
   else { st.right = 'auto'; st.left = x + '%'; st.transform = 'translate(-50%,-50%)' }
@@ -664,18 +664,17 @@ function hubInFrame(cell, mir){
   // coordinate "reali" del pannello: gli elementi specchiati vengono confrontati dopo lo specchio
   return {x:50 + fx / w * 100, y:50 + fy / hh * 100, w, h:hh, r:h.width/2 + 8};
 }
-// riga in alto: nei pannelli piccoli le spie accese si mettono in fila una accanto all'altra, nello stesso ordine
+// riga in alto: le spie accese si mettono in fila una accanto all'altra, nello stesso ordine
 const ROW = ['tax','exp','rad','poison','energy','cmd'];
 function packRow(cell){
   const frame = cell.querySelector('.frame'), W = frame.offsetWidth, H = frame.offsetHeight;
-  if(W * .10 >= 44) return;
   const mir = cell.classList.contains('mir');
   const all = ROW.map(k => cell.querySelector(`.spia[data-s="${k}"]`));
   let els = all.filter(e => e.classList.contains('on'));
   if(mir) els = els.reverse();
   if(!els.length) return;
   const gap = 4, lo = W * (mir ? .29 : .06), hi = W * (mir ? .94 : .71);
-  all.forEach(e => e.style.fontSize = fz(LAYOUT[e.dataset.s][2], 12));
+  all.forEach(e => e.style.fontSize = fz(LAYOUT[e.dataset.s][2], 12, .9));
   const width = () => els.reduce((a,e)=>a + e.offsetWidth, 0) + gap * (els.length - 1);
   // se non ci stanno, rimpiccioliscono quanto basta (mai sotto i 9 px)
   let tot = width();
@@ -689,7 +688,7 @@ function packRow(cell){
   const clear = yy => { const cy = yy / 100 * H, hx = hub.x / 100 * W, hy = hub.y / 100 * H;
     const nx = Math.max(left, Math.min(hx, left + tot)), ny = Math.max(cy - eh/2, Math.min(hy, cy + eh/2));
     return Math.hypot(nx - hx, ny - hy) > hub.r + 4 };
-  const y = [10, 24, 38].find(clear) ?? 10;
+  const y = [13, 26, 39].find(clear) ?? 13;
   els.forEach(e=>{ e.style.top = y + '%'; e.style.right = 'auto'; e.style.left = left + 'px'; e.style.transform = 'translateY(-50%)'; left += e.offsetWidth + gap });
 }
 function placeAll(){
@@ -922,7 +921,10 @@ function resetGame(){
 /* ================= Pannelli + tasto indietro ================= */
 const stack = [];
 function openOv(id){
-  $('#ov-' + id).classList.add('open');
+  if(stack[stack.length-1] === id) return; // doppio tocco: non lo apro due volte
+  const el = $('#ov-' + id);
+  el.style.zIndex = (el.classList.contains('ov') ? 20 : 45) + stack.length;
+  el.classList.add('open');
   stack.push(id);
   history.pushState({ov:id}, '');
 }
@@ -2018,7 +2020,7 @@ async function connectPrinter(){
 function updatePrinterUI(){
   const on = !!printer.ch, name = on ? (printer.dev.name || 'stampante') : '';
   $('#tokenBtn').classList.toggle('pr-on', on);
-  $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega';
+  $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega stampante';
   const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name + (printer.info ? ` (${printer.info})` : '') : 'Non collegata';
   const cb = $('#prConnect'); if(cb) cb.textContent = on ? 'Cambia stampante' : 'Collega stampante';
 }
