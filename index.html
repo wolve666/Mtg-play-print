@@ -490,7 +490,7 @@ const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
-const VERSION = '0.12.5';
+const VERSION = '0.12.6';
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -1223,9 +1223,18 @@ function buildQueries(r){
   const seen = new Set();
   return tries.filter(t => { const k = t.q.join(' '); if(seen.has(k)) return false; seen.add(k); return true });
 }
+// il telefono può dirsi «in linea» anche senza segnale: se Scryfall non risponde, per un minuto vado diretto all'archivio
+let netDown = 0;
+const online = () => navigator.onLine && Date.now() - netDown > 60000;
+window.addEventListener('online', ()=>{ netDown = 0 });
 async function scry(q){
   const url = 'https://api.scryfall.com/cards/search?include_extras=true&unique=art&order=released&dir=desc&q=' + encodeURIComponent(q);
-  const r = await fetch(url, {headers:{Accept:'application/json'}});
+  const ac = new AbortController(), to = setTimeout(()=>ac.abort(), 5000);
+  let r;
+  try{ r = await fetch(url, {headers:{Accept:'application/json'}, signal:ac.signal}) }
+  catch(e){ netDown = Date.now(); throw new Error('rete assente') }
+  finally{ clearTimeout(to) }
+  netDown = 0;
   if(r.status === 404) return [];
   if(!r.ok) throw new Error('Scryfall ' + r.status);
   return (await r.json()).data || [];
@@ -1278,7 +1287,7 @@ function startCaptureNat(btn, silent){
     hidePTT(); if(cancelled || !cb) return;
     const c = cb; cb = null;
     const alts = matches && matches.length ? matches : (interim.trim() ? [interim.trim()] : []);
-    if(!alts.length){ if([1,2,4,12,13].includes(err) || !navigator.onLine) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
+    if(!alts.length){ if([1,2,4,12,13].includes(err) || !online()) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
     c(alts);
   }
   return {
@@ -1309,7 +1318,7 @@ function startCapture(btn, silent){
     const c = cb; cb = null;
     pendingClip = clip ? clip.stop() : null;
     let alts = finals.length === 1 ? finals[0] : finals.length ? [finals.map(f=>f[0]).join(' ')] : (interim.trim() ? [interim.trim()] : []);
-    if(!alts.length){ if(netErr || !navigator.onLine) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
+    if(!alts.length){ if(netErr || !online()) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
     c(alts);
   }
   try{ rec.start() }catch(e){}
@@ -1356,7 +1365,7 @@ $('#tkPrinter').addEventListener('click', ()=> printer.ch ? toast('Stampante col
 $('#tkInput').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.target.blur(); runRequest([e.target.value], 'testo') } });
 
 function renderRecent(){
-  if(!navigator.onLine && ARC.ready) setTimeout(()=>document.querySelectorAll('#tkResults .recent img').forEach(async (im, i)=>{
+  if(ARC.ready) setTimeout(()=>document.querySelectorAll('#tkResults .recent img').forEach(async (im, i)=>{
     const t = RECENT[i], e = t && (ARC.list.find(x => x.id === t.id) || ARC.list.find(x => x.n === t.name)); if(e && e.ok) im.src = await arcUrl(e.id, 's') }), 0);
   $('#tkResults').innerHTML = RECENT.length
     ? `<div class="sec"><h3>Stampate di recente</h3><div class="recent">${RECENT.map((t,i)=>`<button data-r="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`
@@ -1402,7 +1411,7 @@ async function runRequest(alternatives, source){
     $('#tkResults').innerHTML = `<div class="sec"><h3>${results.length} pedine nell'archivio: scegli quella da stampare</h3><div class="grid">${
       results.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
   };
-  if(!navigator.onLine && ARC.ready){ await offline(); return }
+  if(!online() && ARC.ready){ await offline(); return }
   try{
     let data = [], note = '', used = '';
     for(const t of buildQueries(req)){
@@ -2040,14 +2049,14 @@ function arcProg(t){ ARC.prog = t; const el = $('#arcStat'); if(el) el.textConte
 async function arcUrl(id, k){ const key = id + ':' + k; if(ARC.urls.has(key)) return ARC.urls.get(key); const b = await imgGet(key); const u = b ? URL.createObjectURL(b) : ''; ARC.urls.set(key, u); return u }
 async function arcTk(e){
   const small = await arcUrl(e.id, 's');
-  return {id:e.id, name:e.n, type_line:e.t, set:e.s, small, large:navigator.onLine ? e.L : small, print:await arcUrl(e.id, 'g'), local:true, rs:e.S, rl:e.L, rp:e.src};
+  return {id:e.id, name:e.n, type_line:e.t, set:e.s, small, large:online() ? e.L : small, print:await arcUrl(e.id, 'g'), local:true, rs:e.S, rl:e.L, rp:e.src};
 }
 // una pedina di Scryfall già nell'archivio stampa dal telefono (più veloce); senza rete la cerco anche per nome
 async function arcResolve(t){
   if(!t || t.local || !ARC.ready) return t;
-  const e = ARC.list.find(x => x.id === t.id && x.ok) || (!navigator.onLine && ARC.list.find(x => x.n === t.name && x.ok));
+  const e = ARC.list.find(x => x.id === t.id && x.ok) || (!online() && ARC.list.find(x => x.n === t.name && x.ok));
   if(!e) return t;
-  return navigator.onLine ? {...t, print:await arcUrl(e.id, 'g')} : arcTk(e);
+  return online() ? {...t, print:await arcUrl(e.id, 'g')} : arcTk(e);
 }
 const recentOf = t => t.local ? {...t, small:t.rs, large:t.rl, print:t.rp, local:false} : t;
 function arcSearch(r){
@@ -2103,7 +2112,7 @@ async function arcImg(e){
 }
 async function arcSync(quiet){
   if(ARC.busy) return;
-  if(!navigator.onLine){ if(!quiet) toast('Serve la connessione per scaricare l\'archivio'); return }
+  if(!online()){ if(!quiet) toast('Serve la connessione per scaricare l\'archivio'); return }
   ARC.busy = true; arcProg('Scarico la lista delle pedine…'); if(stack[stack.length-1] === 'menu') renderMenu();
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist() }catch(e){}
   try{
@@ -2145,7 +2154,7 @@ async function arcClear(){
 }
 // all'avvio: controllo giornaliero delle pedine nuove; uno scaricamento lasciato a metà riprende se non si è sul traffico dati
 arcLoad().then(()=>setTimeout(()=>{
-  if(!ARC.list.length || !navigator.onLine) return;
+  if(!ARC.list.length || !online()) return;
   const cell = navigator.connection && navigator.connection.type === 'cellular';
   if(!ARC.meta.complete){ if(!cell) arcSync(true) }
   else if(Date.now() - (ARC.meta.checked || 0) > 20 * 3600e3) arcSync(true);
