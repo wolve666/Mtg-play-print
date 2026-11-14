@@ -34,6 +34,9 @@ jobs:
       - run: npx cap add android
       - name: Modulo Bluetooth classico (cartella native)
         run: cp native/*.java android/app/src/main/java/it/educk/magicplayprint/
+      - name: Permessi Bluetooth classico nel manifest (ricerca senza posizione da Android 12)
+        run: |
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>\n</manifest>#' android/app/src/main/AndroidManifest.xml
       - name: Permesso microfono e servizio vocale nel manifest
         run: |
           sed -i 's#</manifest>#    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <queries><intent><action android:name="android.speech.RecognitionService"/></intent></queries>\n</manifest>#' android/app/src/main/AndroidManifest.xml
