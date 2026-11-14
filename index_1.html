@@ -1,0 +1,2432 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<script>
+// versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
+var APPV = '0.13.0', APPN = 2;
+// aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
+(function(){
+  if(window.__LIVE) return;
+  window.BUNDLEV = APPV; window.BUNDLEN = APPN;
+  try{
+    var L = localStorage, h = L.getItem('smtg-live'), v = L.getItem('smtg-livever'), n = +L.getItem('smtg-liven') || 1;
+    var newer = function(a, b){ a = a.split('.'); b = b.split('.'); for(var i = 0; i < 3; i++){ if((+a[i]||0) !== (+b[i]||0)) return (+a[i]||0) > (+b[i]||0) } return false };
+    if(!h || !v) return;
+    if(!newer(v, APPV) || n > APPN || L.getItem('smtg-liveok') === '0'){
+      // superata dall'APK, incompatibile o andata in errore all'avvio precedente: la scarto
+      if(L.getItem('smtg-liveok') === '0') L.setItem('smtg-livefail', v);
+      ['smtg-live','smtg-livever','smtg-liven','smtg-liveok'].forEach(function(k){ L.removeItem(k) });
+      return;
+    }
+    L.setItem('smtg-liveok', '0');
+    window.__LIVE = v;
+    document.write(h + '<plaintext style="display:none">');
+  }catch(e){}
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#22252B">
+<title>Magic Play&amp;Print</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#22252B; --surface:#2C3038; --surface2:#363B45; --line:#454B57;
+  --text:#EEF0F3; --muted:#A3A9B5; --gold:#D9B45A; --gold-ink:#2A2213; --danger:#E0604A; --ok:#5DB37A;
+  --num:'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --ui:'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--ui);overflow:hidden;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select{font:inherit}
+
+/* ---------- Tavolo ---------- */
+#board{position:fixed;inset:0;display:grid;gap:4px;padding:calc(4px + env(safe-area-inset-top)) 4px calc(4px + env(safe-area-inset-bottom))}
+#board.n2{grid-template:1fr 1fr / 1fr}
+#board.n3{grid-template:1.4fr 1fr / 1fr 1fr}
+#board.n3 .cell:nth-child(3){grid-column:1 / 3}
+#board.n4{grid-template:1fr 1fr / 1fr 1fr}
+#board.n5{grid-template:1fr 1fr .9fr / 1fr 1fr}
+#board.n5 .cell:nth-child(5){grid-column:1 / 3}
+#board.n6{grid-template:1fr 1fr 1fr / 1fr 1fr}
+
+.cell{position:relative;container-type:size;overflow:hidden;border-radius:14px;background:var(--pc);color:var(--pt);transition:filter .3s}
+.cell.out{filter:saturate(.15) brightness(.55)}
+.frame{position:absolute;left:50%;top:50%;width:100cqw;height:100cqh;transform:translate(-50%,-50%)}
+.r90 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(90deg)}
+.r270 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
+.r180 .frame{transform:translate(-50%,-50%) rotate(180deg)}
+.half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:min(32cqmin,19cqmax);font-weight:700;line-height:1;color:color-mix(in srgb,var(--pt) 55%,transparent);touch-action:none;transition:background .3s}
+.half.minus{left:0;justify-content:flex-start;padding-left:4%}
+.half.plus{right:0;justify-content:flex-end;padding-right:4%}
+.half.pressed{background:radial-gradient(ellipse at center,rgba(255,255,255,.34),rgba(255,255,255,.12) 55%,rgba(255,255,255,.04));color:var(--pt);transition:none}
+.life{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--num);font-weight:900;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.delta{position:absolute;transform:translate(-50%,-50%);font-family:var(--num);font-weight:800;opacity:0;transition:opacity .25s;pointer-events:none}
+.delta.show{opacity:.9}
+.pname{position:absolute;transform:translateY(-50%);padding:.5em 1.1em;border-radius:99px;background:rgba(0,0,0,.18);font-weight:600;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+.spia{position:absolute;transform:translate(-50%,-50%);padding:.15em .6em;border-radius:99px;background:rgba(0,0,0,.24);font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;scale:.6;transition:opacity .25s,scale .25s}
+.spia.on{opacity:1;scale:1}
+
+
+/* ---------- Hub centrale ---------- */
+#hub{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;z-index:5}
+.spia.on[data-s=turn]{pointer-events:auto;cursor:pointer}
+#hub.col{flex-direction:column}
+#tokenBtn{width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#F2D58C,var(--gold) 55%,#A9842E);color:var(--gold-ink);box-shadow:0 0 0 5px var(--bg),0 6px 18px rgba(0,0,0,.45);display:grid;place-items:center;transition:transform .12s}
+#tokenBtn:active{transform:scale(.93)}
+#tokenBtn svg{width:40px;height:40px}
+.smallBtn{width:44px;height:44px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 4px var(--bg);display:grid;place-items:center}
+.smallBtn svg{width:22px;height:22px}
+
+/* ---------- Pannelli sovrapposti ---------- */
+.ov{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.ov.open{transform:none}
+#ov-player.r180{transform:rotate(180deg) translateY(100%)}
+#ov-player.r180.open{transform:rotate(180deg)}
+#ov-player.r90,#ov-player.r270{inset:auto;left:50%;top:50%;width:100vh;height:100vw;padding:0}
+#ov-player.r90{transform:translate(-50%,-50%) rotate(90deg) translateY(100%)}
+#ov-player.r90.open{transform:translate(-50%,-50%) rotate(90deg)}
+#ov-player.r270{transform:translate(-50%,-50%) rotate(-90deg) translateY(100%)}
+#ov-player.r270.open{transform:translate(-50%,-50%) rotate(-90deg)}
+@media (prefers-reduced-motion:reduce){.ov{transition:none}}
+.ovHead{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.ovHead h2{margin:0;font-size:20px;font-weight:700;flex:1;display:flex;align-items:baseline;gap:8px}
+.ver{font-size:13px;font-weight:500;color:var(--muted)}
+.back{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--surface)}
+.back svg{width:22px;height:22px}
+.ovBody{flex:1;overflow-y:auto;padding:16px 16px 28px;-webkit-overflow-scrolling:touch}
+.sec{margin-bottom:24px}
+.sec h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-width:48px;padding:10px 16px;border-radius:12px;background:var(--surface);font-weight:600}
+.chip.sel{background:var(--gold);color:var(--gold-ink)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;background:var(--surface);font-weight:600;margin-bottom:8px}
+.btn.primary{background:var(--gold);color:var(--gold-ink)}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row .lbl{flex:1}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:40px;height:40px;border-radius:10px;background:var(--surface);font-size:22px;font-weight:600}
+.stepper output{min-width:42px;text-align:center;font-family:var(--num);font-size:26px;font-weight:700}
+.txt{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+select.txt{appearance:auto}
+.note{font-size:14px;color:var(--muted);line-height:1.45;margin:6px 0 0}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:42px;height:42px;border-radius:50%;border:3px solid transparent}
+.sw.sel{border-color:var(--text)}
+
+/* ---------- Pedine ---------- */
+.voiceBar{display:flex;gap:10px;align-items:center}
+#micBtn{flex:none;width:58px;height:58px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center}
+#micBtn svg{width:28px;height:28px}
+#micBtn.listening{animation:pulse 1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(217,180,90,.6)}100%{box-shadow:0 0 0 16px rgba(217,180,90,0)}}
+#heard{min-height:22px;margin:12px 2px 4px;font-size:15px;color:var(--muted)}
+#understood{margin:0 2px 14px;font-size:17px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+.grid button{border-radius:8px;overflow:hidden;background:var(--surface);aspect-ratio:146/204;padding:0}
+.grid img{width:100%;height:100%;object-fit:cover;display:block}
+.recent{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.recent button{flex:none;width:86px;border-radius:7px;overflow:hidden;padding:0;aspect-ratio:146/204;background:var(--surface)}
+.recent img{width:100%;height:100%;object-fit:cover;display:block}
+.empty{padding:24px 6px;color:var(--muted);line-height:1.5}
+.detailImgs{display:flex;gap:12px;justify-content:center;margin-bottom:14px}
+.detailImgs figure{margin:0;flex:1;max-width:240px;text-align:center}
+.detailImgs img,.detailImgs canvas{width:100%;border-radius:8px;display:block;background:#fff}
+.detailImgs canvas{image-rendering:pixelated}
+.detailImgs figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+.tl{font-size:14px;color:var(--muted);text-align:center;margin:-4px 0 14px}
+
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--surface2);color:var(--text);padding:12px 18px;border-radius:12px;font-weight:500;z-index:50;opacity:0;pointer-events:none;transition:all .25s;max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#dice{font-family:var(--num);font-size:96px;font-weight:900;text-align:center;margin:8px 0}
+
+/* ---------- v0.2 ---------- */
+.cell.withart{--pt:#fff;box-shadow:inset 0 0 0 3px var(--pc)}
+.frame.hasart{background-size:cover;background-position:center}
+.frame.hasart::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.62));pointer-events:none}
+.cell.active{box-shadow:inset 0 0 0 4px var(--gold)}
+#turnPill{padding:9px 14px;border-radius:99px;background:var(--surface);box-shadow:0 0 0 4px var(--bg);font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#turnPill b{font-weight:700;margin-right:6px}
+#tokenBtn.listening{animation:pulse 1s infinite}
+#ptt{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,calc(-100% - 60px));visibility:hidden;z-index:60;background:var(--gold);color:var(--gold-ink);padding:12px 18px;border-radius:14px;font-weight:600;max-width:90vw;text-align:center;transition:transform .2s;pointer-events:none}
+#ptt.show{transform:translate(-50%,0);visibility:visible}
+.tog{position:relative;width:52px;height:30px;border-radius:99px;background:var(--surface2);flex:none;transition:background .2s}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--text);transition:transform .2s}
+.tog.on{background:var(--ok)}
+.tog.on::after{transform:translateX(22px)}
+.bigLife{font-family:var(--num);font-size:76px;font-weight:900;text-align:center;line-height:1;margin:2px 0 12px}
+.quick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:24px}
+.quick button{padding:13px 0;border-radius:10px;background:var(--surface);font-weight:700;font-size:17px}
+.hist{font-size:15px}
+.hist div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.hist .pos{color:var(--ok)} .hist .neg{color:var(--danger)}
+.hist time{color:var(--muted);flex:none}
+.artCur{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.artCur img{width:110px;aspect-ratio:4/3;object-fit:cover;border-radius:8px}
+.artGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.artGrid button{padding:0;border-radius:8px;overflow:hidden;aspect-ratio:4/3;background:var(--surface)}
+.artGrid img{width:100%;height:100%;object-fit:cover;display:block}
+.diceRes{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 18px;min-height:120px;margin:4px 0 6px}
+.die{font-family:var(--num);font-size:64px;font-weight:900;min-width:70px;text-align:center}
+.diceSum{text-align:center;color:var(--muted);min-height:22px;margin-bottom:12px}
+.diceBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.diceBtns button{padding:16px 0;border-radius:12px;background:var(--surface);font-weight:700;font-size:17px}
+textarea.txt{min-height:120px;resize:vertical;user-select:text;-webkit-user-select:text}
+input.txt{user-select:text;-webkit-user-select:text}
+#sugMic.listening{animation:pulse 1s infinite}
+
+/* ---------- v0.3 ---------- */
+#tokenBtn{position:relative;background:radial-gradient(circle at 50% 40%,#3A3530,#1E1C1A 70%);box-shadow:0 0 0 3px var(--gold),0 0 0 6px var(--bg),0 6px 18px rgba(0,0,0,.45);transition:transform .12s}
+#tokenBtn{overflow:hidden}
+#tokenBtn img{position:relative;z-index:1}
+#tokenBtn::before{content:'';position:absolute;inset:6px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(150,150,160,.16) 45%,rgba(150,150,160,0) 72%)}
+#tokenBtn.pr-on::before{background:radial-gradient(circle,rgba(61,139,255,.9) 22%,rgba(61,139,255,.38) 50%,rgba(61,139,255,0) 72%);animation:haloPulse 2.2s ease-in-out infinite}
+@keyframes haloPulse{0%,100%{transform:scale(.86);opacity:.75}50%{transform:scale(1.06);opacity:1}}
+.orbit{position:absolute;inset:7px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .4s}
+#tokenBtn.pr-on .orbit{opacity:1;animation:orbit 5s linear infinite}
+.orbit i{position:absolute;width:4px;height:4px;border-radius:50%;background:#D4EAFF;box-shadow:0 0 6px 2px rgba(80,160,255,.95);animation:twinkle 1.6s ease-in-out infinite}
+.orbit i:nth-child(1){top:0;left:calc(50% - 2px)}
+.orbit i:nth-child(2){top:calc(50% - 2px);right:0;animation-delay:.4s}
+.orbit i:nth-child(3){bottom:0;left:calc(50% - 2px);animation-delay:.8s}
+.orbit i:nth-child(4){top:calc(50% - 2px);left:0;animation-delay:1.2s}
+@keyframes orbit{to{transform:rotate(360deg)}}
+@keyframes twinkle{50%{opacity:.25;transform:scale(.6)}}
+@media (prefers-reduced-motion:reduce){#tokenBtn.pr-on::before,#tokenBtn.pr-on .orbit,.orbit i{animation:none}}
+.verBtn{white-space:nowrap;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:500;color:var(--muted);background:rgba(255,255,255,.06)}
+.verBtn.upd{background:var(--gold);color:var(--gold-ink);font-weight:700;animation:verGlow 1.8s ease-in-out infinite}
+@keyframes verGlow{50%{box-shadow:0 0 0 4px rgba(217,180,90,.3)}}
+.ovHead h2{white-space:nowrap}
+.wzBrand .verBtn{color:rgba(255,255,255,.7)}
+.wzBrand .verBtn.upd{color:var(--gold-ink)}
+#tokenBtn img{width:50px;height:50px;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 0 6px rgba(255,80,20,.45))}
+.pname{touch-action:none}
+/* tenere premuto il microfono: niente gesti del telefono che annullano la pressione */
+body.preintro #board .cell,body.preintro #hub{opacity:0}
+.hubSlot{position:fixed;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid var(--gold);background:rgba(217,180,90,.25);z-index:4;pointer-events:none;animation:popIn .2s ease-out}
+#hub.moving{transition:left .25s ease-out,top .25s ease-out}
+#tokenBtn,#micBtn,#sugMic{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.cell.dropT{box-shadow:inset 0 0 0 5px #fff;filter:brightness(1.15)}
+#dragLine{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:15;display:none}
+#dragLine.on{display:block}
+#dragLine line{stroke:var(--gold);stroke-width:5;stroke-linecap:round;stroke-dasharray:2 12}
+#dragLine circle{fill:var(--gold)}
+.pchip{display:inline-block;padding:.2em .7em;border-radius:99px;font-weight:700}
+.cqWho{text-align:center;font-size:18px;margin:4px 0 6px;line-height:2}
+
+.tkm{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .25s}
+.tkm.open{pointer-events:auto;opacity:1}
+.tkmBack{position:absolute;inset:0;background:rgba(10,9,14,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.tkmStage{position:relative;height:78vh;width:92vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.halo{position:absolute;top:44%;left:50%;width:min(130vw,78vh);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);
+  background:conic-gradient(from 0deg,rgba(217,180,90,0),rgba(217,180,90,.6),rgba(255,110,50,.45),rgba(130,170,255,.4),rgba(190,120,255,.35),rgba(217,180,90,0));
+  filter:blur(46px);opacity:.85;animation:spin 7s linear infinite}
+.tkm.loading .halo{animation:spin 7s linear infinite,breathe 1.4s ease-in-out infinite}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes breathe{50%{opacity:.45}}
+.sparks{position:absolute;inset:0;pointer-events:none}
+.spark{position:absolute;left:50%;top:44%;width:6px;height:6px;border-radius:50%;background:#FFE9A8;box-shadow:0 0 10px 3px rgba(255,205,110,.8);opacity:0;animation:float var(--d) ease-in-out var(--dl) infinite}
+@keyframes float{0%{transform:translate(var(--x0),var(--y0)) scale(.3);opacity:0}25%{opacity:1}100%{transform:translate(var(--x1),var(--y1)) scale(1);opacity:0}}
+.tkmCard{position:relative;height:min(60vh,120vw);aspect-ratio:480/680;border-radius:4.6%/3.3%;overflow:hidden;background:#15131a;
+  transform:scale(.8) translateY(14px);opacity:0;transition:transform .5s cubic-bezier(.2,1.35,.4,1),opacity .3s;box-shadow:0 0 0 2px rgba(255,230,160,.35),0 0 50px rgba(217,180,90,.45)}
+.tkm.show .tkmCard{transform:none;opacity:1}
+.tkmCard img,.tkmCard canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tkmCard canvas{background:#fff;image-rendering:pixelated;clip-path:inset(0 0 100% 0)}
+.scan{position:absolute;left:-5%;right:-5%;top:0;height:18px;margin-top:-9px;background:linear-gradient(transparent,rgba(255,225,140,.95),transparent);filter:blur(2px);opacity:0}
+.tkm.printing .scan{opacity:1}
+.qtyBadge{position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:99px;background:var(--gold);color:var(--gold-ink);font-family:var(--num);font-weight:900;font-size:26px}
+.qtyBadge:empty{display:none}
+.tkmName{position:relative;font-size:19px;font-weight:700;min-height:24px;text-align:center}
+.tkmBar{position:relative;width:min(62vw,320px);height:6px;border-radius:9px;background:rgba(255,255,255,.16);overflow:hidden}
+.tkmBar i{display:block;height:100%;width:0;background:var(--gold)}
+.tkmCap{position:relative;color:var(--muted);font-size:15px;min-height:20px;text-align:center}
+#tmConnect{position:relative;width:auto;padding:14px 22px}
+#tmConnect[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.halo,.spark{animation:none}.spark{display:none}}
+
+/* ---------- v0.4 ---------- */
+.cqPop{position:fixed;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:12;width:340px;padding:10px 12px 12px;border-radius:16px;background:rgba(14,13,19,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:popIn .2s ease-out;font-size:14px;touch-action:none}
+@keyframes popIn{from{transform:translate(-50%,-50%) scale(.85);opacity:0}}
+.cqT{text-align:center;margin-bottom:4px;font-weight:600;line-height:1.9}
+.cqRow{display:flex;align-items:center;justify-content:center;gap:10px}
+.cqRow button,.cqQuick button{min-width:44px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);font-weight:700;font-size:18px;color:#fff}
+.cqRow output{font-family:var(--num);font-size:40px;font-weight:900;min-width:56px;text-align:center}
+.cqL{color:#bbb;font-size:13px}
+.cqQuick{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.cqQuick .ok{background:var(--gold);color:var(--gold-ink);padding:0 14px}
+
+.wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;transition:opacity .35s;padding-top:env(safe-area-inset-top)}
+.wz.open,.dlg.open{opacity:1;pointer-events:auto}
+.wzBg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 30% 20%,#3a2c52,#14121a 70%)}
+.wzBg i{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1s;animation:kb 26s ease-in-out infinite alternate}
+.wzBg i.in{opacity:1}
+.wzBg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,12,20,.5),rgba(14,12,20,.9))}
+@keyframes kb{to{transform:scale(1.12) translate(-2%,-2%)}}
+.wz:not(.open) .wzBg i,.dlg:not(.open) .wzBg i{animation-play-state:paused}
+.wzScroll{position:relative;flex:1;overflow:hidden}
+.wzStep{height:100%;display:flex;flex-direction:column;justify-content:center;padding:24px 22px calc(28px + env(safe-area-inset-bottom));gap:22px}
+.wz h1,.dlg h1{font-family:var(--num);font-weight:900;font-size:clamp(46px,14vw,78px);line-height:.92;margin:0;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.5)}
+.wzBrand{font-weight:600;color:var(--gold);display:flex;align-items:baseline;gap:8px}
+.wzBrand .ver{color:rgba(255,255,255,.6)}
+.wzOpts{display:flex;flex-direction:column;gap:10px}
+.wzOpt{padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);text-align:left;border:1px solid rgba(255,255,255,.15);transition:background .15s,transform .15s}
+.wzOpt b{display:block;font-size:22px}
+.wzOpt span{color:rgba(255,255,255,.65);font-size:15px}
+.wzOpt:active{background:rgba(217,180,90,.4);transform:scale(.98)}
+.wzOpts.nums{flex-direction:row;flex-wrap:wrap}
+.wzOpts.nums .wzOpt{flex:1 0 28%;text-align:center;font-family:var(--num);font-size:54px;font-weight:900;padding:16px 0}
+.wzBack{align-self:flex-start;color:rgba(255,255,255,.7);padding:8px 0;font-weight:600}
+#wzStep3{justify-content:flex-start;overflow-y:auto}
+#wzStep3 h1{font-size:clamp(40px,12vw,64px)}
+.wzNames{display:flex;flex-direction:column;gap:8px}
+.wzName{display:flex;align-items:center;gap:10px}
+.wzName i{flex:none;width:14px;height:40px;border-radius:7px}
+.wzName input{flex:1;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:17px}
+.wzName input::placeholder{color:rgba(255,255,255,.45)}
+.wzGo{display:flex;gap:10px}
+.wzGo .btn{margin:0}
+.wzGo .btn:not(.primary){flex:0 0 34%;background:rgba(255,255,255,.12);color:#fff}
+.dlgCard{position:relative;margin:auto;width:min(88vw,420px);padding:30px 22px 22px;border-radius:22px;background:rgba(18,16,24,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);text-align:center;display:flex;flex-direction:column;gap:10px}
+.dlg h1{font-size:clamp(40px,12vw,64px)}
+.dlg p{margin:0 0 10px;color:rgba(255,255,255,.75);line-height:1.45}
+.winName{font-family:var(--num);font-weight:900;font-size:clamp(40px,12vw,64px);line-height:1;margin:4px 0 2px;color:var(--gold)}
+.dlg.win .dlgCard{animation:winIn .6s cubic-bezier(.2,1.3,.4,1)}
+@keyframes winIn{from{transform:scale(.7);opacity:0}}
+@font-face{font-family:'ManaSub';src:url(data:font/woff;base64,d09GRgABAAAAAAzEAAwAAAAAEbwAAS4UAAAAAAAAAAAAAAAAAAAAAAAAAABHU1VCAAAMqAAAABoAAAAabIx0hU9TLzIAAAuoAAAAQQAAAGD1KQrHY21hcAAAC+wAAABPAAAAdKYHjW9nYXNwAAAMoAAAAAgAAAAIAAAAEGdseWYAAAEcAAAJ5gAADp69U8NTaGVhZAAACzQAAAA2AAAANjnEqXRoaGVhAAALiAAAACAAAAAkF7oTyWhtdHgAAAtsAAAAHAAAACgj/wAAbG9jYQAACxwAAAAWAAAAFhSzENptYXhwAAALBAAAABgAAAAgALMaM25hbWUAAAw8AAAAVwAAAHwEhRyzcG9zdAAADJQAAAAMAAAAIAADAAB4nHVXS4wcVxXt96n36v/p+nR1d/Wvqrtqembc09Xf+XlmkskYOz88iETEOJkQkcQ4MomywQYJkKygIBZIRA4rFllGERIr5IgQBWWDyAbxExIbWBiiSCxYsnCHW1UztpOQ0ZunV+/de1/Vveeee7tESqWP3yJt8l7podJLpR+XSmgSJwNUjPkOSuJZttYRh+ExXiyK4XiVJro7dtB8Fs9nHmjBmE5miXBiKMm3sgHHeibNmQejAlbmhbH8qvkgn09MZkKkXatpntY838UiRZhIHCOiEINTygVDqYxdvWWqvuAZqtdwO46z7GqBpjgep0wqy8Yps7NbkeoOW7zvr9iu7zpEJBxLPtUTU4ssjChmmIhM0cA6/cioa/6wjjEzPUKQhlShHBnlAcVVhLCB3lr+Ultvas2yXe7ZTGXeKU+titVTvtWzrIamamXVk42WXbu/ObjYs5Yt1ZUppfOXpu7Aa++3dKI4yy2r6Qaz4BZzdX1Vr2wFdmybddtuWTpBZtuQbdlddle/smov2S8qNc1siXbfXv3qam3ul6Oy6Kh6tWZVreUvJ6UShgi+R/4EEZyUDiF+4GRwXh6afALf5mHLp8y/ycmUhSOPyZwcix8/Hoscq6Gf+z3PjSrVINgJw17nwTA6F/bCcLcRVL3QcbsVP2jASRdOug9FUbuzHdT93yzF8UGrHQSt9kHc6/d78UG7FQTt1plevIT/HT7cBSvdMNwJgmol8pwu2G/sRlGv/YXw5KThV7qu2/P9oL7d6USLd4/Vl+Lemc+YPvHE8+CJ75ZuFZ4AiH4Kpf9vuPei+t5xB7+fBXIxJrP56K798WhW7I9hLkxEIfjRc5uftFvIzUZjUPZYdj1zjlPobqbE0+U78t54GUUs5jFLwGB8fM08Zhz/SHEUhAREJYYpIZQSkRJYKAKBDZnKGs+OOIC13C37g0pnr2FHJlOooApEICDljhrhw0vusieozGgbVBYUW/IiTS9zTBAYlwUrtOrzAMBndSyzZWoS0mva183Q0upabeJDbsDQZcyQv9eDDGOyAPJ2YrsrLkJcwhQhBnlGBEu2+p4/DQiC11V9VbQkhDFcodU0raoprgwZqe2tEilLTXIBMyKIFO6vTWqyI8ueDErc4NmsctmSLE9mGqOcwscwQ1Squjuol7sON0TJEEGXSjTcrXfWfUhN8A9oiTo3Wmb/icGpp4blrgUvizHlRODwEfAhcC0iAt1nnGAsSoQRtarVZ1WusfmzA0ESCOYyJvA9FHsDP9gIGpsN2ZWrqd9/JF56tAca8HU4dwr4D9YIorT78hphAjyWMtZ9j5YAqWlpt3QesJp6wwwAcw6ThiDklYQNeQt1dlE8SgQboHcqAzQRMmgM5+lJhsMjnEWgUaDwOIVxybCc2Frc5BpB64vfEk18e6HK9I2F+jOqIW1x+10uk8UHaEpk/muEy33PMmMmMEUQ6OoqQee2Htk5Q1C7yXQuZNvgjHOPPY8N5e2PtcBMR0ZD+/htTqPvX28z8R0kqDU9TfWqioRfqQZ57vF/LC0l55eWluoPjreeVtWj7eSgKki02AXeyn2A/go+aJf2SlfAB/D2Tk45UZgTEJSQecFmRb5M7yRlvnDzlPHGo/yLpwNEQsY3SCEEzjt2UHqSK8PjFAbJCP2OM2SX91ZW0nRlZa9sUwIxal49u3UlFBn8ieGVrbNXmxkU6L1yiN2CzCGMti5vQyGynd3l/kAxDP3c8xDy7cstCimjcKRaXXs1jjdNyzI343gV0gRws38GTVJFV/+jacpojPDBAwXuV+NkwzJNayOJV8s9dBWQaPD9ITXVtSSeG2YGIWK++Ihq0uE+HCFCC/+RA/Df+6XfIx38500+wWs5JNzMB6yyicbFJqy9ERzlZSE2wLVeduLA9gwOeSESh1EaFvQPnDNLYjYFzkknw2l6pz2Ij5sB0HWZlxvOLLjLxeks8UYZDcZhtobFaDbeRtOcQndRAeIiuCdMOh0NxzYQogPxj+G+Cjnhy5Q5GUfmL+nqx81GJdeezyZZTwFkCcbTeDadFcXLSdDfW16w4ROFipbIVcRcDsmtAgVhva5nfCSDGzHRYIWZKmjgZYlZnBqABWSiLH01xCRkx2XgOkywZPNsV8+yGqthuzqqnP5Bv9wUOc96E+BJhjTgU3/o63XNpYj7nAPTDICOEdWoWBWBPXlUdVRRbXWMlgFkp1QUPTBQf9QVK8iTJB9V5Bc6Kw2zrSoNRCTgIaxD9IlM4kcTiH37oAPwrPGcXLqW2barPXKVImYGLiJINCWjY2V6ZUYI4WUuKAzD+9ZVzvtHfa5hznkI3KoLek+niPprVSgYVr+cMZWCIBHEICM+t+98+9rw2bXeblWu6ryVlqe+/40Auhl/069Oqxyz8TfHiJt85WgNwsRZ5b7r98F3IsEQuMZX9ru2RrVaVXIkxVOEvCDB4vZNcEvdF8UaQj/B3FIqqroe7UTwhZ0LHS7wvVfup0C6wMMSlDWMgWoxvkCfAL+uPL6y8sXEiDQVifewaBcY5CJkQI7qHObpJEdvmid9nOZYyzvZuXBHhg8LhvBmxVGcdvLtXGBYND8Mqm2um2L0LycWBAShpo3gIGgEwQNBQCjUDCq0ax8uPtp/dh+Jos05DaPH4phDKdEZh6qGlz/3iJy+3r+2Mt7ZudLroTL0i+VsssLw8u7e9vqL0fU3BImhin909uzXdC0yTYpE6YdPPvly1f/cg9I9nrlQ+mnpF+AZyCu7CYkHWTfLeqK0so5SSB+Ys35l5LkB4iTrV6I45GHWtpB4kk5mcNRCIAVOWkfT+WQ0nY0qI6eFvNHcBk0XCaMZ2AUuybudNQT6w4wbEgJEu4GBRwjLkjIdoLsyrAV0P+5lxj0n307z/UnGDeMUl6AE34SaPgbvyhSdxgJ+DWAAGfY9JAqDS5c+vHRpIIjwxATYfw3OT+eSaAxaNwHFiw/wZSaSGBKSY/i1IJIUegFgLVd8E0G9F9CbogvxpaKQQssEvM0hYWL4JQA1keINTNZxJobXCTwAJ/wTo8UvGWJn4ZUg0dBTQBCvAnVkFX3xHUAGgv9XUPaO+NWs9j8JgvBCZ2HjQQj47b9BB/SMmF9D6f2Mb0FvrSLAAsaL/8KCbXHE9uEmwhkWn2HCHzA5IlB2M4lzsHga4+PYkm9BbOvQOzycxTaHsfup2pmjFn6BRRAAG6plpyiXFTsLXNElTDvA5jaB4BecC9FG71w8f3gtCsPo2uH5ixcPD69G8Hf18BCtDV7Y3Hxh7UYjWvzFMNaTZO31xkHzxlqSrBvm4s9h88Yfo9Eo6o5GXfLcZ9QvFmYfqjeb9cXC2oq2ZrOjJA4QKZcXt4M4OZrNYNNCeHGrMBKNSv8DuN+36gAAeJxjYGRgYOCSMmRYwQACTAxoAAAX9AEBAAAAAADhAWYCuwM9A90FXgXrBtkHTwAAAAEAAAABLhRN53OXXw889QALBAAAAAAA41cbfAAAAADjVxt8//r/qxP9A8AAAAAIAAIAAAAAAAB4nGNhYGBggWLmDAjNeAPI9kASL2dgAAAjyQIieJxjYGRgYD7w/wADgwjD/1///wn/ZQCKoAAuALsNB6l4nGNgZu5lnMDAysDANJPpDAMDQz+EZnzNYMzIyYAGBNAFHJ5JvApgPvD/AIMDMxADRRhBwkA2CCgwMAAAfPoM5QAAAHicY2BgYGJgYGAGYhEgyQimWRgSwLQAUITlmcRLlpfsL71eNr6c+vLYyxevAv7/Z2DAJir5Uuyf2B+xXWItYoVijmIKojvB5mEAAI/mIpIAeJxNybEOQDAAhOG/Wg2LUYyeQGLzEgwGu0FEIiQV7+9CB8Ml390BngGLcTmGDKITCrXP9re7n1Mqymj/7j0zhzKysHKzy4FJLXCxceqtaWmU7gE1mQlRAHicY2BmwAsAAH0ABAABAAH//wAPAAEAAAAKABYAGAABbGF0bgAIAAAAAAAAAAAAAA==) format('woff');font-display:block}
+.mi{font-family:'ManaSub';font-style:normal;font-weight:400;display:inline-block;line-height:1;vertical-align:-.12em;background:linear-gradient(180deg,#FFF3CC,#E8B94F 55%,#A9762A);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6)) drop-shadow(0 0 3px rgba(0,0,0,.35))}
+.spia .mi{font-size:1.15em;margin-right:.15em}
+#menuBtn.menuBig{width:44px;height:44px;padding:0;flex-shrink:0;border-radius:12px;background:#F2C230;color:#2A2000;display:flex;align-items:center;justify-content:center}
+#menuBtn.menuBig svg{width:24px;height:24px}
+#tkPrinter{white-space:nowrap;flex-shrink:0}
+#updBar{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));z-index:90;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#F2C230;color:#2A2000;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.45);transform:translateY(-140%);transition:transform .35s}
+#updBar.show{transform:none}
+#updBar span{flex:1}
+#updBar button{padding:8px 12px;border-radius:10px;font-weight:700;background:rgba(0,0,0,.12);color:inherit}
+#updBar button.go{background:#2A2000;color:#F2C230}
+#tkDrop{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+#tkDrop.open{grid-template-rows:1fr}
+#tkDrop>.in{overflow:hidden;min-height:0}
+#tkDrop.open>.in{padding-bottom:14px}
+#tkMenu{border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:4px}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:14}
+#introSkip{position:fixed;inset:0;z-index:16}
+#dragLine line{animation:dashMove .45s linear infinite;filter:drop-shadow(0 0 6px rgba(255,200,90,.95))}
+#dragLine circle{filter:drop-shadow(0 0 10px rgba(255,200,90,1));animation:dotPulse .8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes dashMove{to{stroke-dashoffset:-14}}
+@keyframes dotPulse{50%{transform:scale(1.35)}}
+.cmdFx{position:absolute;inset:0;z-index:3;pointer-events:none;display:grid;place-items:center}
+.cmdFx .fl{position:absolute;inset:0;background:radial-gradient(circle,rgba(255,60,40,.55),rgba(120,0,0,.2) 70%);animation:cfFlash .7s ease-out forwards}
+.cmdFx .sl{position:absolute;left:50%;top:50%;width:140%;height:7px;margin:-3.5px 0 0 -70%;border-radius:4px;background:linear-gradient(90deg,transparent,#FFF3CC 30%,#E8B94F 50%,#FFF3CC 70%,transparent);box-shadow:0 0 14px 3px rgba(255,190,80,.9);transform:rotate(var(--a)) scaleX(0);animation:cfSlash .55s cubic-bezier(.2,.9,.3,1) forwards}
+.cmdFx .sl+.sl{animation-delay:.09s}
+.cmdFx .ic{position:relative;font-size:min(30cqmin,90px);display:flex;align-items:center;gap:.1em;animation:cfIcon .9s cubic-bezier(.2,1.4,.4,1) forwards}
+.cmdFx .ic b{font-family:var(--num);font-size:.55em;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+@keyframes cfFlash{from{opacity:1}to{opacity:0}}
+@keyframes cfSlash{0%{transform:rotate(var(--a)) scaleX(0);opacity:1}60%{transform:rotate(var(--a)) scaleX(1);opacity:1}100%{transform:rotate(var(--a)) scaleX(1);opacity:0}}
+@keyframes cfIcon{0%{scale:.2;opacity:0}35%{scale:1.15;opacity:1}75%{scale:1;opacity:1}100%{scale:1;opacity:0}}
+#tut{position:fixed;inset:0;z-index:30;touch-action:none}
+#tut .hole{position:absolute;border-radius:50%;box-shadow:0 0 0 200vmax rgba(5,6,10,.86),0 0 0 3px rgba(242,194,48,.85),0 0 24px 6px rgba(242,194,48,.35);transition:left .5s cubic-bezier(.3,.8,.3,1),top .5s cubic-bezier(.3,.8,.3,1),width .5s,height .5s}
+#tut .dot{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 0 12px rgba(255,255,255,.8);opacity:0;pointer-events:none}
+#tut .dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:3px solid #fff;opacity:0}
+#tut .dot.tap{opacity:1;animation:tTap 1.3s ease-in-out infinite}
+#tut .dot.tap::after{animation:tRip 1.3s ease-out infinite}
+#tut .dot.hold{opacity:1;animation:tHold 2s ease-in-out infinite}
+#tut .dot.hold::after{animation:tRip 2s ease-out infinite;animation-delay:.5s}
+#tut .dot.drag{opacity:1}
+@keyframes tTap{0%,100%{scale:1}20%{scale:.75}40%{scale:1}}
+@keyframes tHold{0%{scale:1}15%{scale:.75}80%{scale:.75}100%{scale:1}}
+@keyframes tRip{0%{opacity:.9;scale:.8}100%{opacity:0;scale:2.4}}
+#tut .box{position:absolute;left:50%;transform:translateX(-50%);width:min(90vw,380px);background:var(--surface);color:var(--text);border-radius:16px;padding:16px 16px 12px;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:top .4s,bottom .4s;animation:popIn .25s ease-out}
+#tut .box h4{margin:0 0 6px;font-size:18px;font-weight:700;color:var(--gold)}
+#tut .box p{margin:0 0 12px;line-height:1.45;font-size:15px}
+#tut .bar{display:flex;align-items:center;gap:10px}
+#tut .dots{flex:1;display:flex;gap:5px}
+#tut .dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+#tut .dots i.on{background:var(--gold)}
+#tut .bar button{padding:9px 14px;border-radius:10px;font-weight:600;font-size:15px}
+#tut .skip{color:var(--muted)}
+#tut .next{background:var(--gold);color:var(--gold-ink)}
+@media (prefers-reduced-motion:reduce){#tut .hole{transition:none}}
+</style>
+</head>
+<body>
+
+<div id="board"></div>
+<div id="hub">
+  <button id="tokenBtn" aria-label="Pedine: tocca per aprire, tieni premuto per parlare">
+    <span class="orbit" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <img src="emblema.png" alt="" draggable="false">
+  </button>
+  <button id="turnPill" hidden></button>
+</div>
+<div id="ptt"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<svg id="dragLine" aria-hidden="true"><line x1="0" y1="0" x2="0" y2="0"/><circle r="10" cx="0" cy="0"/></svg>
+
+<!-- Pedina rapida (tieni premuto il simbolo) -->
+<div id="ov-modal" class="tkm">
+  <div class="tkmBack"></div>
+  <div class="tkmStage">
+    <div class="halo"></div>
+    <div class="sparks" id="tmSparks"></div>
+    <div class="tkmCard" id="tmCard">
+      <img id="tmImg" alt="">
+      <canvas id="tmBits"></canvas>
+      <div class="scan" id="tmScan"></div>
+      <div class="qtyBadge" id="tmQty"></div>
+    </div>
+    <div class="tkmName" id="tmName"></div>
+    <div class="tkmBar"><i id="tmBar"></i></div>
+    <div class="tkmCap" id="tmCap"></div>
+    <button class="btn primary" id="tmConnect" hidden>Collega la stampante e stampa</button>
+  </div>
+</div>
+
+<!-- Menu -->
+<section class="ov" id="ov-menu">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Stampa <button class="verBtn" id="verLbl"></button></h2>
+  </div>
+  <div class="ovBody" id="menuBody"></div>
+</section>
+
+<!-- Giocatore -->
+<section class="ov" id="ov-player">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2 id="plTitle">Giocatore</h2>
+  </div>
+  <div class="ovBody" id="plBody"></div>
+</section>
+
+<!-- Pedine: ricerca -->
+<section class="ov" id="ov-tokens">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Menu <button class="verBtn" id="verLbl2"></button></h2>
+    <button class="menuBig" id="menuBtn" aria-label="Impostazioni di stampa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></button>
+    <button class="chip" id="tkPrinter" style="padding:8px 12px;font-size:14px">Stampante</button>
+  </div>
+  <div class="ovBody">
+    <div class="voiceBar">
+      <button id="micBtn" aria-label="Tieni premuto per parlare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <input class="txt" id="tkInput" placeholder="Es. tre goblin 1/1 rossi" enterkeyhint="search" autocomplete="off">
+    </div>
+    <div id="heard"></div>
+    <div id="understood"></div>
+    <div id="tkRecent"></div>
+    <div id="tkDrop"><div class="in"><div id="tkResults"></div><button class="btn" id="tkClose">Chiudi</button></div></div>
+    <div id="tkMenu"></div>
+  </div>
+</section>
+
+<!-- Pedine: dettaglio -->
+<section class="ov" id="ov-detail">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2 id="dtTitle">Pedina</h2>
+  </div>
+  <div class="ovBody">
+    <div class="detailImgs">
+      <figure><img id="dtImg" alt=""><figcaption>Originale</figcaption></figure>
+      <figure><canvas id="dtPrev"></canvas><figcaption>Come uscirà</figcaption></figure>
+    </div>
+    <p class="tl" id="dtType"></p>
+    <div class="row"><span class="lbl">Copie</span><div class="stepper"><button id="qMinus">−</button><output id="qOut">1</output><button id="qPlus">+</button></div></div>
+    <div style="height:14px"></div>
+    <button class="btn primary" id="dtPrint">Stampa</button>
+  </div>
+</section>
+
+<!-- Dadi -->
+<section class="ov" id="ov-dice">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Dadi e moneta</h2>
+  </div>
+  <div class="ovBody">
+    <div class="diceRes" id="diceRes"></div>
+    <div class="diceSum" id="diceSum"></div>
+    <div class="row"><span class="lbl">Quanti</span><div class="stepper"><button id="dnMinus">−</button><output id="dnOut">1</output><button id="dnPlus">+</button></div></div>
+    <div class="diceBtns" id="diceBtns">
+      <button data-f="4">d4</button><button data-f="6">d6</button><button data-f="8">d8</button><button data-f="10">d10</button>
+      <button data-f="12">d12</button><button data-f="20">d20</button><button data-f="100">d100</button><button data-f="coin">Moneta</button>
+    </div>
+  </div>
+</section>
+
+<!-- Registro -->
+<section class="ov" id="ov-log">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Registro partita</h2>
+  </div>
+  <div class="ovBody" id="logBody"></div>
+</section>
+
+<!-- Suggerimento -->
+<section class="ov" id="ov-bt">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Cerca stampante</h2>
+  </div>
+  <div class="ovBody"><div id="btList"></div></div>
+</section>
+<section class="ov" id="ov-suggest">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Suggerimento</h2>
+  </div>
+  <div class="ovBody">
+    <p class="note" style="margin:0 0 14px">Tieni premuto il microfono e racconta cosa miglioreresti, oppure scrivilo. Finisce nei dati da esportare.</p>
+    <div class="voiceBar" style="align-items:flex-start">
+      <button id="sugMic" class="micLike" aria-label="Tieni premuto per parlare" style="flex:none;width:58px;height:58px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <textarea class="txt" id="sugTxt" placeholder="Es. vorrei vedere chi ha iniziato la partita"></textarea>
+    </div>
+    <div style="height:14px"></div>
+    <button class="btn primary" id="sugSave">Salva suggerimento</button>
+  </div>
+</section>
+
+<!-- Avvio: formato e giocatori -->
+<section id="ov-wizard" class="wz">
+  <div class="wzBg" id="wzBg"><i></i></div>
+  <div class="wzScroll" id="wzScroll">
+    <div class="wzStep" id="wzStep1">
+      <button class="wzBack" id="wzClose" hidden>‹ Indietro</button>
+      <div class="wzBrand">Magic Play&amp;Print <button class="verBtn" id="wzVer"></button></div>
+      <h1>A cosa vuoi giocare?</h1>
+      <div class="wzOpts" id="wzFormats"></div>
+    </div>
+    <div class="wzStep" id="wzStep2">
+      <button class="wzBack" id="wzBack">‹ Cambia formato</button>
+      <h1>In quanti siete a giocare?</h1>
+      <div class="wzOpts nums" id="wzCounts"></div>
+    </div>
+    <div class="wzStep" id="wzStep3">
+      <button class="wzBack" id="wzBack2">‹ Cambia giocatori</button>
+      <h1>Chi gioca?</h1>
+      <div class="wzNames" id="wzNames"></div>
+      <div class="wzGo"><button class="btn" id="wzSkip">Salta</button><button class="btn primary" id="wzStart">Inizia</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- Riprendi la partita -->
+<section id="ov-resume" class="dlg">
+  <div class="wzBg" id="rsBg"><i></i></div>
+  <div class="dlgCard">
+    <h1>Vuoi continuare la partita?</h1>
+    <p id="rsInfo"></p>
+    <button class="btn primary" id="rsGo">Continua</button>
+    <button class="btn" id="rsNew">Nuova partita</button>
+  </div>
+</section>
+
+<!-- Vincitore -->
+<section id="ov-win" class="dlg win">
+  <div class="wzBg" id="wnBg"><i></i></div>
+  <div class="dlgCard">
+    <h1>Vittoria</h1>
+    <div class="winName" id="wnName"></div>
+    <p id="wnInfo"></p>
+    <button class="btn primary" id="wnAgain">Rivincita</button>
+    <button class="btn" id="wnNew">Nuova partita</button>
+    <button class="btn" id="wnBack">Torna al tavolo</button>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<script src="app-config.js"></script>
+<script>
+// app Android (Capacitor): Bluetooth nativo veloce al posto di Web Bluetooth
+const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
+const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
+'use strict';
+const VERSION = APPV, NATIVE_REV = APPN;
+
+/* ================= Stato ================= */
+const COLORS = [
+  {id:'R', bg:'#C4462E', fg:'#FFF4EE'},
+  {id:'U', bg:'#2F6FB0', fg:'#F0F6FF'},
+  {id:'G', bg:'#3E7D4A', fg:'#EFFAF0'},
+  {id:'W', bg:'#E6DDBF', fg:'#2B2614'},
+  {id:'B', bg:'#4A3F55', fg:'#F3EEF8'},
+  {id:'C', bg:'#7D838C', fg:'#FFFFFF'},
+];
+const FORMATS = {
+  standard:{label:'Standard', life:20, cmd:false},
+  commander:{label:'Commander', life:40, cmd:true},
+  brawl:{label:'Brawl', life:25, cmd:false},
+  oathbreaker:{label:'Oathbreaker', life:20, cmd:false},
+};
+const COUNTERS = [
+  {k:'poison', label:'Veleno', icon:'☠', step:1},
+  {k:'energy', label:'Energia', icon:'⚡', step:1},
+  {k:'exp', label:'Esperienza', icon:'✦', step:1},
+  {k:'rad', label:'Radiazioni', icon:'☢', step:1},
+  {k:'tax', label:'Tassa del comandante', icon:'Tassa', step:2},
+];
+const FLAGS = [
+  {k:'monarch', label:'Monarca', icon:'<i class="mi">\ue9e8</i>', unique:true},
+  {k:'initiative', label:'Iniziativa', icon:'<i class="mi">\ue995</i>', unique:true},
+  {k:'blessing', label:'Benedizione della città', icon:'<i class="mi">\ue94a</i>'},
+];
+const KEY = 'smtg-state-v2', SKEY = 'smtg-settings', RKEY = 'smtg-recent', VKEY = 'smtg-voicelog';
+
+function newPlayer(i, life, o){
+  return {name:o?.name || 'Giocatore ' + (i+1), color:o?.color ?? i % COLORS.length, art:o?.art || null, artName:o?.artName || '',
+          partner:!!o?.partner, life, counters:{}, cmd:{}, flags:{}, out:false, hist:[]};
+}
+function freshPlayers(n, life, old){ return Array.from({length:n}, (_,i)=>newPlayer(i, life, old?.[i])) }
+function freshTurn(on){ return {on:!!on, n:1, active:0, first:0, started:Date.now(), turnStart:Date.now()} }
+
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)) }catch(e){ return null } }
+let S = load(KEY);
+if(!S || !S.players){
+  S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
+  S.players = freshPlayers(4, 40);
+}
+let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false, page:false}, load(SKEY) || {});
+SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
+let RECENT = load(RKEY) || [];
+let VLOG = load(VKEY) || [];
+
+let saveT;
+function save(){ clearTimeout(saveT); saveT = setTimeout(()=>{ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }, 250) }
+function saveSet(){ try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
+function saveRecent(){ try{ localStorage.setItem(RKEY, JSON.stringify(RECENT)) }catch(e){} }
+function saveVlog(){ if(VLOG.length > 500) VLOG = VLOG.slice(-500); try{ localStorage.setItem(VKEY, JSON.stringify(VLOG)) }catch(e){} }
+
+const $ = s => document.querySelector(s);
+function toast(msg, ms=2200){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'), ms) }
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hhmm = t => new Date(t).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+function buzz(ms=8){ if(SET.vibrate && navigator.vibrate) navigator.vibrate(ms) }
+function logEv(txt){ S.log.push({t:Date.now(), txt}); if(S.log.length > 300) S.log.shift(); save() }
+
+/* ================= Annulla ================= */
+const undoStack = [];
+function snap(){ undoStack.push(JSON.stringify({players:S.players, turn:S.turn})); if(undoStack.length > 60) undoStack.shift() }
+function undo(){
+  const s = undoStack.pop();
+  if(!s){ toast('Niente da annullare'); return }
+  const o = JSON.parse(s); S.players = o.players; S.turn = o.turn;
+  save(); renderBoard();
+  if(stack[stack.length-1] === 'player') renderPlayer();
+  toast('Annullato'); buzz(15);
+}
+
+/* ================= Tavolo ================= */
+const ROT = {
+  2:['r180','r0'],
+  3:['r90','r270','r0'],
+  4:['r90','r270','r90','r270'],
+  5:['r90','r270','r90','r270','r0'],
+  6:['r90','r270','r90','r270','r90','r270'],
+};
+function isOut(p){
+  if(p.out || p.life <= 0 || (p.counters.poison || 0) >= 10) return true;
+  return S.cmdDamage && Object.values(p.cmd).some(v => v >= 21);
+}
+// Layout del pannello, dalla bozza del banco di prova allineata su una griglia del 10%:
+// [orizzontale %, verticale %, grandezza in % del lato corto]
+const LAYOUT = {
+  life:[50,57,92], delta:[80,10,13], name:[90,88,8],
+  tax:[20,13,11], exp:[30,13,11], rad:[40,13,11], poison:[50,13,11], energy:[60,13,11], cmd:[70,13,11],
+  monarch:[10,70,5.5], blessing:[10,80,5.5], initiative:[10,90,5.5],
+  turn:[90,80,5.5],
+};
+const SPIE = ['tax','exp','rad','poison','energy','cmd','monarch','blessing','initiative','turn'];
+const MI = c => `<i class="mi">${c}</i>`;
+const SPIA_ICON = {tax:MI('\ue904'), exp:MI('\ue981'), rad:MI('\uea50'), poison:MI('\ue618'), energy:MI('\ue907'), cmd:MI('\ue9c6'), monarch:MI('\ue9e8'), blessing:MI('\ue94a'), initiative:MI('\ue995'), turn:'⌛ Turno'};
+// grandezza: % del lato corto, con un tetto sul lato lungo per i pannelli quasi quadrati
+const fz = (z, min, k=.55) => { const f = `min(${z}cqmin,${(z*k).toFixed(2)}cqmax)`; return min ? `max(${min}px,${f})` : f };
+const MINPX = {life:0, delta:0, name:15};
+// posiziona un elemento; vicino ai bordi si appoggia al bordo invece di uscire
+function placeEl(el, k, mir, hub){
+  let [x, y, z] = LAYOUT[k]; if(mir) x = 100 - x;
+  // se il simbolo centrale coprirebbe l'elemento, lo faccio scendere di una riga (o due)
+  if(hub && k !== 'life' && k !== 'name'){
+    const near = yy => Math.hypot((x - hub.x) / 100 * hub.w, (yy - hub.y) / 100 * hub.h) < hub.r + 22;
+    if(near(y)){ for(const yy of [24, 38]){ if(!near(yy)){ y = yy; break } } }
+  }
+  const st = el.style;
+  // colonne in basso: almeno 24 px tra una riga e l'altra anche nei pannelli piccoli
+  const STEP = {monarch:2, blessing:1, turn:1};
+  st.top = (k in STEP && y >= 60) ? `calc(90% - ${STEP[k]} * max(10%, 24px))` : y + '%';
+  if(k !== 'life') st.fontSize = fz(z, MINPX[k] ?? 12, ROW.includes(k) ? .9 : .55);
+  if(x > 80){ st.left = 'auto'; st.right = Math.max(3, 100 - x - 6) + '%'; st.transform = 'translateY(-50%)' }
+  else if(x < 20){ st.right = 'auto'; st.left = Math.max(3, x - 6) + '%'; st.transform = 'translateY(-50%)' }
+  else { st.right = 'auto'; st.left = x + '%'; st.transform = 'translate(-50%,-50%)' }
+}
+// il lato destro del layout guarda sempre verso il simbolo centrale: i pannelli che lo hanno dall'altra parte vengono specchiati
+function cellMirror(cell){
+  const r = cell.getBoundingClientRect(), h = $('#tokenBtn').getBoundingClientRect();
+  const dx = (h.left + h.width/2) - (r.left + r.width/2), dy = (h.top + h.height/2) - (r.top + r.height/2);
+  const fx = {r0:[1,0], r90:[0,1], r180:[-1,0], r270:[0,-1]}[ROT[S.count][+cell.dataset.i]];
+  return fx[0]*dx + fx[1]*dy < -1;
+}
+// posizione del simbolo centrale nelle coordinate del pannello (in %, come il layout)
+function hubInFrame(cell, mir){
+  const r = cell.getBoundingClientRect(), h = $('#tokenBtn').getBoundingClientRect();
+  const dx = (h.left + h.width/2) - (r.left + r.width/2), dy = (h.top + h.height/2) - (r.top + r.height/2);
+  const rot = ROT[S.count][+cell.dataset.i], side = rot === 'r90' || rot === 'r270';
+  const w = side ? r.height : r.width, hh = side ? r.width : r.height;
+  const [fx, fy] = {r0:[dx, dy], r90:[dy, -dx], r180:[-dx, -dy], r270:[-dy, dx]}[rot];
+  // coordinate "reali" del pannello: gli elementi specchiati vengono confrontati dopo lo specchio
+  return {x:50 + fx / w * 100, y:50 + fy / hh * 100, w, h:hh, r:h.width/2 + 8};
+}
+// riga in alto: le spie accese si mettono in fila una accanto all'altra, nello stesso ordine
+const ROW = ['tax','exp','rad','poison','energy','cmd'];
+function packRow(cell){
+  const frame = cell.querySelector('.frame'), W = frame.offsetWidth, H = frame.offsetHeight;
+  const mir = cell.classList.contains('mir');
+  const all = ROW.map(k => cell.querySelector(`.spia[data-s="${k}"]`));
+  let els = all.filter(e => e.classList.contains('on'));
+  if(mir) els = els.reverse();
+  if(!els.length) return;
+  const gap = 4, lo = W * (mir ? .29 : .06), hi = W * (mir ? .94 : .71);
+  all.forEach(e => e.style.fontSize = fz(LAYOUT[e.dataset.s][2], 12, .9));
+  const width = () => els.reduce((a,e)=>a + e.offsetWidth, 0) + gap * (els.length - 1);
+  // se non ci stanno, rimpiccioliscono quanto basta (mai sotto i 9 px)
+  let tot = width();
+  if(tot > hi - lo){
+    const f = parseFloat(getComputedStyle(els[0]).fontSize), nf = Math.max(9, f * (hi - lo) / tot);
+    els.forEach(e => e.style.fontSize = nf + 'px'); tot = width();
+  }
+  let left = Math.max(lo, Math.min(hi - tot, W * (mir ? .615 : .385) - tot / 2));
+  // se il simbolo centrale è sopra la fila, la fila scende di una riga (o due)
+  const hub = hubInFrame(cell, mir), eh = els[0].offsetHeight;
+  const clear = yy => { const cy = yy / 100 * H, hx = hub.x / 100 * W, hy = hub.y / 100 * H;
+    const nx = Math.max(left, Math.min(hx, left + tot)), ny = Math.max(cy - eh/2, Math.min(hy, cy + eh/2));
+    return Math.hypot(nx - hx, ny - hy) > hub.r + 4 };
+  const y = [13, 26, 39].find(clear) ?? 13;
+  els.forEach(e=>{ e.style.top = y + '%'; e.style.right = 'auto'; e.style.left = left + 'px'; e.style.transform = 'translateY(-50%)'; left += e.offsetWidth + gap });
+}
+function placeAll(){
+  document.querySelectorAll('#board .cell').forEach(cell=>{
+    const mir = cellMirror(cell);
+    cell.classList.toggle('mir', mir);
+    const hub = hubInFrame(cell, mir);
+    cell.querySelectorAll('[data-k]').forEach(el => placeEl(el, el.dataset.k, mir, hub));
+    packRow(cell);
+  });
+}
+// posizioni possibili del simbolo: in 2 a sinistra, al centro o a destra; da 3 in su gli incroci tra i pannelli
+function hubSlots(){
+  const cs = [...document.querySelectorAll('#board .cell')].map(c => c.getBoundingClientRect());
+  if(!cs.length) return [];
+  if(S.count === 2) return [[54, innerHeight/2], [innerWidth/2, innerHeight/2], [innerWidth - 54, innerHeight/2]];
+  const pts = [];
+  cs.forEach(r => [[r.left, r.top], [r.right, r.top], [r.left, r.bottom], [r.right, r.bottom]].forEach(([x, y]) => {
+    if(x < 20 || y < 20 || x > innerWidth - 20 || y > innerHeight - 20) return; // bordi dello schermo: no
+    x += x === r.left ? -2 : 2; y += y === r.top ? -2 : 2;
+    if(!pts.some(q => Math.hypot(q[0]-x, q[1]-y) < 14)) pts.push([x, y]);
+  }));
+  return pts.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+}
+function placeHub(){
+  const hub = $('#hub'), sl = hubSlots();
+  if(!sl.length) return;
+  const pos = (SET.hubPos || {})[S.count], def = S.count === 2 ? 0 : 0;
+  const [x, y] = sl[pos ?? def] || sl[def];
+  hub.style.left = x + 'px'; hub.style.top = y + 'px';
+}
+// trascinamento del simbolo: segue il dito e al rilascio scatta sulla posizione più vicina
+const hubDrag = {
+  start(){ this.dots = hubSlots().map(([x, y]) => { const d = document.createElement('div'); d.className = 'hubSlot'; d.style.left = x + 'px'; d.style.top = y + 'px'; document.body.appendChild(d); return d }); buzz(10) },
+  move(x, y){ const h = $('#hub'); h.style.left = x + 'px'; h.style.top = y + 'px' },
+  end(x, y){
+    (this.dots || []).forEach(d => d.remove());
+    const sl = hubSlots(); let k = 0;
+    sl.forEach((p, i) => { if(Math.hypot(p[0]-x, p[1]-y) < Math.hypot(sl[k][0]-x, sl[k][1]-y)) k = i });
+    SET.hubPos = Object.assign({}, SET.hubPos, {[S.count]:k}); saveSet();
+    const h = $('#hub'); h.classList.add('moving'); placeHub(); buzz(15);
+    setTimeout(()=>{ h.classList.remove('moving'); placeAll() }, 260);
+  }
+};
+window.addEventListener('resize', ()=>{ placeHub(); placeAll() });
+function renderBoard(){
+  const b = $('#board');
+  b.className = 'n' + S.count;
+  $('#hub').classList.toggle('col', S.count > 2);
+  b.innerHTML = S.players.map((p,i)=>{
+    const c = COLORS[p.color];
+    return `<div class="cell ${ROT[S.count][i]}${p.art ? ' withart' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}">
+      <div class="frame${p.art ? ' hasart' : ''}"${p.art ? ` style="background-image:url('${esc(p.art)}')"` : ''}>
+        <div class="half minus" data-d="-1">−</div>
+        <div class="half plus" data-d="1">+</div>
+        ${SPIE.map(k=>`<span class="spia" data-s="${k}" data-k="${k}"></span>`).join('')}
+        <div class="delta" data-k="delta"></div>
+        <div class="life" data-k="life"></div>
+        <button class="pname" data-k="name">${esc(p.name)}</button>
+      </div></div>`;
+  }).join('');
+  placeHub(); placeAll();
+  S.players.forEach((_,i)=>updateCell(i));
+  updateTurnUI();
+}
+function updateCell(i){
+  const p = S.players[i], cell = $(`.cell[data-i="${i}"]`);
+  if(!cell) return;
+  const lf = cell.querySelector('.life'); lf.textContent = p.life;
+  // tre cifre (o un negativo a due) rimpiccioliscono il numero per restare nel pannello
+  const big = String(p.life).length >= 3;
+  lf.style.fontSize = big ? `calc(${fz(LAYOUT.life[2], 0, .6)} * .72)` : fz(LAYOUT.life[2], 0, .6);
+  cell.classList.toggle('out', isOut(p));
+  cell.classList.toggle('active', S.turn.on && S.turn.active === i);
+  // spie: si accendono solo quando servono
+  const val = {
+    tax:p.counters.tax || 0, exp:p.counters.exp || 0, rad:p.counters.rad || 0, poison:p.counters.poison || 0, energy:p.counters.energy || 0,
+    cmd:S.cmdDamage ? Math.max(0, ...Object.values(p.cmd)) : 0,
+    monarch:p.flags.monarch, blessing:p.flags.blessing, initiative:p.flags.initiative, turn:S.turn.on && S.turn.active === i,
+  };
+  cell.querySelectorAll('.spia').forEach(el=>{
+    const k = el.dataset.s, v = val[k];
+    el.classList.toggle('on', !!v);
+    if(v){ if(k === 'turn') el.textContent = turnLabel(); else el.innerHTML = typeof v === 'number' ? `${SPIA_ICON[k]}${v}` : SPIA_ICON[k] }
+  });
+  packRow(cell);
+  checkWinner();
+}
+function addHist(i, d){
+  const p = S.players[i], h = p.hist, last = h[h.length-1], now = Date.now();
+  if(last && now - last.t < 3000){ last.d += d; last.life = p.life; last.t = now; if(!last.d) h.pop() }
+  else h.push({t:now, d, life:p.life});
+  if(h.length > 200) h.shift();
+}
+const deltas = {};
+function changeLife(i, d){
+  S.players[i].life += d;
+  addHist(i, d); updateCell(i); save();
+  const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
+  const el = cell.querySelector('.delta'), st = deltas[i] || (deltas[i] = {v:0});
+  st.v += d;
+  el.textContent = (st.v > 0 ? '+' : '') + st.v;
+  el.classList.add('show');
+  clearTimeout(st.t);
+  st.t = setTimeout(()=>{ el.classList.remove('show'); st.v = 0 }, 1600);
+  cell.querySelector('.life').animate([{scale:1},{scale:d > 0 ? 1.07 : .94},{scale:1}], {duration:200});
+}
+
+// tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)
+// ogni dito ha il suo conteggio: più tocchi insieme non si confondono e ognuno si ferma quando si alza il suo dito
+const holds = new Map();
+function endHold(id){ const o = holds.get(id); if(!o) return; clearTimeout(o.t); holds.delete(id); if(![...holds.values()].some(x => x.h === o.h)) o.h.classList.remove('pressed') }
+function endAllHolds(){ [...holds.keys()].forEach(endHold) }
+$('#board').addEventListener('pointerdown', e=>{
+  const h = e.target.closest('.half'); if(!h) return;
+  endHold(e.pointerId);
+  const i = +h.closest('.cell').dataset.i, d = +h.dataset.d;
+  snap(); changeLife(i, d); buzz();
+  h.classList.add('pressed');
+  const o = {first:true, h, n:0}; holds.set(e.pointerId, o);
+  // sicurezza: se il telefono perde il rilascio del dito, il conteggio si ferma comunque da solo
+  const alive = () => holds.get(e.pointerId) === o && o.n++ < 150;
+  if(SET.holdMode === 'ten'){
+    o.t = setTimeout(function rep(){ if(!alive()) return endHold(e.pointerId); changeLife(i, d * (o.first ? 9 : 10)); o.first = false; buzz(20); o.t = setTimeout(rep, 700) }, 480);
+  } else {
+    o.t = setTimeout(function rep(){ if(!alive()) return endHold(e.pointerId); changeLife(i, d); o.t = setTimeout(rep, 110) }, 480);
+  }
+});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev => window.addEventListener(ev, e=>endHold(e.pointerId), true));
+// il dito esce dalla metà premuta: il conteggio si ferma
+$('#board').addEventListener('pointerout', e=>{ const o = holds.get(e.pointerId); if(o && !o.h.contains(e.relatedTarget)) endHold(e.pointerId) });
+['blur','pagehide'].forEach(ev => window.addEventListener(ev, endAllHolds));
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) endAllHolds() });
+$('#board').addEventListener('contextmenu', e=>e.preventDefault());
+// nome: tocco = scheda giocatore; trascinato sul pannello di un avversario = danni da comandante
+let drag = null;
+const clearDrop = () => document.querySelectorAll('.cell.dropT').forEach(c=>c.classList.remove('dropT'));
+function dragLine(x1, y1, x2, y2){
+  const sv = $('#dragLine'), l = sv.querySelector('line'), c = sv.querySelector('circle');
+  if(x1 === null){ sv.classList.remove('on'); return }
+  l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+  c.setAttribute('cx', x2); c.setAttribute('cy', y2); sv.classList.add('on');
+}
+$('#board').addEventListener('pointerdown', e=>{
+  const n = e.target.closest('.pname'); if(!n) return;
+  e.preventDefault();
+  drag = {i:+n.closest('.cell').dataset.i, x:e.clientX, y:e.clientY, moved:false, target:null};
+});
+window.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  if(!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 18) return;
+  drag.moved = true;
+  dragLine(drag.x, drag.y, e.clientX, e.clientY);
+  const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell');
+  const j = el ? +el.dataset.i : null;
+  if(j !== drag.target){ clearDrop(); drag.target = j; if(j !== null && j !== drag.i){ el.classList.add('dropT'); buzz(6) } }
+});
+window.addEventListener('pointerup', ()=>{
+  if(!drag) return;
+  const d = drag; drag = null; dragLine(null); clearDrop();
+  if(!d.moved){ openPlayer(d.i); return }
+  if(d.target === null || d.target === d.i) return;
+  if(!S.cmdDamage){ toast('Attiva «Danni da comandante» nel menu'); return }
+  fxBurstAt($(`.cell[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
+  openCmdQuick(d.i, d.target);
+});
+window.addEventListener('pointercancel', ()=>{ if(drag){ drag = null; dragLine(null); clearDrop() } });
+
+function pchip(p){ const c = COLORS[p.color]; return `<span class="pchip" style="background:${c.bg};color:${c.fg}">${esc(p.name)}</span>` }
+// finestrella semitrasparente sul pannello di chi subisce, girata verso di lui
+let cqp = null;
+function openCmdQuick(a, v){
+  closeCqPop();
+  const cell = $(`.cell[data-i="${v}"]`); if(!cell) return;
+  const el = document.createElement('div'); el.className = 'cqPop';
+  // sta sul pannello di chi subisce, ma girata verso chi infligge il danno (di solito è lui a segnarlo)
+  const rot = ROT[S.count][a], side = rot === 'r90' || rot === 'r270', r = cell.getBoundingClientRect();
+  el.style.setProperty('--rot', {r0:'0deg', r90:'90deg', r180:'180deg', r270:'-90deg'}[rot]);
+  el.style.left = (r.left + r.width/2) + 'px'; el.style.top = (r.top + r.height/2) + 'px';
+  el.style.width = Math.min(340, (side ? r.height : r.width) * .94) + 'px';
+  document.body.appendChild(el); cqp = {a, v, el};
+  renderCqPop(); armCqPop(); buzz(20);
+  // se la finestrella è più alta dello spazio, la rimpicciolisco quanto basta
+  const room = (side ? r.width : r.height) * .96, hh = el.offsetHeight;
+  if(hh > room) el.style.transform = `translate(-50%,-50%) rotate(var(--rot)) scale(${(room / hh).toFixed(3)})`;
+  el.addEventListener('pointerdown', e=>e.stopPropagation());
+  el.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    if(b.hasAttribute('data-ok')){ closeCqPop(); return }
+    const V = S.players[cqp.v], k = b.dataset.k, before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
+    if(after !== before){ snap(); V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before) }
+    renderCqPop(); armCqPop();
+  });
+}
+function renderCqPop(){
+  const A = S.players[cqp.a], V = S.players[cqp.v];
+  const keys = [[String(cqp.a), A.partner ? '1° comandante' : '']];
+  if(A.partner) keys.push([cqp.a + 'b', '2° comandante']);
+  cqp.el.innerHTML = `<div class="cqT">Danni dal comandante di ${pchip(A)}</div>` +
+    keys.map(([k,l])=>`<div class="cqRow">${l ? `<span class="cqL">${l}</span>` : ''}<button data-k="${k}" data-v="-1">−</button><output>${V.cmd[k] || 0}</output><button data-k="${k}" data-v="1">+</button></div>`).join('') +
+    `<div class="cqQuick">${[2,3,4,5].map(x=>`<button data-k="${keys[0][0]}" data-v="${x}">+${x}</button>`).join('')}<button class="ok" data-ok>OK</button></div>`;
+}
+function armCqPop(){ clearTimeout(cqp.t); cqp.t = setTimeout(closeCqPop, 6000) }
+function closeCqPop(){ if(!cqp) return; clearTimeout(cqp.t); cqp.el.remove(); cqp = null }
+// un tocco fuori dalla finestrella la chiude senza toccare i punti vita
+document.addEventListener('pointerdown', e=>{
+  if(cqp && !cqp.el.contains(e.target)){ e.stopPropagation(); e.preventDefault(); closeCqPop() }
+}, true);
+
+/* ================= Turni e timer ================= */
+function fmtTime(ms){
+  const s = Math.max(0, Math.floor(ms/1000)), h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0');
+}
+function turnLabel(){ return `⌛ ${S.turn.n} · ${fmtTime(Date.now() - S.turn.started)}` }
+function updateTurnUI(){
+  $('#turnPill').hidden = true;
+  const el = S.turn.on && document.querySelector(`.cell[data-i="${S.turn.active}"] .spia[data-s="turn"]`);
+  if(el) el.textContent = turnLabel();
+}
+$('#board').addEventListener('click', e=>{ if(e.target.closest('.spia[data-s="turn"].on')) nextTurn() });
+setInterval(()=>{ if(S.turn.on && !document.hidden) updateTurnUI() }, 1000);
+function nextTurn(){
+  snap();
+  const t = S.turn, n = S.count, dist = x => (x - t.first + n) % n;
+  let a = t.active;
+  for(let k=0; k<n; k++){ a = (a + 1) % n; if(!isOut(S.players[a])) break }
+  if(dist(a) <= dist(t.active)){ t.n++; logEv('Inizia il turno ' + t.n) }
+  t.active = a; t.turnStart = Date.now();
+  save(); S.players.forEach((_,i)=>updateCell(i)); updateTurnUI(); buzz(15);
+}
+$('#turnPill').addEventListener('click', nextTurn);
+function whoStarts(){
+  const alive = S.players.map((p,i)=>i).filter(i=>!isOut(S.players[i]));
+  const i = alive[Math.floor(Math.random()*alive.length)];
+  S.turn.first = S.turn.active = i; S.turn.n = 1; S.turn.started = S.turn.turnStart = Date.now();
+  logEv('Inizia ' + S.players[i].name); renderBoard();
+  $(`.cell[data-i="${i}"]`).animate([{filter:'brightness(1)'},{filter:'brightness(1.6)'},{filter:'brightness(1)'}], {duration:500, iterations:3});
+  toast('Inizia ' + S.players[i].name, 3000);
+}
+function resetGame(){
+  S.players = freshPlayers(S.count, S.startLife, S.players);
+  S.turn = freshTurn(S.turn.on); S.log = []; undoStack.length = 0;
+  S.over = false; S.gameStart = Date.now();
+  closeCqPop(); save(); renderBoard();
+}
+
+/* ================= Pannelli + tasto indietro ================= */
+const stack = [];
+function openOv(id){
+  if(stack[stack.length-1] === id) return; // doppio tocco: non lo apro due volte
+  const el = $('#ov-' + id);
+  el.style.zIndex = (el.classList.contains('ov') ? 20 : 45) + stack.length;
+  el.classList.add('open');
+  stack.push(id);
+  history.pushState({ov:id}, '');
+}
+// chiude il pannello in cima e apre il successivo nello stesso passo di cronologia
+function swapOv(id){
+  const top = stack.pop(); if(top) $('#ov-' + top).classList.remove('open');
+  $('#ov-' + id).classList.add('open'); stack.push(id);
+  history.replaceState({ov:id}, '');
+}
+// chiude tutti i pannelli aperti e torna al tavolo in un colpo solo
+function closeAllOv(){
+  const n = stack.length; if(!n) return;
+  stack.splice(0, n - 1).forEach(id => $('#ov-' + id).classList.remove('open'));
+  history.go(-n);
+}
+function closeTop(){
+  const id = stack.pop(); if(!id) return;
+  $('#ov-' + id).classList.remove('open');
+  if(id === 'player') renderBoard();
+  if(id === 'modal') tmCleanup();
+  if(id === 'bt') btStop();
+  if(id === 'wizard' && WZ.step >= 2){ wzStep(WZ.step === 3 && WZ.fmt !== 'standard' ? 2 : 1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
+}
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
+let lastBack = 0;
+history.replaceState({base:true}, '');
+history.pushState({guard:true}, '');
+const backExit = () => {
+  const now = Date.now();
+  if(now - lastBack < 2000){ Capacitor.Plugins.App.exitApp(); return }
+  lastBack = now; toast('Premi di nuovo indietro per uscire');
+};
+// nell'app il tasto indietro del telefono lo gestisco io: chiude finestre e menu, al doppio tocco esce
+if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.addListener('backButton', ()=>{
+  if(TUT){ endTut(); return }
+  if(stack.length){ history.back(); return }
+  backExit();
+});
+window.addEventListener('popstate', ()=>{
+  if(TUT){ endTut(); history.pushState({guard:true}, ''); return }
+  if(stack.length){ closeTop(); return }
+  const now = Date.now();
+  if(now - lastBack < 2000){ if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.exitApp(); else history.back(); return }
+  lastBack = now;
+  toast('Premi di nuovo indietro per uscire');
+  history.pushState({guard:true}, '');
+});
+
+/* ================= Menu ================= */
+const tog = (act, on, v='') => `<button class="tog ${on ? 'on' : ''}" data-act="${act}" data-v="${v}" aria-pressed="${on}"></button>`;
+$('#menuBtn').addEventListener('click', ()=>{ renderMenu(); openOv('menu') });
+function renderMenu(){
+  $('#menuBody').innerHTML = `
+  <div class="sec"><h3>Stampante</h3>
+    <div class="row"><span class="lbl" id="prStatus"></span></div>
+    <button class="btn" data-act="prconnect" id="prConnect">Collega stampante</button>
+    <button class="btn" data-act="prtest">Stampa di prova</button>
+    <div class="row"><span class="lbl">Ultima stampa</span><span class="note" style="margin:0;text-align:right">${printer.last ? esc(printer.last) : '—'}</span></div>
+    <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
+    <div class="row"><span class="lbl">Modello</span>
+      <select class="txt" id="prModelSel" style="width:auto;max-width:58%;min-width:0;text-overflow:ellipsis"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+    <div class="row"><span class="lbl">Dimensione pedina</span><div class="chips">${[100,85,75].map(n=>`<button class="chip ${(SET.scale||100)===n?'sel':''}" data-act="scale" data-v="${n}">${n}%</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Doppia altezza (metà dati)</span>${tog('dh', SET.dh)}</div>
+    <div class="row"><span class="lbl">Stampa in un colpo (sperimentale)</span>${tog('page', SET.page)}</div>
+    <p class="note">Serve una stampante termica con Bluetooth classico e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
+    <p class="note">Ricollegamento automatico: dopo il primo collegamento basta accendere la stampante e l'app la ritrova da sola.</p>
+  </div>
+  <div class="sec"><h3>Archivio offline</h3>
+    <div class="row"><span class="lbl" id="arcStat">${esc(arcStatus())}</span></div>
+    <button class="btn ${ARC.list.length ? '' : 'primary'}" data-act="arcdl" ${ARC.busy ? 'disabled' : ''}>${ARC.list.length ? (ARC.meta.complete ? 'Controlla pedine nuove' : 'Completa lo scaricamento') : 'Scarica l\'archivio'}</button>
+    ${ARC.list.length && !ARC.busy ? '<button class="btn danger" data-act="arcdel">Elimina l\'archivio</button>' : ''}
+    <p class="note">Tutte le pedine ufficiali e gli emblemi, solo l'ultima versione di ognuno: poco meno di mille carte. Si scaricano circa 80-100 MB, meglio col Wi-Fi, e sul telefono ne restano circa 30-40. Senza rete l'app cerca e stampa dall'archivio; con la rete controlla una volta al giorno le pedine nuove e scarica solo quelle.</p>
+  </div>
+`;
+  $('#tkMenu').innerHTML = `
+  <div class="sec"><h3>Partita</h3>
+    <button class="btn primary" data-act="new">Nuova partita</button>
+    <button class="btn" data-act="starts">Chi inizia?</button>
+    <button class="btn" data-act="dice">Dadi e moneta</button>
+    <button class="btn" data-act="log">Registro partita</button>
+  </div>
+  <div class="sec"><h3>Giocatori</h3><div class="chips">${[2,3,4,5,6].map(n=>`<button class="chip ${n===S.count?'sel':''}" data-act="count" data-v="${n}">${n}</button>`).join('')}</div></div>
+  <div class="sec"><h3>Formato</h3>
+    <div class="chips">${Object.entries(FORMATS).map(([k,f])=>`<button class="chip ${k===S.format?'sel':''}" data-act="fmt" data-v="${k}">${f.label}</button>`).join('')}</div>
+    <div class="row"><span class="lbl">Vita iniziale</span><div class="stepper"><button data-act="sl" data-v="-5">−</button><output>${S.startLife}</output><button data-act="sl" data-v="5">+</button></div></div>
+    <div class="row"><span class="lbl">Danni da comandante</span>${tog('cmd', S.cmdDamage)}</div>
+    <p class="note">Scorciatoia: trascina il nome di chi attacca sul pannello di chi subisce.</p>
+    <p class="note">Cambiare giocatori, formato o vita iniziale fa ripartire la partita. Nomi, colori e immagini restano.</p>
+  </div>
+  <div class="sec"><h3>Contatori nella scheda giocatore</h3>
+    ${COUNTERS.map(c=>`<div class="row"><span class="lbl">${c.label}</span>${tog('show', SET.show[c.k], c.k)}</div>`).join('')}
+    <p class="note">Sul tavolo compaiono solo i contatori diversi da zero.</p>
+  </div>
+  <div class="sec"><h3>Turni</h3>
+    <div class="row"><span class="lbl">Contatore turni e timer</span>${tog('turn', S.turn.on)}</div>
+    <p class="note">Chi è di turno ha il bordo dorato e la spia ⌛ con numero del turno e tempo di partita: toccandola passa il turno al giocatore successivo.</p>
+  </div>
+  <div class="sec"><h3>Comandi</h3>
+    <div class="row"><span class="lbl">Tenendo premuto</span><div class="chips">
+      <button class="chip ${SET.holdMode==='repeat'?'sel':''}" data-act="hold" data-v="repeat">ripete ±1</button>
+      <button class="chip ${SET.holdMode==='ten'?'sel':''}" data-act="hold" data-v="ten">±10</button></div></div>
+    <div class="row"><span class="lbl">Vibrazione</span>${tog('vib', SET.vibrate)}</div>
+    <div class="row"><span class="lbl">Schermo sempre acceso</span>${tog('wake', SET.wake)}</div>
+    <div class="row"><span class="lbl">Suoni</span>${tog('sound', SET.sound)}</div>
+    <div class="row"><span class="lbl">Animazione di inizio partita</span>${tog('intro', SET.intro)}</div>
+    <button class="btn" data-act="guide">Guida alle funzioni</button>
+  </div>
+  <div class="sec"><h3>Voce e miglioramento dell'app</h3>
+    <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
+    <div class="row"><span class="lbl">Salva anche l'audio delle richieste</span>${tog('clips', SET.clips)}</div>
+    <p class="note">Il microfono si accende solo mentre tieni premuto. Salvo cosa è stato sentito, cosa ho capito, cosa hai scelto e le correzioni scritte: ${VLOG.length} voci sul telefono, finché non le esporti.</p>
+    <div style="height:10px"></div>
+    <button class="btn" data-act="suggest">Lascia un suggerimento</button>
+    <button class="btn" data-act="export">Esporta i dati raccolti</button>
+    <button class="btn danger" data-act="clearv">Cancella i dati raccolti</button>
+  </div>
+  <div class="sec"><h3>Aggiornamenti</h3>
+    <div class="row"><span class="lbl">Versione installata: v${VERSION}${UPD.remote ? `, disponibile la v${UPD.remote}` : ''}</span></div>
+    <button class="btn ${UPD.remote ? 'primary' : ''}" data-act="update">${UPD.remote ? 'Aggiorna ora alla v' + UPD.remote : 'Verifica aggiornamenti'}</button>
+  </div>
+  <div class="sec">
+    <button class="btn" data-act="install">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+      Scarica l'app
+    </button>
+  </div>`;
+  updatePrinterUI();
+}
+async function menuClick(e){
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const a = b.dataset.act, v = b.dataset.v;
+  switch(a){
+    case 'new': openWizard(true); return;
+    case 'guide': history.back(); setTimeout(startTut, 380); return;
+    case 'starts': history.back(); setTimeout(whoStarts, 300); return;
+    case 'dice': openDice(); return;
+    case 'log': openLog(); return;
+    case 'suggest': openSuggest(); return;
+    case 'export': exportVlog(); return;
+    case 'install': install(); return;
+    case 'update': UPD.remote ? applyUpdate() : checkUpdate(true); return;
+    case 'count': if(+v !== S.count){ S.count = +v; resetGame(); toast(v + ' giocatori, nuova partita') } break;
+    case 'fmt': if(v !== S.format){ S.format = v; S.startLife = FORMATS[v].life; S.cmdDamage = FORMATS[v].cmd; resetGame(); toast(FORMATS[v].label + ': vita ' + S.startLife) } break;
+    case 'sl': S.startLife = Math.max(1, S.startLife + +v); resetGame(); break;
+    case 'cmd': S.cmdDamage = !S.cmdDamage; save(); renderBoard(); break;
+    case 'show': SET.show[v] = !SET.show[v]; saveSet(); break;
+    case 'turn': S.turn.on = !S.turn.on; if(S.turn.on){ S.turn.started = S.turn.turnStart = Date.now() } save(); renderBoard(); break;
+    case 'hold': SET.holdMode = v; saveSet(); break;
+    case 'vib': SET.vibrate = !SET.vibrate; saveSet(); break;
+    case 'wake': SET.wake = !SET.wake; saveSet(); SET.wake ? keepAwake() : releaseWake(); break;
+    case 'br': SET.bright = Math.max(-2, Math.min(3, SET.bright + +v)); saveSet(); break;
+    case 'prconnect': await connectPrinter(); break;
+    case 'prtest': await testPrint(); break;
+    case 'vlog': SET.voiceLog = !SET.voiceLog; saveSet(); break;
+    case 'sound': SET.sound = !SET.sound; saveSet(); if(SET.sound) sfx('found'); break;
+    case 'clips': SET.clips = !SET.clips; saveSet(); break;
+    case 'intro': SET.intro = !SET.intro; saveSet(); break;
+    case 'scale': SET.scale = +v; saveSet(); break;
+    case 'dh': SET.dh = !SET.dh; saveSet(); break;
+    case 'page': SET.page = !SET.page; saveSet(); break;
+    case 'arcdl': arcSync(); break;
+    case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
+    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
+  }
+  renderMenu();
+}
+$('#menuBody').addEventListener('click', menuClick);
+$('#tkMenu').addEventListener('click', menuClick);
+$('#menuBody').addEventListener('change', e=>{ if(e.target.id === 'prModelSel'){ SET.prModel = e.target.value; printer.size = 0; saveSet() } });
+
+/* ================= Scheda giocatore ================= */
+let curP = 0;
+function openPlayer(i){
+  curP = i; renderPlayer();
+  // la scheda si apre girata verso il giocatore che l'ha toccata
+  const el = $('#ov-player'), rot = ROT[S.count][i];
+  el.style.transition = 'none'; el.classList.remove('r90','r180','r270');
+  if(rot !== 'r0') el.classList.add(rot);
+  el.offsetWidth; el.style.transition = '';
+  openOv('player');
+}
+function stepper(act, k, v, step=1){
+  return `<div class="stepper"><button data-act="${act}" data-k="${k}" data-v="${-step}">−</button><output>${v}</output><button data-act="${act}" data-k="${k}" data-v="${step}">+</button></div>`;
+}
+function renderPlayer(){
+  const p = S.players[curP];
+  $('#plTitle').textContent = p.name;
+  const ctrs = COUNTERS.filter(c => SET.show[c.k] && (c.k !== 'tax' || S.format !== 'standard'));
+  let h = `<div class="bigLife">${p.life}</div>
+    <div class="quick">${[-10,-5,-1,1,5,10].map(v=>`<button data-act="life" data-v="${v}">${v>0?'+':'−'}${Math.abs(v)}</button>`).join('')}</div>`;
+  if(ctrs.length) h += `<div class="sec"><h3>Contatori</h3>${ctrs.map(c=>`<div class="row"><span class="lbl">${c.label}</span>${stepper('ctr', c.k, p.counters[c.k] || 0, c.step)}</div>`).join('')}</div>`;
+  if(S.cmdDamage){
+    h += `<div class="sec"><h3>Danni da comandante ricevuti</h3>`;
+    S.players.forEach((o,k)=>{
+      if(k === curP) return;
+      h += `<div class="row"><span class="lbl">da ${esc(o.name)}</span>${stepper('cmd', k, p.cmd[k] || 0)}</div>`;
+      if(o.partner) h += `<div class="row"><span class="lbl">da ${esc(o.name)}, secondo comandante</span>${stepper('cmd', k + 'b', p.cmd[k + 'b'] || 0)}</div>`;
+    });
+    h += `<p class="note">Il danno da comandante toglie anche i punti vita. A 21 da un solo comandante il giocatore è fuori.</p></div>`;
+  }
+  h += `<div class="sec"><h3>Stato</h3>
+    ${FLAGS.map(f=>`<div class="row"><span class="lbl">${f.icon} ${f.label}</span>${tog('flag', !!p.flags[f.k], f.k)}</div>`).join('')}
+    <div class="row"><span class="lbl">Eliminato</span>${tog('out', p.out)}</div></div>
+  <div class="sec"><h3>Nome</h3><input class="txt" id="plName" value="${esc(p.name)}" maxlength="20"></div>
+  <div class="sec"><h3>Colore</h3><div class="swatches">${COLORS.map((c,k)=>`<button class="sw ${k===p.color?'sel':''}" data-act="color" data-v="${k}" style="background:${c.bg}"></button>`).join('')}</div></div>
+  <div class="sec"><h3>Comandante</h3>
+    ${p.art ? `<div class="artCur"><img src="${esc(p.art)}" alt=""><div><div>${esc(p.artName)}</div><button class="chip" data-act="artdel" style="margin-top:8px">Togli immagine</button></div></div>` : ''}
+    <div class="voiceBar"><input class="txt" id="plArtQ" placeholder="Nome del comandante" enterkeyhint="search"><button class="chip" data-act="artsearch">Cerca</button></div>
+    <div id="artRes"></div>
+    ${S.cmdDamage ? `<div class="row"><span class="lbl">Ho due comandanti (partner)</span>${tog('partner', p.partner)}</div>` : ''}
+  </div>
+  <div class="sec"><h3>Storico vita</h3>${p.hist.length ? `<div class="hist">${p.hist.slice().reverse().slice(0,40).map(x=>`<div><span class="${x.d>0?'pos':'neg'}">${x.d>0?'+':''}${x.d} → ${x.life}</span><time>${hhmm(x.t)}</time></div>`).join('')}</div>` : '<p class="note">Nessuna variazione finora.</p>'}</div>`;
+  $('#plBody').innerHTML = h;
+}
+$('#plBody').addEventListener('input', e=>{
+  if(e.target.id !== 'plName') return;
+  S.players[curP].name = e.target.value.trim() || 'Giocatore ' + (curP+1);
+  $('#plTitle').textContent = S.players[curP].name; save();
+});
+$('#plBody').addEventListener('keydown', e=>{ if(e.target.id === 'plArtQ' && e.key === 'Enter'){ e.target.blur(); searchArt() } });
+$('#plBody').addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const p = S.players[curP], a = b.dataset.act, v = b.dataset.v, k = b.dataset.k;
+  switch(a){
+    case 'life': snap(); p.life += +v; addHist(curP, +v); break;
+    case 'ctr': snap(); p.counters[k] = Math.max(0, (p.counters[k] || 0) + +v); break;
+    case 'cmd': { snap(); const before = p.cmd[k] || 0, after = Math.max(0, before + +v);
+      p.cmd[k] = after; if(after !== before){ p.life -= (after - before); addHist(curP, before - after) } break }
+    case 'flag': { snap(); const f = FLAGS.find(x => x.k === v), on = !p.flags[v];
+      if(f.unique && on) S.players.forEach(o => o.flags[v] = false);
+      p.flags[v] = on; if(on) logEv(p.name + ': ' + f.label); break }
+    case 'out': snap(); p.out = !p.out; if(p.out) logEv(p.name + ' eliminato'); break;
+    case 'color': p.color = +v; break;
+    case 'partner': p.partner = !p.partner; break;
+    case 'artdel': p.art = null; p.artName = ''; break;
+    case 'artsearch': searchArt(); return;
+    case 'artpick': p.art = b.dataset.u; p.artName = b.dataset.n; break;
+    default: return;
+  }
+  buzz(); save(); renderPlayer(); S.players.forEach((_,i)=>updateCell(i));
+});
+async function searchArt(){
+  const q = ($('#plArtQ')?.value || '').trim(); if(!q) return;
+  const box = $('#artRes'); box.innerHTML = '<p class="note">Ricerca su Scryfall…</p>';
+  try{
+    let data = await scry(q + ' is:commander');
+    if(!data.length) data = await scry(q + ' -t:token');
+    const arts = data.map(c => { const f = c.image_uris ? c : (c.card_faces || [])[0]; return f && f.image_uris ? {u:f.image_uris.art_crop, n:c.name} : null }).filter(Boolean).slice(0, 12);
+    box.innerHTML = arts.length ? `<div class="artGrid">${arts.map(x=>`<button data-act="artpick" data-u="${esc(x.u)}" data-n="${esc(x.n)}"><img src="${esc(x.u)}" alt="${esc(x.n)}" loading="lazy"></button>`).join('')}</div>`
+                                : '<p class="note">Nessuna carta trovata con quel nome.</p>';
+  }catch(err){ box.innerHTML = '<p class="note">Scryfall non risponde. Controlla la connessione.</p>' }
+}
+
+/* ================= Dadi e moneta ================= */
+let diceN = 1;
+function openDice(){ $('#dnOut').textContent = diceN; $('#diceRes').innerHTML = ''; $('#diceSum').textContent = 'Scegli cosa lanciare'; openOv('dice') }
+$('#dnMinus').addEventListener('click', ()=>{ diceN = Math.max(1, diceN-1); $('#dnOut').textContent = diceN });
+$('#dnPlus').addEventListener('click', ()=>{ diceN = Math.min(6, diceN+1); $('#dnOut').textContent = diceN });
+$('#diceBtns').addEventListener('click', e=>{
+  const f = e.target.dataset.f; if(!f) return;
+  let res, txt;
+  if(f === 'coin'){ res = Array.from({length:diceN}, ()=>Math.random() < .5 ? 'Testa' : 'Croce'); txt = res.join(', ') }
+  else { res = Array.from({length:diceN}, ()=>1 + Math.floor(Math.random() * +f)); txt = res.join(' + ') + (diceN > 1 ? ' = ' + res.reduce((a,b)=>a+b, 0) : '') }
+  $('#diceRes').innerHTML = res.map(r=>`<div class="die" style="${f==='coin'?'font-size:44px':''}">${r}</div>`).join('');
+  $('#diceSum').textContent = diceN > 1 && f !== 'coin' ? 'Totale ' + res.reduce((a,b)=>a+b, 0) : '';
+  document.querySelectorAll('#diceRes .die').forEach((d,i)=>d.animate([{transform:'scale(.5) rotate(-25deg)',opacity:0},{transform:'none',opacity:1}], {duration:260, delay:i*60, fill:'backwards'}));
+  logEv((f === 'coin' ? 'Moneta: ' : diceN + 'd' + f + ': ') + txt); buzz(20);
+});
+
+/* ================= Registro ================= */
+function openLog(){
+  const ev = S.log.map(x=>({t:x.t, txt:x.txt, cls:''}));
+  S.players.forEach(p => p.hist.forEach(h => ev.push({t:h.t, txt:`${p.name} ${h.d>0?'+':''}${h.d} → ${h.life}`, cls:h.d>0?'pos':'neg'})));
+  ev.sort((a,b)=>b.t - a.t);
+  $('#logBody').innerHTML = ev.length
+    ? `<div class="hist">${ev.slice(0,300).map(x=>`<div><span class="${x.cls}">${esc(x.txt)}</span><time>${hhmm(x.t)}</time></div>`).join('')}</div>`
+    : '<p class="empty">Qui compaiono vita, turni, dadi, stati e pedine stampate, man mano che la partita va avanti.</p>';
+  openOv('log');
+}
+
+/* ================= Riconoscimento della richiesta ================= */
+const NUMW = {zero:0,un:1,uno:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7,otto:8,nove:9,dieci:10,undici:11,dodici:12,venti:20};
+// italiano -> tipo inglese su Scryfall
+const DICT = [
+  ['tesor[oi]','Treasure'],['cib[oi]','Food'],['indizi[oi]?','Clue'],['sangue','Blood'],['mapp[ae]','Map'],['oro','Gold'],
+  ['goblin','Goblin'],['zombi(e)?','Zombie'],['soldat[oi]','Soldier'],['spirit[oi]','Spirit'],['saproling(hi|i)?','Saproling'],
+  ['besti[ae]','Beast'],['drag(o|hi)','Dragon'],['angel[oi]','Angel'],['demon[ei]','Demon'],['vampir[oi]','Vampire'],
+  ['cavalier[ei]','Knight'],['gatt[oi]','Cat'],['lup[oi]','Wolf'],['ors[oi]','Bear'],['insett[oi]','Insect'],['piant[ae]','Plant'],
+  ['elemental[ei]','Elemental'],['servitor[ei]|servo','Servo'],['totter[oi]|thopter','Thopter'],['costrutt[oi]','Construct'],
+  ['golem','Golem'],['uccell[oi]','Bird'],['serpent[ei]','Snake'],['ratt[oi]','Rat'],['pirat[ai]','Pirate'],['dinosaur[oi]','Dinosaur'],
+  ['kraken','Kraken'],['uman[oi]','Human'],['guerrier[oi]','Warrior'],['chieric[oi]|chierici','Cleric'],['mag(o|hi)','Wizard'],
+  ['pesc[ei]','Fish'],['ran[ae]','Frog'],['lucertol[ae]','Lizard'],['scheletr[oi]','Skeleton'],['fung(o|hi)','Fungus'],
+  ['germ[ei]','Germ'],['elf[oi]','Elf'],['myr','Myr'],['progenie','Spawn'],['rampoll[oi]|scion','Scion'],['eldrazi','Eldrazi'],
+  ['squal[oi]','Shark'],['scimmi[ae]','Ape'],['orch(i)?|orco','Orc'],['nan[oi]','Dwarf'],['monac[oi]|monaci','Monk'],['idr[ae]','Hydra'],
+  ['wurm','Wurm'],['fat[ae]|faerie','Faerie'],['illusion[ei]','Illusion'],['ragn[oi]','Spider'],['pipistrell[oi]','Bat'],
+  ['conigli[oi]?','Rabbit'],['scoiattol[oi]','Squirrel'],['cittadin[oi]','Citizen'],['ninja','Ninja'],['samurai','Samurai'],
+  ['avatar','Avatar'],['ondin[ae]','Merfolk'],['tritoni?|merfolk','Merfolk'],['cerv[oi]|alc[ei]','Elk'],['ipp?ogrif[oi]','Hippogriff'],
+  ['emblem[ai]','Emblem'],['pietr[ae] del potere|powerstone','Powerstone'],['incubator[ei]','Incubator'],['frammento|shard','Shard'],
+  ['cianfrusagli[ae]|junk','Junk'],['ruol[oi]','Role'],['veicol[oi]','Vehicle'],['equipaggiament[oi]','Equipment'],
+  ['orror[ei]','Horror'],['bu[ei]|buoi','Ox'],['capr[ae]','Goat'],['pecor[ae]','Sheep'],['cinghial[ei]','Boar'],['can[ei]','Dog'],
+  ['segugi?[oi]','Hound'],['cavall[oi]','Horse'],['top[oi]','Mouse'],['lontr[ae]','Otter'],['procion[ei]','Raccoon'],['volp[ei]','Fox'],
+  ['elefant[ei]','Elephant'],['rinoceront[ei]','Rhino'],['polp[oi]|piovr[ae]','Octopus'],['granch[io]|granchi','Crab'],['anguill[ae]','Eel'],
+  ['tartarug[ae]|tartarughe','Turtle'],['mur[oi]|muri','Wall'],['gnom[oi]','Gnome'],['gigant[ei]','Giant'],['ogre|orch[ei]ssa','Ogre'],
+  ['troll','Troll'],['minotaur[oi]','Minotaur'],['centaur[oi]','Centaur'],['satir[oi]','Satyr'],['ninf[ae]','Nymph'],['sfing[ei]','Sphinx'],
+  ['fenic[ei]','Phoenix'],['phyrexian[oi]|ferexian[oi]','Phyrexian'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
+  ['ombr[ae]','Shade'],['diavol[oi]','Devil'],['diavolett[oi]|imp','Imp'],['melm[ae]|ooze','Ooze'],['mutant[ei]','Mutant'],['robot','Robot'],
+  ['mercenari[oi]?','Mercenary'],['furfant[ei]','Rogue'],['mutaform[ae]','Shapeshifter'],['verm[ei]','Worm'],['calamar[oi]|seppi[ae]','Squid'],
+  ['stell[ae] marin[ae]','Starfish'],['aquil[ae]','Bird'],['vigliacc[oi]|codard[oi]','Coward'],['sopravvissut[oi]','Survivor'],
+  ['detective','Detective'],['assassin[oi]','Assassin'],['consiglier[ei]','Advisor'],['contadin[oi]','Peasant'],['nobil[ei]','Noble'],
+  ['incub[oi]|incubi','Nightmare'],['eroe|eroi','Hero'],['acar[oi]|mite','Mite'],['uov[oa]','Egg'],['energia','Energy'],
+  ['copi[ae]','Copy','n'],
+];
+const COLW = [['bianc[oaie]|bianche','W'],['blu','U'],['ner[oaie]','B'],['ross[oaie]','R'],['verd[ei]','G'],['incolor[ei]','C']];
+const KW = [['volant[ei]|volare','flying'],['travolgere','trample'],['cautela','vigilance'],['legame vitale','lifelink'],
+            ['tocco letale','deathtouch'],['rapidita','haste'],['raggiungere','reach'],['minacci[ao]|minaccia','menace'],
+            ['doppio attacco','double strike'],['attacco improvviso','first strike'],['difensore','defender'],
+            ['indistruttibil[ei]','indestructible'],['anti ?malocchio','hexproof'],['velenoso','toxic'],['prodezza','prowess']];
+const FILLER = /\b(stampa(mi|re)?|mi|serve(no)?|vorrei|dammi|fai|fammi|crea|una?|uno|le|la|il|lo|i|gli|di|del|della|dei|delle|da|con|e|pedin[ae]|token|segnalin[oi]|copi[ae]|creatura|creature|artefatt[oi]|per|favore|grazie)\b/g;
+
+function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9/ ]/g,' ').replace(/\s+/g,' ').trim() }
+
+function parseRequest(raw){
+  let s = ' ' + norm(raw) + ' ';
+  s = s.replace(/\b([a-z]+)\b/g, w => (w in NUMW) ? String(NUMW[w]) : w);
+  const out = {qty:1, byName:false, type:null, colors:[], pow:null, tou:null, kw:[], kwIt:[], typeIt:'', artifact:/artefatt/.test(s), free:''};
+
+  // quantità: numero seguito da "pedine/copie/token"
+  let m = s.match(/\b(\d+)\s+(pedin[ae]|copi[ae]|token|segnalin[oi])\b/);
+  if(m){ out.qty = +m[1]; s = s.replace(m[0], ' ') }
+  // forza/costituzione esplicita: "1/1", "1 su 1"
+  m = s.match(/\b(\d+)\s*(?:\/|su|e|x)\s*(\d+)\b/);
+  if(m){ out.pow = +m[1]; out.tou = +m[2]; s = s.replace(m[0], ' ') }
+  // numeri sciolti: 3 = quantità + F/C, 2 = F/C, 1 = quantità
+  // "55" detto di fila = 5/5 (il riconoscimento vocale attacca le cifre)
+  if(out.pow === null){ const mm = s.match(/\b([1-9])([1-9])\b/); if(mm){ out.pow = +mm[1]; out.tou = +mm[2]; s = s.replace(mm[0], ' ') } }
+  const nums = (s.match(/\b\d+\b/g) || []).map(Number);
+  if(out.pow === null && nums.length >= 3){ out.qty = nums[0]; out.pow = nums[nums.length-2]; out.tou = nums[nums.length-1] }
+  else if(out.pow === null && nums.length === 2){ out.pow = nums[0]; out.tou = nums[1] }
+  else if(nums.length === 1){ out.qty = nums[0] }
+  s = s.replace(/\b\d+\b/g, ' ');
+
+  for(const [re, code] of COLW){ const r = new RegExp('\\b(' + re + ')\\b'); if(r.test(s)){ out.colors.push(code); s = s.replace(r,' ') } }
+  for(const [re, k] of KW){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.kw.push(k); out.kwIt.push(mm[1]); s = s.replace(r,' ') } }
+  for(const [re, en, how] of DICT){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.type = en; out.typeIt = mm[1]; out.byName = how === 'n'; s = s.replace(r,' '); break } }
+  out.free = s.replace(FILLER,' ').replace(/\s+/g,' ').trim();
+  out.qty = Math.max(1, Math.min(10, out.qty));
+  return out;
+}
+function describe(r){
+  const cn = {W:'bianco',U:'blu',B:'nero',R:'rosso',G:'verde',C:'incolore'};
+  let s = r.type ? r.typeIt.charAt(0).toUpperCase() + r.typeIt.slice(1) : (r.free ? '«' + r.free + '»' : 'pedina');
+  if(r.pow !== null) s += ' ' + r.pow + '/' + r.tou;
+  if(r.colors.length) s += ' ' + r.colors.map(c=>cn[c]).join(' e ');
+  if(r.kwIt.length) s += ', ' + r.kwIt.join(', ').replace(/rapidita/g, 'rapidità');
+  return s + (r.qty > 1 ? ', ' + r.qty + ' copie' : '');
+}
+function buildQueries(r){
+  const base = r.type === 'Emblem' ? [] : ['t:token']; // gli emblemi su Scryfall non sono «token»
+  if(r.type && r.byName) base.push('name:' + r.type.toLowerCase());
+  else if(r.type) base.push('t:' + r.type.toLowerCase());
+  if(r.type === 'Emblem' && r.free) base.push('t:' + r.free.split(' ')[0]); // «emblema di Elspeth»
+  else if(r.free) base.push(r.free.includes(' ') ? `name:"${r.free}"` : `(t:${r.free} or name:${r.free})`);
+  if(r.artifact) base.push('t:artifact');
+  const col = r.colors.length ? ['c=' + r.colors.join('')] : [];
+  const pt = r.pow !== null ? ['pow=' + r.pow, 'tou=' + r.tou] : [];
+  const kw = r.kw.map(k => 'keyword:' + k);
+  const tries = [
+    {q:[...base, ...pt, ...col, ...kw], note:''},
+    {q:[...base, ...pt, ...kw], note:'senza filtro colore'},
+    {q:[...base, ...pt], note:'senza colore e abilità'},
+    {q:[...base], note:'mostro tutte le versioni del tipo'},
+  ];
+  const seen = new Set();
+  return tries.filter(t => { const k = t.q.join(' '); if(seen.has(k)) return false; seen.add(k); return true });
+}
+// il telefono può dirsi «in linea» anche senza segnale: se Scryfall non risponde, per un minuto vado diretto all'archivio
+let netDown = 0;
+const online = () => navigator.onLine && Date.now() - netDown > 60000;
+window.addEventListener('online', ()=>{ netDown = 0 });
+async function scry(q){
+  const url = 'https://api.scryfall.com/cards/search?include_extras=true&unique=art&order=released&dir=desc&q=' + encodeURIComponent(q);
+  const ac = new AbortController(), to = setTimeout(()=>ac.abort(), 5000);
+  let r;
+  try{ r = await fetch(url, {headers:{Accept:'application/json'}, signal:ac.signal}) }
+  catch(e){ netDown = Date.now(); throw new Error('rete assente') }
+  finally{ clearTimeout(to) }
+  netDown = 0;
+  if(r.status === 404) return [];
+  if(!r.ok) throw new Error('Scryfall ' + r.status);
+  return (await r.json()).data || [];
+}
+function faceOf(card, type){
+  if(card.image_uris) return {name:card.name, type_line:card.type_line, img:card.image_uris};
+  const fs = card.card_faces || [];
+  const f = fs.find(f => type && f.type_line && f.type_line.toLowerCase().includes(type.toLowerCase())) || fs[0];
+  return f && f.image_uris ? {name:f.name, type_line:f.type_line, img:f.image_uris} : null;
+}
+
+/* ================= Microfono: solo tenendo premuto ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function showPTT(t){ const b = $('#ptt'); b.textContent = t; b.classList.add('show') }
+function hidePTT(){ $('#ptt').classList.remove('show') }
+let pendingClip = null;
+function startClip(){
+  if(!SET.clips || !navigator.mediaDevices || !window.MediaRecorder) return null;
+  const chunks = []; let mr = null, stream = null, stopped = false;
+  const ready = navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{
+    stream = st; if(stopped){ st.getTracks().forEach(t=>t.stop()); return }
+    mr = new MediaRecorder(st); mr.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data) }; mr.start();
+  }).catch(()=>{});
+  return {
+    stop(){ stopped = true;
+      return ready.then(()=>new Promise(res=>{
+        if(!mr || mr.state === 'inactive'){ stream && stream.getTracks().forEach(t=>t.stop()); res(null); return }
+        mr.onstop = ()=>{ stream.getTracks().forEach(t=>t.stop()); res(chunks.length ? new Blob(chunks, {type:mr.mimeType}) : null) };
+        mr.stop();
+      }));
+    }
+  };
+}
+// nell'app: riconoscimento vocale nativo di Android
+function startCaptureNat(btn, silent){
+  const SP = Capacitor.Plugins.Speech, hs = [], sid = (startCaptureNat.n = (startCaptureNat.n || 0) + 1), mine = d => d.sid === sid;
+  let interim = '', matches = null, ended = false, cb = null, cancelled = false, err = null;
+  btn.classList.add('listening'); if(!silent) showPTT('Ti ascolto… rilascia per inviare'); buzz(15); sfx('listen');
+  const end = () => { if(ended) return; ended = true; btn.classList.remove('listening'); hs.forEach(h => Promise.resolve(h).then(x => x.remove()).catch(()=>{})); if(cb) deliver() };
+  hs.push(SP.addListener('partial', d => { if(!mine(d)) return; interim = d.text || ''; if(!silent) showPTT(interim || 'Ti ascolto…') }));
+  hs.push(SP.addListener('result', d => { if(!mine(d)) return; matches = d.matches || []; end() }));
+  const t0 = Date.now(); let retried = false;
+  hs.push(SP.addListener('error', d => {
+    if(!mine(d)) return;
+    // 5, 8, 11 = riconoscitore ancora impegnato con la richiesta di prima: riparto una volta
+    if(!retried && [5,8,11].includes(d.code) && Date.now() - t0 < 1500 && !cb){ retried = true; setTimeout(()=>SP.start({lang:'it-IT', sid}).catch(()=>{}), 250); return }
+    err = d.code; end() }));
+  SP.start({lang:'it-IT', sid}).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
+  function deliver(){
+    hidePTT(); if(cancelled || !cb) return;
+    const c = cb; cb = null;
+    const alts = matches && matches.length ? matches : (interim.trim() ? [interim.trim()] : []);
+    if(!alts.length){ if([1,2,4,12,13].includes(err) || !online()) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
+    c(alts);
+  }
+  return {
+    finish(f){ cb = f; if(ended) deliver(); else { SP.stop().catch(()=>{}); setTimeout(end, 1800) } },
+    cancel(){ cancelled = true; SP.cancel().catch(()=>{}); hidePTT(); end() }
+  };
+}
+function startCapture(btn, silent){
+  if(NATIVE && Capacitor.Plugins.Speech) return startCaptureNat(btn, silent);
+  if(!SR){ kbFallback('Riconoscimento vocale non disponibile: scrivi la pedina'); return null }
+  const finals = []; let interim = '', ended = false, cb = null, cancelled = false, netErr = false;
+  const rec = new SR(), clip = startClip();
+  rec.lang = 'it-IT'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;
+  btn.classList.add('listening'); if(!silent) showPTT('Ti ascolto… rilascia per inviare'); buzz(15); sfx('listen');
+  rec.onresult = e=>{
+    interim = '';
+    for(let i=e.resultIndex; i<e.results.length; i++){
+      const r = e.results[i];
+      if(r.isFinal) finals.push(Array.from(r).map(a=>a.transcript.trim()));
+      else interim += r[0].transcript;
+    }
+    if(!silent) showPTT([...finals.map(f=>f[0]), interim].join(' ').trim() || 'Ti ascolto…');
+  };
+  rec.onerror = e=>{ if(e.error === 'not-allowed') toast('Consenti il microfono per dettare le richieste'); if(['network','service-not-allowed','language-not-supported'].includes(e.error)) netErr = true };
+  rec.onend = ()=>{ ended = true; btn.classList.remove('listening'); if(cb) deliver() };
+  function deliver(){
+    hidePTT(); if(cancelled || !cb) return;
+    const c = cb; cb = null;
+    pendingClip = clip ? clip.stop() : null;
+    let alts = finals.length === 1 ? finals[0] : finals.length ? [finals.map(f=>f[0]).join(' ')] : (interim.trim() ? [interim.trim()] : []);
+    if(!alts.length){ if(netErr || !online()) kbFallback('Dettatura non disponibile senza rete: scrivi la pedina'); else toast('Non ho sentito nulla: parla mentre tieni premuto'); return }
+    c(alts);
+  }
+  try{ rec.start() }catch(e){}
+  return {
+    finish(f){ cb = f; if(ended) deliver(); else { try{ rec.stop() }catch(e){ deliver() } } },
+    cancel(){ cancelled = true; try{ rec.abort() }catch(e){} clip && clip.stop(); hidePTT(); btn.classList.remove('listening') }
+  };
+}
+// tocco breve = onTap, pressione lunga = detta finché tieni premuto
+function attachPTT(btn, {onTap, onText, silent, drag}){
+  let down = false, held = false, timer = null, sess = null, x0 = 0, y0 = 0, dragging = false;
+  if(drag){
+    btn.addEventListener('pointermove', e=>{
+      if(!down || held) return;
+      if(!dragging && Math.hypot(e.clientX - x0, e.clientY - y0) > 16){ dragging = true; clearTimeout(timer); drag.start() }
+      if(dragging) drag.move(e.clientX, e.clientY);
+    });
+  }
+  btn.addEventListener('pointerdown', e=>{
+    down = true; held = false; dragging = false; x0 = e.clientX; y0 = e.clientY;
+    try{ btn.setPointerCapture(e.pointerId) }catch(_){}
+    timer = setTimeout(()=>{ held = true; sess = startCapture(btn, silent) }, 230);
+  });
+  btn.addEventListener('pointerup', e=>{
+    if(!down) return; down = false; clearTimeout(timer);
+    if(dragging){ dragging = false; drag.end(e.clientX, e.clientY); return }
+    if(held){ held = false; sess && sess.finish(onText) } else onTap && onTap();
+  });
+  btn.addEventListener('pointercancel', ()=>{
+    if(!down) return; down = false; clearTimeout(timer);
+    if(dragging){ dragging = false; const h = $('#hub').getBoundingClientRect(); drag.end(h.left + h.width/2, h.top + h.height/2); return }
+    if(held){ held = false; sess && sess.cancel() }
+  });
+  btn.addEventListener('contextmenu', e=>e.preventDefault());
+}
+
+function kbFallback(msg){
+  if(stack[stack.length-1] !== 'tokens'){ if(stack[stack.length-1] === 'modal') tmClose(); setTimeout(openTokens, 60) }
+  setTimeout(()=>{ const i = $('#tkInput'); i.focus(); toast(msg, 3200) }, 360);
+}
+/* ================= Pedine: interfaccia ================= */
+let lastReq = null, results = [], curEntry = null, lastVoice = null;
+function openTokens(){
+  $('#heard').textContent = ''; $('#understood').textContent = ''; $('#tkInput').value = '';
+  tkCollapse(true); renderRecent(); renderMenu(); openOv('tokens'); updatePrinterUI();
+}
+attachPTT($('#tokenBtn'), {onTap:openTokens, onText:quickToken, silent:true, drag:hubDrag});
+attachPTT($('#micBtn'), {
+  onTap: ()=>toast('Tieni premuto il microfono mentre parli'),
+  onText: alts => { $('#tkInput').value = alts[0]; runRequest(alts, 'voce') }
+});
+$('#tkPrinter').addEventListener('click', ()=> printer.ch ? toast('Stampante collegata') : connectPrinter());
+$('#tkInput').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.target.blur(); runRequest([e.target.value], 'testo') } });
+
+function renderRecent(){
+  if(ARC.ready) setTimeout(()=>document.querySelectorAll('#tkRecent .recent img').forEach(async (im, i)=>{
+    const t = RECENT[i], e = t && (ARC.list.find(x => x.id === t.id) || ARC.list.find(x => x.n === t.name)); if(e && e.ok) im.src = await arcUrl(e.id, 's') }), 0);
+  $('#tkRecent').innerHTML = RECENT.length
+    ? `<div class="sec"><h3>Stampate di recente</h3><div class="recent">${RECENT.map((t,i)=>`<button data-r="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`
+    : `<p class="empty">Tieni premuto il microfono e chiedi una pedina, ad esempio «due tesori» o «tre goblin uno uno rossi». Puoi anche scriverla qui sopra.</p>`;
+}
+$('#tkRecent').addEventListener('click', e=>{
+  const r = e.target.closest('[data-r]'); if(r){ curEntry = null; openDetail(RECENT[+r.dataset.r], 1) }
+});
+$('#tkResults').addEventListener('click', e=>{
+  const g = e.target.closest('[data-g]'); if(g) openDetail(results[+g.dataset.g], lastReq?.qty || 1);
+});
+// tendina dei risultati: si apre quando c'è qualcosa da mostrare e spinge giù il menu; si richiude a scelta fatta o con «Chiudi»
+new MutationObserver(()=> $('#tkDrop').classList.toggle('open', $('#tkResults').innerHTML.trim() !== '')).observe($('#tkResults'), {childList:true});
+function tkCollapse(now){
+  $('#tkDrop').classList.remove('open');
+  if(now){ $('#tkResults').innerHTML = ''; return }
+  setTimeout(()=>{ if(!$('#tkDrop').classList.contains('open')) $('#tkResults').innerHTML = '' }, 320);
+}
+$('#tkClose').addEventListener('click', ()=>tkCollapse());
+
+function logRequest(source, alts, req, query, found, note){
+  if(!SET.voiceLog) return null;
+  const now = Date.now();
+  if(source === 'testo' && lastVoice && now - lastVoice.t < 90000 && !lastVoice.printed) lastVoice.correctedTo = alts[0];
+  const en = {t:now, kind:'richiesta', source, heard:alts, understood:req && (req.type || req.free) ? describe(req) : null,
+              parsed:req ? {type:req.type, word:req.typeIt, qty:req.qty, pow:req.pow, tou:req.tou, colors:req.colors, kw:req.kw, free:req.free} : null,
+              query, found, relaxed:note || null};
+  if(source === 'voce' && pendingClip){ const pc = pendingClip; pendingClip = null; en.clip = true; pc.then(b=>{ if(b) clipPut(en.t, b); else { en.clip = false; saveVlog() } }) }
+  VLOG.push(en); if(source === 'voce') lastVoice = en; saveVlog();
+  return en;
+}
+
+async function runRequest(alternatives, source){
+  alternatives = alternatives.filter(a => a && a.trim());
+  if(!alternatives.length) return;
+  let req = null;
+  for(const a of alternatives){ const p = parseRequest(a); if(p.type){ req = p; $('#heard').textContent = '«' + a + '»'; break } }
+  if(!req){ req = parseRequest(alternatives[0]); $('#heard').textContent = '«' + alternatives[0] + '»' }
+  if(!req.type && !req.free){
+    $('#understood').textContent = 'Non ho capito quale pedina. Riprova dicendo il tipo, es. «goblin».';
+    curEntry = logRequest(source, alternatives, req, null, 0); return;
+  }
+  lastReq = req;
+  $('#understood').textContent = 'Cerco: ' + describe(req);
+  $('#tkResults').innerHTML = '<p class="empty">Ricerca…</p>';
+  const offline = async () => {
+    const L = arcSearch(req);
+    results = await Promise.all(L.res.slice(0, 60).map(arcTk));
+    curEntry = logRequest(source, alternatives, req, '[archivio]', results.length, L.note);
+    if(!results.length){ $('#tkResults').innerHTML = '<p class="empty">Nessuna pedina nell\'archivio offline. Prova a dire solo il tipo, ad esempio «soldato».</p>'; return }
+    $('#understood').textContent += ' (senza rete: dall\'archivio' + (L.note ? ', ' + L.note : '') + ')';
+    if(results.length === 1){ renderRecent(); openDetail(results[0], req.qty); return }
+    $('#tkResults').innerHTML = `<div class="sec"><h3>${results.length} pedine nell'archivio: scegli quella da stampare</h3><div class="grid">${
+      results.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
+  };
+  if(!online() && ARC.ready){ await offline(); return }
+  try{
+    let data = [], note = '', used = '';
+    for(const t of buildQueries(req)){
+      used = t.q.join(' ');
+      data = await scry(used);
+      if(data.length){ note = t.note; break }
+      await new Promise(r=>setTimeout(r,100));
+    }
+    results = data.map(c => { const f = faceOf(c, req.type); return f && {
+      id:c.id, name:f.name, type_line:f.type_line, set:c.set_name,
+      small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large } }).filter(Boolean).slice(0, 60);
+    curEntry = logRequest(source, alternatives, req, used, results.length, note);
+    if(!results.length){ $('#tkResults').innerHTML = '<p class="empty">Nessuna pedina ufficiale trovata. Prova a dire solo il tipo, ad esempio «soldato».</p>'; return }
+    if(note) $('#understood').textContent += ' (' + note + ')';
+    if(results.length === 1){ renderRecent(); openDetail(results[0], req.qty); return }
+    $('#tkResults').innerHTML = `<div class="sec"><h3>${results.length} versioni ufficiali: scegli quella da stampare</h3><div class="grid">${
+      results.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
+  }catch(err){
+    if(ARC.ready){ await offline(); return }
+    $('#tkResults').innerHTML = '<p class="empty">Scryfall non risponde e l\'archivio offline non è scaricato: puoi scaricarlo da STAMPA.</p>';
+  }
+}
+
+/* ================= Dettaglio e anteprima di stampa ================= */
+let cur = null, qty = 1, curBits = null;
+async function openDetail(t, q){
+  tkCollapse();
+  t = await arcResolve(t);
+  cur = t; qty = q; curBits = null;
+  if(curEntry){ curEntry.chosen = {id:t.id, name:t.name, set:t.set}; saveVlog() }
+  $('#dtTitle').textContent = t.name;
+  $('#dtType').textContent = t.type_line + (t.set ? ' — ' + t.set : '');
+  $('#dtImg').src = t.large || t.print;
+  $('#qOut').textContent = qty;
+  const cv = $('#dtPrev'); cv.width = 1; cv.height = 1;
+  openOv('detail');
+  try{ curBits = await makeBits(t.print); drawBits(cv, curBits) }catch(e){ toast('Impossibile preparare l\'immagine') }
+}
+$('#qMinus').addEventListener('click', ()=>{ qty = Math.max(1, qty-1); $('#qOut').textContent = qty });
+$('#qPlus').addEventListener('click', ()=>{ qty = Math.min(10, qty+1); $('#qOut').textContent = qty });
+$('#dtPrint').addEventListener('click', async ()=>{
+  if(!curBits) return;
+  if(!printer.ch){ await connectPrinter(); if(!printer.ch) return }
+  const btn = $('#dtPrint'); btn.disabled = true;
+  try{
+    for(let k=1; k<=qty; k++){
+      btn.textContent = qty > 1 ? `Stampa ${k} di ${qty}…` : 'Stampa in corso…';
+      await printer.write(escposImg(curBits));
+    }
+    RECENT = [recentOf(cur), ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
+    if(curEntry){ curEntry.printed = qty; saveVlog() }
+    logEv('Stampata pedina ' + cur.name + (qty > 1 ? ' ×' + qty : ''));
+    toast(qty > 1 ? qty + ' pedine stampate' : 'Pedina stampata');
+  }catch(e){ toast('Stampa interrotta: ' + (e.message || e), 3500) }
+  btn.disabled = false; btn.textContent = 'Stampa';
+});
+
+/* ================= Suggerimenti ed esportazione ================= */
+function openSuggest(){ $('#sugTxt').value = ''; openOv('suggest') }
+attachPTT($('#sugMic'), {
+  onTap: ()=>toast('Tieni premuto il microfono mentre parli'),
+  onText: alts => { const t = $('#sugTxt'); t.value = (t.value ? t.value.trim() + ' ' : '') + alts[0] }
+});
+$('#sugSave').addEventListener('click', ()=>{
+  const txt = $('#sugTxt').value.trim();
+  if(!txt){ toast('Scrivi o detta il suggerimento'); return }
+  VLOG.push({t:Date.now(), kind:'suggerimento', text:txt}); saveVlog();
+  toast('Suggerimento salvato'); history.back();
+});
+async function exportVlog(){
+  if(!VLOG.length){ toast('Non ci sono ancora dati da esportare'); return }
+  const name = 'magic-play-print-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
+  const entries = [];
+  for(const en of VLOG){
+    if(!en.clip){ entries.push(en); continue }
+    const b = await clipGet(en.t);
+    entries.push(b ? Object.assign({}, en, {audio:await blobToDataURL(b)}) : en);
+  }
+  const blob = new Blob([JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries}, null, 1)], {type:'application/json'});
+  const file = new File([blob], name, {type:'application/json'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], title:'Dati Magic Play&Print'}); return }catch(e){ if(e.name === 'AbortError') return }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+
+/* ================= Pedina rapida: tieni premuto, mostra, stampa da sola ================= */
+const TM = {seq:0, phase:'idle', timer:null, entry:null};
+function pickFirst(data, type){
+  const ok = data.filter(c => (c.lang || 'en') === 'en');
+  const pool = ok.length ? ok : data;
+  const card = pool.find(c => c.image_uris) || pool[0];
+  const f = card && faceOf(card, type);
+  return f && {id:card.id, name:f.name, type_line:f.type_line, set:card.set_name, small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large};
+}
+function makeSparks(){
+  const box = $('#tmSparks'); if(box.childElementCount) return;
+  let h = '';
+  for(let k=0; k<30; k++){
+    const a = Math.random()*Math.PI*2, r0 = 8 + Math.random()*14, r1 = 30 + Math.random()*22;
+    h += `<span class="spark" style="--x0:${(Math.cos(a)*r0).toFixed(1)}vmin;--y0:${(Math.sin(a)*r0).toFixed(1)}vmin;--x1:${(Math.cos(a)*r1).toFixed(1)}vmin;--y1:${(Math.sin(a)*r1).toFixed(1)}vmin;--d:${(2.2+Math.random()*2.4).toFixed(2)}s;--dl:${(-Math.random()*4).toFixed(2)}s"></span>`;
+  }
+  box.innerHTML = h;
+}
+function tmSet(cls, cap, name){
+  const m = $('#ov-modal');
+  ['loading','show','printing'].forEach(c => m.classList.toggle(c, cls.includes(c)));
+  if(cap !== undefined) $('#tmCap').textContent = cap;
+  if(name !== undefined) $('#tmName').textContent = name;
+}
+function tmBar(p, ms){ const b = $('#tmBar'); b.style.transition = ms ? `width ${ms}ms linear` : 'none'; b.style.width = (p*100) + '%' }
+function tmReveal(p){ $('#tmBits').style.clipPath = `inset(0 0 ${(100 - p*100).toFixed(1)}% 0)`; $('#tmScan').style.top = (p*100) + '%' }
+function tmClose(){ if(stack[stack.length-1] === 'modal') history.back() }
+function tmCleanup(){
+  clearTimeout(TM.timer);
+  if(TM.phase === 'count'){ if(TM.entry){ TM.entry.cancelled = true; saveVlog() } sfx('cancel'); buzz([20,40,20]); toast('Pedina annullata') }
+  TM.phase = 'idle'; TM.seq++;
+  $('#ov-modal').className = 'tkm';
+}
+$('#ov-modal').addEventListener('click', e=>{
+  if(e.target.closest('#tmConnect')) return;
+  if(TM.phase === 'count' || TM.phase === 'msg' || TM.phase === 'search' || TM.phase === 'wait') tmClose();
+});
+async function quickToken(alts){
+  alts = alts.filter(a => a && a.trim()); if(!alts.length) return;
+  const seq = ++TM.seq; TM.phase = 'search'; TM.entry = null;
+  makeSparks(); tmBar(0); tmReveal(0); $('#tmQty').textContent = ''; $('#tmConnect').hidden = true; $('#tmImg').removeAttribute('src');
+  $('#ov-modal').classList.add('open'); stack.push('modal'); history.pushState({ov:'modal'}, '');
+  tmSet('loading', 'Cerco la pedina…', '«' + alts[0] + '»');
+  let req = null;
+  for(const a of alts){ const p = parseRequest(a); if(p.type){ req = p; break } }
+  if(!req) req = parseRequest(alts[0]);
+  const fail = msg => { if(seq !== TM.seq) return; TM.phase = 'msg'; tmSet('', msg); sfx('cancel'); TM.timer = setTimeout(()=>{ if(seq === TM.seq) tmClose() }, 2600) };
+  if(!req.type && !req.free){ TM.entry = logRequest('voce', alts, req, null, 0); fail('Non ho capito quale pedina. Tocca per chiudere.'); return }
+  let data = [], used = '', note = '', tk = null;
+  // prima l'archivio sul telefono (istantaneo, anche senza rete), poi Scryfall
+  if(ARC.ready){ const L = arcSearch(req); if(L.res.length){ tk = await arcTk(L.res[0]); data = L.res; used = '[archivio]'; note = L.note } }
+  if(!tk){
+    try{
+      for(const t of buildQueries(req)){ used = t.q.join(' '); data = await scry(used); if(data.length){ note = t.note; break } await new Promise(r=>setTimeout(r,100)) }
+    }catch(e){ fail(ARC.ready ? 'Nessuna pedina trovata nell\'archivio offline.' : 'Senza rete: scarica l\'archivio offline da STAMPA.'); return }
+    tk = pickFirst(data, req.type);
+  }
+  if(seq !== TM.seq) return;
+  TM.entry = logRequest('voce', alts, req, used, data.length, note);
+  if(!tk){ fail('Nessuna pedina trovata per «' + describe(req) + '».'); return }
+  if(TM.entry){ TM.entry.chosen = {id:tk.id, name:tk.name, set:tk.set, auto:true}; saveVlog() }
+  const qn = req.qty;
+  const bitsP = makeBits(tk.print).catch(()=>null);
+  await new Promise(res=>{ const im = $('#tmImg'); im.onload = res; im.onerror = ()=>{ if(tk.small && !im.src.startsWith('blob:')) im.src = tk.small; else res() }; im.src = tk.large || tk.print });
+  if(seq !== TM.seq) return;
+  $('#tmQty').textContent = qn > 1 ? '×' + qn : '';
+  TM.phase = 'count'; sfx('found'); buzz(30);
+  tmSet('show', 'Stampa tra 3 secondi. Tocca per annullare.', describe(req));
+  requestAnimationFrame(()=>tmBar(1, 3000));
+  TM.timer = setTimeout(async ()=>{
+    if(seq !== TM.seq) return;
+    TM.phase = 'printing';
+    const bits = await bitsP;
+    if(!bits){ fail('Immagine non disponibile.'); return }
+    drawBits($('#tmBits'), bits);
+    if(!(await printer.ensure())){
+      if(seq !== TM.seq) return;
+      TM.phase = 'wait'; tmSet('show', 'Stampante non collegata.');
+      const btn = $('#tmConnect'); btn.hidden = false;
+      btn.onclick = async ()=>{ await connectPrinter(); if(printer.ch && seq === TM.seq){ btn.hidden = true; TM.phase = 'printing'; tmPrint(seq, tk, bits, qn) } };
+      return;
+    }
+    tmPrint(seq, tk, bits, qn);
+  }, 3000);
+}
+async function tmPrint(seq, tk, bits, qn){
+  tmSet('show printing', qn > 1 ? `Stampa 1 di ${qn}…` : 'Stampa in corso…');
+  sfx('print'); buzz([40,60,40]);
+  const data = escposImg(bits);
+  try{
+    for(let k=0; k<qn; k++){
+      if(qn > 1) $('#tmCap').textContent = `Stampa ${k+1} di ${qn}…`;
+      await printer.write(data, p => tmReveal((k + p) / qn));
+    }
+  }catch(e){ if(seq === TM.seq){ TM.phase = 'msg'; tmSet('show', 'Stampa interrotta: ' + (e.message || e)); TM.timer = setTimeout(()=>{ if(seq === TM.seq) tmClose() }, 3500) } return }
+  tmReveal(1);
+  RECENT = [recentOf(tk), ...RECENT.filter(r => r.id !== tk.id)].slice(0, 12); saveRecent();
+  if(TM.entry){ TM.entry.printed = qn; saveVlog() }
+  logEv('Stampata pedina ' + tk.name + (qn > 1 ? ' ×' + qn : ''));
+  if(seq !== TM.seq) return;
+  TM.phase = 'done'; tmSet('show', qn > 1 ? qn + ' pedine stampate' : 'Pedina stampata'); sfx('done');
+  TM.timer = setTimeout(()=>{ if(seq === TM.seq){ TM.phase = 'msg'; tmClose() } }, 1300);
+}
+
+/* ================= Suoni ================= */
+let actx = null;
+function sfx(kind){
+  if(!SET.sound) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    const t = actx.currentTime;
+    const tone = (f, at, dur, type='sine', g=.14) => {
+      const o = actx.createOscillator(), a = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t+at);
+      a.gain.setValueAtTime(0, t+at); a.gain.linearRampToValueAtTime(g, t+at+.02); a.gain.exponentialRampToValueAtTime(.001, t+at+dur);
+      o.connect(a).connect(actx.destination); o.start(t+at); o.stop(t+at+dur+.05);
+    };
+    if(kind === 'listen') tone(740, 0, .12, 'sine', .1);
+    if(kind === 'found') [784, 988, 1319].forEach((f,i)=>tone(f, i*.08, .55, 'triangle', .11));
+    if(kind === 'print') [523, 659, 784, 1047, 1319].forEach((f,i)=>tone(f, i*.06, .4, 'sine', .09));
+    if(kind === 'done') { tone(1175, 0, .7, 'triangle', .09); tone(1568, .1, .8, 'sine', .06) }
+    if(kind === 'cancel') { tone(392, 0, .18, 'sine', .12); tone(262, .12, .3, 'sine', .1) }
+  }catch(e){}
+}
+
+/* ================= Archivio clip audio (IndexedDB) ================= */
+function idb(){ return new Promise((ok, ko)=>{ const r = indexedDB.open('smtg-clips', 1); r.onupgradeneeded = ()=>r.result.createObjectStore('clips'); r.onsuccess = ()=>ok(r.result); r.onerror = ko }) }
+async function clipPut(k, blob){ try{ const db = await idb(); db.transaction('clips','readwrite').objectStore('clips').put(blob, k) }catch(e){} }
+async function clipGet(k){ try{ const db = await idb(); return await new Promise(ok=>{ const r = db.transaction('clips').objectStore('clips').get(k); r.onsuccess = ()=>ok(r.result || null); r.onerror = ()=>ok(null) }) }catch(e){ return null } }
+async function clipClear(){ try{ const db = await idb(); db.transaction('clips','readwrite').objectStore('clips').clear() }catch(e){} }
+const blobToDataURL = b => new Promise(ok=>{ const r = new FileReader(); r.onload = ()=>ok(r.result); r.readAsDataURL(b) });
+
+/* ================= Installazione ================= */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e });
+async function install(){
+  if(NATIVE){ if(APK_URL){ toast('Scarico l\'APK da condividere o reinstallare', 3000); location.href = APK_URL } return }
+  if(matchMedia('(display-mode: standalone)').matches){ toast('L\'app è già installata'); return }
+  if(installEvt){ installEvt.prompt(); await installEvt.userChoice; installEvt = null; return }
+  toast('Apri il menu di Chrome (⋮) e scegli «Installa app»', 3500);
+}
+
+/* ================= Stampa termica ================= */
+// archivio stampanti: impostazioni di partenza per modello (la velocità e il riscaldamento si scelgono nel menu)
+const PRINTERS = [
+  {id:'netum', name:'NetumScan NS1809DD', re:/ns-?18|netum/i, w:384, chunk:100},
+  {id:'pt210', name:'Goojprt PT-210 / MTP-II', re:/pt-?210|mtp-?ii|goojprt/i, w:384, chunk:100},
+  {id:'xp', name:'Xprinter XP-P300 / P323B', re:/xp-?p\d|xprinter/i, w:384, chunk:100},
+  {id:'g58', name:'Generica 58 mm ESC/POS', w:384, chunk:100},
+  {id:'g80', name:'Generica 80 mm ESC/POS', w:576, chunk:180},
+];
+// immagine in un unico blocco (ogni blocco separato fermava il motore = una riga); cambia solo il ritmo d'invio dei dati
+function prAuto(){ const n = printer.dev?.name || ''; return PRINTERS.find(p => p.re && p.re.test(n)) || PRINTERS[3] }
+function prProf(){ return (SET.prModel !== 'auto' && PRINTERS.find(p => p.id === SET.prModel)) || prAuto() }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function loadImg(src){ return new Promise((ok, ko)=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = ()=>ok(i); i.onerror = ko; i.src = src }) }
+async function makeBits(src){
+  const img = await loadImg(src);
+  // meno dati = meno pause: pedina ridotta e/o doppia altezza (la stampante raddoppia ogni riga da sola)
+  const W0 = prProf().w, w = Math.round(W0 * (SET.scale||100) / 800) * 8, dh = !!SET.dh;
+  const h = Math.round(w * img.naturalHeight / img.naturalWidth / (dh ? 2 : 1));
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,w,h); cx.drawImage(img, 0, 0, w, h);
+  const d = cx.getImageData(0,0,w,h).data;
+  const g = new Float32Array(w*h), gamma = Math.pow(0.82, SET.bright);
+  for(let i=0;i<w*h;i++){
+    let v = (0.299*d[i*4] + 0.587*d[i*4+1] + 0.114*d[i*4+2]) / 255;
+    v = Math.pow(v, gamma); v = (v - .5) * 1.12 + .5;
+    g[i] = Math.max(0, Math.min(1, v)) * 255;
+  }
+  // dithering di Atkinson: più pulito sulle termiche
+  const bits = new Uint8Array(w*h);
+  const add = (x,y,e)=>{ if(x>=0 && x<w && y<h) g[y*w+x] += e };
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const i = y*w+x, o = g[i], n = o < 128 ? 0 : 255, e = (o - n) / 8;
+    bits[i] = n === 0 ? 1 : 0;
+    add(x+1,y,e); add(x+2,y,e); add(x-1,y+1,e); add(x,y+1,e); add(x+1,y+1,e); add(x,y+2,e);
+  }
+  return {w, h, bits, dh};
+}
+function drawBits(cv, b){
+  const k = b.dh ? 2 : 1, H = b.h * k;
+  cv.width = b.w; cv.height = H;
+  const cx = cv.getContext('2d'), id = cx.createImageData(b.w, H);
+  for(let i=0;i<b.w*H;i++){ const y = Math.floor(i / b.w / k), v = b.bits[y*b.w + i % b.w] ? 20 : 255; id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v; id.data[i*4+3]=255 }
+  cx.putImageData(id, 0, 0);
+}
+// "Stampa in un colpo": modalità pagina ESC/POS. La stampante riceve tutta l'immagine in memoria
+// e la stampa solo al comando finale (FF), quindi non può restare a secco di dati a metà.
+function escposPage(b){
+  const W0 = prProf().w, k = b.dh ? 2 : 1, H = b.h * k, Hp = Math.ceil(H / 24) * 24, x0 = (W0 - b.w) >> 1;
+  const px = (x, y) => y < H ? b.bits[Math.floor(y / k) * b.w + x] : 0;
+  const out = [0x1B, 0x40, 0x1B, 0x4C, 0x1B, 0x57, x0 & 255, x0 >> 8, 0, 0, b.w & 255, b.w >> 8, Hp & 255, Hp >> 8, 0x1B, 0x33, 24];
+  for(let y0 = 0; y0 < Hp; y0 += 24){
+    out.push(0x1B, 0x2A, 33, b.w & 255, b.w >> 8);
+    for(let x = 0; x < b.w; x++) for(let j = 0; j < 3; j++){
+      let byte = 0;
+      for(let q = 0; q < 8; q++) if(px(x, y0 + j*8 + q)) byte |= 0x80 >> q;
+      out.push(byte);
+    }
+    out.push(0x0A);
+  }
+  out.push(0x0C, 0x1B, 0x32, 0x1B, 0x64, 0x04); // FF = stampa la pagina, poi interlinea normale e avanzamento
+  return new Uint8Array(out);
+}
+const escposImg = b => SET.page ? escposPage(b) : escposRaster(b);
+function escposRaster(b){
+  const wb = b.w / 8, out = [0x1B, 0x40];
+  out.push(0x1B, 0x61, 1); // centrata (serve quando la pedina è ridotta)
+  out.push(0x1D, 0x76, 0x30, b.dh ? 2 : 0, wb & 255, wb >> 8, b.h & 255, b.h >> 8);
+  for(let y=0; y<b.h; y++) for(let xb=0; xb<wb; xb++){
+    let byte = 0;
+    for(let k=0;k<8;k++) if(b.bits[y*b.w + xb*8 + k]) byte |= 0x80 >> k;
+    out.push(byte);
+  }
+  out.push(0x1B, 0x64, 0x04); // avanza 4 righe per lo strappo
+  return new Uint8Array(out);
+}
+
+/* ================= Stampante (Bluetooth classico) ================= */
+const toB64 = d => { let s = ''; for(let i = 0; i < d.length; i += 8192) s += String.fromCharCode.apply(null, d.subarray(i, i + 8192)); return btoa(s) };
+const printer = {
+  dev:null, ch:null,
+  async write(bytes, onProg){
+    const size = 4096, t0 = performance.now();
+    for(let i = 0; i < bytes.length; i += size){
+      await this.ch.writeValue(bytes.subarray(i, i + size));
+      if(onProg) onProg(Math.min(1, (i + size) / bytes.length));
+    }
+    if(bytes.length > 2000){ const ms = performance.now() - t0; this.last = `${(bytes.length / ms).toFixed(1)} KB/s · ${(bytes.length/1024).toFixed(1)} KB in ${(ms/1000).toFixed(1)} s` }
+  },
+  // ricollega da solo la stampante già usata
+  async ensure(){
+    if(this.ch) return true;
+    if(this.dev){ try{ await setupDevice(this.dev); return true }catch(e){} }
+    return false;
+  }
+};
+// un collegamento alla volta: due tentativi sovrapposti si disturbano
+let btLock = Promise.resolve();
+function setupDevice(dev){ const p = btLock.then(()=>sppSetup(dev.id, dev.name)); btLock = p.catch(()=>{}); return p }
+async function sppSetup(addr, name){
+  if(printer.ch && printer.dev && printer.dev.id === addr) return;
+  printer.ch = null;
+  const cr = await SPP.connect({address:addr});
+  printer.dev = {id:addr, name}; printer.info = 'Bluetooth classico · ' + ((cr && cr.how) || '');
+  printer.ch = {writeValue: d => SPP.write({data: toB64(d)})};
+  if(!sppSetup.l){ sppSetup.l = true; SPP.addListener('disconnected', ()=>{ printer.ch = null; updatePrinterUI() }) }
+  if(!SET.prNat || SET.prNat.id !== addr){ SET.prNat = {id:addr, name, spp:true}; saveSet() }
+  updatePrinterUI();
+}
+// ricollegamento automatico: la stampante già usata viene ritrovata appena la accendi
+let reconnecting = false;
+// se la stampante non risponde allungo le pause tra un tentativo e l'altro (7 s, 14 s, 28 s... fino a 1 minuto)
+const rc = {fails:0, next:0};
+async function autoReconnect(){
+  if(!NATIVE || printer.ch || !printer.dev || reconnecting || btScanning || document.visibilityState !== 'visible' || Date.now() < rc.next) return;
+  reconnecting = true;
+  try{ await setupDevice(printer.dev); rc.fails = 0; toast('Stampante collegata: ' + (printer.dev.name || '')); sfx('found'); buzz(30) }
+  catch(e){ rc.fails++; rc.next = Date.now() + Math.min(60000, 7000 * 2 ** rc.fails) }
+  reconnecting = false;
+}
+// tornando dallo standby riprovo subito, poi di nuovo con le pause
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible'){ rc.fails = 0; rc.next = 0; autoReconnect() } });
+setInterval(autoReconnect, 7000);
+if(NATIVE && SET.prNat && !SET.prNat.spp){ delete SET.prNat; saveSet() } // vecchio collegamento LE: lo dimentico, si ricollega in classico
+if(NATIVE && SET.prNat) printer.dev = SET.prNat;
+// scelta della stampante: quelle già accoppiate, più la ricerca e l'accoppiamento di quelle nuove direttamente qui
+let btScanning = false, btPaired = [], btFound = {}, btPairing = null;
+const isKnownPr = n => PRINTERS.some(p => p.re && p.re.test(n || ''));
+const isPr = d => isKnownPr(d.name) || d.major === 0x600; // 0x600 = classe "immagine" (stampanti)
+async function btList(){ try{ btPaired = ((await SPP.list()).devices || []).filter(d => d.type !== 2) }catch(e){ toast('Bluetooth: ' + (e.message || e), 3500) } renderBt() }
+async function btPick(){ btFound = {}; openOv('bt'); await btList(); if(!btPaired.length) btScan() }
+async function btScan(){
+  if(btScanning) return;
+  btFound = {}; btScanning = true; renderBt();
+  if(!btScan.l){ btScan.l = true;
+    SPP.addListener('found', d => { if(!d.name || d.bonded || d.type === 2) return; btFound[d.address] = d; renderBt() });
+    SPP.addListener('scanDone', () => { btScanning = false; renderBt() });
+  }
+  try{ await SPP.scan() }catch(e){ btScanning = false; renderBt(); toast('Ricerca non riuscita: ' + (e.message || e), 4000) }
+}
+function btStop(){ if(btScanning){ btScanning = false; SPP.stopScan().catch(()=>{}) } renderBt() }
+function renderBt(){
+  const el = $('#btList'); if(!el) return;
+  const pr = btPaired.slice().sort((a, b) => isKnownPr(b.name) - isKnownPr(a.name));
+  const nw = Object.values(btFound).sort((a, b) => (isPr(b) - isPr(a)) || (b.rssi - a.rssi));
+  const btn = (d, k) => `<button class="btn ${isPr(d) ? 'primary' : ''}" data-${k}="${esc(d.address)}" data-n="${esc(d.name || '')}">${esc(d.name || d.address)}</button>`;
+  el.innerHTML = `<h3 style="margin:4px 0 8px">Stampanti accoppiate</h3>`
+    + (pr.length ? pr.map(d => btn(d, 'spp')).join('') : '<p class="note">Nessuna stampante accoppiata: accendila e cercala qui sotto.</p>')
+    + `<h3 style="margin:20px 0 8px">Nuove stampanti</h3>`
+    + (btPairing ? `<p class="note">Accoppiamento con ${esc(btPairing)}… se compare la richiesta di Android tocca «Accoppia» (PIN di solito 0000 o 1234).</p>`
+      : (nw.length ? nw.map(d => btn(d, 'pair')).join('') : `<p class="note">${btScanning ? 'Cerco… tieni la stampante accesa e vicina.' : 'Tocca «Cerca stampanti» con la stampante accesa.'}</p>`)
+        + `<button class="btn" data-bt="${btScanning ? 'stop' : 'scan'}" style="margin-top:12px">${btScanning ? 'Ferma la ricerca' : 'Cerca stampanti'}</button>`);
+}
+async function btConnect(addr, name){
+  btStop(); history.back();
+  const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
+  try{ await setupDevice({id:addr, name}); toast('Collegata a ' + name); sfx('found'); buzz(30) }
+  catch(err){ toast((err.message || err) + ' — è accesa?', 4000) }
+  updatePrinterUI();
+}
+$('#btList').addEventListener('click', async e => {
+  const sb = e.target.closest('[data-spp]');
+  if(sb) return btConnect(sb.dataset.spp, sb.dataset.n || 'stampante');
+  const pb = e.target.closest('[data-pair]');
+  if(pb){
+    if(btPairing) return;
+    const addr = pb.dataset.pair, name = pb.dataset.n || 'stampante';
+    btStop(); btPairing = name; renderBt();
+    try{ await SPP.pair({address:addr}); btPairing = null; toast('Accoppiata: ' + name); return btConnect(addr, name) }
+    catch(err){ btPairing = null; renderBt(); toast('Accoppiamento non riuscito: ' + (err.message || err), 4000) }
+    return;
+  }
+  const b = e.target.closest('[data-bt]'); if(!b) return;
+  if(b.dataset.bt === 'scan') btScan(); else btStop();
+});
+async function connectPrinter(){
+  if(!NATIVE){ toast('La stampa funziona solo nell\'app Android', 3000); return }
+  try{ await btPick() }catch(e){ toast('Bluetooth non disponibile: ' + (e.message || e), 3500) }
+}
+function updatePrinterUI(){
+  const on = !!printer.ch, name = on ? (printer.dev.name || 'stampante') : '';
+  $('#tokenBtn').classList.toggle('pr-on', on);
+  $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega stampante';
+  const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name + (printer.info ? ` (${printer.info})` : '') : 'Non collegata';
+  const cb = $('#prConnect'); if(cb) cb.textContent = on ? 'Cambia stampante' : 'Collega stampante';
+}
+async function testPrint(){
+  if(!printer.ch){ await connectPrinter(); if(!printer.ch) return }
+  // scala di grigi + scacchiera per tarare luminosità e velocità
+  const w = prProf().w, h = 160, bits = new Uint8Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    if(y < 80){ const lvl = Math.floor(x / (w/6)) / 5; bits[y*w+x] = ((x*7 + y*13) % 100) / 100 < lvl ? 1 : 0 }
+    else bits[y*w+x] = ((x >> 4) + (y >> 4)) % 2;
+  }
+  try{ await printer.write(escposImg({w,h,bits})); toast('Prova inviata · ' + (printer.last || ''), 6000) }catch(e){ toast('Errore: ' + e.message, 3500) }
+}
+
+/* ================= Schermo sempre acceso ================= */
+let lock = null;
+async function keepAwake(){ try{ if(SET.wake && 'wakeLock' in navigator && document.visibilityState === 'visible') lock = await navigator.wakeLock.request('screen') }catch(e){} }
+function releaseWake(){ try{ lock && lock.release() }catch(e){} lock = null }
+document.addEventListener('visibilitychange', keepAwake);
+keepAwake();
+
+/* ================= Avvio, riprendi, vincitore ================= */
+const WZ = {step:1};
+const ART_Q = {
+  wizard:'(t:planeswalker or (t:legendary t:dragon)) -is:digital',
+  resume:'t:legendary t:creature -is:digital',
+  win:'o:"you win the game" -is:digital',
+};
+async function themeBg(box, q, url){
+  const i = box.querySelector('i'); i.classList.remove('in');
+  try{
+    if(!url){
+      const r = await fetch('https://api.scryfall.com/cards/random?q=' + encodeURIComponent(q));
+      const c = await r.json(); const f = c.image_uris || (c.card_faces && c.card_faces[0].image_uris);
+      url = f && f.art_crop;
+    }
+    if(!url) return;
+    const im = new Image(); im.onload = ()=>{ i.style.backgroundImage = `url('${url}')`; i.classList.add('in') }; im.src = url;
+  }catch(e){}
+}
+function wzStep(n){
+  if(n < 3) document.activeElement?.blur?.();
+  WZ.step = n;
+  $('#wzStep' + n).scrollIntoView({behavior: n > 1 ? 'smooth' : 'instant', block:'start'});
+}
+// nomi dei giocatori: propongo gli ultimi usati, Salta lascia Giocatore 1, 2, 3...
+const NKEY = 'smtg-names';
+function wzNames(n){
+  WZ.n = n;
+  const last = load(NKEY) || [];
+  $('#wzNames').innerHTML = Array.from({length:n}, (_,i)=>`<label class="wzName"><i style="background:${COLORS[i % COLORS.length].bg}"></i><input maxlength="20" placeholder="Giocatore ${i+1}" value="${esc(last[i] || '')}" enterkeyhint="${i < n-1 ? 'next' : 'done'}"></label>`).join('');
+  wzStep(3);
+}
+$('#wzNames').addEventListener('keydown', e=>{
+  if(e.key !== 'Enter') return;
+  const ins = [...$('#wzNames').querySelectorAll('input')], k = ins.indexOf(e.target);
+  if(k < ins.length - 1) ins[k+1].focus(); else e.target.blur();
+});
+$('#wzStart').addEventListener('click', ()=>{
+  const names = [...$('#wzNames').querySelectorAll('input')].map(x => x.value.trim());
+  if(names.some(Boolean)){ const last = load(NKEY) || []; names.forEach((v,i)=>{ last[i] = v }); try{ localStorage.setItem(NKEY, JSON.stringify(last)) }catch(e){} }
+  buzz(15); startGame(WZ.fmt, WZ.n, names);
+});
+$('#wzSkip').addEventListener('click', ()=>{ buzz(15); startGame(WZ.fmt, WZ.n, []) });
+$('#wzBack2').addEventListener('click', ()=>wzStep(WZ.fmt === 'standard' ? 1 : 2));
+function openWizard(swap){
+  $('#wzFormats').innerHTML = [
+    ['standard','Standard','20 punti vita, testa a testa'],
+    ['commander','Commander','40 punti vita, danni da comandante'],
+    ['brawl','Brawl','25 punti vita in due, 30 in più giocatori'],
+    ['oathbreaker','Oathbreaker','20 punti vita'],
+  ].map(([k,l,d])=>`<button class="wzOpt" data-f="${k}"><b>${l}</b><span>${d}</span></button>`).join('');
+  $('#wzCounts').innerHTML = [2,3,4,5,6].map(n=>`<button class="wzOpt" data-n="${n}">${n}</button>`).join('');
+  themeBg($('#wzBg'), ART_Q.wizard);
+  $('#wzClose').hidden = !swap;
+  openOv('wizard');
+  requestAnimationFrame(()=>wzStep(1));
+}
+$('#wzFormats').addEventListener('click', e=>{
+  const b = e.target.closest('[data-f]'); if(!b) return;
+  WZ.fmt = b.dataset.f; buzz(15);
+  if(WZ.fmt === 'standard') wzNames(2); else wzStep(2);
+});
+$('#wzCounts').addEventListener('click', e=>{ const b = e.target.closest('[data-n]'); if(b){ buzz(15); wzNames(+b.dataset.n) } });
+$('#wzBack').addEventListener('click', ()=>wzStep(1));
+$('#wzClose').addEventListener('click', ()=>history.back());
+function startGame(fmt, n, names){
+  document.activeElement?.blur?.();
+  S.format = fmt; S.count = n; S.cmdDamage = FORMATS[fmt].cmd;
+  S.startLife = fmt === 'brawl' && n > 2 ? 30 : FORMATS[fmt].life;
+  if(SET.intro && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.body.classList.add('preintro');
+  S.players = freshPlayers(n, S.startLife, S.players).map((p,i)=>(p.name = names?.[i] || 'Giocatore ' + (i+1), p));
+  resetGame();
+  WZ.step = 0; closeAllOv();
+  toast(FORMATS[fmt].label + ', ' + n + ' giocatori, ' + S.startLife + ' punti vita');
+  setTimeout(()=>{ if(SET.intro) playIntro(); else maybeTut() }, 320);
+}
+function inProgress(){ return !S.over && (S.players.some(p=>p.hist.length) || S.turn.n > 1) }
+function openResume(){
+  const st = S.gameStart || (S.players.flatMap(p=>p.hist.map(h=>h.t)).sort()[0]);
+  $('#rsInfo').textContent = `${FORMATS[S.format].label}, ${S.count} giocatori` + (st ? `, iniziata alle ${hhmm(st)}` : '') + '.';
+  themeBg($('#rsBg'), ART_Q.resume);
+  openOv('resume');
+}
+$('#rsGo').addEventListener('click', ()=>history.back());
+$('#rsNew').addEventListener('click', ()=>openWizard(true));
+
+let winT = null;
+function checkWinner(){
+  clearTimeout(winT);
+  winT = setTimeout(()=>{
+    const alive = S.players.map((p,i)=>i).filter(i=>!isOut(S.players[i]));
+    if(alive.length === 1 && S.count > 1){ if(!S.over){ S.over = true; save(); showWinner(alive[0]) } }
+    else if(alive.length > 1 && S.over){ S.over = false; save() }
+  }, 900);
+}
+function showWinner(i){
+  const p = S.players[i];
+  $('#wnName').textContent = p.name;
+  const mins = S.gameStart ? Math.max(1, Math.round((Date.now() - S.gameStart) / 60000)) : 0;
+  $('#wnInfo').textContent = [mins ? `Partita durata ${mins} minut${mins === 1 ? 'o' : 'i'}` : '', S.turn.on ? `al turno ${S.turn.n}` : ''].filter(Boolean).join(', ') + (mins || S.turn.on ? '.' : '');
+  themeBg($('#wnBg'), ART_Q.win, p.art);
+  logEv('Vince ' + p.name);
+  sfx('done'); buzz([60,80,60,80,120]);
+  closeCqPop(); openOv('win');
+}
+$('#wnAgain').addEventListener('click', ()=>{ resetGame(); history.back(); toast('Rivincita!') });
+$('#wnNew').addEventListener('click', ()=>openWizard(true));
+$('#wnBack').addEventListener('click', ()=>history.back());
+
+/* ================= Archivio offline delle pedine ================= */
+const ARC = {list:[], meta:{}, ready:false, busy:false, prog:'', urls:new Map()};
+let _adb;
+function adb(){ return _adb || (_adb = new Promise((ok, ko)=>{ const r = indexedDB.open('smtg-arc', 1); r.onupgradeneeded = ()=>{ r.result.createObjectStore('kv'); r.result.createObjectStore('img') }; r.onsuccess = ()=>ok(r.result); r.onerror = ()=>ko(r.error) })) }
+async function aop(store, mode, fn){ const db = await adb(); return new Promise((ok, ko)=>{ const tx = db.transaction(store, mode), rq = fn(tx.objectStore(store)); tx.oncomplete = ()=>ok(rq && rq.result); tx.onerror = ()=>ko(tx.error) }) }
+const kvGet = k => aop('kv', 'readonly', s => s.get(k)), kvSet = (k, v) => aop('kv', 'readwrite', s => s.put(v, k));
+const imgGet = k => aop('img', 'readonly', s => s.get(k)), imgPut = (k, v) => aop('img', 'readwrite', s => s.put(v, k)), imgDel = k => aop('img', 'readwrite', s => s.delete(k));
+async function arcLoad(){
+  try{ ARC.list = await kvGet('idx') || []; ARC.meta = await kvGet('meta') || {} }catch(e){ ARC.list = []; ARC.meta = {} }
+  ARC.ready = ARC.list.some(e => e.ok);
+}
+async function arcSave(){ await kvSet('idx', ARC.list); await kvSet('meta', ARC.meta) }
+function arcStatus(){
+  if(ARC.busy) return ARC.prog;
+  if(!ARC.list.length) return 'Non scaricato';
+  const ok = ARC.list.filter(e => e.ok).length, d = ARC.meta.checked ? new Date(ARC.meta.checked).toLocaleDateString('it-IT') : '';
+  return ok + (ok < ARC.list.length ? ' pedine su ' + ARC.list.length : ' pedine') + (d ? ', controllato il ' + d : '');
+}
+function arcProg(t){ ARC.prog = t; const el = $('#arcStat'); if(el) el.textContent = t }
+async function arcUrl(id, k){ const key = id + ':' + k; if(ARC.urls.has(key)) return ARC.urls.get(key); const b = await imgGet(key); const u = b ? URL.createObjectURL(b) : ''; ARC.urls.set(key, u); return u }
+async function arcTk(e){
+  const small = await arcUrl(e.id, 's');
+  return {id:e.id, name:e.n, type_line:e.t, set:e.s, small, large:online() ? e.L : small, print:await arcUrl(e.id, 'g'), local:true, rs:e.S, rl:e.L, rp:e.src};
+}
+// una pedina di Scryfall già nell'archivio stampa dal telefono (più veloce); senza rete la cerco anche per nome
+async function arcResolve(t){
+  if(!t || t.local || !ARC.ready) return t;
+  const e = ARC.list.find(x => x.id === t.id && x.ok) || (!online() && ARC.list.find(x => x.n === t.name && x.ok));
+  if(!e) return t;
+  return online() ? {...t, print:await arcUrl(e.id, 'g')} : arcTk(e);
+}
+const recentOf = t => t.local ? {...t, small:t.rs, large:t.rl, print:t.rp, local:false} : t;
+function arcSearch(r){
+  const tl = e => e.t.toLowerCase(), fr = (r.free || '').toLowerCase();
+  const typeOk = r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : r.type === 'Emblem' && fr ? e => re.test(tl(e)) && tl(e).includes(fr.split(' ')[0]) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? e => e.n.toLowerCase().includes(fr) || tl(e).includes(fr) : () => true;
+  const cols = r.colors.filter(c => c !== 'C').sort().join(''), colorless = r.colors.includes('C') && !cols;
+  const pt = e => r.pow === null || (e.p === String(r.pow) && e.o === String(r.tou));
+  const col = e => !r.colors.length || (colorless ? e.c === '' : e.c === cols);
+  const kw = e => r.kw.every(k => e.k.includes(k));
+  const base = e => e.ok && typeOk(e) && (!r.artifact || /artifact/.test(tl(e)));
+  const tries = [[[pt, col, kw], ''], [[pt, kw], 'senza filtro colore'], [[pt], 'senza colore e abilità'], [[], 'tutte le pedine del tipo']];
+  for(const [fs, note] of tries){
+    const res = ARC.list.filter(e => base(e) && fs.every(f => f(e)));
+    if(res.length) return {res:res.sort((a, b) => (/token/i.test(b.t) - /token/i.test(a.t)) || (b.r || '').localeCompare(a.r || '')), note};
+  }
+  return {res:[], note:''};
+}
+const arcJunk = c => (c.type_line || '').split('//').every(p => ['Card', ''].includes(p.trim()));
+function arcEntries(c){
+  const faces = c.image_uris ? [c] : (c.card_faces || []).filter(f => f.image_uris), multi = faces.length > 1;
+  // la stessa pedina compare in tante carte fronte/retro: la riconosco da nome, tipo, F/C, colori e testo
+  return faces.map((f, k) => ({id:c.id + (multi ? '#' + k : ''), oid:[f.name, f.type_line || c.type_line, f.power ?? c.power, f.toughness ?? c.toughness, (f.colors || c.colors || []).slice().sort().join(''), f.oracle_text ?? c.oracle_text ?? ''].join('|'), n:f.name, t:f.type_line || c.type_line || '',
+    p:f.power ?? c.power ?? null, o:f.toughness ?? c.toughness ?? null, c:(f.colors || c.colors || []).slice().sort().join(''),
+    k:(c.keywords || []).map(x => x.toLowerCase()), s:c.set_name, r:c.released_at, S:f.image_uris.small, L:f.image_uris.large,
+    src:f.image_uris.border_crop || f.image_uris.large, ok:false}));
+}
+async function arcFetchList(extra){
+  const out = [];
+  for(const q of ['is:token game:paper prefer:newest', 't:emblem game:paper prefer:newest']){
+    let url = 'https://api.scryfall.com/cards/search?unique=cards&q=' + encodeURIComponent(q + extra);
+    while(url){
+      const r = await fetch(url, {headers:{Accept:'application/json'}});
+      if(r.status === 404) break;
+      if(!r.ok) throw new Error('Scryfall ' + r.status);
+      const d = await r.json(); out.push(...d.data.filter(c => !arcJunk(c))); url = d.has_more ? d.next_page : null;
+      await sleep(120);
+    }
+  }
+  return out;
+}
+// una sola immagine scaricata per pedina: ne ricavo l'anteprima a colori e la versione in grigio per la stampa
+async function arcImg(e){
+  const r = await fetch(e.src); if(!r.ok) throw new Error('immagine ' + r.status);
+  const bmp = await createImageBitmap(await r.blob());
+  const mk = (w, gray, q) => new Promise(ok => {
+    const h = Math.round(w * bmp.height / bmp.width), cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const cx = cv.getContext('2d', {willReadFrequently:gray}); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(bmp, 0, 0, w, h);
+    if(gray){ const id = cx.getImageData(0, 0, w, h), d = id.data; for(let i=0;i<d.length;i+=4){ const v = .299*d[i] + .587*d[i+1] + .114*d[i+2]; d[i] = d[i+1] = d[i+2] = v } cx.putImageData(id, 0, 0) }
+    cv.toBlob(ok, 'image/webp', q);
+  });
+  const g = await mk(384, true, .7), sm = await mk(220, false, .75);
+  await imgPut(e.id + ':g', g); await imgPut(e.id + ':s', sm); e.ok = true;
+}
+async function arcSync(quiet){
+  if(ARC.busy) return;
+  if(!online()){ if(!quiet) toast('Serve la connessione per scaricare l\'archivio'); return }
+  ARC.busy = true; arcProg('Scarico la lista delle pedine…'); if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
+  try{ navigator.storage && navigator.storage.persist && navigator.storage.persist() }catch(e){}
+  try{
+    const since = ARC.meta.complete && ARC.meta.since;
+    const best = new Map();
+    for(const e of (await arcFetchList(since ? ' date>=' + since : '')).flatMap(arcEntries)){ const o = best.get(e.oid); if(!o || (e.r || '') > (o.r || '')) best.set(e.oid, e) }
+    const fresh = [...best.values()];
+    const byId = new Map(ARC.list.map(e => [e.id, e]));
+    if(!since){
+      // lista completa: tengo le immagini già scaricate, tolgo le versioni superate
+      const keep = new Set(fresh.map(e => e.id));
+      for(const e of ARC.list) if(!keep.has(e.id) && e.ok){ await imgDel(e.id + ':g'); await imgDel(e.id + ':s') }
+      ARC.list = fresh.map(e => byId.get(e.id) || e);
+    } else {
+      for(const e of fresh){
+        if(byId.has(e.id)) continue;
+        const i = ARC.list.findIndex(x => x.oid === e.oid);
+        if(i >= 0){ const old = ARC.list[i]; if((old.r || '') > (e.r || '')) continue; if(old.ok){ await imgDel(old.id + ':g'); await imgDel(old.id + ':s') } ARC.list[i] = e } else ARC.list.push(e);
+      }
+    }
+    await arcSave();
+    const todo = ARC.list.filter(e => !e.ok); let done = 0, fails = 0;
+    if(todo.length) arcProg(`Scarico le immagini: 0 di ${todo.length}`);
+    const worker = async () => { while(todo.length){ const e = todo.shift();
+      try{ await arcImg(e) }catch(err){ fails++ }
+      done++; arcProg(`Scarico le immagini: ${done} di ${done + todo.length}`);
+      if(done % 25 === 0) await arcSave(); ARC.ready = ARC.ready || e.ok } };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    ARC.meta.complete = ARC.list.every(e => e.ok);
+    if(ARC.meta.complete) ARC.meta.since = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    ARC.meta.checked = Date.now(); await arcSave(); ARC.ready = ARC.list.some(e => e.ok);
+    if(!quiet || done) toast(fails ? `Archivio aggiornato, ${fails} immagini da riprovare` : done ? `Archivio pronto: ${ARC.list.length} pedine` : 'Nessuna pedina nuova', 3000);
+  }catch(e){ if(!quiet) toast('Scaricamento interrotto: ' + (e.message || e), 3500) }
+  ARC.busy = false; if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
+}
+async function arcClear(){
+  await aop('img', 'readwrite', s => s.clear()); await aop('kv', 'readwrite', s => s.clear());
+  ARC.urls.forEach(u => u && URL.revokeObjectURL(u)); ARC.urls.clear(); ARC.list = []; ARC.meta = {}; ARC.ready = false;
+}
+// all'avvio: controllo giornaliero delle pedine nuove; uno scaricamento lasciato a metà riprende se non si è sul traffico dati
+arcLoad().then(()=>setTimeout(()=>{
+  if(!ARC.list.length || !online()) return;
+  const cell = navigator.connection && navigator.connection.type === 'cellular';
+  if(!ARC.meta.complete){ if(!cell) arcSync(true) }
+  else if(Date.now() - (ARC.meta.checked || 0) > 20 * 3600e3) arcSync(true);
+}, 6000));
+
+/* ================= Effetti: particelle ================= */
+const FX = {P:[], on:false};
+function fxSize(){ const c = $('#fx'), d = devicePixelRatio || 1; c.width = innerWidth * d; c.height = innerHeight * d; c.getContext('2d').setTransform(d,0,0,d,0,0) }
+function fxRun(){
+  if(FX.on) return; FX.on = true; fxSize();
+  const c = $('#fx').getContext('2d');
+  (function loop(){
+    c.clearRect(0, 0, innerWidth, innerHeight); c.globalCompositeOperation = 'lighter';
+    FX.P = FX.P.filter(p=>{ p.l--; const f = p.l / p.m; c.globalAlpha = Math.max(f, 0);
+      if(p.ring){ p.r += (p.max - p.r) * .15; c.strokeStyle = p.col; c.lineWidth = 7 * f; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.stroke() }
+      else { p.x += p.vx; p.y += p.vy; p.vx *= .96; p.vy *= .96; c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.s * (.4 + f * .6), 0, 6.283); c.fill() }
+      return p.l > 0 });
+    c.globalAlpha = 1;
+    if(FX.P.length) requestAnimationFrame(loop); else { c.clearRect(0, 0, innerWidth, innerHeight); FX.on = false }
+  })();
+}
+function fxBurst(x, y, n, cols, sp, life){ for(let i=0;i<n;i++){ const a = Math.random()*6.283, v = sp*(.3+Math.random()); FX.P.push({x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, l:life, m:life, col:cols[i % cols.length], s:2+Math.random()*3}) } fxRun() }
+function fxRing(x, y, col, max){ FX.P.push({ring:1, x, y, r:10, max, l:32, m:32, col}); fxRun() }
+function fxBurstAt(el, n, cols){ if(!el) return; const r = el.getBoundingClientRect(); fxBurst(r.left + r.width/2, r.top + r.height/2, n, cols, 4.5, 34) }
+window.addEventListener('resize', ()=>{ if(FX.on) fxSize() });
+
+/* ================= Animazione di inizio partita ================= */
+let INTRO = null;
+function playIntro(){
+  document.body.classList.remove('preintro');
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ maybeTut(); return }
+  const hub = $('#tokenBtn'), cells = [...document.querySelectorAll('#board .cell')];
+  const hr = hub.getBoundingClientRect(), cx = hr.left + hr.width/2, cy = hr.top + hr.height/2;
+  const skip = document.createElement('div'); skip.id = 'introSkip'; document.body.appendChild(skip);
+  const anims = [], T = [];
+  cells.forEach(c => c.style.opacity = 0); hub.style.opacity = 0;
+  const done = () => { if(!INTRO) return; INTRO = null; T.forEach(clearTimeout); anims.forEach(a=>{ try{ a.finish() }catch(e){} }); cells.forEach(c => c.style.opacity = ''); skip.remove(); maybeTut() };
+  INTRO = {done};
+  skip.addEventListener('pointerdown', e=>{ e.preventDefault(); FX.P = []; done() });
+  hub.style.opacity = '';
+  const a = hub.animate([{transform:'scale(7)', opacity:0}, {opacity:1, offset:.35}, {transform:'scale(1)', opacity:1}], {duration:520, easing:'cubic-bezier(.55,0,1,.45)'});
+  anims.push(a);
+  a.onfinish = () => { if(!INTRO) return;
+    anims.push($('#board').animate([{translate:'0 0'},{translate:'-7px 6px'},{translate:'6px -5px'},{translate:'-3px 2px'},{translate:'0 0'}], {duration:300}));
+    fxRing(cx, cy, '#FFD27A', Math.max(innerWidth, innerHeight) * .45);
+    fxBurst(cx, cy, 80, ['#FFC86A','#FFF3CC','#FF9A3C'], 8, 44);
+    buzz([40, 30, 20]);
+    cells.forEach((c,i)=>{ const r = c.getBoundingClientRect(), x = r.left + r.width/2, y = r.top + r.height/2;
+      c.style.opacity = '';
+      anims.push(c.animate([{translate:`${cx-x}px ${cy-y}px`, scale:.12, opacity:0}, {translate:'0 0', scale:1, opacity:1}], {duration:460, delay:70 + i*45, easing:'cubic-bezier(.2,1.5,.4,1)', fill:'backwards'})) });
+    T.push(setTimeout(done, 70 + cells.length*45 + 520));
+  };
+}
+
+/* ================= Danni da comandante: effetto ================= */
+function cmdFx(v, n){
+  const fr = $(`.cell[data-i="${v}"] .frame`); if(!fr) return;
+  fr.querySelector('.cmdFx')?.remove();
+  const el = document.createElement('div'); el.className = 'cmdFx';
+  el.innerHTML = `<div class="fl"></div><div class="sl" style="--a:35deg"></div><div class="sl" style="--a:-35deg"></div><div class="ic">${MI('\ue9c6')}<b>−${n}</b></div>`;
+  fr.appendChild(el); setTimeout(()=>el.remove(), 950);
+  fr.closest('.cell').animate([{translate:'0 0'},{translate:'-5px 3px'},{translate:'4px -3px'},{translate:'0 0'}], {duration:240, delay:80});
+  fxBurstAt(fr.closest('.cell'), 30, ['#FF6A4A','#FFD27A','#FFF3CC']);
+  buzz([25, 30, 45]);
+}
+
+/* ================= Guida ================= */
+let TUT = null;
+function maybeTut(){ let seen = null; try{ seen = localStorage.getItem('smtg-tut') }catch(e){} if(!seen) startTut() }
+function tutSteps(){
+  const n = S.count, me = $(`.cell[data-i="${n-1}"]`), other = $(`.cell[data-i="${n > 1 ? n-2 : 0}"]`);
+  return [
+    {t:'Benvenuto!', p:'Ti mostro in un minuto le funzioni principali di Magic Play&Print. Puoi rivedere questa guida quando vuoi dal Menu, sotto le pedine.'},
+    {el:me, t:'Punti vita', p:'Tocca la metà con il + per aggiungere un punto e quella con il − per toglierlo. Tenendo premuto il conteggio scorre (o salta di 10, lo scegli nel Menu).', g:'tap', at:me?.querySelector('.half.plus')},
+    {el:me?.querySelector('.pname'), t:'Scheda giocatore', p:'Tocca il nome per aprire la scheda: nome, colore, immagine di sfondo, veleno, contatori, monarca e iniziativa.', g:'tap'},
+    {el:me?.querySelector('.pname'), t:'Danni da comandante', p:'Trascina il nome di chi attacca sul pannello di chi subisce, poi scegli quanti danni. Vengono tolti anche dai punti vita.', g:'drag', to:other},
+    {el:$('#tokenBtn'), t:'Pedine', p:'Tocca il simbolo centrale per cercare le pedine. Tienilo premuto e di\' la pedina, per esempio «drago 5/5 volare»: la trova e dopo 3 secondi la stampa. Toccala per annullare. Trascinalo per spostarlo dove ti è più comodo.', g:'hold'},
+    {el:$('#tokenBtn'), t:'Stampante', p:'Quando sotto il simbolo c\'è un alone blu pulsante con le scintille, la stampante è collegata. Se è grigio, collegala dalla pagina Pedine.'},
+    {el:$('#tokenBtn'), t:'Menu', p:'Toccando il simbolo si apre la pagina delle pedine: sotto le pedine recenti c\'è il Menu con nuova partita, dadi, impostazioni e questa guida. Il tasto giallo STAMPA in alto apre le impostazioni della stampante.', g:'tap'},
+    {t:'Tutto qui!', p:'Buona partita. Che il mazzo sia con te.'},
+  ];
+}
+function startTut(){
+  if(TUT) return;
+  const el = document.createElement('div'); el.id = 'tut';
+  el.innerHTML = '<div class="hole"></div><div class="dot"></div><div class="box"></div>';
+  document.body.appendChild(el);
+  const h = el.querySelector('.hole'); h.style.cssText = `left:${innerWidth/2}px;top:${innerHeight/2}px;width:0;height:0`;
+  TUT = {el, i:0, steps:tutSteps()};
+  el.addEventListener('click', e=>{
+    if(e.target.closest('.skip')){ endTut(); return }
+    if(e.target.closest('.next') || !e.target.closest('.box')){ tutGo(TUT.i + 1) }
+  });
+  tutGo(0);
+}
+const ctrOf = el => { const r = el.getBoundingClientRect(); return [r.left + r.width/2, r.top + r.height/2, r] };
+function tutGo(i){
+  const st = TUT.steps; if(i >= st.length){ endTut(); return }
+  TUT.i = i; const s = st[i], el = TUT.el, h = el.querySelector('.hole'), dot = el.querySelector('.dot'), box = el.querySelector('.box');
+  let cx = innerWidth/2, cy = innerHeight/2, r = 0;
+  if(s.el){ const [x, y, rc] = ctrOf(s.el); cx = x; cy = y; r = Math.min(Math.max(rc.width, rc.height) / 2 + 14, Math.min(innerWidth, innerHeight) * .42) }
+  h.style.left = (cx - r) + 'px'; h.style.top = (cy - r) + 'px'; h.style.width = h.style.height = (2*r) + 'px';
+  dot.getAnimations().forEach(a=>a.cancel()); dot.className = 'dot';
+  if(s.g){
+    const [dx, dy] = s.at ? ctrOf(s.at) : [cx, cy];
+    dot.style.left = dx + 'px'; dot.style.top = dy + 'px';
+    setTimeout(()=>{ if(TUT && TUT.i === i){ dot.classList.add(s.g);
+      if(s.g === 'drag' && s.to){ const [tx, ty] = ctrOf(s.to);
+        dot.animate([{translate:'0 0', scale:1, opacity:0}, {translate:'0 0', scale:.75, opacity:1, offset:.15}, {translate:`${tx-dx}px ${ty-dy}px`, scale:.75, opacity:1, offset:.7}, {translate:`${tx-dx}px ${ty-dy}px`, scale:1, opacity:0}], {duration:1800, iterations:Infinity, easing:'ease-in-out'}) } } }, 450);
+  }
+  const top = !s.el || cy > innerHeight * .5;
+  box.style.top = top ? 'calc(18px + env(safe-area-inset-top))' : 'auto';
+  box.style.bottom = top ? 'auto' : 'calc(18px + env(safe-area-inset-bottom))';
+  if(!s.el){ box.style.top = '50%'; box.style.bottom = 'auto'; box.style.transform = 'translate(-50%,-50%)' } else box.style.transform = 'translateX(-50%)';
+  const last = i === st.length - 1;
+  box.innerHTML = `<h4>${s.t}</h4><p>${esc(s.p)}</p><div class="bar"><div class="dots">${st.map((_,k)=>`<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>${last ? '' : '<button class="skip">Salta</button>'}<button class="next">${last ? 'Inizia' : 'Avanti'}</button></div>`;
+  box.style.animation = 'none'; void box.offsetWidth; box.style.animation = '';
+  buzz(6);
+}
+function endTut(){ if(!TUT) return; TUT.el.remove(); TUT = null; try{ localStorage.setItem('smtg-tut', '1') }catch(e){} }
+
+/* ================= Aggiornamenti ================= */
+const UPD = {remote:null, html:null, native:false};
+function cmpVer(a, b){ const x = a.split('.').map(Number), y = b.split('.').map(Number); for(let i=0;i<3;i++){ if((x[i]||0) !== (y[i]||0)) return (x[i]||0) - (y[i]||0) } return 0 }
+function showVer(){
+  ['#verLbl','#verLbl2','#wzVer'].forEach(id=>{
+    const el = $(id); if(!el) return;
+    el.classList.toggle('upd', !!UPD.remote);
+    el.textContent = UPD.remote ? `v${VERSION} · aggiorna` : 'v' + VERSION;
+    el.title = UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Verifica aggiornamenti';
+  });
+}
+async function checkUpdate(manual){
+  if(manual) toast('Verifico gli aggiornamenti…');
+  try{
+    let m;
+    if(NATIVE){ // l'app controlla l'ultima release su GitHub
+      const r = await fetch(`https://api.github.com/repos/${window.APP_REPO}/releases/latest`, {cache:'no-store'});
+      m = [0, ((await r.json()).tag_name || '').replace(/^v/, '')]; if(!m[1]) throw new Error();
+      UPD.html = null; UPD.native = false;
+      if(cmpVer(m[1], VERSION) > 0){
+        // scarico solo la pagina dell'app (circa 150 kB): se la parte nativa non cambia, niente APK
+        try{
+          const h = await (await fetch(`https://raw.githubusercontent.com/${window.APP_REPO}/v${m[1]}/index.html`, {cache:'no-store'})).text();
+          const hv = h.match(/var APPV = '([\d.]+)', APPN = (\d+)/) || [];
+          if(hv[1] === m[1] && +hv[2] <= window.BUNDLEN) UPD.html = h; else UPD.native = true;
+        }catch(e){ UPD.native = true }
+      }
+    }else{
+      const r = await fetch('index.html?check=' + Date.now(), {cache:'no-store'});
+      m = (await r.text()).match(/var APPV = '([\d.]+)'/);
+    }
+    if(!m) throw new Error();
+    UPD.remote = cmpVer(m[1], VERSION) > 0 ? m[1] : null;
+    if(!manual && UPD.remote) updNotice();
+    if(manual) toast(UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Hai già l\'ultima versione (' + VERSION + ')');
+  }catch(e){ if(manual) toast('Impossibile verificare: controlla la connessione') }
+  showVer(); if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
+}
+// avviso automatico: una volta per ogni nuova versione, tocchi Aggiorna o Dopo
+function updNotice(){
+  if(localStorage.getItem('smtg-updseen') === UPD.remote || $('#updBar')) return;
+  const b = document.createElement('div'); b.id = 'updBar';
+  b.innerHTML = `<span>Nuova versione ${esc(UPD.remote)} disponibile</span><button>Dopo</button><button class="go">Aggiorna</button>`;
+  document.body.appendChild(b); requestAnimationFrame(()=>b.classList.add('show')); sfx('found'); buzz(30);
+  const hide = () => { try{ localStorage.setItem('smtg-updseen', UPD.remote) }catch(e){} b.classList.remove('show'); setTimeout(()=>b.remove(), 400) };
+  b.querySelector('button').onclick = hide;
+  b.querySelector('.go').onclick = () => { hide(); applyUpdate() };
+}
+async function applyUpdate(){
+  if(NATIVE && UPD.html){
+    try{
+      localStorage.setItem('smtg-live', UPD.html); localStorage.setItem('smtg-livever', UPD.remote);
+      localStorage.setItem('smtg-liven', String(window.BUNDLEN)); localStorage.removeItem('smtg-liveok');
+      toast('Aggiorno…'); setTimeout(()=>location.reload(), 400); return;
+    }catch(e){ /* memoria piena: passo all'APK */ }
+  }
+  if(NATIVE){ toast('Questa versione cambia anche la parte nativa: scarico l\'APK da installare', 4500); location.href = APK_URL; return }
+  toast('Aggiorno…');
+  try{
+    const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+    if(reg) await reg.update();
+    const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k)));
+  }catch(e){}
+  location.reload();
+}
+['#verLbl','#verLbl2','#wzVer'].forEach(id => $(id).addEventListener('click', ()=> UPD.remote ? applyUpdate() : checkUpdate(true)));
+(function(){
+  // avvio riuscito: la versione scaricata in app è buona
+  setTimeout(()=>{ try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){} }, 4000);
+  const fail = localStorage.getItem('smtg-livefail');
+  if(fail){ localStorage.removeItem('smtg-livefail'); setTimeout(()=>toast('La v' + fail + ' non è partita: torno alla versione installata', 4000), 900) }
+  const last = localStorage.getItem('smtg-lastver');
+  if(last && last !== VERSION) setTimeout(()=>toast('Aggiornata alla versione ' + VERSION, 3000), 800);
+  try{ localStorage.setItem('smtg-lastver', VERSION) }catch(e){}
+})();
+showVer();
+setTimeout(()=>checkUpdate(false), 2500);
+setInterval(()=>{ if(document.visibilityState === 'visible') checkUpdate(false) }, 30*60*1000);
+// controllo anche quando riapri l'app dallo sfondo (al massimo ogni 10 minuti)
+let lastChk = Date.now();
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && Date.now() - lastChk > 10*60*1000){ lastChk = Date.now(); checkUpdate(false) } });
+
+renderBoard();
+if(inProgress()) openResume(); else openWizard();
+updatePrinterUI();
+if(!NATIVE && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
