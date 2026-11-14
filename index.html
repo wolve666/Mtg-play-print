@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.12.10', APPN = 1;
+var APPV = '0.13.0', APPN = 2;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -62,14 +62,14 @@ input,select{font:inherit}
 .r90 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(90deg)}
 .r270 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
 .r180 .frame{transform:translate(-50%,-50%) rotate(180deg)}
-.half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:16cqmin;font-weight:600;color:color-mix(in srgb,var(--pt) 45%,transparent);touch-action:none;transition:background .3s}
-.half.minus{left:0;justify-content:flex-start;padding-left:6%}
-.half.plus{right:0;justify-content:flex-end;padding-right:6%}
+.half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:min(32cqmin,19cqmax);font-weight:700;line-height:1;color:color-mix(in srgb,var(--pt) 55%,transparent);touch-action:none;transition:background .3s}
+.half.minus{left:0;justify-content:flex-start;padding-left:4%}
+.half.plus{right:0;justify-content:flex-end;padding-right:4%}
 .half.pressed{background:radial-gradient(ellipse at center,rgba(255,255,255,.34),rgba(255,255,255,.12) 55%,rgba(255,255,255,.04));color:var(--pt);transition:none}
 .life{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--num);font-weight:900;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
 .delta{position:absolute;transform:translate(-50%,-50%);font-family:var(--num);font-weight:800;opacity:0;transition:opacity .25s;pointer-events:none}
 .delta.show{opacity:.9}
-.pname{position:absolute;transform:translateY(-50%);padding:.35em .9em;border-radius:99px;background:rgba(0,0,0,.18);font-weight:600;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+.pname{position:absolute;transform:translateY(-50%);padding:.5em 1.1em;border-radius:99px;background:rgba(0,0,0,.18);font-weight:600;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
 .spia{position:absolute;transform:translate(-50%,-50%);padding:.15em .6em;border-radius:99px;background:rgba(0,0,0,.24);font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;scale:.6;transition:opacity .25s,scale .25s}
 .spia.on{opacity:1;scale:1}
 
@@ -87,6 +87,13 @@ input,select{font:inherit}
 /* ---------- Pannelli sovrapposti ---------- */
 .ov{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 .ov.open{transform:none}
+#ov-player.r180{transform:rotate(180deg) translateY(100%)}
+#ov-player.r180.open{transform:rotate(180deg)}
+#ov-player.r90,#ov-player.r270{inset:auto;left:50%;top:50%;width:100vh;height:100vw;padding:0}
+#ov-player.r90{transform:translate(-50%,-50%) rotate(90deg) translateY(100%)}
+#ov-player.r90.open{transform:translate(-50%,-50%) rotate(90deg)}
+#ov-player.r270{transform:translate(-50%,-50%) rotate(-90deg) translateY(100%)}
+#ov-player.r270.open{transform:translate(-50%,-50%) rotate(-90deg)}
 @media (prefers-reduced-motion:reduce){.ov{transition:none}}
 .ovHead{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
 .ovHead h2{margin:0;font-size:20px;font-weight:700;flex:1;display:flex;align-items:baseline;gap:8px}
@@ -246,7 +253,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 @media (prefers-reduced-motion:reduce){.halo,.spark{animation:none}.spark{display:none}}
 
 /* ---------- v0.4 ---------- */
-.cqPop{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;width:min(94%,340px);padding:10px 12px 12px;border-radius:16px;background:rgba(14,13,19,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:popIn .2s ease-out;font-size:14px;touch-action:none}
+.cqPop{position:fixed;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:12;width:340px;padding:10px 12px 12px;border-radius:16px;background:rgba(14,13,19,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:popIn .2s ease-out;font-size:14px;touch-action:none}
 @keyframes popIn{from{transform:translate(-50%,-50%) scale(.85);opacity:0}}
 .cqT{text-align:center;margin-bottom:4px;font-weight:600;line-height:1.9}
 .cqRow{display:flex;align-items:center;justify-content:center;gap:10px}
@@ -263,6 +270,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wzBg i.in{opacity:1}
 .wzBg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,12,20,.5),rgba(14,12,20,.9))}
 @keyframes kb{to{transform:scale(1.12) translate(-2%,-2%)}}
+.wz:not(.open) .wzBg i,.dlg:not(.open) .wzBg i{animation-play-state:paused}
 .wzScroll{position:relative;flex:1;overflow:hidden}
 .wzStep{height:100%;display:flex;flex-direction:column;justify-content:center;padding:24px 22px calc(28px + env(safe-area-inset-bottom));gap:22px}
 .wz h1,.dlg h1{font-family:var(--num);font-weight:900;font-size:clamp(46px,14vw,78px);line-height:.92;margin:0;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.5)}
@@ -276,6 +284,16 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wzOpts.nums{flex-direction:row;flex-wrap:wrap}
 .wzOpts.nums .wzOpt{flex:1 0 28%;text-align:center;font-family:var(--num);font-size:54px;font-weight:900;padding:16px 0}
 .wzBack{align-self:flex-start;color:rgba(255,255,255,.7);padding:8px 0;font-weight:600}
+#wzStep3{justify-content:flex-start;overflow-y:auto}
+#wzStep3 h1{font-size:clamp(40px,12vw,64px)}
+.wzNames{display:flex;flex-direction:column;gap:8px}
+.wzName{display:flex;align-items:center;gap:10px}
+.wzName i{flex:none;width:14px;height:40px;border-radius:7px}
+.wzName input{flex:1;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:17px}
+.wzName input::placeholder{color:rgba(255,255,255,.45)}
+.wzGo{display:flex;gap:10px}
+.wzGo .btn{margin:0}
+.wzGo .btn:not(.primary){flex:0 0 34%;background:rgba(255,255,255,.12);color:#fff}
 .dlgCard{position:relative;margin:auto;width:min(88vw,420px);padding:30px 22px 22px;border-radius:22px;background:rgba(18,16,24,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);text-align:center;display:flex;flex-direction:column;gap:10px}
 .dlg h1{font-size:clamp(40px,12vw,64px)}
 .dlg p{margin:0 0 10px;color:rgba(255,255,255,.75);line-height:1.45}
@@ -493,6 +511,12 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
       <h1>In quanti siete a giocare?</h1>
       <div class="wzOpts nums" id="wzCounts"></div>
     </div>
+    <div class="wzStep" id="wzStep3">
+      <button class="wzBack" id="wzBack2">‹ Cambia giocatori</button>
+      <h1>Chi gioca?</h1>
+      <div class="wzNames" id="wzNames"></div>
+      <div class="wzGo"><button class="btn" id="wzSkip">Salta</button><button class="btn primary" id="wzStart">Inizia</button></div>
+    </div>
   </div>
 </section>
 
@@ -526,7 +550,6 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 <script>
 // app Android (Capacitor): Bluetooth nativo veloce al posto di Web Bluetooth
 const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
-const BLE = NATIVE ? Capacitor.Plugins.BluetoothLe : null;
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
@@ -619,7 +642,7 @@ function isOut(p){
 // Layout del pannello, dalla bozza del banco di prova allineata su una griglia del 10%:
 // [orizzontale %, verticale %, grandezza in % del lato corto]
 const LAYOUT = {
-  life:[50,57,92], delta:[80,10,13], name:[90,90,6.5],
+  life:[50,57,92], delta:[80,10,13], name:[90,88,8],
   tax:[20,13,11], exp:[30,13,11], rad:[40,13,11], poison:[50,13,11], energy:[60,13,11], cmd:[70,13,11],
   monarch:[10,70,5.5], blessing:[10,80,5.5], initiative:[10,90,5.5],
   turn:[90,80,5.5],
@@ -629,7 +652,7 @@ const MI = c => `<i class="mi">${c}</i>`;
 const SPIA_ICON = {tax:MI('\ue904'), exp:MI('\ue981'), rad:MI('\uea50'), poison:MI('\ue618'), energy:MI('\ue907'), cmd:MI('\ue9c6'), monarch:MI('\ue9e8'), blessing:MI('\ue94a'), initiative:MI('\ue995'), turn:'⌛ Turno'};
 // grandezza: % del lato corto, con un tetto sul lato lungo per i pannelli quasi quadrati
 const fz = (z, min, k=.55) => { const f = `min(${z}cqmin,${(z*k).toFixed(2)}cqmax)`; return min ? `max(${min}px,${f})` : f };
-const MINPX = {life:0, delta:0, name:13};
+const MINPX = {life:0, delta:0, name:15};
 // posiziona un elemento; vicino ai bordi si appoggia al bordo invece di uscire
 function placeEl(el, k, mir, hub){
   let [x, y, z] = LAYOUT[k]; if(mir) x = 100 - x;
@@ -798,20 +821,30 @@ function changeLife(i, d){
 }
 
 // tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)
-let hold = null;
+// ogni dito ha il suo conteggio: più tocchi insieme non si confondono e ognuno si ferma quando si alza il suo dito
+const holds = new Map();
+function endHold(id){ const o = holds.get(id); if(!o) return; clearTimeout(o.t); holds.delete(id); if(![...holds.values()].some(x => x.h === o.h)) o.h.classList.remove('pressed') }
+function endAllHolds(){ [...holds.keys()].forEach(endHold) }
 $('#board').addEventListener('pointerdown', e=>{
   const h = e.target.closest('.half'); if(!h) return;
+  endHold(e.pointerId);
   const i = +h.closest('.cell').dataset.i, d = +h.dataset.d;
   snap(); changeLife(i, d); buzz();
   h.classList.add('pressed');
-  hold = {first:true, h};
+  const o = {first:true, h, n:0}; holds.set(e.pointerId, o);
+  // sicurezza: se il telefono perde il rilascio del dito, il conteggio si ferma comunque da solo
+  const alive = () => holds.get(e.pointerId) === o && o.n++ < 150;
   if(SET.holdMode === 'ten'){
-    hold.t = setTimeout(function rep(){ changeLife(i, d * (hold.first ? 9 : 10)); hold.first = false; buzz(20); hold.t = setTimeout(rep, 700) }, 480);
+    o.t = setTimeout(function rep(){ if(!alive()) return endHold(e.pointerId); changeLife(i, d * (o.first ? 9 : 10)); o.first = false; buzz(20); o.t = setTimeout(rep, 700) }, 480);
   } else {
-    hold.t = setTimeout(function rep(){ changeLife(i, d); hold.t = setTimeout(rep, 110) }, 480);
+    o.t = setTimeout(function rep(){ if(!alive()) return endHold(e.pointerId); changeLife(i, d); o.t = setTimeout(rep, 110) }, 480);
   }
 });
-['pointerup','pointercancel'].forEach(ev => window.addEventListener(ev, ()=>{ if(hold){ clearTimeout(hold.t); hold.h.classList.remove('pressed'); hold = null } }));
+['pointerup','pointercancel','lostpointercapture'].forEach(ev => window.addEventListener(ev, e=>endHold(e.pointerId), true));
+// il dito esce dalla metà premuta: il conteggio si ferma
+$('#board').addEventListener('pointerout', e=>{ const o = holds.get(e.pointerId); if(o && !o.h.contains(e.relatedTarget)) endHold(e.pointerId) });
+['blur','pagehide'].forEach(ev => window.addEventListener(ev, endAllHolds));
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) endAllHolds() });
 $('#board').addEventListener('contextmenu', e=>e.preventDefault());
 // nome: tocco = scheda giocatore; trascinato sul pannello di un avversario = danni da comandante
 let drag = null;
@@ -852,10 +885,18 @@ function pchip(p){ const c = COLORS[p.color]; return `<span class="pchip" style=
 let cqp = null;
 function openCmdQuick(a, v){
   closeCqPop();
-  const fr = $(`.cell[data-i="${v}"] .frame`); if(!fr) return;
+  const cell = $(`.cell[data-i="${v}"]`); if(!cell) return;
   const el = document.createElement('div'); el.className = 'cqPop';
-  fr.appendChild(el); cqp = {a, v, el};
+  // sta sul pannello di chi subisce, ma girata verso chi infligge il danno (di solito è lui a segnarlo)
+  const rot = ROT[S.count][a], side = rot === 'r90' || rot === 'r270', r = cell.getBoundingClientRect();
+  el.style.setProperty('--rot', {r0:'0deg', r90:'90deg', r180:'180deg', r270:'-90deg'}[rot]);
+  el.style.left = (r.left + r.width/2) + 'px'; el.style.top = (r.top + r.height/2) + 'px';
+  el.style.width = Math.min(340, (side ? r.height : r.width) * .94) + 'px';
+  document.body.appendChild(el); cqp = {a, v, el};
   renderCqPop(); armCqPop(); buzz(20);
+  // se la finestrella è più alta dello spazio, la rimpicciolisco quanto basta
+  const room = (side ? r.width : r.height) * .96, hh = el.offsetHeight;
+  if(hh > room) el.style.transform = `translate(-50%,-50%) rotate(var(--rot)) scale(${(room / hh).toFixed(3)})`;
   el.addEventListener('pointerdown', e=>e.stopPropagation());
   el.addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
@@ -892,7 +933,7 @@ function updateTurnUI(){
   if(el) el.textContent = turnLabel();
 }
 $('#board').addEventListener('click', e=>{ if(e.target.closest('.spia[data-s="turn"].on')) nextTurn() });
-setInterval(()=>{ if(S.turn.on) updateTurnUI() }, 1000);
+setInterval(()=>{ if(S.turn.on && !document.hidden) updateTurnUI() }, 1000);
 function nextTurn(){
   snap();
   const t = S.turn, n = S.count, dist = x => (x - t.first + n) % n;
@@ -946,7 +987,7 @@ function closeTop(){
   if(id === 'player') renderBoard();
   if(id === 'modal') tmCleanup();
   if(id === 'bt') btStop();
-  if(id === 'wizard' && WZ.step === 2){ wzStep(1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
+  if(id === 'wizard' && WZ.step >= 2){ wzStep(WZ.step === 3 && WZ.fmt !== 'standard' ? 2 : 1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
 let lastBack = 0;
@@ -986,17 +1027,11 @@ function renderMenu(){
     <div class="row"><span class="lbl">Luminosità stampa</span><div class="stepper"><button data-act="br" data-v="-1">−</button><output>${(SET.bright>0?'+':'') + SET.bright}</output><button data-act="br" data-v="1">+</button></div></div>
     <div class="row"><span class="lbl">Modello</span>
       <select class="txt" id="prModelSel" style="width:auto;max-width:58%;min-width:0;text-overflow:ellipsis"><option value="auto">Automatico (${esc(prAuto().name)})</option>${PRINTERS.map(p=>`<option value="${p.id}" ${SET.prModel===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
-    <div class="row"><span class="lbl">Stampa</span><div class="chips">${Object.entries(SPEEDS).map(([k,v])=>`<button class="chip ${SET.speed===k?'sel':''}" data-act="speed" data-v="${k}">${v.label}</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Dimensione pedina</span><div class="chips">${[100,85,75].map(n=>`<button class="chip ${(SET.scale||100)===n?'sel':''}" data-act="scale" data-v="${n}">${n}%</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Doppia altezza (metà dati)</span>${tog('dh', SET.dh)}</div>
     <div class="row"><span class="lbl">Stampa in un colpo (sperimentale)</span>${tog('page', SET.page)}</div>
-    ${NATIVE ? `<div class="row"><span class="lbl">Collegamento veloce</span>${tog('prio', !SET.noPrio)}</div>` : ''}
-    <div class="row"><span class="lbl">Pacchetto</span><div class="chips">${[0,60,100,180].map(n=>`<button class="chip ${(SET.pkt||0)===n?'sel':''}" data-act="pkt" data-v="${n}">${n||'Auto'}</button>`).join('')}</div></div>
-    <p class="note">«Fluida» manda i dati alla massima velocità perché la stampante non resti mai a secco (ogni pausa lascia una riga); se la stampa esce rovinata o con simboli strani, prova «Bilanciata» o «Prudente». «Pacchetto» è la dimensione dei blocchi Bluetooth: Auto usa quella del modello scelto. Dopo ogni stampa compare la velocità dei dati ricevuti.</p>
-    <p class="note">Serve una stampante termica con Bluetooth LE e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
-    <p class="note">${navigator.bluetooth && navigator.bluetooth.getDevices
-      ? 'Ricollegamento automatico: dopo il primo collegamento, basta accendere la stampante e l\'app la ritrova da sola, anche dopo averla riaperta.'
-      : 'Ricollegamento automatico attivo finché l\'app resta aperta. Per averlo anche dopo averla riaperta, in Chrome apri chrome://flags e attiva «Use the new permissions backend for Web Bluetooth».'}</p>
+    <p class="note">Serve una stampante termica con Bluetooth classico e comandi ESC/POS. Le stampantine «a gatto» (GB01, MX05…) e le Phomemo usano un protocollo diverso e non sono supportate.</p>
+    <p class="note">Ricollegamento automatico: dopo il primo collegamento basta accendere la stampante e l'app la ritrova da sola.</p>
   </div>
   <div class="sec"><h3>Archivio offline</h3>
     <div class="row"><span class="lbl" id="arcStat">${esc(arcStatus())}</span></div>
@@ -1088,12 +1123,9 @@ async function menuClick(e){
     case 'sound': SET.sound = !SET.sound; saveSet(); if(SET.sound) sfx('found'); break;
     case 'clips': SET.clips = !SET.clips; saveSet(); break;
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
-    case 'speed': SET.speed = v; saveSet(); break;
-    case 'pkt': SET.pkt = +v; printer.size = 0; saveSet(); break;
     case 'scale': SET.scale = +v; saveSet(); break;
     case 'dh': SET.dh = !SET.dh; saveSet(); break;
     case 'page': SET.page = !SET.page; saveSet(); break;
-    case 'prio': SET.noPrio = !SET.noPrio; if(!SET.noPrio) SET.natLvl = 0; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
     case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
@@ -1106,7 +1138,15 @@ $('#menuBody').addEventListener('change', e=>{ if(e.target.id === 'prModelSel'){
 
 /* ================= Scheda giocatore ================= */
 let curP = 0;
-function openPlayer(i){ curP = i; renderPlayer(); openOv('player') }
+function openPlayer(i){
+  curP = i; renderPlayer();
+  // la scheda si apre girata verso il giocatore che l'ha toccata
+  const el = $('#ov-player'), rot = ROT[S.count][i];
+  el.style.transition = 'none'; el.classList.remove('r90','r180','r270');
+  if(rot !== 'r0') el.classList.add(rot);
+  el.offsetWidth; el.style.transition = '';
+  openOv('player');
+}
 function stepper(act, k, v, step=1){
   return `<div class="stepper"><button data-act="${act}" data-k="${k}" data-v="${-step}">−</button><output>${v}</output><button data-act="${act}" data-k="${k}" data-v="${step}">+</button></div>`;
 }
@@ -1749,9 +1789,6 @@ const PRINTERS = [
   {id:'g80', name:'Generica 80 mm ESC/POS', w:576, chunk:180},
 ];
 // immagine in un unico blocco (ogni blocco separato fermava il motore = una riga); cambia solo il ritmo d'invio dei dati
-const SPEEDS = {flow:{pace:4, label:'Fluida'}, bal:{pace:6, label:'Bilanciata'}, safe:{pace:9, label:'Prudente'}};
-if(!SPEEDS[SET.speed]) SET.speed = 'bal';
-if(SET.pkt && ![60,100,180].includes(SET.pkt)) SET.pkt = 0;
 function prAuto(){ const n = printer.dev?.name || ''; return PRINTERS.find(p => p.re && p.re.test(n)) || PRINTERS[3] }
 function prProf(){ return (SET.prModel !== 'auto' && PRINTERS.find(p => p.id === SET.prModel)) || prAuto() }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1819,203 +1856,107 @@ function escposRaster(b){
   return new Uint8Array(out);
 }
 
-/* ================= Stampante Bluetooth LE ================= */
-const PR_SERVICES = [
-  '000018f0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb',
-  'e7810a71-73ae-499d-8c15-faa9aef0c3f2','49535343-fe7d-4ae5-8fa9-9fafd205e455','0000fee7-0000-1000-8000-00805f9b34fb',
-];
+/* ================= Stampante (Bluetooth classico) ================= */
+const toB64 = d => { let s = ''; for(let i = 0; i < d.length; i += 8192) s += String.fromCharCode.apply(null, d.subarray(i, i + 8192)); return btoa(s) };
 const printer = {
   dev:null, ch:null,
   async write(bytes, onProg){
-    let size = this.spp ? 4096 : (NATIVE && SET.pkt) || this.size || SET.pkt || prProf().chunk; const t0 = performance.now();
-    const pace = NATIVE ? 0 : (SPEEDS[SET.speed] || SPEEDS.flow).pace, wwr = this.ch.properties.writeWithoutResponse;
-    for(let i=0; i<bytes.length;){
-      const part = bytes.slice(i, i+size);
-      try{
-        this.wAt = Date.now();
-        if(wwr){ await this.ch.writeValueWithoutResponse(part); if(pace) await sleep(pace) }
-        else await this.ch.writeValue(part);
-      }catch(e){
-        // pacchetto troppo grande per questa stampante: riprovo più piccolo e me lo ricordo
-        if(size > 20 && this.ch && !NATIVE){ size = size > 180 ? 180 : size > 100 ? 100 : 20; this.size = size; await sleep(60); continue }
-        throw e;
-      }
-      i += part.length;
-      if(onProg) onProg(Math.min(1, i / bytes.length));
+    const size = 4096, t0 = performance.now();
+    for(let i = 0; i < bytes.length; i += size){
+      await this.ch.writeValue(bytes.subarray(i, i + size));
+      if(onProg) onProg(Math.min(1, (i + size) / bytes.length));
     }
-    if(bytes.length > 2000){ const ms = performance.now() - t0; this.last = `${(bytes.length / ms).toFixed(1)} KB/s · ${(bytes.length/1024).toFixed(1)} KB in ${(ms/1000).toFixed(1)} s · pacchetto ${size}` }
+    if(bytes.length > 2000){ const ms = performance.now() - t0; this.last = `${(bytes.length / ms).toFixed(1)} KB/s · ${(bytes.length/1024).toFixed(1)} KB in ${(ms/1000).toFixed(1)} s` }
   },
-  // ricollega da solo la stampante già usata in questa sessione
+  // ricollega da solo la stampante già usata
   async ensure(){
     if(this.ch) return true;
     if(this.dev){ try{ await setupDevice(this.dev); return true }catch(e){} }
     return false;
   }
 };
-async function setupDevice(dev){
-  if(NATIVE) return nativeSetup(dev.id, dev.name, dev.spp);
-  const server = await dev.gatt.connect();
-  let found = null;
-  for(const s of await server.getPrimaryServices()){
-    for(const c of await s.getCharacteristics()){
-      if(c.properties.writeWithoutResponse || c.properties.write){ found = c; break }
-    }
-    if(found) break;
-  }
-  if(!found) throw new Error('nessun canale di stampa trovato');
-  printer.dev = dev; printer.ch = found; printer.size = 0;
-  if(SET.prId !== dev.id){ SET.prId = dev.id; saveSet() }
-  watchAdv(dev);
-  if(!dev._smtg){ dev._smtg = true; dev.addEventListener('gattserverdisconnected', ()=>{ printer.ch = null; updatePrinterUI() }) }
+// un collegamento alla volta: due tentativi sovrapposti si disturbano
+let btLock = Promise.resolve();
+function setupDevice(dev){ const p = btLock.then(()=>sppSetup(dev.id, dev.name)); btLock = p.catch(()=>{}); return p }
+async function sppSetup(addr, name){
+  if(printer.ch && printer.dev && printer.dev.id === addr) return;
+  printer.ch = null;
+  const cr = await SPP.connect({address:addr});
+  printer.dev = {id:addr, name}; printer.info = 'Bluetooth classico · ' + ((cr && cr.how) || '');
+  printer.ch = {writeValue: d => SPP.write({data: toB64(d)})};
+  if(!sppSetup.l){ sppSetup.l = true; SPP.addListener('disconnected', ()=>{ printer.ch = null; updatePrinterUI() }) }
+  if(!SET.prNat || SET.prNat.id !== addr){ SET.prNat = {id:addr, name, spp:true}; saveSet() }
   updatePrinterUI();
 }
 // ricollegamento automatico: la stampante già usata viene ritrovata appena la accendi
 let reconnecting = false;
+// se la stampante non risponde allungo le pause tra un tentativo e l'altro (7 s, 14 s, 28 s... fino a 1 minuto)
+const rc = {fails:0, next:0};
 async function autoReconnect(){
-  if(printer.ch || !printer.dev || reconnecting || btScanning || document.visibilityState !== 'visible') return;
+  if(!NATIVE || printer.ch || !printer.dev || reconnecting || btScanning || document.visibilityState !== 'visible' || Date.now() < rc.next) return;
   reconnecting = true;
-  try{ await setupDevice(printer.dev); toast('Stampante collegata: ' + (printer.dev.name || '')); sfx('found'); buzz(30) }catch(e){}
+  try{ await setupDevice(printer.dev); rc.fails = 0; toast('Stampante collegata: ' + (printer.dev.name || '')); sfx('found'); buzz(30) }
+  catch(e){ rc.fails++; rc.next = Date.now() + Math.min(60000, 7000 * 2 ** rc.fails) }
   reconnecting = false;
 }
-function watchAdv(dev){
-  try{
-    if(dev.watchAdvertisements && !dev._watch){
-      dev._watch = true;
-      dev.addEventListener('advertisementreceived', autoReconnect);
-      dev.watchAdvertisements().catch(()=>{ dev._watch = false });
-    }
-  }catch(e){}
-}
-if(navigator.bluetooth && navigator.bluetooth.getDevices){
-  navigator.bluetooth.getDevices().then(ds=>{
-    if(!ds || !ds.length || printer.dev) return;
-    printer.dev = ds.find(d => d.id === SET.prId) || ds[0];
-    watchAdv(printer.dev); autoReconnect();
-  }).catch(()=>{});
-}
+// tornando dallo standby riprovo subito, poi di nuovo con le pause
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible'){ rc.fails = 0; rc.next = 0; autoReconnect() } });
 setInterval(autoReconnect, 7000);
-document.addEventListener('visibilitychange', autoReconnect);
-// --- Bluetooth nativo: priorità alta + pacchetti grandi (MTU fino a 512) = dati più veloci della testina ---
-const toHex = d => Array.from(d, b => (b < 16 ? '0' : '') + b.toString(16)).join('');
-let bleReady = null;
-const bleInit = () => bleReady || (bleReady = BLE.initialize({androidNeverForLocation:false}) /* senza il permesso posizione Android 12+ nasconde tutti i dispositivi trovati */.catch(e => { bleReady = null; throw e }));
-// un collegamento alla volta: due connect sovrapposti fanno chiudere il primo (collega/scollega)
-let bleLock = Promise.resolve(), prioAt = 0;
-// livelli di sicurezza: se la stampante cade mentre stampa, scendo di un gradino (pacchetti più piccoli, poi niente priorità)
-const NAT_LVLS = [{pkt:240, prio:true}, {pkt:180, prio:true}, {pkt:100, prio:true}, {pkt:100, prio:false}];
-const natLvl = () => NAT_LVLS[Math.min(3, SET.natLvl || 0)];
-function nativeSetup(id, name, spp){ const p = bleLock.then(()=> spp ? sppSetup(id, name) : nativeSetup0(id, name)); bleLock = p.catch(()=>{}); return p }
-const toB64 = d => { let s = ''; for(let i = 0; i < d.length; i += 8192) s += String.fromCharCode.apply(null, d.subarray(i, i + 8192)); return btoa(s) };
-async function sppSetup(addr, name){
-  if(printer.ch && printer.spp && printer.dev && printer.dev.id === addr) return;
-  // stesso indirizzo in LE e in classico: se era collegata in LE, la stacco prima, altrimenti si continuava a stampare in LE
-  printer.ch = null; printer.spp = true;
-  try{ await BLE.disconnect({deviceId:addr}) }catch(e){}
-  await sleep(300);
-  const cr = await SPP.connect({address:addr});
-  printer.dev = {id:addr, name, spp:true}; printer.spp = true; printer.size = 4096; printer.info = 'Bluetooth classico · ' + ((cr && cr.how) || '');
-  printer.ch = {properties:{write:true}, writeValue: d => SPP.write({data: toB64(d)})};
-  if(!sppSetup.l){ sppSetup.l = true; SPP.addListener('disconnected', ()=>{ if(printer.spp){ printer.ch = null; updatePrinterUI() } }) }
-  if(!SET.prNat || SET.prNat.id !== addr){ SET.prNat = {id:addr, name, spp:true}; saveSet() }
-  updatePrinterUI();
-}
-async function nativeSetup0(id, name){
-  if(printer.ch && !printer.spp && printer.dev && printer.dev.id === id) return;
-  if(printer.spp){ printer.ch = null; try{ await SPP.disconnect() }catch(e){} }
-  printer.spp = false;
-  await bleInit();
-  await BLE.connect({deviceId:id, timeout:10000});
-  // collegamento veloce: se la stampante cade subito dopo, lo disattivo da solo
-  if(!SET.noPrio && natLvl().prio){ await sleep(600); try{ await BLE.requestConnectionPriority({deviceId:id, connectionPriority:1}); prioAt = Date.now() }catch(e){} }
-  const {services} = await BLE.getServices({deviceId:id});
-  let svc = null, chr = null;
-  for(const s of services){ for(const c of s.characteristics){ if(c.properties.writeWithoutResponse || c.properties.write){ svc = s.uuid; chr = c; break } } if(chr) break }
-  if(!chr) throw new Error('nessun canale di stampa trovato');
-  let mtu = 23; try{ mtu = (await BLE.getMtu({deviceId:id})).value || 23 }catch(e){}
-  const w = (fn, d) => BLE[fn]({deviceId:id, service:svc, characteristic:chr.uuid, value:toHex(d)});
-  printer.dev = {id, name};
-  printer.ch = {properties:chr.properties, writeValueWithoutResponse: d => w('writeWithoutResponse', d), writeValue: d => w('write', d)};
-  printer.size = Math.max(20, Math.min(natLvl().pkt, mtu - 3));
-  printer.info = `MTU ${mtu} · pacchetto ${printer.size} · ${!SET.noPrio && natLvl().prio ? 'veloce' : 'normale'} · livello ${(SET.natLvl || 0) + 1}/4`;
-  if(!SET.prNat || SET.prNat.id !== id){ SET.prNat = {id, name}; saveSet() }
-  if(!nativeSetup.l) nativeSetup.l = {};
-  if(!nativeSetup.l[id]){ nativeSetup.l[id] = true; BLE.addListener('disconnected|' + id, ()=>{
-    if(printer.spp) return;
-    printer.ch = null; updatePrinterUI();
-    if(Date.now() - (printer.wAt || 0) < 3000 && (SET.natLvl || 0) < 3){
-      SET.natLvl = (SET.natLvl || 0) + 1; saveSet(); printer.wAt = 0;
-      toast(`La stampante è caduta durante la stampa: passo al livello ${SET.natLvl + 1}/4 e la ricollego. Poi riprova.`, 5000);
-      setTimeout(autoReconnect, 1500); return;
-    }
-    if(!SET.noPrio && Date.now() - prioAt < 5000){ SET.noPrio = true; saveSet(); toast('La stampante non regge il collegamento veloce: l\'ho disattivato, ricollegala', 4500) }
-  }) }
-  updatePrinterUI();
-}
 if(NATIVE && SET.prNat && !SET.prNat.spp){ delete SET.prNat; saveSet() } // vecchio collegamento LE: lo dimentico, si ricollega in classico
 if(NATIVE && SET.prNat) printer.dev = SET.prNat;
-// ricerca nostra: solo dispositivi con nome, stampanti note in cima, più vicine prima
-let btScanning = false, btSeen = {};
+// scelta della stampante: quelle già accoppiate, più la ricerca e l'accoppiamento di quelle nuove direttamente qui
+let btScanning = false, btPaired = [], btFound = {}, btPairing = null;
 const isKnownPr = n => PRINTERS.some(p => p.re && p.re.test(n || ''));
-let btPaired = [];
-async function btPick(){
-  btPaired = []; btSeen = {}; openOv('bt');
-  try{ btPaired = ((await SPP.list()).devices || []).filter(d => d.type !== 2) }catch(e){}
-  renderBt(); return; // solo Bluetooth classico: in LE la NetumScan si interrompe
-  await bleInit();
-  try{ await BLE.stopLEScan() }catch(e){}
-  if(!btPick.l){ btPick.l = true; BLE.addListener('onScanResult', r => {
-    const d = r.device || {}, name = d.name || r.localName; if(!name || !d.deviceId) return;
-    btSeen[d.deviceId] = {id:d.deviceId, name, rssi:r.rssi}; renderBt();
-  }) }
-  btScanning = true; renderBt();
-  try{ await BLE.requestLEScan({allowDuplicates:false, scanMode:2}) }
-  catch(e){ btScanning = false; renderBt(); toast('Ricerca non riuscita: ' + (e.message || e) + ' (posizione accesa?)', 4000); return }
-  clearTimeout(btPick.t); btPick.t = setTimeout(btStop, 15000);
+const isPr = d => isKnownPr(d.name) || d.major === 0x600; // 0x600 = classe "immagine" (stampanti)
+async function btList(){ try{ btPaired = ((await SPP.list()).devices || []).filter(d => d.type !== 2) }catch(e){ toast('Bluetooth: ' + (e.message || e), 3500) } renderBt() }
+async function btPick(){ btFound = {}; openOv('bt'); await btList(); if(!btPaired.length) btScan() }
+async function btScan(){
+  if(btScanning) return;
+  btFound = {}; btScanning = true; renderBt();
+  if(!btScan.l){ btScan.l = true;
+    SPP.addListener('found', d => { if(!d.name || d.bonded || d.type === 2) return; btFound[d.address] = d; renderBt() });
+    SPP.addListener('scanDone', () => { btScanning = false; renderBt() });
+  }
+  try{ await SPP.scan() }catch(e){ btScanning = false; renderBt(); toast('Ricerca non riuscita: ' + (e.message || e), 4000) }
 }
-function btStop(){ clearTimeout(btPick.t); if(btScanning){ btScanning = false; BLE.stopLEScan().catch(()=>{}) } renderBt() }
+function btStop(){ if(btScanning){ btScanning = false; SPP.stopScan().catch(()=>{}) } renderBt() }
 function renderBt(){
   const el = $('#btList'); if(!el) return;
-  const ds = Object.values(btSeen).sort((a, b) => (isKnownPr(b.name) - isKnownPr(a.name)) || (b.rssi - a.rssi));
   const pr = btPaired.slice().sort((a, b) => isKnownPr(b.name) - isKnownPr(a.name));
+  const nw = Object.values(btFound).sort((a, b) => (isPr(b) - isPr(a)) || (b.rssi - a.rssi));
+  const btn = (d, k) => `<button class="btn ${isPr(d) ? 'primary' : ''}" data-${k}="${esc(d.address)}" data-n="${esc(d.name || '')}">${esc(d.name || d.address)}</button>`;
   el.innerHTML = `<h3 style="margin:4px 0 8px">Stampanti accoppiate</h3>`
-    + (pr.length ? pr.map(d => `<button class="btn ${isKnownPr(d.name) ? 'primary' : ''}" data-spp="${esc(d.address)}" data-n="${esc(d.name || '')}">${esc(d.name || d.address)}</button>`).join('')
-      : '<p class="note">Nessuna stampante accoppiata. Accoppiala da Impostazioni → Bluetooth di Android (PIN di solito 0000 o 1234), poi torna qui.</p>')
-    + '<button class="btn" data-bt="again" style="margin-top:12px">Aggiorna elenco</button>';
+    + (pr.length ? pr.map(d => btn(d, 'spp')).join('') : '<p class="note">Nessuna stampante accoppiata: accendila e cercala qui sotto.</p>')
+    + `<h3 style="margin:20px 0 8px">Nuove stampanti</h3>`
+    + (btPairing ? `<p class="note">Accoppiamento con ${esc(btPairing)}… se compare la richiesta di Android tocca «Accoppia» (PIN di solito 0000 o 1234).</p>`
+      : (nw.length ? nw.map(d => btn(d, 'pair')).join('') : `<p class="note">${btScanning ? 'Cerco… tieni la stampante accesa e vicina.' : 'Tocca «Cerca stampanti» con la stampante accesa.'}</p>`)
+        + `<button class="btn" data-bt="${btScanning ? 'stop' : 'scan'}" style="margin-top:12px">${btScanning ? 'Ferma la ricerca' : 'Cerca stampanti'}</button>`);
+}
+async function btConnect(addr, name){
+  btStop(); history.back();
+  const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
+  try{ await setupDevice({id:addr, name}); toast('Collegata a ' + name); sfx('found'); buzz(30) }
+  catch(err){ toast((err.message || err) + ' — è accesa?', 4000) }
+  updatePrinterUI();
 }
 $('#btList').addEventListener('click', async e => {
   const sb = e.target.closest('[data-spp]');
-  if(sb){
-    btStop(); history.back();
-    const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
-    try{ await nativeSetup(sb.dataset.spp, sb.dataset.n || 'stampante', true); toast('Collegata a ' + (sb.dataset.n || 'stampante')); sfx('found'); buzz(30) }
-    catch(err){ toast((err.message || err) + ' — è accesa e accoppiata?', 4000) }
-    updatePrinterUI(); return;
-  }
-  const b = e.target.closest('[data-bt]'); if(!b) return;
-  if(b.dataset.bt === 'again'){ try{ btPaired = ((await SPP.list()).devices || []).filter(d => d.type !== 2) }catch(err){} renderBt(); return }
-  if(b.dataset.bt === 'again-le'){ btSeen = {}; btScanning = true; renderBt(); try{ await BLE.requestLEScan({allowDuplicates:false, scanMode:2}); btPick.t = setTimeout(btStop, 15000) }catch(err){ btStop() } return }
-  const d = btSeen[b.dataset.bt]; if(!d) return;
-  btStop(); history.back();
-  const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
-  try{ await nativeSetup(d.id, d.name); toast('Collegata a ' + d.name); sfx('found'); buzz(30) }
-  catch(err){ toast('Collegamento non riuscito: ' + (err.message || err), 3500) }
-  updatePrinterUI();
-});
-async function connectPrinter(){
-  if(NATIVE){
-    try{ await btPick() }catch(e){ toast('Bluetooth non disponibile: ' + (e.message || e), 3500) }
+  if(sb) return btConnect(sb.dataset.spp, sb.dataset.n || 'stampante');
+  const pb = e.target.closest('[data-pair]');
+  if(pb){
+    if(btPairing) return;
+    const addr = pb.dataset.pair, name = pb.dataset.n || 'stampante';
+    btStop(); btPairing = name; renderBt();
+    try{ await SPP.pair({address:addr}); btPairing = null; toast('Accoppiata: ' + name); return btConnect(addr, name) }
+    catch(err){ btPairing = null; renderBt(); toast('Accoppiamento non riuscito: ' + (err.message || err), 4000) }
     return;
   }
-  if(!navigator.bluetooth){ toast('Bluetooth non disponibile: usa Chrome su Android', 3000); return }
-  try{
-    const dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true, optionalServices:PR_SERVICES});
-    const st = $('#prStatus'); if(st) st.textContent = 'Collegamento…';
-    await setupDevice(dev);
-    toast('Collegata a ' + (dev.name || 'stampante'));
-  }catch(e){
-    if(e.name !== 'NotFoundError') toast('Collegamento non riuscito: ' + e.message, 3500);
-  }
-  updatePrinterUI();
+  const b = e.target.closest('[data-bt]'); if(!b) return;
+  if(b.dataset.bt === 'scan') btScan(); else btStop();
+});
+async function connectPrinter(){
+  if(!NATIVE){ toast('La stampa funziona solo nell\'app Android', 3000); return }
+  try{ await btPick() }catch(e){ toast('Bluetooth non disponibile: ' + (e.message || e), 3500) }
 }
 function updatePrinterUI(){
   const on = !!printer.ch, name = on ? (printer.dev.name || 'stampante') : '';
@@ -2062,9 +2003,30 @@ async function themeBg(box, q, url){
   }catch(e){}
 }
 function wzStep(n){
+  if(n < 3) document.activeElement?.blur?.();
   WZ.step = n;
-  $(n === 1 ? '#wzStep1' : '#wzStep2').scrollIntoView({behavior: n === 2 ? 'smooth' : 'instant', block:'start'});
+  $('#wzStep' + n).scrollIntoView({behavior: n > 1 ? 'smooth' : 'instant', block:'start'});
 }
+// nomi dei giocatori: propongo gli ultimi usati, Salta lascia Giocatore 1, 2, 3...
+const NKEY = 'smtg-names';
+function wzNames(n){
+  WZ.n = n;
+  const last = load(NKEY) || [];
+  $('#wzNames').innerHTML = Array.from({length:n}, (_,i)=>`<label class="wzName"><i style="background:${COLORS[i % COLORS.length].bg}"></i><input maxlength="20" placeholder="Giocatore ${i+1}" value="${esc(last[i] || '')}" enterkeyhint="${i < n-1 ? 'next' : 'done'}"></label>`).join('');
+  wzStep(3);
+}
+$('#wzNames').addEventListener('keydown', e=>{
+  if(e.key !== 'Enter') return;
+  const ins = [...$('#wzNames').querySelectorAll('input')], k = ins.indexOf(e.target);
+  if(k < ins.length - 1) ins[k+1].focus(); else e.target.blur();
+});
+$('#wzStart').addEventListener('click', ()=>{
+  const names = [...$('#wzNames').querySelectorAll('input')].map(x => x.value.trim());
+  if(names.some(Boolean)){ const last = load(NKEY) || []; names.forEach((v,i)=>{ last[i] = v }); try{ localStorage.setItem(NKEY, JSON.stringify(last)) }catch(e){} }
+  buzz(15); startGame(WZ.fmt, WZ.n, names);
+});
+$('#wzSkip').addEventListener('click', ()=>{ buzz(15); startGame(WZ.fmt, WZ.n, []) });
+$('#wzBack2').addEventListener('click', ()=>wzStep(WZ.fmt === 'standard' ? 1 : 2));
 function openWizard(swap){
   $('#wzFormats').innerHTML = [
     ['standard','Standard','20 punti vita, testa a testa'],
@@ -2081,15 +2043,17 @@ function openWizard(swap){
 $('#wzFormats').addEventListener('click', e=>{
   const b = e.target.closest('[data-f]'); if(!b) return;
   WZ.fmt = b.dataset.f; buzz(15);
-  if(WZ.fmt === 'standard') startGame('standard', 2); else wzStep(2);
+  if(WZ.fmt === 'standard') wzNames(2); else wzStep(2);
 });
-$('#wzCounts').addEventListener('click', e=>{ const b = e.target.closest('[data-n]'); if(b){ buzz(15); startGame(WZ.fmt, +b.dataset.n) } });
+$('#wzCounts').addEventListener('click', e=>{ const b = e.target.closest('[data-n]'); if(b){ buzz(15); wzNames(+b.dataset.n) } });
 $('#wzBack').addEventListener('click', ()=>wzStep(1));
 $('#wzClose').addEventListener('click', ()=>history.back());
-function startGame(fmt, n){
+function startGame(fmt, n, names){
+  document.activeElement?.blur?.();
   S.format = fmt; S.count = n; S.cmdDamage = FORMATS[fmt].cmd;
   S.startLife = fmt === 'brawl' && n > 2 ? 30 : FORMATS[fmt].life;
   if(SET.intro && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.body.classList.add('preintro');
+  S.players = freshPlayers(n, S.startLife, S.players).map((p,i)=>(p.name = names?.[i] || 'Giocatore ' + (i+1), p));
   resetGame();
   WZ.step = 0; closeAllOv();
   toast(FORMATS[fmt].label + ', ' + n + ' giocatori, ' + S.startLife + ' punti vita');
