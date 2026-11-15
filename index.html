@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.14.0', APPN = 3;
+var APPV = '0.14.1', APPN = 3;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -112,9 +112,10 @@ input,select{font:inherit}
 /* spie in basso in pausa: si riattivano togliendo questa riga */
 .spia[data-s=monarch],.spia[data-s=blessing],.spia[data-s=initiative],.spia[data-s=turn]{display:none!important}
 /* zona dello swipe per il menu rapido: linguetta appena accennata a filo bordo */
-.cell.rowon .life{scale:.84;translate:0 .03em}
 .life{transition:scale .3s,translate .3s}
-.swz{position:absolute;left:50%;transform:translateX(-50%);width:min(30%,96px);bottom:0;height:max(18px,7%);border-radius:12px 12px 0 0;background:color-mix(in srgb,var(--pt) 13%,transparent);box-shadow:0 0 12px 1px color-mix(in srgb,var(--pt) 10%,transparent);z-index:2;touch-action:none}
+.swz{position:absolute;left:50%;transform:translateX(-50%);width:30%;bottom:0;height:max(20px,8%);border-radius:18px 18px 0 0;background:color-mix(in srgb,var(--pt) 14%,transparent);box-shadow:0 0 14px 2px color-mix(in srgb,var(--pt) 12%,transparent);z-index:2;touch-action:none;display:grid;place-items:center;color:color-mix(in srgb,var(--pt) 70%,transparent);transition:width .25s}
+.swz svg{width:max(14px,min(5cqmin,20px));height:max(14px,min(5cqmin,20px));animation:swzBob 1.8s ease-in-out infinite}
+@keyframes swzBob{50%{transform:translateY(-3px)}}
 
 
 /* ---------- Hub centrale ---------- */
@@ -332,8 +333,8 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .cqTabs button{padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.12);font-weight:600;color:#fff;display:flex;gap:4px;align-items:center}
 .cqTabs button.sel{background:var(--gold);color:var(--gold-ink)}
 
-.wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;transition:opacity .35s;padding-top:env(safe-area-inset-top)}
-.wz.open,.dlg.open{opacity:1;pointer-events:auto}
+.wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .35s,visibility 0s .35s;padding-top:env(safe-area-inset-top)}
+.wz.open,.dlg.open{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .35s}
 .wzBg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 30% 20%,#3a2c52,#14121a 70%)}
 .wzBg i{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1s;animation:kb 26s ease-in-out infinite alternate}
 .wzBg i.in{opacity:1}
@@ -351,7 +352,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wzOpt{position:relative}
 .wzOpt .wzInfo{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.7);display:grid;place-items:center;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:18px;color:#fff}
 .wzExtra{display:flex;gap:10px}
-.wzExtra .wzOpt{flex:1;text-align:center;font-weight:700;font-size:17px;padding:14px 8px}
+.wzExtra .wzOpt{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(20,18,28,.6);flex:1;text-align:center;font-weight:700;font-size:17px;padding:14px 8px}
 .rulesBody{text-align:left;max-height:58vh;overflow-y:auto;margin:6px 0 14px;line-height:1.45;color:rgba(255,255,255,.85);font-size:15px}
 .rulesBody h3{margin:14px 0 4px;font-size:15px;color:var(--gold)}
 .rulesBody ul{margin:0;padding-left:20px}
@@ -783,8 +784,6 @@ function packRow(cell){
   const all = ROW.flatMap(k => [...cell.querySelectorAll(`.spia[data-s="${k}"]`)]);
   let els = all.filter(e => e.classList.contains('on'));
   if(mir) els = els.reverse();
-  // con la riga accesa il numero della vita si fa un po' più piccolo e scende, così non si toccano
-  cell.classList.toggle('rowon', els.length > 0);
   if(!els.length) return;
   const gap = 4, lo = W * (mir ? .29 : .06), hi = W * (mir ? .94 : .71);
   all.forEach(e => e.style.fontSize = fz(LAYOUT[e.dataset.s][2], 12, .9));
@@ -869,7 +868,7 @@ function renderBoard(){
         <div class="half plus" data-d="1">+</div>
         ${SPIE.filter(k => k !== 'cmd').map(k=>`<span class="spia" data-s="${k}" data-k="${k}"></span>`).join('')}
         ${S.players.map((q,j)=> j === i ? '' : `<span class="spia cmdb" data-s="cmd" data-k="cmd" data-o="${j}" style="--kc:${COLORS[q.color].bg}"></span>`).join('')}
-        <div class="swz"></div>
+        <div class="swz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></div>
         <div class="delta" data-k="delta"></div>
         <div class="life" data-k="life"></div>
         <button class="pname" data-k="name">${esc(p.name)}</button>
@@ -889,6 +888,8 @@ function updateCell(i){
   // tre cifre (o un negativo a due) rimpiccioliscono il numero per restare nel pannello
   const big = String(p.life).length >= 3;
   lf.style.fontSize = big ? `calc(${fz(LAYOUT.life[2], 0, .6)} * .72)` : fz(LAYOUT.life[2], 0, .6);
+  // la linguetta è larga quanto il numero della vita
+  const sw = cell.querySelector('.swz'); if(sw && lf.offsetWidth) sw.style.width = lf.offsetWidth + 'px';
   cell.classList.toggle('out', isOut(p));
   cell.classList.toggle('active', S.turn.on && S.turn.active === i);
   // spie: si accendono solo quando servono
@@ -922,8 +923,7 @@ function changeLife(i, d){
   el.classList.add('show');
   clearTimeout(st.t);
   st.t = setTimeout(()=>{ el.classList.remove('show'); st.v = 0 }, 1600);
-  const sc = cell.classList.contains('rowon') ? .84 : 1;
-  cell.querySelector('.life').animate([{scale:sc},{scale:sc * (d > 0 ? 1.07 : .94)},{scale:sc}], {duration:200});
+  cell.querySelector('.life').animate([{scale:1},{scale:d > 0 ? 1.07 : .94},{scale:1}], {duration:200});
 }
 
 // tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)

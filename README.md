@@ -51,6 +51,12 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.14.1
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Linguetta dello swipe come nell'anteprima: angoli superiori più tondi, freccina che si muove, larga quanto il numero della vita.
+- Il numero della vita non si rimpicciolisce più quando compaiono gli indicatori del comandante.
+- Pagina iniziale più leggera: le finestre chiuse non vengono più disegnate e i tasti «Stampa pedine» e «Dadi e moneta» non usano la sfocatura.
+
 ### v0.14.0
 Revisione dell'interfaccia. Cambia anche la parte nativa (APPN 3): l'aggiornamento scarica l'APK.
 - Tavolo: un indicatore del danno da comandante per ogni avversario, con luce interna che respira nel suo colore. Quando la riga in alto è accesa, il numero della vita si riduce all'84% per non toccare le icone.
