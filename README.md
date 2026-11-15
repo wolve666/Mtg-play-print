@@ -51,6 +51,12 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.14.3
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Dadi 3D veri, disegnati da un piccolo motore interno (nessuna libreria, funziona senza rete): d4, d6 con i pallini, d8, d10, d12 e d20, visti dall'alto. Rotolano, rimbalzano con l'ombra e si fermano con il risultato sulla faccia in alto. Fino a 6 dadi con la somma, cinque colori (la scelta viene ricordata).
+- Moneta 3D con le facce disegnate da Federico (drago su Testa, runa su Croce): bordo zigrinato, riflessi sul metallo e oscillazione finale prima di posarsi. Si lancia sempre una moneta sola.
+- «Chi inizia?» mostra i nomi che scorrono sopra il tavolo.
+
 ### v0.14.2
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Risolto il rallentamento della pagina iniziale. Gli indicatori del comandante animavano la luce anche quando erano nascosti: il telefono ricalcolava la grafica 60 volte al secondo, anche sotto le finestre aperte. Ora la luce anima solo l'opacità (lavoro della scheda grafica) e solo sugli indicatori visibili, e con una finestra aperta le animazioni del tavolo si fermano.
