@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.13.0', APPN = 2;
+var APPV = '0.14.0', APPN = 3;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -62,6 +62,40 @@ input,select{font:inherit}
 .r90 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(90deg)}
 .r270 .frame{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
 .r180 .frame{transform:translate(-50%,-50%) rotate(180deg)}
+/* pannello personale: la scheda della vita sale di 4/5 e scopre il pannello sotto */
+.frame{z-index:1;transition:transform .42s cubic-bezier(.2,.9,.25,1.06),background-color 0s .42s}
+.cell.pp .frame{background-color:var(--pc);transition:transform .42s cubic-bezier(.2,.9,.25,1.06),background-color 0s}
+.cell.pp .frame{transform:translate(-50%,-50%) translateY(-80%)}
+.cell.pp.r90 .frame{transform:translate(-50%,-50%) rotate(90deg) translateY(-80%)}
+.cell.pp.r270 .frame{transform:translate(-50%,-50%) rotate(-90deg) translateY(-80%)}
+.cell.pp.r180 .frame{transform:translate(-50%,-50%) rotate(180deg) translateY(-80%)}
+.cell.pp .frame>:not(.strip){opacity:0;pointer-events:none;transition:opacity .2s}
+.strip{position:absolute;left:0;right:0;bottom:0;height:20%;display:flex;align-items:center;justify-content:center;gap:.6em;font-weight:600;font-size:max(12px,min(7cqmin,22px));opacity:0;pointer-events:none;transition:opacity .25s}
+.strip b{font-family:var(--num);font-weight:900;font-size:1.5em}
+.strip svg{width:1.1em;height:1.1em}
+.cell.pp .strip{opacity:1;pointer-events:auto}
+.under{position:absolute;left:50%;top:50%;width:100cqw;height:100cqh;transform:translate(-50%,-50%);background:#1b1d22;color:var(--text);visibility:hidden;transition:visibility 0s .42s}
+.r90 .under{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(90deg)}
+.r270 .under{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
+.r180 .under{transform:translate(-50%,-50%) rotate(180deg)}
+.cell.pp .under{visibility:visible;transition:none}
+.ppIn{position:absolute;left:0;right:0;bottom:0;height:80%;padding:.5em .7em;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:.45em;font-size:clamp(10px,6.5cqmin,15px);overflow:hidden}
+.ppRow{display:flex;gap:.4em;flex-wrap:wrap;justify-content:center;align-items:center}
+.ppC{display:flex;align-items:center;gap:.25em;background:var(--surface);border-radius:.6em;padding:.2em .3em}
+.ppC .mi{font-size:1.3em;margin:0 .1em}
+.ppC b{font-family:var(--num);font-weight:900;font-size:1.5em;min-width:1.2em;text-align:center}
+.ppC button{width:2em;height:2em;border-radius:.45em;background:var(--surface2);font-size:1.1em;font-weight:700}
+.ppF{padding:.35em .7em;border-radius:99px;background:var(--surface);opacity:.6;display:flex;gap:.3em;align-items:center;font-weight:600}
+.ppF.on{opacity:1;background:var(--surface2);box-shadow:inset 0 0 0 2px var(--gold)}
+.ppName{width:8.5em;padding:.4em .6em;border-radius:.6em;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:1em}
+.ppSw{width:1.7em;height:1.7em;border-radius:50%;border:2px solid transparent}
+.ppSw.sel{border-color:#fff}
+.ppCmd{height:2em;padding:0 .8em;border-radius:.6em;background:var(--surface2) center/cover;display:flex;align-items:center;font-weight:600;color:#fff;text-shadow:0 1px 3px #000}
+.ppCmd.off{filter:grayscale(1);opacity:.45}
+.ppFull{height:2em;padding:0 .8em;border-radius:.6em;background:var(--gold);color:var(--gold-ink);font-weight:700}
+.ppArts{display:flex;gap:.4em;overflow-x:auto;max-width:100%}
+.ppArts button{flex:none;width:4.6em;height:3.4em;border-radius:.4em;padding:0;background:var(--surface) center/cover}
+.ppNote{color:var(--muted);font-size:.9em}
 .half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:min(32cqmin,19cqmax);font-weight:700;line-height:1;color:color-mix(in srgb,var(--pt) 55%,transparent);touch-action:none;transition:background .3s}
 .half.minus{left:0;justify-content:flex-start;padding-left:4%}
 .half.plus{right:0;justify-content:flex-end;padding-right:4%}
@@ -72,6 +106,15 @@ input,select{font:inherit}
 .pname{position:absolute;transform:translateY(-50%);padding:.5em 1.1em;border-radius:99px;background:rgba(0,0,0,.18);font-weight:600;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
 .spia{position:absolute;transform:translate(-50%,-50%);padding:.15em .6em;border-radius:99px;background:rgba(0,0,0,.24);font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;scale:.6;transition:opacity .25s,scale .25s}
 .spia.on{opacity:1;scale:1}
+/* danni da comandante: un segnalino per avversario, luce interna nel colore di chi ha fatto il danno */
+.spia.cmdb{box-shadow:inset 0 0 .45em .08em var(--kc);animation:cmdGlow 2.6s ease-in-out infinite}
+@keyframes cmdGlow{50%{box-shadow:inset 0 0 .8em .28em var(--kc)}}
+/* spie in basso in pausa: si riattivano togliendo questa riga */
+.spia[data-s=monarch],.spia[data-s=blessing],.spia[data-s=initiative],.spia[data-s=turn]{display:none!important}
+/* zona dello swipe per il menu rapido: linguetta appena accennata a filo bordo */
+.cell.rowon .life{scale:.84;translate:0 .03em}
+.life{transition:scale .3s,translate .3s}
+.swz{position:absolute;left:50%;transform:translateX(-50%);width:min(30%,96px);bottom:0;height:max(18px,7%);border-radius:12px 12px 0 0;background:color-mix(in srgb,var(--pt) 13%,transparent);box-shadow:0 0 12px 1px color-mix(in srgb,var(--pt) 10%,transparent);z-index:2;touch-action:none}
 
 
 /* ---------- Hub centrale ---------- */
@@ -94,6 +137,8 @@ input,select{font:inherit}
 #ov-player.r90.open{transform:translate(-50%,-50%) rotate(90deg)}
 #ov-player.r270{transform:translate(-50%,-50%) rotate(-90deg) translateY(100%)}
 #ov-player.r270.open{transform:translate(-50%,-50%) rotate(-90deg)}
+#ov-player.r90 .ovHead,#ov-player.r90 .ovBody{padding-left:calc(14px + env(safe-area-inset-top));padding-right:calc(14px + env(safe-area-inset-bottom))}
+#ov-player.r270 .ovHead,#ov-player.r270 .ovBody{padding-left:calc(14px + env(safe-area-inset-bottom));padding-right:calc(14px + env(safe-area-inset-top))}
 @media (prefers-reduced-motion:reduce){.ov{transition:none}}
 .ovHead{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
 .ovHead h2{margin:0;font-size:20px;font-weight:700;flex:1;display:flex;align-items:baseline;gap:8px}
@@ -177,6 +222,26 @@ select.txt{appearance:auto}
 .diceRes{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 18px;min-height:120px;margin:4px 0 6px}
 .die{font-family:var(--num);font-size:64px;font-weight:900;min-width:70px;text-align:center}
 .diceSum{text-align:center;color:var(--muted);min-height:22px;margin-bottom:12px}
+.dzChips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:4px}
+.dzChips button{min-width:52px;padding:10px 12px;border-radius:12px;background:var(--surface);font-weight:700;font-size:16px}
+.dzChips .sel{background:var(--gold);color:var(--gold-ink)}
+.dzStage{min-height:250px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-content:center;padding:18px 0 6px;perspective:700px;cursor:pointer}
+.dz1{position:relative;display:grid;place-items:center}
+.dz1 svg{position:absolute;inset:0;width:100%;height:100%}
+.dz1 b{position:relative;font-family:var(--num);font-weight:900;color:#1b1a20;line-height:1}
+.dz1.coin b{color:#412402;font-family:var(--ui);font-weight:700}
+.dz1.roll{animation:dzRoll .9s cubic-bezier(.3,.6,.4,1) backwards}
+.dz1.flip{animation:dzFlip 1.2s cubic-bezier(.25,.7,.35,1) backwards}
+@keyframes dzRoll{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-70px) rotate(240deg) scale(.85)}55%{transform:translateY(10px) rotate(520deg) scale(1.05)}75%{transform:translateY(-14px) rotate(650deg)}100%{transform:none}}
+@keyframes dzFlip{0%{transform:none}45%{transform:translateY(-110px) rotateX(1080deg) scale(.9)}100%{transform:rotateX(1800deg)}}
+.dz1 b.hit{animation:dzHit 1.4s ease-out forwards}
+@keyframes dzHit{0%{scale:.4}30%{scale:1.25;color:#fff;text-shadow:0 0 22px #FAC775,0 0 44px #EF9F27}100%{scale:1;text-shadow:0 0 10px #FAC775}}
+.dzName{padding:14px 26px;border-radius:99px;font-weight:700;font-size:28px}
+.dzName.hit{animation:dzName 1.4s ease-out forwards}
+@keyframes dzName{0%{scale:.6}30%{scale:1.15;box-shadow:0 0 30px 8px rgba(250,199,117,.8)}100%{scale:1;box-shadow:0 0 14px 3px rgba(250,199,117,.6)}}
+.dzTap{text-align:center;color:var(--muted);font-size:14px;min-height:20px}
+.dzSum{text-align:center;font-family:var(--num);font-weight:900;font-size:40px;color:var(--gold);min-height:48px;line-height:1.2}
+.dzHist{text-align:center;color:var(--muted);font-size:14px;min-height:20px;margin-bottom:14px}
 .diceBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
 .diceBtns button{padding:16px 0;border-radius:12px;background:var(--surface);font-weight:700;font-size:17px}
 textarea.txt{min-height:120px;resize:vertical;user-select:text;-webkit-user-select:text}
@@ -222,7 +287,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .pchip{display:inline-block;padding:.2em .7em;border-radius:99px;font-weight:700}
 .cqWho{text-align:center;font-size:18px;margin:4px 0 6px;line-height:2}
 
-.tkm{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .25s}
+.tkm{position:fixed;inset:0;z-index:49;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .25s}
 .tkm.open{pointer-events:auto;opacity:1}
 .tkmBack{position:absolute;inset:0;background:rgba(10,9,14,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .tkmStage{position:relative;height:78vh;width:92vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
@@ -253,7 +318,8 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 @media (prefers-reduced-motion:reduce){.halo,.spark{animation:none}.spark{display:none}}
 
 /* ---------- v0.4 ---------- */
-.cqPop{position:fixed;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:12;width:340px;padding:10px 12px 12px;border-radius:16px;background:rgba(14,13,19,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:popIn .2s ease-out;font-size:14px;touch-action:none}
+.cqPop{position:fixed;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:12;width:340px;padding:10px 12px 12px;border-radius:16px;background:rgba(14,13,19,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:cqIn .18s ease-out;font-size:14px;touch-action:none}
+@keyframes cqIn{from{opacity:0}}
 @keyframes popIn{from{transform:translate(-50%,-50%) scale(.85);opacity:0}}
 .cqT{text-align:center;margin-bottom:4px;font-weight:600;line-height:1.9}
 .cqRow{display:flex;align-items:center;justify-content:center;gap:10px}
@@ -262,6 +328,9 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .cqL{color:#bbb;font-size:13px}
 .cqQuick{display:flex;gap:6px;justify-content:center;margin-top:8px}
 .cqQuick .ok{background:var(--gold);color:var(--gold-ink);padding:0 14px}
+.cqTabs{display:flex;gap:6px;justify-content:center;margin-bottom:6px}
+.cqTabs button{padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.12);font-weight:600;color:#fff;display:flex;gap:4px;align-items:center}
+.cqTabs button.sel{background:var(--gold);color:var(--gold-ink)}
 
 .wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;transition:opacity .35s;padding-top:env(safe-area-inset-top)}
 .wz.open,.dlg.open{opacity:1;pointer-events:auto}
@@ -279,6 +348,14 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wzOpts{display:flex;flex-direction:column;gap:10px}
 .wzOpt{padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);text-align:left;border:1px solid rgba(255,255,255,.15);transition:background .15s,transform .15s}
 .wzOpt b{display:block;font-size:22px}
+.wzOpt{position:relative}
+.wzOpt .wzInfo{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.7);display:grid;place-items:center;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:18px;color:#fff}
+.wzExtra{display:flex;gap:10px}
+.wzExtra .wzOpt{flex:1;text-align:center;font-weight:700;font-size:17px;padding:14px 8px}
+.rulesBody{text-align:left;max-height:58vh;overflow-y:auto;margin:6px 0 14px;line-height:1.45;color:rgba(255,255,255,.85);font-size:15px}
+.rulesBody h3{margin:14px 0 4px;font-size:15px;color:var(--gold)}
+.rulesBody ul{margin:0;padding-left:20px}
+.rulesBody li{margin:3px 0}
 .wzOpt span{color:rgba(255,255,255,.65);font-size:15px}
 .wzOpt:active{background:rgba(217,180,90,.4);transform:scale(.98)}
 .wzOpts.nums{flex-direction:row;flex-wrap:wrap}
@@ -453,13 +530,15 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
     <h2>Dadi e moneta</h2>
   </div>
   <div class="ovBody">
-    <div class="diceRes" id="diceRes"></div>
-    <div class="diceSum" id="diceSum"></div>
-    <div class="row"><span class="lbl">Quanti</span><div class="stepper"><button id="dnMinus">−</button><output id="dnOut">1</output><button id="dnPlus">+</button></div></div>
-    <div class="diceBtns" id="diceBtns">
-      <button data-f="4">d4</button><button data-f="6">d6</button><button data-f="8">d8</button><button data-f="10">d10</button>
-      <button data-f="12">d12</button><button data-f="20">d20</button><button data-f="100">d100</button><button data-f="coin">Moneta</button>
+    <div class="dzChips" id="dzChips">
+      <button data-f="4">d4</button><button data-f="6">d6</button><button data-f="8">d8</button><button data-f="10">d10</button><button data-f="12">d12</button><button data-f="20">d20</button><button data-f="coin">Moneta</button>
     </div>
+    <div class="row" style="justify-content:center;border:0"><span class="lbl" style="flex:none">Quanti</span><div class="stepper"><button id="dnMinus">−</button><output id="dnOut">1</output><button id="dnPlus">+</button></div></div>
+    <div class="dzStage" id="dzStage"></div>
+    <div class="dzTap" id="dzTap"></div>
+    <div class="dzSum" id="dzSum"></div>
+    <div class="dzHist" id="dzHist"></div>
+    <button class="btn" id="dzWho">Chi inizia?</button>
   </div>
 </section>
 
@@ -505,6 +584,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
       <div class="wzBrand">Magic Play&amp;Print <button class="verBtn" id="wzVer"></button></div>
       <h1>A cosa vuoi giocare?</h1>
       <div class="wzOpts" id="wzFormats"></div>
+      <div class="wzExtra"><button class="wzOpt" id="wzTok">Stampa pedine</button><button class="wzOpt" id="wzDice">Dadi e moneta</button></div>
     </div>
     <div class="wzStep" id="wzStep2">
       <button class="wzBack" id="wzBack">‹ Cambia formato</button>
@@ -521,6 +601,14 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 </section>
 
 <!-- Riprendi la partita -->
+<section id="ov-rules" class="dlg">
+  <div class="dlgCard">
+    <h1 id="ruTitle"></h1>
+    <div class="rulesBody" id="ruBody"></div>
+    <button class="btn primary" id="ruOk">Ho capito</button>
+  </div>
+</section>
+
 <section id="ov-resume" class="dlg">
   <div class="wzBg" id="rsBg"><i></i></div>
   <div class="dlgCard">
@@ -692,9 +780,11 @@ const ROW = ['tax','exp','rad','poison','energy','cmd'];
 function packRow(cell){
   const frame = cell.querySelector('.frame'), W = frame.offsetWidth, H = frame.offsetHeight;
   const mir = cell.classList.contains('mir');
-  const all = ROW.map(k => cell.querySelector(`.spia[data-s="${k}"]`));
+  const all = ROW.flatMap(k => [...cell.querySelectorAll(`.spia[data-s="${k}"]`)]);
   let els = all.filter(e => e.classList.contains('on'));
   if(mir) els = els.reverse();
+  // con la riga accesa il numero della vita si fa un po' più piccolo e scende, così non si toccano
+  cell.classList.toggle('rowon', els.length > 0);
   if(!els.length) return;
   const gap = 4, lo = W * (mir ? .29 : .06), hi = W * (mir ? .94 : .71);
   all.forEach(e => e.style.fontSize = fz(LAYOUT[e.dataset.s][2], 12, .9));
@@ -722,6 +812,16 @@ function placeAll(){
     cell.querySelectorAll('[data-k]').forEach(el => placeEl(el, el.dataset.k, mir, hub));
     packRow(cell);
   });
+  gestureExcl();
+}
+// nell'app: la linguetta dello swipe è esclusa dai gesti di Android (indietro dal bordo)
+function gestureExcl(){
+  if(!NATIVE || !Capacitor.Plugins.Gestures) return;
+  clearTimeout(gestureExcl.t);
+  gestureExcl.t = setTimeout(()=>{
+    const rects = [...document.querySelectorAll('#board .swz')].map(el => { const r = el.getBoundingClientRect(); return {x:r.left, y:r.top, w:r.width, h:r.height} });
+    Capacitor.Plugins.Gestures.exclude({rects}).catch(()=>{});
+  }, 120);
 }
 // posizioni possibili del simbolo: in 2 a sinistra, al centro o a destra; da 3 in su gli incroci tra i pannelli
 function hubSlots(){
@@ -763,24 +863,29 @@ function renderBoard(){
   $('#hub').classList.toggle('col', S.count > 2);
   b.innerHTML = S.players.map((p,i)=>{
     const c = COLORS[p.color];
-    return `<div class="cell ${ROT[S.count][i]}${p.art ? ' withart' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}">
+    return `<div class="cell ${ROT[S.count][i]}${p.art ? ' withart' : ''}${PP.has(i) ? ' pp' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}">
       <div class="frame${p.art ? ' hasart' : ''}"${p.art ? ` style="background-image:url('${esc(p.art)}')"` : ''}>
         <div class="half minus" data-d="-1">−</div>
         <div class="half plus" data-d="1">+</div>
-        ${SPIE.map(k=>`<span class="spia" data-s="${k}" data-k="${k}"></span>`).join('')}
+        ${SPIE.filter(k => k !== 'cmd').map(k=>`<span class="spia" data-s="${k}" data-k="${k}"></span>`).join('')}
+        ${S.players.map((q,j)=> j === i ? '' : `<span class="spia cmdb" data-s="cmd" data-k="cmd" data-o="${j}" style="--kc:${COLORS[q.color].bg}"></span>`).join('')}
+        <div class="swz"></div>
         <div class="delta" data-k="delta"></div>
         <div class="life" data-k="life"></div>
         <button class="pname" data-k="name">${esc(p.name)}</button>
-      </div></div>`;
+        <div class="strip"><b>${p.life}</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><span>${esc(p.name)}</span></div>
+      </div><div class="under"><div class="ppIn"></div></div></div>`;
   }).join('');
   placeHub(); placeAll();
   S.players.forEach((_,i)=>updateCell(i));
+  [...PP].forEach(i => i < S.count ? renderPP(i) : PP.delete(i));
   updateTurnUI();
 }
 function updateCell(i){
   const p = S.players[i], cell = $(`.cell[data-i="${i}"]`);
   if(!cell) return;
   const lf = cell.querySelector('.life'); lf.textContent = p.life;
+  const sb = cell.querySelector('.strip b'); if(sb) sb.textContent = p.life;
   // tre cifre (o un negativo a due) rimpiccioliscono il numero per restare nel pannello
   const big = String(p.life).length >= 3;
   lf.style.fontSize = big ? `calc(${fz(LAYOUT.life[2], 0, .6)} * .72)` : fz(LAYOUT.life[2], 0, .6);
@@ -793,7 +898,7 @@ function updateCell(i){
     monarch:p.flags.monarch, blessing:p.flags.blessing, initiative:p.flags.initiative, turn:S.turn.on && S.turn.active === i,
   };
   cell.querySelectorAll('.spia').forEach(el=>{
-    const k = el.dataset.s, v = val[k];
+    const k = el.dataset.s, o = el.dataset.o, v = o == null ? val[k] : (S.cmdDamage ? Math.max(p.cmd[o] || 0, p.cmd[o + 'b'] || 0) : 0);
     el.classList.toggle('on', !!v);
     if(v){ if(k === 'turn') el.textContent = turnLabel(); else el.innerHTML = typeof v === 'number' ? `${SPIA_ICON[k]}${v}` : SPIA_ICON[k] }
   });
@@ -817,7 +922,8 @@ function changeLife(i, d){
   el.classList.add('show');
   clearTimeout(st.t);
   st.t = setTimeout(()=>{ el.classList.remove('show'); st.v = 0 }, 1600);
-  cell.querySelector('.life').animate([{scale:1},{scale:d > 0 ? 1.07 : .94},{scale:1}], {duration:200});
+  const sc = cell.classList.contains('rowon') ? .84 : 1;
+  cell.querySelector('.life').animate([{scale:sc},{scale:sc * (d > 0 ? 1.07 : .94)},{scale:sc}], {duration:200});
 }
 
 // tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)
@@ -874,7 +980,6 @@ window.addEventListener('pointerup', ()=>{
   const d = drag; drag = null; dragLine(null); clearDrop();
   if(!d.moved){ openPlayer(d.i); return }
   if(d.target === null || d.target === d.i) return;
-  if(!S.cmdDamage){ toast('Attiva «Danni da comandante» nel menu'); return }
   fxBurstAt($(`.cell[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
   openCmdQuick(d.i, d.target);
 });
@@ -892,7 +997,7 @@ function openCmdQuick(a, v){
   el.style.setProperty('--rot', {r0:'0deg', r90:'90deg', r180:'180deg', r270:'-90deg'}[rot]);
   el.style.left = (r.left + r.width/2) + 'px'; el.style.top = (r.top + r.height/2) + 'px';
   el.style.width = Math.min(340, (side ? r.height : r.width) * .94) + 'px';
-  document.body.appendChild(el); cqp = {a, v, el};
+  document.body.appendChild(el); cqp = {a, v, el, mode:S.cmdDamage ? 'cmd' : 'poison'};
   renderCqPop(); armCqPop(); buzz(20);
   // se la finestrella è più alta dello spazio, la rimpicciolisco quanto basta
   const room = (side ? r.width : r.height) * .96, hh = el.offsetHeight;
@@ -901,16 +1006,33 @@ function openCmdQuick(a, v){
   el.addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
     if(b.hasAttribute('data-ok')){ closeCqPop(); return }
-    const V = S.players[cqp.v], k = b.dataset.k, before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
-    if(after !== before){ snap(); V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before) }
+    if(b.dataset.mode){ cqp.mode = b.dataset.mode; buzz(); renderCqPop(); armCqPop(); return }
+    const V = S.players[cqp.v], k = b.dataset.k;
+    if(k.startsWith('c:')){
+      // veleno e radiazioni: solo segnalini, la vita non cambia
+      const c = k.slice(2), before = V.counters[c] || 0, after = Math.max(0, before + +b.dataset.v);
+      if(after !== before){ snap(); V.counters[c] = after; updateCell(cqp.v); save(); buzz(); if(after > before) logEv(`${S.players[cqp.a].name} → ${V.name}: +${after - before} ${c === 'poison' ? 'veleno' : 'radiazioni'}`) }
+    } else {
+      const before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
+      if(after !== before){ snap(); V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before) }
+    }
     renderCqPop(); armCqPop();
   });
 }
 function renderCqPop(){
   const A = S.players[cqp.a], V = S.players[cqp.v];
+  const modes = [...(S.cmdDamage ? [['cmd', MI('\ue9c6') + 'Comandante']] : []), ['poison', MI('\ue618') + 'Veleno'], ['rad', MI('\uea50') + 'Radiazioni']];
+  const tabs = `<div class="cqTabs">${modes.map(([m,l])=>`<button data-mode="${m}" class="${m === cqp.mode ? 'sel' : ''}">${l}</button>`).join('')}</div>`;
+  if(cqp.mode !== 'cmd'){
+    const c = cqp.mode, k = 'c:' + c;
+    cqp.el.innerHTML = tabs + `<div class="cqT">${c === 'poison' ? 'Veleno' : 'Radiazioni'} da ${pchip(A)} a ${pchip(V)}</div>` +
+      `<div class="cqRow"><button data-k="${k}" data-v="-1">−</button><output>${V.counters[c] || 0}</output><button data-k="${k}" data-v="1">+</button></div>` +
+      `<div class="cqQuick">${[2,3,4].map(x=>`<button data-k="${k}" data-v="${x}">+${x}</button>`).join('')}<button class="ok" data-ok>OK</button></div>`;
+    return;
+  }
   const keys = [[String(cqp.a), A.partner ? '1° comandante' : '']];
   if(A.partner) keys.push([cqp.a + 'b', '2° comandante']);
-  cqp.el.innerHTML = `<div class="cqT">Danni dal comandante di ${pchip(A)}</div>` +
+  cqp.el.innerHTML = tabs + `<div class="cqT">Danni dal comandante di ${pchip(A)}</div>` +
     keys.map(([k,l])=>`<div class="cqRow">${l ? `<span class="cqL">${l}</span>` : ''}<button data-k="${k}" data-v="-1">−</button><output>${V.cmd[k] || 0}</output><button data-k="${k}" data-v="1">+</button></div>`).join('') +
     `<div class="cqQuick">${[2,3,4,5].map(x=>`<button data-k="${keys[0][0]}" data-v="${x}">+${x}</button>`).join('')}<button class="ok" data-ok>OK</button></div>`;
 }
@@ -920,6 +1042,99 @@ function closeCqPop(){ if(!cqp) return; clearTimeout(cqp.t); cqp.el.remove(); cq
 document.addEventListener('pointerdown', e=>{
   if(cqp && !cqp.el.contains(e.target)){ e.stopPropagation(); e.preventDefault(); closeCqPop() }
 }, true);
+
+/* ================= Pannello personale ================= */
+// le cose che il giocatore attiva da solo; quelle che arrivano da un avversario si danno trascinando il nome
+const PP = new Set(), PPART = {};
+const PP_CTR = ['energy','exp','tax','rad'];
+const PP_ICON = {energy:'', exp:'', tax:'', rad:''};
+const PP_ROT = {r0:0, r90:90, r180:180, r270:-90};
+function openPP(i){ PP.add(i); $(`.cell[data-i="${i}"]`)?.classList.add('pp'); renderPP(i); buzz(12) }
+function closePP(i){ PP.delete(i); delete PPART[i]; const c = $(`.cell[data-i="${i}"]`); if(!c) return; document.activeElement?.blur?.(); c.classList.remove('pp') }
+function renderPP(i){
+  const cell = $(`.cell[data-i="${i}"]`), box = cell?.querySelector('.ppIn'); if(!box) return;
+  const p = S.players[i], online = navigator.onLine !== false;
+  if(PPART[i]){
+    const a = PPART[i];
+    box.innerHTML = `<div class="ppRow"><input class="ppName" data-pa="artq" placeholder="Nome del comandante" enterkeyhint="search" value="${esc(a.q || '')}" style="width:11em">
+      <button class="ppFull" data-pa="artgo">Cerca</button><button class="ppF on" data-pa="artx" aria-label="Chiudi">✕</button></div>
+      <div class="ppRow">${a.res ? (a.res.length ? `<div class="ppArts">${a.res.map(x=>`<button data-pa="artpick" data-u="${esc(x.u)}" data-n="${esc(x.n)}" style="background-image:url('${esc(x.u)}')"></button>`).join('')}</div>` : '<span class="ppNote">Nessuna carta trovata</span>') : (a.busy ? '<span class="ppNote">Ricerca…</span>' : '')}
+      ${p.art ? '<button class="ppF" data-pa="artdel">Togli sfondo</button>' : ''}</div>`;
+  } else {
+    const ctrs = PP_CTR.filter(k => k !== 'tax' || S.format !== 'standard');
+    box.innerHTML = `<div class="ppRow">${ctrs.map(k=>`<div class="ppC"><i class="mi">${PP_ICON[k]}</i><button data-pa="ctr" data-k="${k}" data-v="${k === 'tax' ? -2 : -1}">−</button><b>${p.counters[k] || 0}</b><button data-pa="ctr" data-k="${k}" data-v="${k === 'tax' ? 2 : 1}">+</button></div>`).join('')}</div>
+      <div class="ppRow">${FLAGS.map(f=>`<button class="ppF ${p.flags[f.k] ? 'on' : ''}" data-pa="flag" data-k="${f.k}">${f.icon}${f.k === 'blessing' ? 'Benedizione' : f.label}</button>`).join('')}<button class="ppFull" data-pa="full">Scheda completa</button></div>
+      <div class="ppRow"><input class="ppName" data-pa="name" maxlength="20" value="${esc(p.name)}" enterkeyhint="done">
+        ${COLORS.map((c,k)=>`<button class="ppSw ${k === p.color ? 'sel' : ''}" data-pa="color" data-v="${k}" style="background:${c.bg}" aria-label="Colore"></button>`).join('')}
+        <button class="ppCmd ${online ? '' : 'off'}" data-pa="art"${p.art ? ` style="background-image:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.25)),url('${esc(p.art)}')"` : ''}>Comandante</button></div>`;
+  }
+  // se non ci sta, rimpicciolisco il testo quanto basta
+  box.style.fontSize = '';
+  let fs = parseFloat(getComputedStyle(box).fontSize);
+  while(box.scrollHeight > box.clientHeight + 1 && fs > 8){ fs -= .5; box.style.fontSize = fs + 'px' }
+}
+async function ppSearch(i){
+  const a = PPART[i], q = (a.q || '').trim(); if(!q) return;
+  a.busy = true; a.res = null; renderPP(i);
+  try{
+    let data = await scry(q + ' is:commander');
+    if(!data.length) data = await scry(q + ' -t:token');
+    a.res = data.map(c => { const f = c.image_uris ? c : (c.card_faces || [])[0]; return f && f.image_uris ? {u:f.image_uris.art_crop, n:c.name} : null }).filter(Boolean).slice(0, 12);
+  }catch(err){ a.res = []; toast('Scryfall non risponde. Controlla la connessione.') }
+  a.busy = false; if(PPART[i] === a) renderPP(i);
+}
+$('#board').addEventListener('click', e=>{
+  const b = e.target.closest('.under [data-pa]'); if(!b || b.tagName === 'INPUT') return;
+  const i = +b.closest('.cell').dataset.i, p = S.players[i], a = b.dataset.pa, k = b.dataset.k;
+  switch(a){
+    case 'ctr': snap(); p.counters[k] = Math.max(0, (p.counters[k] || 0) + +b.dataset.v); updateCell(i); break;
+    case 'flag': { snap(); const f = FLAGS.find(x => x.k === k), on = !p.flags[k];
+      if(f.unique && on) S.players.forEach(o => o.flags[k] = false);
+      p.flags[k] = on; if(on) logEv(p.name + ': ' + f.label); S.players.forEach((_,j)=>updateCell(j)); PP.forEach(j => j !== i && renderPP(j)); break }
+    case 'full': closePP(i); openPlayer(i); return;
+    case 'color': p.color = +b.dataset.v; save(); buzz(); renderBoard(); return;
+    case 'art': if(navigator.onLine === false){ toast('Serve la connessione per cercare la carta'); return } PPART[i] = {q:''}; renderPP(i); b.closest('.cell')?.querySelector('.ppIn input')?.focus(); return;
+    case 'artx': delete PPART[i]; renderPP(i); return;
+    case 'artgo': ppSearch(i); return;
+    case 'artpick': p.art = b.dataset.u; p.artName = b.dataset.n; delete PPART[i]; save(); buzz(); renderBoard(); return;
+    case 'artdel': p.art = null; p.artName = ''; delete PPART[i]; save(); buzz(); renderBoard(); return;
+    default: return;
+  }
+  buzz(); save(); renderPP(i);
+});
+$('#board').addEventListener('input', e=>{
+  const t = e.target; if(!t.matches('.under input')) return;
+  const i = +t.closest('.cell').dataset.i;
+  if(t.dataset.pa === 'artq'){ PPART[i].q = t.value; return }
+  const p = S.players[i]; p.name = t.value.trim() || 'Giocatore ' + (i+1);
+  const c = t.closest('.cell'); c.querySelector('.pname').textContent = p.name; c.querySelector('.strip span').textContent = p.name; save();
+});
+$('#board').addEventListener('keydown', e=>{
+  const t = e.target; if(e.key !== 'Enter' || !t.matches('.under input')) return;
+  t.blur(); if(t.dataset.pa === 'artq') ppSearch(+t.closest('.cell').dataset.i);
+});
+window.addEventListener('online', ()=>PP.forEach(renderPP));
+window.addEventListener('offline', ()=>PP.forEach(renderPP));
+// linguetta: swipe in su (o tocco) apre; sulla striscia rimasta: swipe in giù (o tocco) chiude
+let ppG = null;
+$('#board').addEventListener('pointerdown', e=>{
+  const cell = e.target.closest('.cell'); if(!cell) return;
+  if(e.target.closest('.under')){ e.stopPropagation(); return }
+  const open = cell.classList.contains('pp');
+  if(open || e.target.closest('.swz')){
+    e.stopPropagation(); e.preventDefault();
+    ppG = {i:+cell.dataset.i, x:e.clientX, y:e.clientY, open, rot:PP_ROT[ROT[S.count][+cell.dataset.i]]};
+  }
+}, true);
+window.addEventListener('pointerup', e=>{
+  if(!ppG) return;
+  const g = ppG; ppG = null;
+  const dx = e.clientX - g.x, dy = e.clientY - g.y, a = -g.rot * Math.PI / 180, ly = dx * Math.sin(a) + dy * Math.cos(a);
+  const tap = Math.hypot(dx, dy) < 12;
+  if(!g.open && (tap || ly < -20)) openPP(g.i);
+  else if(g.open && (tap || ly > 20)) closePP(g.i);
+});
+window.addEventListener('pointercancel', ()=>{ ppG = null });
 
 /* ================= Turni e timer ================= */
 function fmtTime(ms){
@@ -964,7 +1179,9 @@ const stack = [];
 function openOv(id){
   if(stack[stack.length-1] === id) return; // doppio tocco: non lo apro due volte
   const el = $('#ov-' + id);
-  el.style.zIndex = (el.classList.contains('ov') ? 20 : 45) + stack.length;
+  // sopra la pagina iniziale (o un'altra finestra a schermo intero) i pannelli devono stare davanti
+  const overWz = stack.some(s => $('#ov-' + s).matches('.wz,.dlg'));
+  el.style.zIndex = (el.classList.contains('ov') && !overWz ? 20 : 45) + stack.length;
   el.classList.add('open');
   stack.push(id);
   history.pushState({ov:id}, '');
@@ -1220,19 +1437,74 @@ async function searchArt(){
 }
 
 /* ================= Dadi e moneta ================= */
-let diceN = 1;
-function openDice(){ $('#dnOut').textContent = diceN; $('#diceRes').innerHTML = ''; $('#diceSum').textContent = 'Scegli cosa lanciare'; openOv('dice') }
-$('#dnMinus').addEventListener('click', ()=>{ diceN = Math.max(1, diceN-1); $('#dnOut').textContent = diceN });
-$('#dnPlus').addEventListener('click', ()=>{ diceN = Math.min(6, diceN+1); $('#dnOut').textContent = diceN });
-$('#diceBtns').addEventListener('click', e=>{
-  const f = e.target.dataset.f; if(!f) return;
-  let res, txt;
-  if(f === 'coin'){ res = Array.from({length:diceN}, ()=>Math.random() < .5 ? 'Testa' : 'Croce'); txt = res.join(', ') }
-  else { res = Array.from({length:diceN}, ()=>1 + Math.floor(Math.random() * +f)); txt = res.join(' + ') + (diceN > 1 ? ' = ' + res.reduce((a,b)=>a+b, 0) : '') }
-  $('#diceRes').innerHTML = res.map(r=>`<div class="die" style="${f==='coin'?'font-size:44px':''}">${r}</div>`).join('');
-  $('#diceSum').textContent = diceN > 1 && f !== 'coin' ? 'Totale ' + res.reduce((a,b)=>a+b, 0) : '';
-  document.querySelectorAll('#diceRes .die').forEach((d,i)=>d.animate([{transform:'scale(.5) rotate(-25deg)',opacity:0},{transform:'none',opacity:1}], {duration:260, delay:i*60, fill:'backwards'}));
-  logEv((f === 'coin' ? 'Moneta: ' : diceN + 'd' + f + ': ') + txt); buzz(20);
+let diceN = 1, diceF = '20', dzBusy = false;
+const dzH = [];
+const dzPoly = n => Array.from({length:n}, (_,i)=>{ const a = -Math.PI/2 + i*2*Math.PI/n; return (105 + 96*Math.cos(a)).toFixed(1) + ',' + (105 + 96*Math.sin(a)).toFixed(1) }).join(' ');
+const DZ_SH = {
+  4:'<polygon points="105,12 198,182 12,182"/>',
+  6:'<rect x="18" y="18" width="174" height="174" rx="26"/>',
+  8:'<polygon points="105,6 196,105 105,204 14,105"/><polyline points="14,105 196,105" fill="none" stroke-opacity=".35"/>',
+  10:'<polygon points="105,6 196,92 105,204 14,92"/><polyline points="14,92 105,130 196,92" fill="none" stroke-opacity=".35"/>',
+  12:`<polygon points="${dzPoly(5)}"/>`,
+  20:`<polygon points="${dzPoly(6)}"/><polygon points="105,40 168,150 42,150" fill="none" stroke-opacity=".35"/>`,
+};
+const dzSvg = f => f === 'coin'
+  ? '<svg viewBox="0 0 210 210"><circle cx="105" cy="105" r="98" fill="#EF9F27" stroke="#854F0B" stroke-width="6"/><circle cx="105" cy="105" r="78" fill="none" stroke="#854F0B" stroke-width="3" stroke-dasharray="6 6"/></svg>'
+  : `<svg viewBox="0 0 210 210"><g fill="#f3eee2" stroke="#D9B45A" stroke-width="7" stroke-linejoin="round">${DZ_SH[f]}</g></svg>`;
+function dzDraw(vals){
+  const coin = diceF === 'coin', n = vals.length, sz = n === 1 ? 200 : n === 2 ? 150 : n <= 4 ? 120 : 98;
+  $('#dzStage').innerHTML = vals.map(v=>`<div class="dz1${coin ? ' coin' : ''}" style="width:${sz}px;height:${sz}px">${dzSvg(diceF)}<b style="font-size:${coin ? sz*.15 : sz*.3}px${diceF === '4' ? ';top:' + sz*.1 + 'px' : ''}">${v}</b></div>`).join('');
+}
+function dzIdle(){ dzDraw(Array(diceN).fill(diceF === 'coin' ? 'Testa' : diceF)); $('#dzSum').textContent = ''; $('#dzTap').textContent = 'Tocca per lanciare' }
+function dzHist(){ $('#dzHist').textContent = dzH.slice(0, 6).join(' · ') }
+function openDice(){
+  $('#dnOut').textContent = diceN;
+  document.querySelectorAll('#dzChips button').forEach(b => b.classList.toggle('sel', b.dataset.f === diceF));
+  dzIdle(); dzHist(); openOv('dice');
+}
+$('#dnMinus').addEventListener('click', ()=>{ if(dzBusy) return; diceN = Math.max(1, diceN-1); $('#dnOut').textContent = diceN; dzIdle() });
+$('#dnPlus').addEventListener('click', ()=>{ if(dzBusy) return; diceN = Math.min(6, diceN+1); $('#dnOut').textContent = diceN; dzIdle() });
+$('#dzChips').addEventListener('click', e=>{
+  const b = e.target.closest('[data-f]'); if(!b || dzBusy) return;
+  diceF = b.dataset.f; document.querySelectorAll('#dzChips button').forEach(x => x.classList.toggle('sel', x === b)); buzz(); dzIdle();
+});
+// lancio: il dado salta e rotola, la moneta vola girando; il risultato si accende
+$('#dzStage').addEventListener('click', ()=>{
+  if(dzBusy) return; dzBusy = true;
+  const coin = diceF === 'coin', f = coin ? 2 : +diceF, dur = coin ? 1200 : 900;
+  dzDraw(Array(diceN).fill(coin ? 'Testa' : f));
+  const els = [...document.querySelectorAll('#dzStage .dz1')];
+  els.forEach((d,k)=>{ d.style.animationDelay = k*60 + 'ms'; d.classList.add(coin ? 'flip' : 'roll') });
+  $('#dzSum').textContent = ''; $('#dzTap').textContent = '';
+  const iv = setInterval(()=>els.forEach(d => d.querySelector('b').textContent = coin ? (Math.random() < .5 ? 'Testa' : 'Croce') : 1 + Math.floor(Math.random()*f)), 70);
+  buzz(20);
+  setTimeout(()=>{
+    clearInterval(iv);
+    const res = els.map(()=> coin ? (Math.random() < .5 ? 'Testa' : 'Croce') : 1 + Math.floor(Math.random()*f));
+    els.forEach((d,k)=>{ const b = d.querySelector('b'); b.textContent = res[k]; b.classList.add('hit') });
+    let txt;
+    if(coin){ const t = res.filter(x => x === 'Testa').length; txt = diceN === 1 ? res[0] : `${t} ${t === 1 ? 'testa' : 'teste'}, ${diceN - t} ${diceN - t === 1 ? 'croce' : 'croci'}` }
+    else txt = diceN === 1 ? String(res[0]) : res.reduce((a,b)=>a+b, 0);
+    $('#dzSum').textContent = coin || diceN === 1 ? (coin && diceN === 1 ? '' : txt) : 'Totale ' + txt;
+    $('#dzTap').textContent = 'Tocca per rilanciare';
+    dzH.unshift(coin ? (diceN === 1 ? txt : diceN + ' monete: ' + txt) : (diceN === 1 ? 'd' + f + ': ' + txt : diceN + 'd' + f + ': ' + txt)); dzHist();
+    logEv(coin ? 'Moneta: ' + res.join(', ') : diceN + 'd' + f + ': ' + res.join(' + ') + (diceN > 1 ? ' = ' + txt : ''));
+    buzz(40); dzBusy = false;
+  }, dur + (diceN - 1) * 60);
+});
+// chi inizia: i nomi scorrono, rallentano e si ferma su uno
+$('#dzWho').addEventListener('click', ()=>{
+  if(dzBusy) return; dzBusy = true;
+  const ps = S.players, win = Math.floor(Math.random() * ps.length);
+  const show = (k, hit) => { const p = ps[k], c = COLORS[p.color]; $('#dzStage').innerHTML = `<div class="dzName${hit ? ' hit' : ''}" style="background:${c.bg};color:${c.fg}">${esc(p.name)}</div>` };
+  $('#dzSum').textContent = ''; $('#dzTap').textContent = '';
+  let k = Math.floor(Math.random() * ps.length), step = 0, total = ps.length * 3 + ((win - k + ps.length * 3) % ps.length);
+  (function tick(){
+    show(k % ps.length, false); buzz(6);
+    if(step >= total){ show(win, true); $('#dzSum').textContent = 'Inizia ' + ps[win].name; $('#dzTap').textContent = 'Tocca per lanciare';
+      dzH.unshift('Inizia ' + ps[win].name); dzHist(); logEv('Inizia ' + ps[win].name); buzz(40); dzBusy = false; return }
+    k++; step++; setTimeout(tick, 60 + step * step * 1.6);
+  })();
 });
 
 /* ================= Registro ================= */
@@ -2027,13 +2299,34 @@ $('#wzStart').addEventListener('click', ()=>{
 });
 $('#wzSkip').addEventListener('click', ()=>{ buzz(15); startGame(WZ.fmt, WZ.n, []) });
 $('#wzBack2').addEventListener('click', ()=>wzStep(WZ.fmt === 'standard' ? 1 : 2));
+// regole principali dei formati, riassunte in parole nostre (il riferimento resta il regolamento ufficiale)
+const RULES = {
+  standard:{t:'Standard', h:`
+    <h3>Partita</h3><ul><li>Due giocatori, 20 punti vita a testa.</li><li>Si perde a 0 punti vita, con 10 segnalini veleno o se si deve pescare da un grimorio vuoto.</li><li>Chi gioca per primo salta la pescata del primo turno.</li></ul>
+    <h3>Mazzo</h3><ul><li>Almeno 60 carte, al massimo 4 copie di ogni carta tranne le terre base.</li><li>Sideboard fino a 15 carte.</li><li>Valgono solo le espansioni in rotazione in Standard e le carte non bandite.</li></ul>
+    <h3>Mulligan</h3><ul><li>Peschi 7 carte. Se ne vuoi una nuova, rimescoli e ripeschi 7, poi metti in fondo al grimorio una carta per ogni mulligan fatto.</li></ul>
+    <h3>Partite al meglio di tre</h3><ul><li>Tra una partita e l'altra puoi scambiare carte con la sideboard. Chi ha perso sceglie chi inizia la successiva.</li></ul>`},
+  commander:{t:'Commander', h:`
+    <h3>Partita</h3><ul><li>Di solito in 3-6 giocatori, 40 punti vita a testa.</li><li>Si perde a 0 punti vita, con 10 segnalini veleno, pescando da un grimorio vuoto o subendo 21 danni da combattimento dallo stesso comandante.</li><li>In multigiocatore nessuno salta la pescata del primo turno e il primo mulligan è gratuito.</li></ul>
+    <h3>Mazzo</h3><ul><li>Esattamente 100 carte, comandante compreso.</li><li>Una sola copia di ogni carta tranne le terre base.</li><li>Il comandante è una creatura leggendaria (o una carta che dice di poterlo essere). Le altre carte devono stare nella sua identità di colore: i simboli di mana nel costo e nel testo.</li><li>Con «Partner» e meccaniche simili si possono avere due comandanti.</li></ul>
+    <h3>Comandante</h3><ul><li>Inizia nella zona di comando e si lancia da lì.</li><li>Ogni volta che lo rilanci dalla zona di comando costa 2 mana generico in più per ogni lancio precedente: la tassa del comandante.</li><li>Se va al cimitero o in esilio (o in mano o nel grimorio) puoi rimetterlo nella zona di comando.</li></ul>
+    <h3>Nell'app</h3><ul><li>Trascina il tuo nome sull'avversario per assegnare danni da comandante, veleno o radiazioni.</li></ul>`},
+  brawl:{t:'Brawl', h:`
+    <h3>Partita</h3><ul><li>25 punti vita in due, 30 con più giocatori.</li><li>Si perde a 0 punti vita, con 10 segnalini veleno o pescando da un grimorio vuoto. Il danno da comandante non conta.</li></ul>
+    <h3>Mazzo</h3><ul><li>Su carta: 60 carte comandante compreso, solo carte legali in Standard. Su MTG Arena il Brawl più giocato usa 100 carte e un archivio più ampio.</li><li>Una sola copia di ogni carta tranne le terre base.</li><li>Il comandante può essere una creatura leggendaria o un planeswalker. Le altre carte stanno nella sua identità di colore.</li></ul>
+    <h3>Comandante</h3><ul><li>Come in Commander: zona di comando, tassa di 2 mana in più a ogni nuovo lancio, può tornare nella zona di comando.</li></ul>`},
+  oathbreaker:{t:'Oathbreaker', h:`
+    <h3>Partita</h3><ul><li>Di solito in 3-6 giocatori, 20 punti vita a testa.</li><li>Si perde a 0 punti vita, con 10 segnalini veleno o pescando da un grimorio vuoto. Il danno da comandante non conta.</li></ul>
+    <h3>Mazzo</h3><ul><li>60 carte, comprese l'Oathbreaker e il suo incantesimo distintivo.</li><li>Una sola copia di ogni carta tranne le terre base.</li><li>L'Oathbreaker è un planeswalker. L'incantesimo distintivo è un istantaneo o una stregoneria. Tutto il mazzo sta nell'identità di colore dell'Oathbreaker.</li></ul>
+    <h3>Zona di comando</h3><ul><li>Oathbreaker e incantesimo distintivo iniziano lì e si lanciano da lì.</li><li>L'incantesimo distintivo si può lanciare solo se il tuo Oathbreaker è sul campo di battaglia.</li><li>Ognuno ha la sua tassa: 2 mana in più per ogni lancio precedente dalla zona di comando.</li><li>Quando l'incantesimo distintivo si risolve o lascia la pila, torna nella zona di comando.</li></ul>`},
+};
 function openWizard(swap){
   $('#wzFormats').innerHTML = [
     ['standard','Standard','20 punti vita, testa a testa'],
     ['commander','Commander','40 punti vita, danni da comandante'],
     ['brawl','Brawl','25 punti vita in due, 30 in più giocatori'],
     ['oathbreaker','Oathbreaker','20 punti vita'],
-  ].map(([k,l,d])=>`<button class="wzOpt" data-f="${k}"><b>${l}</b><span>${d}</span></button>`).join('');
+  ].map(([k,l,d])=>`<button class="wzOpt" data-f="${k}"><b>${l}</b><span>${d}</span><span class="wzInfo" data-info="${k}" role="button" aria-label="Regole ${l}">i</span></button>`).join('');
   $('#wzCounts').innerHTML = [2,3,4,5,6].map(n=>`<button class="wzOpt" data-n="${n}">${n}</button>`).join('');
   themeBg($('#wzBg'), ART_Q.wizard);
   $('#wzClose').hidden = !swap;
@@ -2041,18 +2334,25 @@ function openWizard(swap){
   requestAnimationFrame(()=>wzStep(1));
 }
 $('#wzFormats').addEventListener('click', e=>{
+  const inf = e.target.closest('[data-info]'); if(inf){ openRules(inf.dataset.info); return }
   const b = e.target.closest('[data-f]'); if(!b) return;
   WZ.fmt = b.dataset.f; buzz(15);
   if(WZ.fmt === 'standard') wzNames(2); else wzStep(2);
 });
 $('#wzCounts').addEventListener('click', e=>{ const b = e.target.closest('[data-n]'); if(b){ buzz(15); wzNames(+b.dataset.n) } });
 $('#wzBack').addEventListener('click', ()=>wzStep(1));
+// dalla pagina iniziale anche senza partita: solo pedine o solo dadi
+$('#wzTok').addEventListener('click', ()=>{ buzz(15); openTokens() });
+$('#wzDice').addEventListener('click', ()=>{ buzz(15); openDice() });
+function openRules(k){ const r = RULES[k]; $('#ruTitle').textContent = r.t; $('#ruBody').innerHTML = r.h; $('#ruBody').scrollTop = 0; buzz(10); openOv('rules') }
+$('#ruOk').addEventListener('click', ()=>history.back());
 $('#wzClose').addEventListener('click', ()=>history.back());
 function startGame(fmt, n, names){
   document.activeElement?.blur?.();
   S.format = fmt; S.count = n; S.cmdDamage = FORMATS[fmt].cmd;
   S.startLife = fmt === 'brawl' && n > 2 ? 30 : FORMATS[fmt].life;
   if(SET.intro && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.body.classList.add('preintro');
+  PP.clear();
   S.players = freshPlayers(n, S.startLife, S.players).map((p,i)=>(p.name = names?.[i] || 'Giocatore ' + (i+1), p));
   resetGame();
   WZ.step = 0; closeAllOv();
@@ -2288,17 +2588,19 @@ function cmdFx(v, n){
 
 /* ================= Guida ================= */
 let TUT = null;
-function maybeTut(){ let seen = null; try{ seen = localStorage.getItem('smtg-tut') }catch(e){} if(!seen) startTut() }
+function maybeTut(){ let seen = null; try{ seen = localStorage.getItem('smtg-tut-014') }catch(e){} if(!seen) startTut() }
 function tutSteps(){
   const n = S.count, me = $(`.cell[data-i="${n-1}"]`), other = $(`.cell[data-i="${n > 1 ? n-2 : 0}"]`);
   return [
     {t:'Benvenuto!', p:'Ti mostro in un minuto le funzioni principali di Magic Play&Print. Puoi rivedere questa guida quando vuoi dal Menu, sotto le pedine.'},
     {el:me, t:'Punti vita', p:'Tocca la metà con il + per aggiungere un punto e quella con il − per toglierlo. Tenendo premuto il conteggio scorre (o salta di 10, lo scegli nel Menu).', g:'tap', at:me?.querySelector('.half.plus')},
-    {el:me?.querySelector('.pname'), t:'Scheda giocatore', p:'Tocca il nome per aprire la scheda: nome, colore, immagine di sfondo, veleno, contatori, monarca e iniziativa.', g:'tap'},
-    {el:me?.querySelector('.pname'), t:'Danni da comandante', p:'Trascina il nome di chi attacca sul pannello di chi subisce, poi scegli quanti danni. Vengono tolti anche dai punti vita.', g:'drag', to:other},
+    {el:me?.querySelector('.swz'), t:'Pannello personale', p:'Fai scorrere verso l\'alto la linguetta in fondo alla tua scheda, oppure toccala: la scheda sale e sotto trovi energia, esperienza, tassa, radiazioni, monarca, iniziativa, nome, colore e lo sfondo del comandante. Per chiudere fai scorrere in giù o tocca la striscia rimasta.', g:'drag', to:me?.querySelector('.life')},
+    {el:me?.querySelector('.pname'), t:'Danni dagli avversari', p:'Trascina il tuo nome sulla scheda di un avversario e scegli cosa gli dai: danni da comandante (già selezionati), veleno o radiazioni. Il danno da comandante toglie anche i punti vita. Toccando il nome si apre la scheda completa con le statistiche.', g:'drag', to:other},
+    {el:me, t:'Danni da comandante', p:'Sopra la vita compare un segnalino per ogni avversario che ti ha colpito con il comandante, con una luce nel suo colore. A 21 danni dallo stesso comandante sei fuori.'},
     {el:$('#tokenBtn'), t:'Pedine', p:'Tocca il simbolo centrale per cercare le pedine. Tienilo premuto e di\' la pedina, per esempio «drago 5/5 volare»: la trova e dopo 3 secondi la stampa. Toccala per annullare. Trascinalo per spostarlo dove ti è più comodo.', g:'hold'},
     {el:$('#tokenBtn'), t:'Stampante', p:'Quando sotto il simbolo c\'è un alone blu pulsante con le scintille, la stampante è collegata. Se è grigio, collegala dalla pagina Pedine.'},
     {el:$('#tokenBtn'), t:'Menu', p:'Toccando il simbolo si apre la pagina delle pedine: sotto le pedine recenti c\'è il Menu con nuova partita, dadi, impostazioni e questa guida. Il tasto giallo STAMPA in alto apre le impostazioni della stampante.', g:'tap'},
+    {t:'Pagina iniziale', p:'Dalla pagina iniziale puoi anche solo stampare pedine o lanciare dadi e moneta, senza aprire una partita. Il cerchietto con la «i» accanto a ogni formato mostra le regole principali.'},
     {t:'Tutto qui!', p:'Buona partita. Che il mazzo sia con te.'},
   ];
 }
@@ -2339,7 +2641,7 @@ function tutGo(i){
   box.style.animation = 'none'; void box.offsetWidth; box.style.animation = '';
   buzz(6);
 }
-function endTut(){ if(!TUT) return; TUT.el.remove(); TUT = null; try{ localStorage.setItem('smtg-tut', '1') }catch(e){} }
+function endTut(){ if(!TUT) return; TUT.el.remove(); TUT = null; try{ localStorage.setItem('smtg-tut-014', '1') }catch(e){} }
 
 /* ================= Aggiornamenti ================= */
 const UPD = {remote:null, html:null, native:false};
