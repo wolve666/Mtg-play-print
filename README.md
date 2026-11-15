@@ -51,6 +51,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.14.2
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Risolto il rallentamento della pagina iniziale. Gli indicatori del comandante animavano la luce anche quando erano nascosti: il telefono ricalcolava la grafica 60 volte al secondo, anche sotto le finestre aperte. Ora la luce anima solo l'opacità (lavoro della scheda grafica) e solo sugli indicatori visibili, e con una finestra aperta le animazioni del tavolo si fermano.
+- Tornata la trasparenza sfocata sui tasti «Stampa pedine» e «Dadi e moneta».
+
 ### v0.14.1
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Linguetta dello swipe come nell'anteprima: angoli superiori più tondi, freccina che si muove, larga quanto il numero della vita.

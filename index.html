@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.14.1', APPN = 3;
+var APPV = '0.14.2', APPN = 3;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -107,8 +107,13 @@ input,select{font:inherit}
 .spia{position:absolute;transform:translate(-50%,-50%);padding:.15em .6em;border-radius:99px;background:rgba(0,0,0,.24);font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;scale:.6;transition:opacity .25s,scale .25s}
 .spia.on{opacity:1;scale:1}
 /* danni da comandante: un segnalino per avversario, luce interna nel colore di chi ha fatto il danno */
-.spia.cmdb{box-shadow:inset 0 0 .45em .08em var(--kc);animation:cmdGlow 2.6s ease-in-out infinite}
-@keyframes cmdGlow{50%{box-shadow:inset 0 0 .8em .28em var(--kc)}}
+.spia.cmdb{box-shadow:inset 0 0 .45em .08em var(--kc)}
+/* il respiro anima solo l'opacità (lavoro della scheda grafica) e solo sugli indicatori visibili */
+.spia.cmdb::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 .8em .28em var(--kc);opacity:0;pointer-events:none}
+.spia.cmdb.on::after{animation:cmdGlow 2.6s ease-in-out infinite}
+@keyframes cmdGlow{0%,100%{opacity:0}50%{opacity:1}}
+/* con una finestra aperta sopra il tavolo le animazioni del tavolo si fermano: non si vedono e rallentano le trasparenze */
+body:has(.wz.open,.dlg.open,.ov.open) #board *,body:has(.wz.open,.dlg.open,.ov.open) #board *::before,body:has(.wz.open,.dlg.open,.ov.open) #board *::after,body:has(.wz.open,.dlg.open,.ov.open) #hub *,body:has(.wz.open,.dlg.open,.ov.open) #hub *::before,body:has(.wz.open,.dlg.open,.ov.open) #hub *::after{animation-play-state:paused!important}
 /* spie in basso in pausa: si riattivano togliendo questa riga */
 .spia[data-s=monarch],.spia[data-s=blessing],.spia[data-s=initiative],.spia[data-s=turn]{display:none!important}
 /* zona dello swipe per il menu rapido: linguetta appena accennata a filo bordo */
@@ -352,7 +357,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wzOpt{position:relative}
 .wzOpt .wzInfo{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.7);display:grid;place-items:center;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:18px;color:#fff}
 .wzExtra{display:flex;gap:10px}
-.wzExtra .wzOpt{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(20,18,28,.6);flex:1;text-align:center;font-weight:700;font-size:17px;padding:14px 8px}
+.wzExtra .wzOpt{flex:1;text-align:center;font-weight:700;font-size:17px;padding:14px 8px}
 .rulesBody{text-align:left;max-height:58vh;overflow-y:auto;margin:6px 0 14px;line-height:1.45;color:rgba(255,255,255,.85);font-size:15px}
 .rulesBody h3{margin:14px 0 4px;font-size:15px;color:var(--gold)}
 .rulesBody ul{margin:0;padding-left:20px}
