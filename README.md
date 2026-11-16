@@ -51,6 +51,19 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.14.4
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK. Nessun cambiamento visibile: è un aggiornamento di stabilità.
+- La partita viene salvata subito quando l'app va in secondo piano o viene chiusa: prima l'ultimo tocco poteva andare perso.
+- Una partita salvata incompleta o di una versione vecchia viene riparata all'avvio invece di bloccare l'app.
+- Un aggiornamento scaricato non viene più scartato per errore se chiudi l'app nei primi secondi. Se lo scaricamento arriva a metà, l'app riprova al controllo successivo invece di proporre l'APK.
+- Una stampa alla volta: due pedine chieste di fila non mescolano più i dati sulla carta.
+- Archivio offline: durante lo scaricamento la memoria viene liberata immagine per immagine, e se lo spazio finisce lo scaricamento si ferma con un avviso invece di restare «in corso».
+- Tutte le richieste di rete hanno un tempo massimo: una connessione che non risponde non lascia l'app in attesa.
+- Quando arrivano i font, spie e linguette vengono rimisurate.
+- Il tasto indietro sul tavolo chiude prima la finestrella dei danni o il pannello personale aperto.
+- Gli errori imprevisti vengono annotati (gli ultimi 20) e finiscono nei dati da esportare. Se la memoria è piena compare un avviso.
+- «Chi inizia?» non va più in errore se tutti i giocatori sono eliminati.
+
 ### v0.14.3
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Dadi 3D veri, disegnati da un piccolo motore interno (nessuna libreria, funziona senza rete): d4, d6 con i pallini, d8, d10, d12 e d20, visti dall'alto. Rotolano, rimbalzano con l'ombra e si fermano con il risultato sulla faccia in alto. Fino a 6 dadi con la somma, cinque colori (la scelta viene ricordata).

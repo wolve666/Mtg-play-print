@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.14.3', APPN = 3;
+var APPV = '0.14.4', APPN = 3;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -659,6 +659,10 @@ const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (s
 const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
 const VERSION = APPV, NATIVE_REV = APPN;
+// errori imprevisti: annoto gli ultimi 20, finiscono nei dati da esportare
+function logErr(m){ try{ const L = JSON.parse(localStorage.getItem('smtg-errors')) || []; L.push({t:Date.now(), v:VERSION, m:String(m).slice(0, 300)}); localStorage.setItem('smtg-errors', JSON.stringify(L.slice(-20))) }catch(e){} }
+window.addEventListener('error', e=>{ if(e.message) logErr(e.message + ' @' + (e.lineno || 0) + ':' + (e.colno || 0)) });
+window.addEventListener('unhandledrejection', e=>{ const x = e.reason; logErr('promessa: ' + ((x && (x.stack || x.message)) || x)) });
 
 /* ================= Stato ================= */
 const COLORS = [
@@ -697,8 +701,39 @@ function freshPlayers(n, life, old){ return Array.from({length:n}, (_,i)=>newPla
 function freshTurn(on){ return {on:!!on, n:1, active:0, first:0, started:Date.now(), turnStart:Date.now()} }
 
 function load(k){ try{ return JSON.parse(localStorage.getItem(k)) }catch(e){ return null } }
-let S = load(KEY);
-if(!S || !S.players){
+// ripara uno stato salvato incompleto o vecchio: sistemo solo i campi mancanti o non validi, il resto non lo tocco
+function fixState(s){
+  if(!s || !Array.isArray(s.players) || s.players.length < 2) return null;
+  const obj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  if(!FORMATS[s.format]) s.format = 'commander';
+  if(!(Number.isFinite(s.startLife) && s.startLife > 0)) s.startLife = FORMATS[s.format].life;
+  if(typeof s.cmdDamage !== 'boolean') s.cmdDamage = FORMATS[s.format].cmd;
+  s.players = s.players.slice(0, 6).map((p, i)=>{
+    if(!obj(p)) return newPlayer(i, s.startLife);
+    if(typeof p.name !== 'string' || !p.name) p.name = 'Giocatore ' + (i+1);
+    if(!(Number.isInteger(p.color) && COLORS[p.color])) p.color = i % COLORS.length;
+    if(!Number.isFinite(p.life)) p.life = s.startLife;
+    for(const k of ['counters','cmd','flags']) if(!obj(p[k])) p[k] = {};
+    if(!Array.isArray(p.hist)) p.hist = [];
+    if(typeof p.art !== 'string') p.art = null;
+    if(typeof p.artName !== 'string') p.artName = '';
+    p.partner = !!p.partner; p.out = !!p.out;
+    return p;
+  });
+  s.count = s.players.length;
+  const t = s.turn;
+  if(!obj(t)) s.turn = freshTurn(false);
+  else {
+    t.on = !!t.on; if(!(t.n >= 1)) t.n = 1;
+    for(const k of ['active','first']) if(!(Number.isInteger(t[k]) && t[k] >= 0 && t[k] < s.count)) t[k] = 0;
+    for(const k of ['started','turnStart']) if(!Number.isFinite(t[k])) t[k] = Date.now();
+  }
+  if(!Array.isArray(s.log)) s.log = [];
+  return s;
+}
+let S = null;
+try{ S = fixState(load(KEY)) }catch(e){ S = null }
+if(!S){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
@@ -707,8 +742,16 @@ SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:t
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
 
-let saveT;
-function save(){ clearTimeout(saveT); saveT = setTimeout(()=>{ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }, 250) }
+let saveT = 0, saveWarn = false;
+function saveNow(){
+  clearTimeout(saveT); saveT = 0;
+  try{ localStorage.setItem(KEY, JSON.stringify(S)) }
+  catch(e){ if(!saveWarn){ saveWarn = true; toast('Memoria piena: la partita non viene salvata', 4000) } }
+}
+function save(){ clearTimeout(saveT); saveT = setTimeout(saveNow, 250) }
+// se l'app va in secondo piano o viene chiusa salvo subito, senza aspettare
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden && saveT) saveNow() });
+window.addEventListener('pagehide', ()=>{ if(saveT) saveNow() });
 function saveSet(){ try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
 function saveRecent(){ try{ localStorage.setItem(RKEY, JSON.stringify(RECENT)) }catch(e){} }
 function saveVlog(){ if(VLOG.length > 500) VLOG = VLOG.slice(-500); try{ localStorage.setItem(VKEY, JSON.stringify(VLOG)) }catch(e){} }
@@ -1177,6 +1220,7 @@ function nextTurn(){
 $('#turnPill').addEventListener('click', nextTurn);
 function whoStarts(){
   const alive = S.players.map((p,i)=>i).filter(i=>!isOut(S.players[i]));
+  if(!alive.length){ toast('Nessun giocatore in gioco'); return }
   const i = alive[Math.floor(Math.random()*alive.length)];
   S.turn.first = S.turn.active = i; S.turn.n = 1; S.turn.started = S.turn.turnStart = Date.now();
   logEv('Inizia ' + S.players[i].name); renderBoard();
@@ -1224,6 +1268,12 @@ function closeTop(){
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
 let lastBack = 0;
+// tasto indietro sul tavolo: prima chiude la finestrella dei danni o un pannello personale aperto
+function backLocal(){
+  if(cqp){ closeCqPop(); return true }
+  if(PP.size){ closePP([...PP].pop()); return true }
+  return false;
+}
 history.replaceState({base:true}, '');
 history.pushState({guard:true}, '');
 const backExit = () => {
@@ -1235,11 +1285,13 @@ const backExit = () => {
 if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.addListener('backButton', ()=>{
   if(TUT){ endTut(); return }
   if(stack.length){ history.back(); return }
+  if(backLocal()) return;
   backExit();
 });
 window.addEventListener('popstate', ()=>{
   if(TUT){ endTut(); history.pushState({guard:true}, ''); return }
   if(stack.length){ closeTop(); return }
+  if(backLocal()){ history.pushState({guard:true}, ''); return }
   const now = Date.now();
   if(now - lastBack < 2000){ if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.exitApp(); else history.back(); return }
   lastBack = now;
@@ -1361,7 +1413,7 @@ async function menuClick(e){
     case 'page': SET.page = !SET.page; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
-    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); toast('Dati cancellati') } break;
+    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); try{ localStorage.removeItem('smtg-errors') }catch(e){} toast('Dati cancellati') } break;
   }
   renderMenu();
 }
@@ -1746,6 +1798,8 @@ function buildQueries(r){
 let netDown = 0;
 const online = () => navigator.onLine && Date.now() - netDown > 60000;
 window.addEventListener('online', ()=>{ netDown = 0 });
+// richieste con tempo massimo: una rete che non risponde non lascia l'app in attesa per sempre
+function fetchT(url, opt, ms=20000){ const ac = new AbortController(); setTimeout(()=>ac.abort(), ms); return fetch(url, Object.assign({signal:ac.signal}, opt)) }
 async function scry(q){
   const url = 'https://api.scryfall.com/cards/search?include_extras=true&unique=art&order=released&dir=desc&q=' + encodeURIComponent(q);
   const ac = new AbortController(), to = setTimeout(()=>ac.abort(), 5000);
@@ -2020,7 +2074,8 @@ $('#sugSave').addEventListener('click', ()=>{
   toast('Suggerimento salvato'); history.back();
 });
 async function exportVlog(){
-  if(!VLOG.length){ toast('Non ci sono ancora dati da esportare'); return }
+  const errors = load('smtg-errors') || [];
+  if(!VLOG.length && !errors.length){ toast('Non ci sono ancora dati da esportare'); return }
   const name = 'magic-play-print-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
   const entries = [];
   for(const en of VLOG){
@@ -2028,7 +2083,7 @@ async function exportVlog(){
     const b = await clipGet(en.t);
     entries.push(b ? Object.assign({}, en, {audio:await blobToDataURL(b)}) : en);
   }
-  const blob = new Blob([JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries}, null, 1)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries, errors}, null, 1)], {type:'application/json'});
   const file = new File([blob], name, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[file]})){
     try{ await navigator.share({files:[file], title:'Dati Magic Play&Print'}); return }catch(e){ if(e.name === 'AbortError') return }
@@ -2100,7 +2155,7 @@ async function quickToken(alts){
   if(TM.entry){ TM.entry.chosen = {id:tk.id, name:tk.name, set:tk.set, auto:true}; saveVlog() }
   const qn = req.qty;
   const bitsP = makeBits(tk.print).catch(()=>null);
-  await new Promise(res=>{ const im = $('#tmImg'); im.onload = res; im.onerror = ()=>{ if(tk.small && !im.src.startsWith('blob:')) im.src = tk.small; else res() }; im.src = tk.large || tk.print });
+  await new Promise(res=>{ const im = $('#tmImg'); setTimeout(res, 12000); im.onload = res; im.onerror = ()=>{ if(tk.small && !im.src.startsWith('blob:')) im.src = tk.small; else res() }; im.src = tk.large || tk.print });
   if(seq !== TM.seq) return;
   $('#tmQty').textContent = qn > 1 ? '×' + qn : '';
   TM.phase = 'count'; sfx('found'); buzz(30);
@@ -2193,7 +2248,9 @@ const PRINTERS = [
 function prAuto(){ const n = printer.dev?.name || ''; return PRINTERS.find(p => p.re && p.re.test(n)) || PRINTERS[3] }
 function prProf(){ return (SET.prModel !== 'auto' && PRINTERS.find(p => p.id === SET.prModel)) || prAuto() }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-function loadImg(src){ return new Promise((ok, ko)=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = ()=>ok(i); i.onerror = ko; i.src = src }) }
+function loadImg(src){ return new Promise((ok, ko)=>{
+  const i = new Image(), to = setTimeout(()=>ko(new Error('immagine: tempo scaduto')), 20000);
+  i.crossOrigin = 'anonymous'; i.onload = ()=>{ clearTimeout(to); ok(i) }; i.onerror = e=>{ clearTimeout(to); ko(e) }; i.src = src }) }
 async function makeBits(src){
   const img = await loadImg(src);
   // meno dati = meno pause: pedina ridotta e/o doppia altezza (la stampante raddoppia ogni riga da sola)
@@ -2260,10 +2317,13 @@ function escposRaster(b){
 /* ================= Stampante (Bluetooth classico) ================= */
 const toB64 = d => { let s = ''; for(let i = 0; i < d.length; i += 8192) s += String.fromCharCode.apply(null, d.subarray(i, i + 8192)); return btoa(s) };
 const printer = {
-  dev:null, ch:null,
-  async write(bytes, onProg){
+  dev:null, ch:null, q:Promise.resolve(),
+  // una stampa alla volta: due invii sovrapposti mescolerebbero i dati sulla carta
+  write(bytes, onProg){ const p = this.q.then(()=>this.send(bytes, onProg)); this.q = p.catch(()=>{}); return p },
+  async send(bytes, onProg){
     const size = 4096, t0 = performance.now();
     for(let i = 0; i < bytes.length; i += size){
+      if(!this.ch) throw new Error('stampante non collegata');
       await this.ch.writeValue(bytes.subarray(i, i + size));
       if(onProg) onProg(Math.min(1, (i + size) / bytes.length));
     }
@@ -2395,7 +2455,7 @@ async function themeBg(box, q, url){
   const i = box.querySelector('i'); i.classList.remove('in');
   try{
     if(!url){
-      const r = await fetch('https://api.scryfall.com/cards/random?q=' + encodeURIComponent(q));
+      const r = await fetchT('https://api.scryfall.com/cards/random?q=' + encodeURIComponent(q), {}, 8000);
       const c = await r.json(); const f = c.image_uris || (c.card_faces && c.card_faces[0].image_uris);
       url = f && f.art_crop;
     }
@@ -2525,7 +2585,7 @@ $('#wnBack').addEventListener('click', ()=>history.back());
 const ARC = {list:[], meta:{}, ready:false, busy:false, prog:'', urls:new Map()};
 let _adb;
 function adb(){ return _adb || (_adb = new Promise((ok, ko)=>{ const r = indexedDB.open('smtg-arc', 1); r.onupgradeneeded = ()=>{ r.result.createObjectStore('kv'); r.result.createObjectStore('img') }; r.onsuccess = ()=>ok(r.result); r.onerror = ()=>ko(r.error) })) }
-async function aop(store, mode, fn){ const db = await adb(); return new Promise((ok, ko)=>{ const tx = db.transaction(store, mode), rq = fn(tx.objectStore(store)); tx.oncomplete = ()=>ok(rq && rq.result); tx.onerror = ()=>ko(tx.error) }) }
+async function aop(store, mode, fn){ const db = await adb(); return new Promise((ok, ko)=>{ const tx = db.transaction(store, mode), rq = fn(tx.objectStore(store)); tx.oncomplete = ()=>ok(rq && rq.result); tx.onerror = ()=>ko(tx.error); tx.onabort = ()=>ko(tx.error || new Error('archivio: spazio esaurito')) }) }
 const kvGet = k => aop('kv', 'readonly', s => s.get(k)), kvSet = (k, v) => aop('kv', 'readwrite', s => s.put(v, k));
 const imgGet = k => aop('img', 'readonly', s => s.get(k)), imgPut = (k, v) => aop('img', 'readwrite', s => s.put(v, k)), imgDel = k => aop('img', 'readwrite', s => s.delete(k));
 async function arcLoad(){
@@ -2582,7 +2642,7 @@ async function arcFetchList(extra){
   for(const q of ['is:token game:paper prefer:newest', 't:emblem game:paper prefer:newest']){
     let url = 'https://api.scryfall.com/cards/search?unique=cards&q=' + encodeURIComponent(q + extra);
     while(url){
-      const r = await fetch(url, {headers:{Accept:'application/json'}});
+      const r = await fetchT(url, {headers:{Accept:'application/json'}});
       if(r.status === 404) break;
       if(!r.ok) throw new Error('Scryfall ' + r.status);
       const d = await r.json(); out.push(...d.data.filter(c => !arcJunk(c))); url = d.has_more ? d.next_page : null;
@@ -2593,7 +2653,7 @@ async function arcFetchList(extra){
 }
 // una sola immagine scaricata per pedina: ne ricavo l'anteprima a colori e la versione in grigio per la stampa
 async function arcImg(e){
-  const r = await fetch(e.src); if(!r.ok) throw new Error('immagine ' + r.status);
+  const r = await fetchT(e.src, {}, 30000); if(!r.ok) throw new Error('immagine ' + r.status);
   const bmp = await createImageBitmap(await r.blob());
   const mk = (w, gray, q) => new Promise(ok => {
     const h = Math.round(w * bmp.height / bmp.width), cv = document.createElement('canvas'); cv.width = w; cv.height = h;
@@ -2601,7 +2661,9 @@ async function arcImg(e){
     if(gray){ const id = cx.getImageData(0, 0, w, h), d = id.data; for(let i=0;i<d.length;i+=4){ const v = .299*d[i] + .587*d[i+1] + .114*d[i+2]; d[i] = d[i+1] = d[i+2] = v } cx.putImageData(id, 0, 0) }
     cv.toBlob(ok, 'image/webp', q);
   });
-  const g = await mk(384, true, .7), sm = await mk(220, false, .75);
+  let g, sm;
+  try{ g = await mk(384, true, .7); sm = await mk(220, false, .75) }
+  finally{ bmp.close && bmp.close() } // libero subito l'immagine decodificata: sono quasi mille di fila
   await imgPut(e.id + ':g', g); await imgPut(e.id + ':s', sm); e.ok = true;
 }
 async function arcSync(quiet){
@@ -2788,19 +2850,21 @@ async function checkUpdate(manual){
   try{
     let m;
     if(NATIVE){ // l'app controlla l'ultima release su GitHub
-      const r = await fetch(`https://api.github.com/repos/${window.APP_REPO}/releases/latest`, {cache:'no-store'});
+      const r = await fetchT(`https://api.github.com/repos/${window.APP_REPO}/releases/latest`, {cache:'no-store'});
       m = [0, ((await r.json()).tag_name || '').replace(/^v/, '')]; if(!m[1]) throw new Error();
       UPD.html = null; UPD.native = false;
       if(cmpVer(m[1], VERSION) > 0){
         // scarico solo la pagina dell'app (circa 150 kB): se la parte nativa non cambia, niente APK
-        try{
-          const h = await (await fetch(`https://raw.githubusercontent.com/${window.APP_REPO}/v${m[1]}/index.html`, {cache:'no-store'})).text();
-          const hv = h.match(/var APPV = '([\d.]+)', APPN = (\d+)/) || [];
-          if(hv[1] === m[1] && +hv[2] <= window.BUNDLEN) UPD.html = h; else UPD.native = true;
-        }catch(e){ UPD.native = true }
+        // se lo scaricamento non riesce o arriva a metà non propongo nulla: riprovo al prossimo controllo
+        const hr = await fetchT(`https://raw.githubusercontent.com/${window.APP_REPO}/v${m[1]}/index.html`, {cache:'no-store'}, 30000);
+        if(!hr.ok) throw new Error();
+        const h = await hr.text();
+        if(!/<\/html>\s*$/.test(h)) throw new Error();
+        const hv = h.match(/var APPV = '([\d.]+)', APPN = (\d+)/) || [];
+        if(hv[1] === m[1] && +hv[2] <= window.BUNDLEN) UPD.html = h; else UPD.native = true;
       }
     }else{
-      const r = await fetch('index.html?check=' + Date.now(), {cache:'no-store'});
+      const r = await fetchT('index.html?check=' + Date.now(), {cache:'no-store'});
       m = (await r.text()).match(/var APPV = '([\d.]+)'/);
     }
     if(!m) throw new Error();
@@ -2839,8 +2903,6 @@ async function applyUpdate(){
 }
 ['#verLbl','#verLbl2','#wzVer'].forEach(id => $(id).addEventListener('click', ()=> UPD.remote ? applyUpdate() : checkUpdate(true)));
 (function(){
-  // avvio riuscito: la versione scaricata in app è buona
-  setTimeout(()=>{ try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){} }, 4000);
   const fail = localStorage.getItem('smtg-livefail');
   if(fail){ localStorage.removeItem('smtg-livefail'); setTimeout(()=>toast('La v' + fail + ' non è partita: torno alla versione installata', 4000), 900) }
   const last = localStorage.getItem('smtg-lastver');
@@ -2857,6 +2919,10 @@ document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState 
 renderBoard();
 if(inProgress()) openResume(); else openWizard();
 updatePrinterUI();
+// arrivati qui l'avvio è riuscito: la versione scaricata in app è buona (confermo subito, senza aspettare)
+try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){}
+// quando arrivano i font veri le misure cambiano: riposiziono spie e linguette
+if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>{ placeAll(); S.players.forEach((_,i)=>updateCell(i)) });
 if(!NATIVE && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
