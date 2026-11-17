@@ -34,7 +34,7 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 **Aggiornamenti**
 - La versione è visibile accanto al nome. Toccandola, l'app verifica gli aggiornamenti.
 - L'app controlla anche da sola. Quando trova una nuova versione mostra un avviso con i tasti «Aggiorna» e «Dopo».
-- Se cambia solo la pagina dell'app, l'aggiornamento avviene dentro l'app (circa 150 kB). Se cambia la parte nativa, l'app scarica la nuova APK.
+- Se cambia solo la pagina dell'app, l'aggiornamento avviene dentro l'app (circa 450 kB). Se cambia la parte nativa, l'app scarica la nuova APK.
 
 ## Compilazione
 
@@ -50,6 +50,11 @@ Struttura:
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v0.15.1
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.15.0).
+- Font Big Shoulders Display e Barlow incorporati nell'app: stesso aspetto, ma funzionano anche al primo avvio senza rete e non c'è più il cambio di carattere all'apertura. Il file dell'app cresce di circa 155 kB.
+- Tolto il codice di «Annulla», che non era collegato a nessun tasto: ogni tocco è più leggero.
 
 ### v0.15.0
 Cambia la parte nativa: serve la nuova APK.
