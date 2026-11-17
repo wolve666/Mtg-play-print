@@ -34,7 +34,7 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 **Aggiornamenti**
 - La versione è visibile accanto al nome. Toccandola, l'app verifica gli aggiornamenti.
 - L'app controlla anche da sola. Quando trova una nuova versione mostra un avviso con i tasti «Aggiorna» e «Dopo».
-- Se cambia solo la pagina dell'app, l'aggiornamento avviene dentro l'app (circa 150 kB). Se cambia la parte nativa, l'app scarica la nuova APK.
+- Se cambia solo la pagina dell'app, l'aggiornamento avviene dentro l'app (circa 450 kB). Se cambia la parte nativa, l'app scarica la nuova APK.
 
 ## Compilazione
 
@@ -50,6 +50,38 @@ Struttura:
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v0.15.1
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.15.0).
+- Font Big Shoulders Display e Barlow incorporati nell'app: stesso aspetto, ma funzionano anche al primo avvio senza rete e non c'è più il cambio di carattere all'apertura. Il file dell'app cresce di circa 155 kB.
+- Tolto il codice di «Annulla», che non era collegato a nessun tasto: ogni tocco è più leggero.
+
+### v0.15.0
+Cambia la parte nativa: serve la nuova APK.
+- La stampante spenta o fuori portata viene riconosciuta subito: l'alone blu si spegne e il ricollegamento automatico riparte da solo. Prima l'app la credeva collegata fino alla stampa successiva, che restava in attesa a lungo.
+- Alla chiusura dell'app la porta Bluetooth e la ricerca vengono liberate.
+- Compilazione con versioni fissate delle librerie (`package-lock.json`): ogni APK nasce dalle stesse versioni di Capacitor.
+
+### v0.14.5
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK. Stesso aspetto, meno lavoro per il telefono.
+- Fermate le animazioni che giravano senza essere viste: l'alone e le scintille della pedina rapida a finestra chiusa, i puntini della stampante quando è scollegata, l'alone del tasto versione nei pannelli chiusi, lo sfondo della pagina iniziale quando è coperto da un pannello.
+- Particelle legate al tempo e non ai fotogrammi: stessa durata e velocità sugli schermi a 60, 90 e 120 Hz. Prima sugli schermi veloci duravano la metà.
+- Tela delle particelle più leggera: non viene più ricreata a ogni effetto.
+- Ombre dei dadi disegnate con un gradiente al posto della sfocatura: stesso aspetto, lancio più fluido.
+- Tavolo: quando cambia solo la vita, i segnalini non vengono ridisegnati né rimisurati.
+
+### v0.14.4
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK. Nessun cambiamento visibile: è un aggiornamento di stabilità.
+- La partita viene salvata subito quando l'app va in secondo piano o viene chiusa: prima l'ultimo tocco poteva andare perso.
+- Una partita salvata incompleta o di una versione vecchia viene riparata all'avvio invece di bloccare l'app.
+- Un aggiornamento scaricato non viene più scartato per errore se chiudi l'app nei primi secondi. Se lo scaricamento arriva a metà, l'app riprova al controllo successivo invece di proporre l'APK.
+- Una stampa alla volta: due pedine chieste di fila non mescolano più i dati sulla carta.
+- Archivio offline: durante lo scaricamento la memoria viene liberata immagine per immagine, e se lo spazio finisce lo scaricamento si ferma con un avviso invece di restare «in corso».
+- Tutte le richieste di rete hanno un tempo massimo: una connessione che non risponde non lascia l'app in attesa.
+- Quando arrivano i font, spie e linguette vengono rimisurate.
+- Il tasto indietro sul tavolo chiude prima la finestrella dei danni o il pannello personale aperto.
+- Gli errori imprevisti vengono annotati (gli ultimi 20) e finiscono nei dati da esportare. Se la memoria è piena compare un avviso.
+- «Chi inizia?» non va più in errore se tutti i giocatori sono eliminati.
 
 ### v0.14.3
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
