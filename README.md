@@ -51,6 +51,14 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.14.5
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK. Stesso aspetto, meno lavoro per il telefono.
+- Fermate le animazioni che giravano senza essere viste: l'alone e le scintille della pedina rapida a finestra chiusa, i puntini della stampante quando è scollegata, l'alone del tasto versione nei pannelli chiusi, lo sfondo della pagina iniziale quando è coperto da un pannello.
+- Particelle legate al tempo e non ai fotogrammi: stessa durata e velocità sugli schermi a 60, 90 e 120 Hz. Prima sugli schermi veloci duravano la metà.
+- Tela delle particelle più leggera: non viene più ricreata a ogni effetto.
+- Ombre dei dadi disegnate con un gradiente al posto della sfocatura: stesso aspetto, lancio più fluido.
+- Tavolo: quando cambia solo la vita, i segnalini non vengono ridisegnati né rimisurati.
+
 ### v0.14.4
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK. Nessun cambiamento visibile: è un aggiornamento di stabilità.
 - La partita viene salvata subito quando l'app va in secondo piano o viene chiusa: prima l'ultimo tocco poteva andare perso.

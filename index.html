@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.14.4', APPN = 3;
+var APPV = '0.14.5', APPN = 3;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -121,6 +121,7 @@ body:has(.wz.open,.dlg.open,.ov.open) #board *,body:has(.wz.open,.dlg.open,.ov.o
 .swz{position:absolute;left:50%;transform:translateX(-50%);width:30%;bottom:0;height:max(20px,8%);border-radius:18px 18px 0 0;background:color-mix(in srgb,var(--pt) 14%,transparent);box-shadow:0 0 14px 2px color-mix(in srgb,var(--pt) 12%,transparent);z-index:2;touch-action:none;display:grid;place-items:center;color:color-mix(in srgb,var(--pt) 70%,transparent);transition:width .25s}
 .swz svg{width:max(14px,min(5cqmin,20px));height:max(14px,min(5cqmin,20px));animation:swzBob 1.8s ease-in-out infinite}
 @keyframes swzBob{50%{transform:translateY(-3px)}}
+.cell.pp .swz svg{animation-play-state:paused}
 
 
 /* ---------- Hub centrale ---------- */
@@ -275,17 +276,22 @@ input.txt{user-select:text;-webkit-user-select:text}
 @keyframes haloPulse{0%,100%{transform:scale(.86);opacity:.75}50%{transform:scale(1.06);opacity:1}}
 .orbit{position:absolute;inset:7px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .4s}
 #tokenBtn.pr-on .orbit{opacity:1;animation:orbit 5s linear infinite}
-.orbit i{position:absolute;width:4px;height:4px;border-radius:50%;background:#D4EAFF;box-shadow:0 0 6px 2px rgba(80,160,255,.95);animation:twinkle 1.6s ease-in-out infinite}
+.orbit i{position:absolute;width:4px;height:4px;border-radius:50%;background:#D4EAFF;box-shadow:0 0 6px 2px rgba(80,160,255,.95)}
+/* i puntini lampeggiano solo a stampante collegata, quando si vedono */
+#tokenBtn.pr-on .orbit i{animation:twinkle 1.6s ease-in-out infinite}
 .orbit i:nth-child(1){top:0;left:calc(50% - 2px)}
 .orbit i:nth-child(2){top:calc(50% - 2px);right:0;animation-delay:.4s}
 .orbit i:nth-child(3){bottom:0;left:calc(50% - 2px);animation-delay:.8s}
 .orbit i:nth-child(4){top:calc(50% - 2px);left:0;animation-delay:1.2s}
 @keyframes orbit{to{transform:rotate(360deg)}}
 @keyframes twinkle{50%{opacity:.25;transform:scale(.6)}}
-@media (prefers-reduced-motion:reduce){#tokenBtn.pr-on::before,#tokenBtn.pr-on .orbit,.orbit i{animation:none}}
+@media (prefers-reduced-motion:reduce){#tokenBtn.pr-on::before,#tokenBtn.pr-on .orbit,#tokenBtn.pr-on .orbit i{animation:none}}
 .verBtn{white-space:nowrap;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:500;color:var(--muted);background:rgba(255,255,255,.06)}
-.verBtn.upd{background:var(--gold);color:var(--gold-ink);font-weight:700;animation:verGlow 1.8s ease-in-out infinite}
-@keyframes verGlow{50%{box-shadow:0 0 0 4px rgba(217,180,90,.3)}}
+.verBtn.upd{position:relative;background:var(--gold);color:var(--gold-ink);font-weight:700}
+/* l'alone anima solo l'opacità, e solo dove il tasto si vede */
+.verBtn.upd::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 0 4px rgba(217,180,90,.3);opacity:0;pointer-events:none;animation:verGlow 1.8s ease-in-out infinite}
+@keyframes verGlow{50%{opacity:1}}
+.ov:not(.open) .verBtn.upd::after,.wz:not(.open) .verBtn.upd::after{animation-play-state:paused}
 .ovHead h2{white-space:nowrap}
 .wzBrand .verBtn{color:rgba(255,255,255,.7)}
 .wzBrand .verBtn.upd{color:var(--gold-ink)}
@@ -317,6 +323,8 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .sparks{position:absolute;inset:0;pointer-events:none}
 .spark{position:absolute;left:50%;top:44%;width:6px;height:6px;border-radius:50%;background:#FFE9A8;box-shadow:0 0 10px 3px rgba(255,205,110,.8);opacity:0;animation:float var(--d) ease-in-out var(--dl) infinite}
 @keyframes float{0%{transform:translate(var(--x0),var(--y0)) scale(.3);opacity:0}25%{opacity:1}100%{transform:translate(var(--x1),var(--y1)) scale(1);opacity:0}}
+/* a finestra chiusa alone e scintille sono invisibili: le fermo */
+.tkm:not(.open) .halo,.tkm:not(.open) .spark{animation-play-state:paused}
 .tkmCard{position:relative;height:min(60vh,120vw);aspect-ratio:480/680;border-radius:4.6%/3.3%;overflow:hidden;background:#15131a;
   transform:scale(.8) translateY(14px);opacity:0;transition:transform .5s cubic-bezier(.2,1.35,.4,1),opacity .3s;box-shadow:0 0 0 2px rgba(255,230,160,.35),0 0 50px rgba(217,180,90,.45)}
 .tkm.show .tkmCard{transform:none;opacity:1}
@@ -357,6 +365,8 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wzBg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,12,20,.5),rgba(14,12,20,.9))}
 @keyframes kb{to{transform:scale(1.12) translate(-2%,-2%)}}
 .wz:not(.open) .wzBg i,.dlg:not(.open) .wzBg i{animation-play-state:paused}
+/* sfondo coperto da un pannello o da un'altra finestra: fermo anche lì */
+body:has(.ov.open,#ov-rules.open) #ov-wizard .wzBg i,body:has(#ov-wizard.open) .dlg .wzBg i{animation-play-state:paused}
 .wzScroll{position:relative;flex:1;overflow:hidden}
 .wzStep{height:100%;display:flex;flex-direction:column;justify-content:center;padding:24px 22px calc(28px + env(safe-area-inset-bottom));gap:22px}
 .wz h1,.dlg h1{font-family:var(--num);font-weight:900;font-size:clamp(46px,14vw,78px);line-height:.92;margin:0;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.5)}
@@ -957,12 +967,18 @@ function updateCell(i){
     cmd:S.cmdDamage ? Math.max(0, ...Object.values(p.cmd)) : 0,
     monarch:p.flags.monarch, blessing:p.flags.blessing, initiative:p.flags.initiative, turn:S.turn.on && S.turn.active === i,
   };
+  // tocco solo le spie che cambiano davvero: se cambia solo la vita non ridisegno né rimisuro la riga
+  let changed = false;
   cell.querySelectorAll('.spia').forEach(el=>{
     const k = el.dataset.s, o = el.dataset.o, v = o == null ? val[k] : (S.cmdDamage ? Math.max(p.cmd[o] || 0, p.cmd[o + 'b'] || 0) : 0);
+    if(k === 'turn'){ el.classList.toggle('on', !!v); if(v) el.textContent = turnLabel(); return }
+    const key = v ? String(v) : '';
+    if(el._v === key) return;
+    el._v = key; changed = true;
     el.classList.toggle('on', !!v);
-    if(v){ if(k === 'turn') el.textContent = turnLabel(); else el.innerHTML = typeof v === 'number' ? `${SPIA_ICON[k]}${v}` : SPIA_ICON[k] }
+    if(v) el.innerHTML = typeof v === 'number' ? `${SPIA_ICON[k]}${v}` : SPIA_ICON[k];
   });
-  packRow(cell);
+  if(changed) packRow(cell);
   checkWinner();
 }
 function addHist(i, d){
@@ -1579,15 +1595,22 @@ const D3 = (()=>{
     ctx.globalCompositeOperation='screen';ctx.fillStyle=g;ctx.fillRect(-1,-1,2,2);ctx.restore();
     ctx.lineWidth=.035;ctx.strokeStyle='#6a420a';ctx.beginPath();ctx.arc(0,0,1,0,7);ctx.stroke();
   }
+  // ombra sfumata con un gradiente: stesso aspetto della sfocatura (b = raggio di sfocatura), molto più leggera per il telefono
+  const SH=[[0,1],[.15,.977],[.3,.885],[.4,.726],[.5,.5],[.6,.274],[.7,.115],[.85,.023],[1,0]];
+  function shadow(x,y,rx,ry,an,b,al){
+    const e=b*2.5,s0=Math.max(0,(Math.min(rx,ry)-e)/(Math.min(rx,ry)+e)),g=ctx.createRadialGradient(0,0,0,0,0,1);
+    for(const[t,a]of SH)g.addColorStop(s0+(1-s0)*t,`rgba(0,0,0,${(al*a).toFixed(3)})`);
+    ctx.save();ctx.translate(x,y);ctx.rotate(an);ctx.scale(rx+e,ry+e);ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,1,0,7);ctx.fill();ctx.restore();
+  }
   function render(){
     if(!ctx) return;
     ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);
     const g=ctx.createRadialGradient(W/2,H/2,20,W/2,H/2,W*.7);g.addColorStop(0,'#2d2638');g.addColorStop(1,'#16131c');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
     ctx.strokeStyle='rgba(217,180,90,.25)';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(8,8,W-16,H-16,14):ctx.rect(8,8,W-16,H-16);ctx.stroke();
-    for(const d of items){const h=d.sc-1,off=4+h*90;ctx.save();ctx.filter=`blur(${3+h*18}px)`;ctx.fillStyle=`rgba(0,0,0,${Math.max(.15,.55-h*.6)})`;ctx.beginPath();
-      if(d.coin){const n=mv(d.R,[0,0,1]);ctx.ellipse(d.x+off*.6,d.y+off,d.size*(1+h*.3),d.size*(1+h*.3)*Math.max(.25,Math.abs(n[2])),Math.atan2(n[1],n[0])+Math.PI/2,0,7)}
-      else ctx.ellipse(d.x+off*.6,d.y+off,d.size*.85*(1+h*.3),d.size*.85*(1+h*.3),0,0,7);
-      ctx.fill();ctx.restore()}
+    for(const d of items){const h=d.sc-1,off=4+h*90,al=Math.max(.15,.55-h*.6);let rx,ry,an=0;
+      if(d.coin){const n=mv(d.R,[0,0,1]);rx=d.size*(1+h*.3);ry=rx*Math.max(.25,Math.abs(n[2]));an=Math.atan2(n[1],n[0])+Math.PI/2}
+      else rx=ry=d.size*.85*(1+h*.3);
+      shadow(d.x+off*.6,d.y+off,rx,ry,an,(3+h*18)/DPR,al)}
     for(const d of items) d.coin ? drawCoin(d) : drawDie(d);
   }
   // disposizione: fino a 6 dadi, la moneta è sempre una sola e grande
@@ -2718,15 +2741,23 @@ arcLoad().then(()=>setTimeout(()=>{
 
 /* ================= Effetti: particelle ================= */
 const FX = {P:[], on:false};
-function fxSize(){ const c = $('#fx'), d = devicePixelRatio || 1; c.width = innerWidth * d; c.height = innerHeight * d; c.getContext('2d').setTransform(d,0,0,d,0,0) }
+function fxSize(){
+  const c = $('#fx'), d = Math.min(2, devicePixelRatio || 1), w = Math.round(innerWidth * d), h = Math.round(innerHeight * d);
+  if(c.width !== w || c.height !== h){ c.width = w; c.height = h } // lo ricreo solo se lo schermo è cambiato
+  c.getContext('2d').setTransform(d,0,0,d,0,0);
+}
 function fxRun(){
   if(FX.on) return; FX.on = true; fxSize();
   const c = $('#fx').getContext('2d');
-  (function loop(){
+  // gli effetti seguono l'orologio, non i fotogrammi: stessa durata e velocità a 60, 90 e 120 Hz (k = 1 è un fotogramma a 60 Hz)
+  let last = performance.now() - 16.667;
+  (function loop(now){
+    now = now || performance.now();
+    const k = Math.min(3, Math.max(0, (now - last) / 16.667)), dk = Math.pow(.96, k); last = now;
     c.clearRect(0, 0, innerWidth, innerHeight); c.globalCompositeOperation = 'lighter';
-    FX.P = FX.P.filter(p=>{ p.l--; const f = p.l / p.m; c.globalAlpha = Math.max(f, 0);
-      if(p.ring){ p.r += (p.max - p.r) * .15; c.strokeStyle = p.col; c.lineWidth = 7 * f; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.stroke() }
-      else { p.x += p.vx; p.y += p.vy; p.vx *= .96; p.vy *= .96; c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.s * (.4 + f * .6), 0, 6.283); c.fill() }
+    FX.P = FX.P.filter(p=>{ p.l -= k; const f = Math.max(p.l / p.m, 0); c.globalAlpha = f;
+      if(p.ring){ p.r += (p.max - p.r) * (1 - Math.pow(.85, k)); c.strokeStyle = p.col; c.lineWidth = 7 * f; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.stroke() }
+      else { p.x += p.vx * k; p.y += p.vy * k; p.vx *= dk; p.vy *= dk; c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.s * (.4 + f * .6), 0, 6.283); c.fill() }
       return p.l > 0 });
     c.globalAlpha = 1;
     if(FX.P.length) requestAnimationFrame(loop); else { c.clearRect(0, 0, innerWidth, innerHeight); FX.on = false }
