@@ -51,6 +51,10 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.2
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Tornato lo zoom lento degli sfondi nella pagina iniziale e nelle finestre «Vuoi continuare?» e «Vittoria». La regola aggiunta nella 0.14.5 per fermarlo quando è coperto da un pannello lo bloccava anche quando si vedeva: tolta.
+
 ### v0.15.1
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.15.0).
 - Font Big Shoulders Display e Barlow incorporati nell'app: stesso aspetto, ma funzionano anche al primo avvio senza rete e non c'è più il cambio di carattere all'apertura. Il file dell'app cresce di circa 155 kB.
@@ -64,7 +68,7 @@ Cambia la parte nativa: serve la nuova APK.
 
 ### v0.14.5
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK. Stesso aspetto, meno lavoro per il telefono.
-- Fermate le animazioni che giravano senza essere viste: l'alone e le scintille della pedina rapida a finestra chiusa, i puntini della stampante quando è scollegata, l'alone del tasto versione nei pannelli chiusi, lo sfondo della pagina iniziale quando è coperto da un pannello.
+- Fermate le animazioni che giravano senza essere viste: l'alone e le scintille della pedina rapida a finestra chiusa, i puntini della stampante quando è scollegata, l'alone del tasto versione nei pannelli chiusi.
 - Particelle legate al tempo e non ai fotogrammi: stessa durata e velocità sugli schermi a 60, 90 e 120 Hz. Prima sugli schermi veloci duravano la metà.
 - Tela delle particelle più leggera: non viene più ricreata a ogni effetto.
 - Ombre dei dadi disegnate con un gradiente al posto della sfocatura: stesso aspetto, lancio più fluido.

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.1', APPN = 4;
+var APPV = '0.15.2', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -362,8 +362,6 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wzBg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,12,20,.5),rgba(14,12,20,.9))}
 @keyframes kb{to{transform:scale(1.12) translate(-2%,-2%)}}
 .wz:not(.open) .wzBg i,.dlg:not(.open) .wzBg i{animation-play-state:paused}
-/* sfondo coperto da un pannello o da un'altra finestra: fermo anche lì */
-body:has(.ov.open,#ov-rules.open) #ov-wizard .wzBg i,body:has(#ov-wizard.open) .dlg .wzBg i{animation-play-state:paused}
 .wzScroll{position:relative;flex:1;overflow:hidden}
 .wzStep{height:100%;display:flex;flex-direction:column;justify-content:center;padding:24px 22px calc(28px + env(safe-area-inset-bottom));gap:22px}
 .wz h1,.dlg h1{font-family:var(--num);font-weight:900;font-size:clamp(46px,14vw,78px);line-height:.92;margin:0;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.5)}
