@@ -51,6 +51,10 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.6
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Pannello personale: risolto il glitch alla prima apertura, con i contatori sovrapposti. Il font delle icone si caricava solo in quel momento e il pannello veniva misurato prima che arrivasse. Ora il font si carica all'avvio e i pannelli aperti vengono rimisurati quando arriva.
+
 ### v0.15.5
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Pagina iniziale: il passaggio tra le schede ora si vede scorrere. Nella 0.15.4 la scheda faceva quasi metà corsa nel primo decimo di secondo e sembrava comparire di colpo. Ora parte dolce, accelera e frena in mezzo secondo, con passi regolari a ogni fotogramma.

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.5', APPN = 4;
+var APPV = '0.15.6', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -1140,7 +1140,10 @@ function renderPP(i){
         ${COLORS.map((c,k)=>`<button class="ppSw ${k === p.color ? 'sel' : ''}" data-pa="color" data-v="${k}" style="background:${c.bg}" aria-label="Colore"></button>`).join('')}
         <button class="ppCmd ${online ? '' : 'off'}" data-pa="art"${p.art ? ` style="background-image:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.25)),url('${esc(p.art)}')"` : ''}>Comandante</button></div>`;
   }
-  // se non ci sta, rimpicciolisco il testo quanto basta
+  ppFit(box);
+}
+// se non ci sta, rimpicciolisco il testo quanto basta
+function ppFit(box){
   box.style.fontSize = '';
   let fs = parseFloat(getComputedStyle(box).fontSize);
   while(box.scrollHeight > box.clientHeight + 1 && fs > 8){ fs -= .5; box.style.fontSize = fs + 'px' }
@@ -2962,7 +2965,12 @@ updatePrinterUI();
 // arrivati qui l'avvio è riuscito: la versione scaricata in app è buona (confermo subito, senza aspettare)
 try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){}
 // quando arrivano i font veri le misure cambiano: riposiziono spie e linguette
-if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>{ placeAll(); S.players.forEach((_,i)=>updateCell(i)) });
+if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>{
+  placeAll(); S.players.forEach((_,i)=>updateCell(i));
+  PP.forEach(i => { const b = $(`.cell[data-i="${i}"] .ppIn`); if(b) ppFit(b) }); // pannelli personali aperti: rimisuro
+});
+// il font delle icone si carica subito, non alla prima apertura del pannello personale (che lo misurava ancora vuoto)
+try{ document.fonts.load('1em ManaSub', '\ue907\ue981\ue904\uea50\ue9e8\ue995\ue94a\ue618\ue9c6') }catch(e){}
 if(!NATIVE && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
