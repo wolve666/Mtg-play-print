@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.5', APPN = 4;
+var APPV = '0.15.8', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -76,12 +76,32 @@ input,select{font:inherit}
 .r270 .under{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
 .r180 .under{transform:translate(-50%,-50%) rotate(180deg)}
 .cell.pp .under{visibility:visible;transition:none}
-.ppIn{position:absolute;left:0;right:0;bottom:0;height:80%;padding:.5em .7em;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:.45em;font-size:clamp(10px,6.5cqmin,15px);overflow:hidden}
+.ppIn{position:absolute;left:0;right:0;bottom:0;height:80%;padding:.5em .7em;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:.45em;font-size:clamp(11px,8.5cqmin,20px);overflow:hidden}
 .ppRow{display:flex;gap:.4em;flex-wrap:wrap;justify-content:center;align-items:center}
 .ppC{display:flex;align-items:center;gap:.25em;background:var(--surface);border-radius:.6em;padding:.2em .3em}
 .ppC .mi{font-size:1.3em;margin:0 .1em}
 .ppC b{font-family:var(--num);font-weight:900;font-size:1.5em;min-width:1.2em;text-align:center}
 .ppC button{width:2em;height:2em;border-radius:.45em;background:var(--surface2);font-size:1.1em;font-weight:700}
+/* i tre contatori: una riga sola che non va mai a capo, caselle larghe uguali, numeri e tasti grandi */
+.ppCtrs,.ppFlags{flex-wrap:nowrap}
+/* i sei colori vanno a capo tutti insieme, mai un pallino da solo */
+.ppSws{display:flex;gap:.4em;flex:none}
+.ppFlags{gap:.3em;font-size:.9em}
+.ppFlags .ppF{padding:.35em .55em;white-space:nowrap}
+.ppCtrs .ppC{flex:1 1 0;max-width:10em;justify-content:space-between;padding:.25em .3em;border-radius:.7em}
+.ppCtrs .ppC .mi{font-size:1.4em}
+.ppCtrs .ppC b{font-size:1.8em;min-width:1em}
+.ppCtrs .ppC button{width:2em;height:2em;font-size:1.15em;border-radius:.45em}
+/* pannello alto: ogni contatore su due righe, icona e numero sopra, − e + sotto: numeri e tasti molto più grandi */
+.ppIn.tall .ppCtrs .ppC{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"i n" "m p";align-items:center;justify-items:center;gap:.3em;padding:.4em}
+.ppIn.tall .ppCtrs .ppC .mi{grid-area:i;font-size:1.6em;margin:0}
+.ppIn.tall .ppCtrs .ppC b{grid-area:n;font-size:2.2em}
+.ppIn.tall .ppCtrs .ppC button{width:100%;min-width:2em;height:2.1em}
+.ppIn.tall .ppCtrs .ppC button:first-of-type{grid-area:m}
+.ppIn.tall .ppCtrs .ppC button:last-of-type{grid-area:p}
+/* tasto quadrato con l'ingranaggio: apre la Scheda completa */
+.ppGear{flex:none;width:2.1em;height:2.1em;border-radius:.55em;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center}
+.ppGear svg{width:1.3em;height:1.3em}
 .ppF{padding:.35em .7em;border-radius:99px;background:var(--surface);opacity:.6;display:flex;gap:.3em;align-items:center;font-weight:600}
 .ppF.on{opacity:1;background:var(--surface2);box-shadow:inset 0 0 0 2px var(--gold)}
 .ppName{width:8.5em;padding:.4em .6em;border-radius:.6em;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:1em}
@@ -757,7 +777,9 @@ if(!S){
   S.players = freshPlayers(4, 40);
 }
 let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false, page:false}, load(SKEY) || {});
-SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
+SET.show = Object.assign({poison:true, energy:false, exp:true, rad:false, tax:true}, SET.show || {});
+// 0.15.7: l'esperienza esce dal pannello personale e si sposta nella Scheda completa, quindi la accendo lì una volta per tutti
+if(!SET.expMoved){ SET.show.exp = true; SET.expMoved = true; try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
 
@@ -1118,9 +1140,11 @@ document.addEventListener('pointerdown', e=>{
 /* ================= Pannello personale ================= */
 // le cose che il giocatore attiva da solo; quelle che arrivano da un avversario si danno trascinando il nome
 const PP = new Set(), PPART = {};
-const PP_CTR = ['energy','exp','tax','rad'];
+// l'esperienza è stata tolta dal pannello (rara): resta nella Scheda completa
+const PP_CTR = ['energy','tax','rad'];
 const PP_ICON = {energy:'', exp:'', tax:'', rad:''};
 const PP_ROT = {r0:0, r90:90, r180:180, r270:-90};
+const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 function openPP(i){ PP.add(i); $(`.cell[data-i="${i}"]`)?.classList.add('pp'); renderPP(i); buzz(12) }
 function closePP(i){ PP.delete(i); delete PPART[i]; const c = $(`.cell[data-i="${i}"]`); if(!c) return; document.activeElement?.blur?.(); c.classList.remove('pp') }
 function renderPP(i){
@@ -1134,16 +1158,29 @@ function renderPP(i){
       ${p.art ? '<button class="ppF" data-pa="artdel">Togli sfondo</button>' : ''}</div>`;
   } else {
     const ctrs = PP_CTR.filter(k => k !== 'tax' || S.format !== 'standard');
-    box.innerHTML = `<div class="ppRow">${ctrs.map(k=>`<div class="ppC"><i class="mi">${PP_ICON[k]}</i><button data-pa="ctr" data-k="${k}" data-v="${k === 'tax' ? -2 : -1}">−</button><b>${p.counters[k] || 0}</b><button data-pa="ctr" data-k="${k}" data-v="${k === 'tax' ? 2 : 1}">+</button></div>`).join('')}</div>
-      <div class="ppRow">${FLAGS.map(f=>`<button class="ppF ${p.flags[f.k] ? 'on' : ''}" data-pa="flag" data-k="${f.k}">${f.icon}${f.k === 'blessing' ? 'Benedizione' : f.label}</button>`).join('')}<button class="ppFull" data-pa="full">Scheda completa</button></div>
+    box.innerHTML = `<div class="ppRow ppCtrs">${ctrs.map(k=>`<div class="ppC"><i class="mi">${PP_ICON[k]}</i><button data-pa="ctr" data-k="${k}" data-v="${k === 'tax' ? -2 : -1}">−</button><b>${p.counters[k] || 0}</b><button data-pa="ctr" data-k="${k}" data-v="${k === 'tax' ? 2 : 1}">+</button></div>`).join('')}</div>
+      <div class="ppRow ppFlags">${FLAGS.map(f=>`<button class="ppF ${p.flags[f.k] ? 'on' : ''}" data-pa="flag" data-k="${f.k}">${f.icon}${f.k === 'blessing' ? 'Benedizione' : f.label}</button>`).join('')}<button class="ppGear" data-pa="full" aria-label="Scheda completa">${GEAR}</button></div>
       <div class="ppRow"><input class="ppName" data-pa="name" maxlength="20" value="${esc(p.name)}" enterkeyhint="done">
-        ${COLORS.map((c,k)=>`<button class="ppSw ${k === p.color ? 'sel' : ''}" data-pa="color" data-v="${k}" style="background:${c.bg}" aria-label="Colore"></button>`).join('')}
+        <span class="ppSws">${COLORS.map((c,k)=>`<button class="ppSw ${k === p.color ? 'sel' : ''}" data-pa="color" data-v="${k}" style="background:${c.bg}" aria-label="Colore"></button>`).join('')}</span>
         <button class="ppCmd ${online ? '' : 'off'}" data-pa="art"${p.art ? ` style="background-image:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.25)),url('${esc(p.art)}')"` : ''}>Comandante</button></div>`;
   }
-  // se non ci sta, rimpicciolisco il testo quanto basta
+  ppFit(box);
+}
+// se non ci sta, rimpicciolisco il testo quanto basta
+function ppFit(box){
+  // provo le due disposizioni dei contatori (in fila e su due righe) e tengo quella che permette il testo più grande
+  box.classList.remove('tall'); const a = ppFit1(box);
+  box.classList.add('tall'); const b = ppFit1(box);
+  if(a > b){ box.classList.remove('tall'); ppFit1(box) }
+}
+function ppFit1(box){
   box.style.fontSize = '';
   let fs = parseFloat(getComputedStyle(box).fontSize);
-  while(box.scrollHeight > box.clientHeight + 1 && fs > 8){ fs -= .5; box.style.fontSize = fs + 'px' }
+  // contatori e stati non vanno a capo: se una delle due righe è più larga del pannello rimpicciolisco anche per quella
+  const rows = [...box.querySelectorAll('.ppCtrs,.ppFlags')];
+  const wide = () => rows.some(row => row.scrollWidth > row.clientWidth + 1);
+  while((box.scrollHeight > box.clientHeight + 1 || wide()) && fs > 8){ fs -= .5; box.style.fontSize = fs + 'px' }
+  return fs;
 }
 async function ppSearch(i){
   const a = PPART[i], q = (a.q || '').trim(); if(!q) return;
@@ -2825,7 +2862,7 @@ function tutSteps(){
   return [
     {t:'Benvenuto!', p:'Ti mostro in un minuto le funzioni principali di Magic Play&Print. Puoi rivedere questa guida quando vuoi dal Menu, sotto le pedine.'},
     {el:me, t:'Punti vita', p:'Tocca la metà con il + per aggiungere un punto e quella con il − per toglierlo. Tenendo premuto il conteggio scorre (o salta di 10, lo scegli nel Menu).', g:'tap', at:me?.querySelector('.half.plus')},
-    {el:me?.querySelector('.swz'), t:'Pannello personale', p:'Fai scorrere verso l\'alto la linguetta in fondo alla tua scheda, oppure toccala: la scheda sale e sotto trovi energia, esperienza, tassa, radiazioni, monarca, iniziativa, nome, colore e lo sfondo del comandante. Per chiudere fai scorrere in giù o tocca la striscia rimasta.', g:'drag', to:me?.querySelector('.life')},
+    {el:me?.querySelector('.swz'), t:'Pannello personale', p:'Fai scorrere verso l\'alto la linguetta in fondo alla tua scheda, oppure toccala: la scheda sale e sotto trovi energia, tassa, radiazioni, monarca, iniziativa, benedizione, nome, colore e lo sfondo del comandante. L\'ingranaggio dorato apre la scheda completa. Per chiudere fai scorrere in giù o tocca la striscia rimasta.', g:'drag', to:me?.querySelector('.life')},
     {el:me?.querySelector('.pname'), t:'Danni dagli avversari', p:'Trascina il tuo nome sulla scheda di un avversario e scegli cosa gli dai: danni da comandante (già selezionati), veleno o radiazioni. Il danno da comandante toglie anche i punti vita. Toccando il nome si apre la scheda completa con le statistiche.', g:'drag', to:other},
     {el:me, t:'Danni da comandante', p:'Sopra la vita compare un segnalino per ogni avversario che ti ha colpito con il comandante, con una luce nel suo colore. A 21 danni dallo stesso comandante sei fuori.'},
     {el:$('#tokenBtn'), t:'Pedine', p:'Tocca il simbolo centrale per cercare le pedine. Tienilo premuto e di\' la pedina, per esempio «drago 5/5 volare»: la trova e dopo 3 secondi la stampa. Toccala per annullare. Trascinalo per spostarlo dove ti è più comodo.', g:'hold'},
@@ -2962,7 +2999,12 @@ updatePrinterUI();
 // arrivati qui l'avvio è riuscito: la versione scaricata in app è buona (confermo subito, senza aspettare)
 try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){}
 // quando arrivano i font veri le misure cambiano: riposiziono spie e linguette
-if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>{ placeAll(); S.players.forEach((_,i)=>updateCell(i)) });
+if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>{
+  placeAll(); S.players.forEach((_,i)=>updateCell(i));
+  PP.forEach(i => { const b = $(`.cell[data-i="${i}"] .ppIn`); if(b) ppFit(b) }); // pannelli personali aperti: rimisuro
+});
+// il font delle icone si carica subito, non alla prima apertura del pannello personale (che lo misurava ancora vuoto)
+try{ document.fonts.load('1em ManaSub', '\ue907\ue981\ue904\uea50\ue9e8\ue995\ue94a\ue618\ue9c6') }catch(e){}
 if(!NATIVE && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
