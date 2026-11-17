@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.2', APPN = 4;
+var APPV = '0.15.3', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -320,8 +320,9 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .sparks{position:absolute;inset:0;pointer-events:none}
 .spark{position:absolute;left:50%;top:44%;width:6px;height:6px;border-radius:50%;background:#FFE9A8;box-shadow:0 0 10px 3px rgba(255,205,110,.8);opacity:0;animation:float var(--d) ease-in-out var(--dl) infinite}
 @keyframes float{0%{transform:translate(var(--x0),var(--y0)) scale(.3);opacity:0}25%{opacity:1}100%{transform:translate(var(--x1),var(--y1)) scale(1);opacity:0}}
-/* a finestra chiusa alone e scintille sono invisibili: le fermo */
-.tkm:not(.open) .halo,.tkm:not(.open) .spark{animation-play-state:paused}
+/* a finestra chiusa le scintille sono invisibili: le fermo. L'alone invece continua a girare come nella 0.14.3:
+   su alcuni telefoni, senza di lui, la pagina iniziale perdeva lo zoom dello sfondo e la fluidità */
+.tkm:not(.open) .spark{animation-play-state:paused}
 .tkmCard{position:relative;height:min(60vh,120vw);aspect-ratio:480/680;border-radius:4.6%/3.3%;overflow:hidden;background:#15131a;
   transform:scale(.8) translateY(14px);opacity:0;transition:transform .5s cubic-bezier(.2,1.35,.4,1),opacity .3s;box-shadow:0 0 0 2px rgba(255,230,160,.35),0 0 50px rgba(217,180,90,.45)}
 .tkm.show .tkmCard{transform:none;opacity:1}

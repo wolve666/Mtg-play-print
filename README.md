@@ -51,6 +51,10 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.3
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Pagina iniziale: l'alone della pedina rapida torna a girare anche a finestra chiusa, come nella 0.14.3. Fermarlo (0.14.5) è l'unica differenza rimasta rispetto a quando lo zoom dello sfondo e la fluidità della pagina iniziale erano a posto.
+
 ### v0.15.2
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Tornato lo zoom lento degli sfondi nella pagina iniziale e nelle finestre «Vuoi continuare?» e «Vittoria». La regola aggiunta nella 0.14.5 per fermarlo quando è coperto da un pannello lo bloccava anche quando si vedeva: tolta.
