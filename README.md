@@ -13,7 +13,7 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 - Formati Standard, Commander, Brawl e Oathbreaker, da 2 a 6 giocatori, con i punti vita iniziali già impostati.
 - Pannelli orientati verso ogni giocatore, con colori o illustrazioni personalizzabili.
 - Segnalini mostrati solo quando servono: veleno, energia, esperienza, radiazioni, tassa del comandante e un indicatore per ogni avversario che ha fatto danno da comandante, con una luce interna nel suo colore.
-- Pannello personale: uno swipe in su sulla linguetta in fondo alla scheda la fa salire e scopre energia, tassa, radiazioni, monarca, iniziativa, benedizione della città, nome, colore e sfondo del comandante.
+- Pannello personale: uno swipe in su sulla linguetta in fondo alla scheda la fa salire e scopre energia, tassa, radiazioni, monarca, iniziativa, benedizione della città, nome, colore e sfondo del comandante. L'ingranaggio dorato apre la scheda completa del giocatore.
 - Trascinando il proprio nome sulla scheda di un avversario si assegnano danni da comandante, veleno o radiazioni.
 - Dadi e moneta con lancio animato, più dadi insieme con la somma, «Chi inizia?», registro della partita e rilevamento del vincitore con rivincita.
 
@@ -50,6 +50,12 @@ Struttura:
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v0.15.8
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Pannello personale ridisegnato. Il tasto «Scheda completa» diventa un tasto quadrato dorato con l'ingranaggio, sulla stessa riga di Monarca, Iniziativa e Benedizione.
+- Lo spazio liberato va ai tre contatori, che stanno sempre su una riga. Quando il pannello è alto (2 giocatori, o le schede dritte) ogni contatore si dispone su due righe, con icona e numero sopra e i tasti − e + larghi sotto. Quando è basso (le schede girate) restano in fila. Il pannello sceglie da solo la disposizione che permette la misura più grande.
+- I sei colori vanno a capo tutti insieme, mai un pallino da solo.
 
 ### v0.15.7
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
