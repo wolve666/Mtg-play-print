@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.6', APPN = 4;
+var APPV = '0.15.7', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -76,7 +76,7 @@ input,select{font:inherit}
 .r270 .under{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}
 .r180 .under{transform:translate(-50%,-50%) rotate(180deg)}
 .cell.pp .under{visibility:visible;transition:none}
-.ppIn{position:absolute;left:0;right:0;bottom:0;height:80%;padding:.5em .7em;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:.45em;font-size:clamp(10px,6.5cqmin,15px);overflow:hidden}
+.ppIn{position:absolute;left:0;right:0;bottom:0;height:80%;padding:.5em .7em;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:.45em;font-size:clamp(11px,8.5cqmin,20px);overflow:hidden}
 .ppRow{display:flex;gap:.4em;flex-wrap:wrap;justify-content:center;align-items:center}
 .ppC{display:flex;align-items:center;gap:.25em;background:var(--surface);border-radius:.6em;padding:.2em .3em}
 .ppC .mi{font-size:1.3em;margin:0 .1em}
@@ -757,7 +757,9 @@ if(!S){
   S.players = freshPlayers(4, 40);
 }
 let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false, page:false}, load(SKEY) || {});
-SET.show = Object.assign({poison:true, energy:false, exp:false, rad:false, tax:true}, SET.show || {});
+SET.show = Object.assign({poison:true, energy:false, exp:true, rad:false, tax:true}, SET.show || {});
+// 0.15.7: l'esperienza esce dal pannello personale e si sposta nella Scheda completa, quindi la accendo lì una volta per tutti
+if(!SET.expMoved){ SET.show.exp = true; SET.expMoved = true; try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
 
@@ -1118,7 +1120,8 @@ document.addEventListener('pointerdown', e=>{
 /* ================= Pannello personale ================= */
 // le cose che il giocatore attiva da solo; quelle che arrivano da un avversario si danno trascinando il nome
 const PP = new Set(), PPART = {};
-const PP_CTR = ['energy','exp','tax','rad'];
+// l'esperienza è stata tolta dal pannello (rara): resta nella Scheda completa
+const PP_CTR = ['energy','tax','rad'];
 const PP_ICON = {energy:'', exp:'', tax:'', rad:''};
 const PP_ROT = {r0:0, r90:90, r180:180, r270:-90};
 function openPP(i){ PP.add(i); $(`.cell[data-i="${i}"]`)?.classList.add('pp'); renderPP(i); buzz(12) }
@@ -2828,7 +2831,7 @@ function tutSteps(){
   return [
     {t:'Benvenuto!', p:'Ti mostro in un minuto le funzioni principali di Magic Play&Print. Puoi rivedere questa guida quando vuoi dal Menu, sotto le pedine.'},
     {el:me, t:'Punti vita', p:'Tocca la metà con il + per aggiungere un punto e quella con il − per toglierlo. Tenendo premuto il conteggio scorre (o salta di 10, lo scegli nel Menu).', g:'tap', at:me?.querySelector('.half.plus')},
-    {el:me?.querySelector('.swz'), t:'Pannello personale', p:'Fai scorrere verso l\'alto la linguetta in fondo alla tua scheda, oppure toccala: la scheda sale e sotto trovi energia, esperienza, tassa, radiazioni, monarca, iniziativa, nome, colore e lo sfondo del comandante. Per chiudere fai scorrere in giù o tocca la striscia rimasta.', g:'drag', to:me?.querySelector('.life')},
+    {el:me?.querySelector('.swz'), t:'Pannello personale', p:'Fai scorrere verso l\'alto la linguetta in fondo alla tua scheda, oppure toccala: la scheda sale e sotto trovi energia, tassa, radiazioni, monarca, iniziativa, nome, colore e lo sfondo del comandante. Per chiudere fai scorrere in giù o tocca la striscia rimasta.', g:'drag', to:me?.querySelector('.life')},
     {el:me?.querySelector('.pname'), t:'Danni dagli avversari', p:'Trascina il tuo nome sulla scheda di un avversario e scegli cosa gli dai: danni da comandante (già selezionati), veleno o radiazioni. Il danno da comandante toglie anche i punti vita. Toccando il nome si apre la scheda completa con le statistiche.', g:'drag', to:other},
     {el:me, t:'Danni da comandante', p:'Sopra la vita compare un segnalino per ogni avversario che ti ha colpito con il comandante, con una luce nel suo colore. A 21 danni dallo stesso comandante sei fuori.'},
     {el:$('#tokenBtn'), t:'Pedine', p:'Tocca il simbolo centrale per cercare le pedine. Tienilo premuto e di\' la pedina, per esempio «drago 5/5 volare»: la trova e dopo 3 secondi la stampa. Toccala per annullare. Trascinalo per spostarlo dove ti è più comodo.', g:'hold'},

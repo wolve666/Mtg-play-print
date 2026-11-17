@@ -13,7 +13,7 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 - Formati Standard, Commander, Brawl e Oathbreaker, da 2 a 6 giocatori, con i punti vita iniziali già impostati.
 - Pannelli orientati verso ogni giocatore, con colori o illustrazioni personalizzabili.
 - Segnalini mostrati solo quando servono: veleno, energia, esperienza, radiazioni, tassa del comandante e un indicatore per ogni avversario che ha fatto danno da comandante, con una luce interna nel suo colore.
-- Pannello personale: uno swipe in su sulla linguetta in fondo alla scheda la fa salire e scopre energia, esperienza, tassa, radiazioni, monarca, iniziativa, benedizione della città, nome, colore e sfondo del comandante.
+- Pannello personale: uno swipe in su sulla linguetta in fondo alla scheda la fa salire e scopre energia, tassa, radiazioni, monarca, iniziativa, benedizione della città, nome, colore e sfondo del comandante.
 - Trascinando il proprio nome sulla scheda di un avversario si assegnano danni da comandante, veleno o radiazioni.
 - Dadi e moneta con lancio animato, più dadi insieme con la somma, «Chi inizia?», registro della partita e rilevamento del vincitore con rivincita.
 
@@ -50,6 +50,10 @@ Struttura:
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v0.15.7
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Pannello personale: tolto il contatore Esperienza, che resta nella Scheda completa (lì ora è attivo per tutti). Con tre contatori stanno su una riga sola e il pannello è più grande: circa un terzo in più con 2 giocatori, un decimo con 4.
 
 ### v0.15.6
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
