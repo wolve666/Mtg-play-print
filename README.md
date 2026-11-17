@@ -51,6 +51,10 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.9
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Ingranaggio del pannello personale pieno, con il foro al centro, e centrato nel tasto anche con molti giocatori. Prima il margine interno predefinito del tasto lo spingeva a destra nei pannelli piccoli.
+
 ### v0.15.8
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Pannello personale ridisegnato. Il tasto «Scheda completa» diventa un tasto quadrato dorato con l'ingranaggio, sulla stessa riga di Monarca, Iniziativa e Benedizione.
