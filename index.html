@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.3', APPN = 4;
+var APPV = '0.15.4', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -358,12 +358,19 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .35s,visibility 0s .35s;padding-top:env(safe-area-inset-top)}
 .wz.open,.dlg.open{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .35s}
 .wzBg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 30% 20%,#3a2c52,#14121a 70%)}
-.wzBg i{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1s;animation:kb 26s ease-in-out infinite alternate}
+.wzBg i{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1s;animation:kb 26s ease-in-out -5s infinite alternate}
+/* sfondo visibile: livello proprio sulla scheda grafica, lo zoom non passa dal processo principale */
+.wz.open .wzBg i,.dlg.open .wzBg i{will-change:transform,opacity}
 .wzBg i.in{opacity:1}
 .wzBg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,12,20,.5),rgba(14,12,20,.9))}
 @keyframes kb{to{transform:scale(1.12) translate(-2%,-2%)}}
 .wz:not(.open) .wzBg i,.dlg:not(.open) .wzBg i{animation-play-state:paused}
 .wzScroll{position:relative;flex:1;overflow:hidden}
+/* le schede scorrono spostando il binario (transform): lo fa la scheda grafica, senza scatti */
+.wzTrack{height:100%;transition:transform .42s cubic-bezier(.2,.85,.25,1);will-change:transform}
+.wzTrack.now{transition:none}
+.wzStep.off{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.wzTrack{transition:none}}
 .wzStep{height:100%;display:flex;flex-direction:column;justify-content:center;padding:24px 22px calc(28px + env(safe-area-inset-bottom));gap:22px}
 .wz h1,.dlg h1{font-family:var(--num);font-weight:900;font-size:clamp(46px,14vw,78px);line-height:.92;margin:0;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.5)}
 .wzBrand{font-weight:600;color:var(--gold);display:flex;align-items:baseline;gap:8px}
@@ -608,7 +615,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 <!-- Avvio: formato e giocatori -->
 <section id="ov-wizard" class="wz">
   <div class="wzBg" id="wzBg"><i></i></div>
-  <div class="wzScroll" id="wzScroll">
+  <div class="wzScroll" id="wzScroll"><div class="wzTrack" id="wzTrack">
     <div class="wzStep" id="wzStep1">
       <button class="wzBack" id="wzClose" hidden>‹ Indietro</button>
       <div class="wzBrand">Magic Play&amp;Print <button class="verBtn" id="wzVer"></button></div>
@@ -627,7 +634,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
       <div class="wzNames" id="wzNames"></div>
       <div class="wzGo"><button class="btn" id="wzSkip">Salta</button><button class="btn primary" id="wzStart">Inizia</button></div>
     </div>
-  </div>
+  </div></div>
 </section>
 
 <!-- Riprendi la partita -->
@@ -2473,13 +2480,29 @@ async function themeBg(box, q, url){
       url = f && f.art_crop;
     }
     if(!url) return;
-    const im = new Image(); im.onload = ()=>{ i.style.backgroundImage = `url('${url}')`; i.classList.add('in') }; im.src = url;
+    const im = new Image();
+    im.onload = ()=>{
+      i.style.backgroundImage = `url('${url}')`;
+      // faccio ripartire lo zoom insieme alla dissolvenza: così si vede muoversi da subito
+      i.style.animation = 'none'; void i.offsetWidth; i.style.animation = '';
+      i.classList.add('in');
+    };
+    im.src = url;
   }catch(e){}
 }
 function wzStep(n){
   if(n < 3) document.activeElement?.blur?.();
   WZ.step = n;
-  $('#wzStep' + n).scrollIntoView({behavior: n > 1 ? 'smooth' : 'instant', block:'start'});
+  const tr = $('#wzTrack'), steps = [1,2,3].map(k => $('#wzStep' + k));
+  $('#wzScroll').scrollTop = 0;
+  // durante il passaggio si vedono la scheda di partenza e quella d'arrivo; a fine corsa le altre si spengono
+  // così le loro sfocature non vengono ricalcolate mentre lo sfondo si muove
+  steps.forEach(st => st.classList.remove('off'));
+  tr.classList.toggle('now', wzStep.now === true);
+  wzStep.now = false;
+  tr.style.transform = `translateY(${-(n - 1) * 100}%)`;
+  clearTimeout(wzStep.t);
+  wzStep.t = setTimeout(()=>steps.forEach((st, k) => st.classList.toggle('off', k !== n - 1)), tr.classList.contains('now') ? 0 : 460);
 }
 // nomi dei giocatori: propongo gli ultimi usati, Salta lascia Giocatore 1, 2, 3...
 const NKEY = 'smtg-names';
@@ -2533,7 +2556,7 @@ function openWizard(swap){
   themeBg($('#wzBg'), ART_Q.wizard);
   $('#wzClose').hidden = !swap;
   openOv('wizard');
-  requestAnimationFrame(()=>wzStep(1));
+  wzStep.now = true; wzStep(1);
 }
 $('#wzFormats').addEventListener('click', e=>{
   const inf = e.target.closest('[data-info]'); if(inf){ openRules(inf.dataset.info); return }

@@ -51,6 +51,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.4
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Pagina iniziale più fluida: il passaggio tra «A cosa vuoi giocare?», «In quanti siete» e «Chi gioca?» ora lo fa la scheda grafica, invece dello scorrimento automatico del browser che nell'app dava un micro-scatto. Stesso movimento verso l'alto. A passaggio finito le schede non visibili si spengono, così le loro sfocature non pesano mentre lo sfondo si muove.
+- Zoom degli sfondi ripristinato: riparte insieme alla dissolvenza ogni volta che compare un'immagine, già in movimento dal primo istante, e lo sfondo visibile ha un livello proprio sulla scheda grafica.
+
 ### v0.15.3
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Pagina iniziale: l'alone della pedina rapida torna a girare anche a finestra chiusa, come nella 0.14.3. Fermarlo (0.14.5) è l'unica differenza rimasta rispetto a quando lo zoom dello sfondo e la fluidità della pagina iniziale erano a posto.
