@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.8', APPN = 4;
+var APPV = '0.15.9', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -100,8 +100,8 @@ input,select{font:inherit}
 .ppIn.tall .ppCtrs .ppC button:first-of-type{grid-area:m}
 .ppIn.tall .ppCtrs .ppC button:last-of-type{grid-area:p}
 /* tasto quadrato con l'ingranaggio: apre la Scheda completa */
-.ppGear{flex:none;width:2.1em;height:2.1em;border-radius:.55em;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center}
-.ppGear svg{width:1.3em;height:1.3em}
+.ppGear{flex:none;width:2.1em;height:2.1em;padding:0;border-radius:.55em;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center}
+.ppGear svg{display:block;width:1.35em;height:1.35em}
 .ppF{padding:.35em .7em;border-radius:99px;background:var(--surface);opacity:.6;display:flex;gap:.3em;align-items:center;font-weight:600}
 .ppF.on{opacity:1;background:var(--surface2);box-shadow:inset 0 0 0 2px var(--gold)}
 .ppName{width:8.5em;padding:.4em .6em;border-radius:.6em;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:1em}
@@ -1144,7 +1144,7 @@ const PP = new Set(), PPART = {};
 const PP_CTR = ['energy','tax','rad'];
 const PP_ICON = {energy:'', exp:'', tax:'', rad:''};
 const PP_ROT = {r0:0, r90:90, r180:180, r270:-90};
-const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+const GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M20.22 9.46 L23.04 10.11 L23.04 13.89 L20.22 14.54 L19.61 16.01 L21.15 18.47 L18.47 21.15 L16.01 19.61 L14.54 20.22 L13.89 23.04 L10.11 23.04 L9.46 20.22 L7.99 19.61 L5.53 21.15 L2.85 18.47 L4.39 16.01 L3.78 14.54 L0.96 13.89 L0.96 10.11 L3.78 9.46 L4.39 7.99 L2.85 5.53 L5.53 2.85 L7.99 4.39 L9.46 3.78 L10.11 0.96 L13.89 0.96 L14.54 3.78 L16.01 4.39 L18.47 2.85 L21.15 5.53 L19.61 7.99Z M12 8.6a3.4 3.4 0 1 0 0 6.8a3.4 3.4 0 1 0 0-6.8Z"/></svg>';
 function openPP(i){ PP.add(i); $(`.cell[data-i="${i}"]`)?.classList.add('pp'); renderPP(i); buzz(12) }
 function closePP(i){ PP.delete(i); delete PPART[i]; const c = $(`.cell[data-i="${i}"]`); if(!c) return; document.activeElement?.blur?.(); c.classList.remove('pp') }
 function renderPP(i){
