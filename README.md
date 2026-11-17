@@ -51,6 +51,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.5
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Pagina iniziale: il passaggio tra le schede ora si vede scorrere. Nella 0.15.4 la scheda faceva quasi metà corsa nel primo decimo di secondo e sembrava comparire di colpo. Ora parte dolce, accelera e frena in mezzo secondo, con passi regolari a ogni fotogramma.
+- Le schede non visibili restano pronte invece di spegnersi, così all'inizio del passaggio il telefono non deve ridisegnarle.
+
 ### v0.15.4
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Pagina iniziale più fluida: il passaggio tra «A cosa vuoi giocare?», «In quanti siete» e «Chi gioca?» ora lo fa la scheda grafica, invece dello scorrimento automatico del browser che nell'app dava un micro-scatto. Stesso movimento verso l'alto. A passaggio finito le schede non visibili si spengono, così le loro sfocature non pesano mentre lo sfondo si muove.
