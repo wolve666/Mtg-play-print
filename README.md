@@ -51,6 +51,12 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.0
+Cambia la parte nativa: serve la nuova APK.
+- La stampante spenta o fuori portata viene riconosciuta subito: l'alone blu si spegne e il ricollegamento automatico riparte da solo. Prima l'app la credeva collegata fino alla stampa successiva, che restava in attesa a lungo.
+- Alla chiusura dell'app la porta Bluetooth e la ricerca vengono liberate.
+- Compilazione con versioni fissate delle librerie (`package-lock.json`): ogni APK nasce dalle stesse versioni di Capacitor.
+
 ### v0.14.5
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK. Stesso aspetto, meno lavoro per il telefono.
 - Fermate le animazioni che giravano senza essere viste: l'alone e le scintille della pedina rapida a finestra chiusa, i puntini della stampante quando è scollegata, l'alone del tasto versione nei pannelli chiusi, lo sfondo della pagina iniziale quando è coperto da un pannello.

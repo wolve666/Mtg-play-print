@@ -25,6 +25,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -250,6 +251,7 @@ public class BtSerialPlugin extends Plugin {
                 close0();
                 sock = open(addr);
                 out = sock.getOutputStream();
+                watch(sock);
                 addr0 = addr;
                 JSObject r = new JSObject();
                 r.put("how", how);
@@ -284,6 +286,7 @@ public class BtSerialPlugin extends Plugin {
                     if (addr0 == null) throw e;
                     sock = open(addr0);
                     out = sock.getOutputStream();
+                    watch(sock);
                     send(b);
                     c.resolve();
                 } catch (Exception e2) {
@@ -298,6 +301,36 @@ public class BtSerialPlugin extends Plugin {
     @PluginMethod
     public void disconnect(PluginCall c) {
         ex.execute(() -> { close0(); c.resolve(); });
+    }
+
+    // Sorveglianza del collegamento: se la stampante si spegne o esce dalla portata la lettura si interrompe,
+    // e l'app lo sa subito invece di scoprirlo alla stampa successiva.
+    private void watch(final BluetoothSocket s) {
+        Thread t = new Thread(() -> {
+            try {
+                InputStream in = s.getInputStream();
+                byte[] buf = new byte[64];
+                while (in.read(buf) >= 0) { /* eventuali risposte della stampante: le ignoro */ }
+            } catch (Exception ignored) {}
+            try {
+                ex.execute(() -> {
+                    if (sock != s) return; // collegamento già chiuso o sostituito da uno nuovo
+                    close0();
+                    notifyListeners("disconnected", new JSObject());
+                });
+            } catch (Exception ignored) {}
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    // l'app si chiude: fermo la ricerca e libero la porta della stampante
+    @Override
+    protected void handleOnDestroy() {
+        stopScan0();
+        main.removeCallbacks(pairTimeout);
+        if (bondRx != null) { try { getContext().unregisterReceiver(bondRx); } catch (Exception ignored) {} bondRx = null; }
+        close0();
     }
 
     private void close0() {
