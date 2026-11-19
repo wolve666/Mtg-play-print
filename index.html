@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.17.1', APPN = 6;
+var APPV = '0.18.0', APPN = 6;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -503,8 +503,8 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
 /* tavolo */
 .th-forgia .cell{border-radius:0;clip-path:var(--notch);background:linear-gradient(155deg,color-mix(in srgb,var(--pc),#fff 8%),var(--pc) 45%,color-mix(in srgb,var(--pc) 62%,#000))}
 .th-forgia .cell:not(.active):not(.withart):not(.dropT){box-shadow:inset 0 0 0 2px rgba(255,255,255,.13)}
-.th-forgia .frame{background-image:repeating-linear-gradient(-58deg,rgba(255,255,255,.05) 0 2px,transparent 2px 12px)}
-.th-forgia .cell.pp .frame{background-color:transparent;background-image:repeating-linear-gradient(-58deg,rgba(255,255,255,.05) 0 2px,transparent 2px 12px),linear-gradient(155deg,color-mix(in srgb,var(--pc),#fff 8%),var(--pc) 45%,color-mix(in srgb,var(--pc) 62%,#000))}
+.th-forgia .frame{background-image:repeating-linear-gradient(-58deg,rgba(255,255,255,.05) 0 2px,transparent 2px 12px),linear-gradient(155deg,color-mix(in srgb,var(--pc),#fff 8%),var(--pc) 45%,color-mix(in srgb,var(--pc) 62%,#000))}
+/* lo sfondo della scheda è sempre pieno: con la linguetta che si chiude la scheda non diventa trasparente mentre scende */
 .th-forgia .life{text-shadow:0 4px 0 rgba(0,0,0,.22),0 0 18px color-mix(in srgb,var(--pc) 60%,#fff)}
 .th-forgia .half{font-family:var(--num);font-weight:900}
 .th-forgia .pname{border-radius:0;clip-path:var(--par);background:rgba(0,0,0,.32);font-weight:700;letter-spacing:.02em;padding:.5em 1.35em}
@@ -581,8 +581,35 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
 .th-forgia .wzTrack{transform:none!important;transition:none!important}
 .th-forgia .wzStep{position:absolute;inset:0;visibility:hidden}
 .th-forgia .wzStep.cur{visibility:visible}
-#fx2{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:46;display:none}
+.th-forgia .wzStep.mv .wzOpt,.th-forgia .wzStep.mv .wzName input{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(24,20,28,.74)}
+#fx2{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60;display:none}
 #fx2.on{display:block}
+
+/* effetti di Forgia sul tavolo */
+.th-forgia #dragLine{display:none!important}
+.fgHit{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.fgHit .fl{position:absolute;inset:0;background:radial-gradient(circle,rgba(255,80,40,.5),transparent 70%);animation:fgFlash .6s ease-out forwards}
+.fgHit .sl{position:absolute;left:50%;top:50%;width:150%;height:6px;margin:-3px 0 0 -75%;background:linear-gradient(90deg,transparent,#fff6d8 35%,var(--kc) 50%,#fff6d8 65%,transparent);transform:rotate(var(--a)) scaleX(0);animation:fgSlash .52s cubic-bezier(.2,.9,.25,1) forwards}
+.fgHit .sl+.sl{animation-delay:.08s}
+@keyframes fgFlash{from{opacity:1}to{opacity:0}}
+@keyframes fgSlash{0%{transform:rotate(var(--a)) scaleX(0);opacity:1}55%{transform:rotate(var(--a)) scaleX(1);opacity:1}100%{transform:rotate(var(--a)) scaleX(1);opacity:0}}
+/* pedina rapida: raggi che girano al posto dell'alone sfocato (molto più leggeri), carta che gira entrando */
+.fgRays{display:none}
+.th-forgia .tkm .halo,.th-forgia .tkm .sparks{display:none}
+.th-forgia .fgRays{display:block;position:absolute;left:50%;top:44%;width:170vmin;aspect-ratio:1;translate:-50% -50%;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(255,140,40,.13) 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 60%);mask:radial-gradient(circle,#000 18%,transparent 60%)}
+.th-forgia .tkm.open .fgRays{animation:fgSpin 18s linear infinite}
+@keyframes fgSpin{to{rotate:360deg}}
+.th-forgia .tkmStage{perspective:900px}
+.th-forgia .tkmCard{border-radius:0;clip-path:var(--notch);box-shadow:none;transform:rotateY(95deg) scale(.7);transition:transform .7s cubic-bezier(.2,1.1,.3,1),opacity .3s}
+.th-forgia .tkm.show .tkmCard{transform:none}
+.th-forgia .tkmCard::after{content:'';position:absolute;inset:0;clip-path:var(--notch);box-shadow:inset 0 0 0 2px rgba(255,180,90,.55),inset 0 0 40px rgba(255,90,30,.25);pointer-events:none;z-index:3}
+.th-forgia .qtyBadge{border-radius:0;clip-path:var(--par)}
+.th-forgia .tkmName{font-family:var(--num);font-weight:900;font-size:28px;text-transform:uppercase;transform:skewX(-7deg)}
+.th-forgia .tkmBar{border-radius:0;clip-path:var(--par);height:10px}
+.th-forgia .tkmBar i{background:repeating-linear-gradient(-58deg,#FF4A1C 0 8px,#FF8A2A 8px 16px)}
+.th-forgia .winName{display:inline-block;padding:8px 26px;align-self:center;clip-path:var(--par);background:var(--wc,#FF4A1C);color:var(--wt,#fff)}
+.th-forgia .dlg.win h1 .hl span{display:inline-block}
 </style>
 </head>
 <body>
@@ -603,7 +630,7 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
 <div id="ov-modal" class="tkm">
   <div class="tkmBack"></div>
   <div class="tkmStage">
-    <div class="halo"></div>
+    <div class="halo"></div><div class="fgRays"></div>
     <div class="sparks" id="tmSparks"></div>
     <div class="tkmCard" id="tmCard">
       <img id="tmImg" alt="">
@@ -1175,6 +1202,7 @@ function changeLife(i, d){
   clearTimeout(st.t);
   st.t = setTimeout(()=>{ el.classList.remove('show'); st.v = 0 }, 1600);
   cell.querySelector('.life').animate([{scale:1},{scale:d > 0 ? 1.07 : .94},{scale:1}], {duration:200});
+  if(fgOn()) fgLife(i, d);
 }
 
 // tocco ±1; pressione lunga: ripete ±1 oppure salta di ±10 (impostazione)
@@ -1222,6 +1250,7 @@ window.addEventListener('pointermove', e=>{
   if(!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 18) return;
   drag.moved = true;
   dragLine(drag.x, drag.y, e.clientX, e.clientY);
+  if(fgOn()) EMB.embers(e.clientX, e.clientY, {n:3, speed:50, spread:6.28, life:.55, cols:[fgPc(drag.i), '#FFD27A', '#FFF3CC'], drag:2.5, wob:4});
   const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell');
   const j = el ? +el.dataset.i : null;
   if(j !== drag.target){ clearDrop(); drag.target = j; if(j !== null && j !== drag.i){ el.classList.add('dropT'); buzz(6) } }
@@ -1265,7 +1294,7 @@ function openCmdQuick(a, v){
       if(after !== before){ V.counters[c] = after; updateCell(cqp.v); save(); buzz(); if(after > before) logEv(`${S.players[cqp.a].name} → ${V.name}: +${after - before} ${c === 'poison' ? 'veleno' : 'radiazioni'}`) }
     } else {
       const before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
-      if(after !== before){ V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before) }
+      if(after !== before){ V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before, cqp.a) }
     }
     renderCqPop(); armCqPop();
   });
@@ -1302,7 +1331,7 @@ const PP_CTR = ['energy','tax','rad'];
 const PP_ICON = {energy:'', exp:'', tax:'', rad:''};
 const PP_ROT = {r0:0, r90:90, r180:180, r270:-90};
 const GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M20.22 9.46 L23.04 10.11 L23.04 13.89 L20.22 14.54 L19.61 16.01 L21.15 18.47 L18.47 21.15 L16.01 19.61 L14.54 20.22 L13.89 23.04 L10.11 23.04 L9.46 20.22 L7.99 19.61 L5.53 21.15 L2.85 18.47 L4.39 16.01 L3.78 14.54 L0.96 13.89 L0.96 10.11 L3.78 9.46 L4.39 7.99 L2.85 5.53 L5.53 2.85 L7.99 4.39 L9.46 3.78 L10.11 0.96 L13.89 0.96 L14.54 3.78 L16.01 4.39 L18.47 2.85 L21.15 5.53 L19.61 7.99Z M12 8.6a3.4 3.4 0 1 0 0 6.8a3.4 3.4 0 1 0 0-6.8Z"/></svg>';
-function openPP(i){ PP.add(i); $(`.cell[data-i="${i}"]`)?.classList.add('pp'); renderPP(i); buzz(12) }
+function openPP(i){ PP.add(i); $(`.cell[data-i="${i}"]`)?.classList.add('pp'); renderPP(i); buzz(12); if(fgOn()) fgPPIn(i) }
 function closePP(i){ PP.delete(i); delete PPART[i]; const c = $(`.cell[data-i="${i}"]`); if(!c) return; document.activeElement?.blur?.(); c.classList.remove('pp') }
 function renderPP(i){
   const cell = $(`.cell[data-i="${i}"]`), box = cell?.querySelector('.ppIn'); if(!box) return;
@@ -1367,6 +1396,7 @@ $('#board').addEventListener('click', e=>{
     default: return;
   }
   buzz(); save(); renderPP(i);
+  if(a === 'ctr' && fgOn()) fgCtr(i, k, +b.dataset.v > 0);
 });
 $('#board').addEventListener('input', e=>{
   const t = e.target; if(!t.matches('.under input')) return;
@@ -2390,6 +2420,7 @@ async function quickToken(alts){
   const seq = ++TM.seq; TM.phase = 'search'; TM.entry = null;
   makeSparks(); tmBar(0); tmReveal(0); $('#tmQty').textContent = ''; $('#tmConnect').hidden = true; $('#tmImg').removeAttribute('src');
   $('#ov-modal').classList.add('open'); stack.push('modal'); history.pushState({ov:'modal'}, '');
+  if(fgOn()) requestAnimationFrame(fgTokStart);
   tmSet('loading', 'Cerco la pedina…', '«' + alts[0] + '»');
   let req = null;
   for(const a of alts){ const p = parseRequest(a); if(p.type){ req = p; break } }
@@ -2417,6 +2448,7 @@ async function quickToken(alts){
   if(seq !== TM.seq) return;
   $('#tmQty').textContent = qn > 1 ? '×' + qn : '';
   TM.phase = 'count'; sfx('found'); buzz(30);
+  if(fgOn()) setTimeout(()=>{ if(seq === TM.seq) fgTokShow(seq) }, 120);
   tmSet('show', 'Stampa tra 3 secondi. Tocca per annullare.', describe(req));
   requestAnimationFrame(()=>tmBar(1, 3000));
   TM.timer = setTimeout(async ()=>{
@@ -2451,6 +2483,7 @@ async function tmPrint(seq, tk, bits, qn){
   logEv('Stampata pedina ' + tk.name + (qn > 1 ? ' ×' + qn : ''));
   if(seq !== TM.seq) return;
   TM.phase = 'done'; tmSet('show', qn > 1 ? qn + ' pedine stampate' : 'Pedina stampata'); sfx('done');
+  if(fgOn()) fgTokDone();
   TM.timer = setTimeout(()=>{ if(seq === TM.seq){ TM.phase = 'msg'; tmClose() } }, 1300);
 }
 
@@ -2744,12 +2777,14 @@ function wzStep(n){
 const FG_EASE = {spring:'cubic-bezier(.2,1.25,.3,1)', in:'cubic-bezier(.5,0,.75,.2)'};
 const fgItems = st => [...st.children].flatMap(c => c.matches('.wzOpts,.wzNames') ? [...c.children] : [c]).filter(e => !e.hidden);
 const fgStop = st => st.getAnimations({subtree:true}).forEach(a => a.cancel());
+function fgMove(st, ms){ st.classList.add('mv'); clearTimeout(st._mv); st._mv = setTimeout(()=>st.classList.remove('mv'), ms) }
 function fgEnter(st, dir, delay){
   st.classList.add('cur');
-  fgItems(st).forEach((el, i) => el.animate([{translate:`${dir * 70}% 0`, opacity:0}, {translate:'0 0', opacity:1}], {duration:560, delay:delay + i * 55, easing:FG_EASE.spring, fill:'backwards'}));
+  const its = fgItems(st); fgMove(st, delay + its.length * 55 + 580);
+  its.forEach((el, i) => el.animate([{translate:`${dir * 70}% 0`, opacity:0}, {translate:'0 0', opacity:1}], {duration:560, delay:delay + i * 55, easing:FG_EASE.spring, fill:'backwards'}));
 }
 function fgLeave(st, dir){
-  let end = 0;
+  let end = 0; fgMove(st, 60 + fgItems(st).length * 35 + 300);
   fgItems(st).forEach((el, i) => { end = Math.max(end, i * 35 + 260); el.animate([{translate:'0 0', opacity:1}, {translate:`${-dir * 60}% 0`, opacity:0}], {duration:260, delay:i * 35, easing:FG_EASE.in, fill:'forwards'}) });
   return end;
 }
@@ -2877,6 +2912,7 @@ function showWinner(i){
   logEv('Vince ' + p.name);
   sfx('done'); buzz([60,80,60,80,120]);
   closeCqPop(); openOv('win');
+  if(fgOn()) fgWin(i);
 }
 $('#wnAgain').addEventListener('click', ()=>{ resetGame(); history.back(); toast('Rivincita!') });
 $('#wnNew').addEventListener('click', ()=>openWizard(true));
@@ -3060,7 +3096,9 @@ const EMB = (()=>{
     ctx.setTransform(D, 0, 0, D, 0, 0); ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
     P = P.filter(p => {
       p.a += dt; if(p.a >= p.life) return false; const k = p.a / p.life;
-      p.vy += (p.g || 0) * dt; const f = Math.exp(-(p.drag || 0) * dt); p.vx *= f; p.vy *= f;
+      if(p.ring){ const rr = p.r0 + (p.r1 - p.r0) * (1 - Math.pow(1 - k, 3)); ctx.globalAlpha = (1 - k) * .9; ctx.strokeStyle = p.c; ctx.lineWidth = p.w * (1 - k) + 1; ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, 6.2832); ctx.stroke(); return true }
+      if(p.tx != null){ p.vx += (p.tx - p.x) * p.pull * dt; p.vy += (p.ty - p.y) * p.pull * dt; const fa = Math.exp(-4 * dt); p.vx *= fa; p.vy *= fa }
+      else { p.vy += (p.g || 0) * dt; const f = Math.exp(-(p.drag || 0) * dt); p.vx *= f; p.vy *= f }
       if(p.wob) p.x += Math.sin(p.a * p.wob + p.ph) * 18 * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
       const al = (1 - k) * (p.flick ? .65 + .35 * Math.sin(p.a * 22 + p.ph) : 1); ctx.globalAlpha = al;
@@ -3076,7 +3114,12 @@ const EMB = (()=>{
   return {
     burst(x, y, o){ const n = RMOT ? Math.ceil(o.n / 4) : o.n; for(let i = 0; i < n; i++){ const a = (o.dir ?? 0) + (Math.random() - .5) * (o.spread ?? 6.28), v = o.speed * (.35 + Math.random() * .9);
       add({x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 2.2, life:o.life * (.6 + Math.random() * .6), c:pick(o.cols), s:o.size ?? (1.2 + Math.random() * 1.6), streak:o.streak ?? .035}) } go() },
-    ambient(on, z){ if(z != null) cv.style.zIndex = z;
+    embers(x, y, o){ const n = RMOT ? Math.ceil(o.n / 4) : o.n; for(let i = 0; i < n; i++){ const a = (o.dir ?? -1.57) + (Math.random() - .5) * (o.spread ?? 1.2), v = o.speed * (.3 + Math.random() * .8);
+      add({x:x + (Math.random() - .5) * (o.w ?? 0), y:y + (Math.random() - .5) * (o.h ?? 0), vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 1, life:o.life * (.6 + Math.random() * .7), c:pick(o.cols), s:o.size ?? (1.4 + Math.random() * 1.8), flick:true, wob:o.wob ?? 3}) } go() },
+    ring(x, y, c, r1, life = .6, w = 8){ add({ring:1, x, y, r0:8, r1, c, life, w}); go() },
+    converge(x, y, n, cols, dur = .7){ if(RMOT) n = Math.ceil(n / 4); for(let i = 0; i < n; i++){ const a = Math.random() * 6.28, rr = 120 + Math.random() * 160;
+      add({x:x + Math.cos(a) * rr, y:y + Math.sin(a) * rr, vx:-Math.sin(a) * 120, vy:Math.cos(a) * 120, tx:x, ty:y, pull:26, life:dur * (.8 + Math.random() * .4), c:pick(cols), s:1.3 + Math.random() * 1.5, flick:true}) } go() },
+    ambient(on){
       // spegnendo, le braci già in volo si dissolvono in mezzo secondo invece di salire sul tavolo
       if(!on) P.forEach(p => { if(p.amb) p.life = Math.min(p.life, p.a + .45) });
       amb = on && !RMOT ? {every:.07, spawn:() => add({amb:true, x:Math.random() * W, y:H + 6, vx:(Math.random() - .5) * 14, vy:-(28 + Math.random() * 46), drag:0, life:4 + Math.random() * 3, c:pick(['#FF7A2A','#FFB347','#FF4A1C','#FFD27A']), s:.8 + Math.random() * 1.6, flick:true, wob:1.5 + Math.random() * 2})} : null;
@@ -3087,7 +3130,7 @@ const EMB = (()=>{
 function fgAmbient(){
   const top = stack[stack.length - 1], el = top && $('#ov-' + top);
   const on = FORGIA() && !document.hidden && (top === 'wizard' || top === 'resume');
-  EMB.ambient(on, on ? (parseInt(el.style.zIndex) || 45) : null);
+  EMB.ambient(on);
 }
 document.addEventListener('visibilitychange', fgAmbient);
 // tocco su una casella: riflesso che la attraversa e scintille dal dito
@@ -3098,9 +3141,116 @@ document.addEventListener('visibilitychange', fgAmbient);
   EMB.burst(e.clientX, e.clientY, {n:14, speed:260, life:.45, cols:['#FFD27A','#FF8A2A','#FFF3CC'], drag:4});
 }));
 
+
+/* ================= Forgia: effetti ================= */
+// tutti gli effetti passano dal canvas delle braci (EMB), solo posizione e trasparenza, a tempo reale
+const fgOn = () => FORGIA() && !RMOT;
+const fgC = el => { const r = el.getBoundingClientRect(); return {x:r.left + r.width / 2, y:r.top + r.height / 2, w:r.width, h:r.height} };
+const FG_UP = {r0:-Math.PI / 2, r180:Math.PI / 2, r90:0, r270:Math.PI};   // «verso chi gioca» sullo schermo
+const fgPc = i => COLORS[S.players[i].color].bg;
+const fgHits = {};
+// vita: il + fa salire scintille dorate verso il giocatore, il − fa cadere braci rosse; 5 punti persi di fila = colpo
+function fgLife(i, d){
+  const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
+  const c = fgC(cell.querySelector('.life')), up = FG_UP[ROT[S.count][i]];
+  if(d > 0) EMB.embers(c.x, c.y, {n:8, speed:170, dir:up, spread:.9, life:.9, cols:['#FFD27A','#FFF3CC','#9CFF7A'], w:c.w * .5, h:c.h * .3, drag:1.2});
+  else EMB.burst(c.x, c.y, {n:10, speed:240, dir:up + Math.PI, spread:1.4, life:.6, cols:['#FF4A1C','#FF8A2A','#B8240A'], drag:3});
+  const now = performance.now(), o = fgHits[i], h = fgHits[i] = o && now - o.t < 1300 ? {v:o.v + d, t:now, big:o.big} : {v:d, t:now};
+  if(d < 0 && h.v <= -5 && !h.big){ h.big = true; fgHit(cell, '#FFB347') }
+}
+// colpo: due tagli di luce incrociati, lampo, la scheda trema, esplosione di scintille
+function fgHit(cell, col){
+  const fr = cell.querySelector('.frame'); if(!fr) return;
+  fr.querySelector('.fgHit')?.remove();
+  const fx = document.createElement('div'); fx.className = 'fgHit'; fx.style.setProperty('--kc', col);
+  fx.innerHTML = '<i class="fl"></i><i class="sl" style="--a:32deg"></i><i class="sl" style="--a:-32deg"></i>';
+  fr.appendChild(fx); setTimeout(()=>fx.remove(), 800);
+  cell.animate([{translate:'0 0'},{translate:'-6px 4px'},{translate:'5px -3px'},{translate:'-2px 1px'},{translate:'0 0'}], {duration:300, delay:60});
+  const c = fgC(cell); EMB.burst(c.x, c.y, {n:44, speed:520, life:.7, cols:['#FF6A4A','#FFD27A','#FFF3CC', col], drag:2.8, g:200});
+  buzz([25, 30, 45]);
+}
+// danni da comandante: scia di braci del colore di chi attacca, dal suo nome al numero del bersaglio, poi il colpo
+function fgCmd(a, v){
+  const from = $(`.cell[data-i="${a}"] .pname`), cell = $(`.cell[data-i="${v}"]`); if(!from || !cell) return;
+  const f = fgC(from), t = fgC(cell.querySelector('.life')), col = fgPc(a);
+  for(let k = 0; k < 22; k++) setTimeout(()=>{ const q = k / 21, x = f.x + (t.x - f.x) * q, y = f.y + (t.y - f.y) * q - Math.sin(q * Math.PI) * 60;
+    EMB.embers(x, y, {n:3, speed:40, spread:6.28, life:.45, cols:[col, '#FFD27A', '#FFF3CC'], drag:2}) }, k * 11);
+  setTimeout(()=>{ fgHit(cell, col); cell.querySelector(`.spia.cmdb[data-o="${a}"]`)?.animate([{scale:1},{scale:1.5},{scale:1}], {duration:300}) }, 280);
+}
+// pannello personale: le caselle entrano a cascata, braci dalla striscia
+function fgPPIn(i){
+  const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
+  [...cell.querySelectorAll('.ppC,.ppF,.ppGear')].forEach((el, k) => el.animate([{translate:'0 40%', scale:.9, opacity:0}, {translate:'0 0', scale:1, opacity:1}], {duration:460, delay:120 + k * 40, easing:FG_EASE.spring, fill:'backwards'}));
+  setTimeout(()=>{ const st = cell.querySelector('.strip'); if(!st) return; const c = fgC(st);
+    EMB.embers(c.x, c.y, {n:18, speed:90, dir:FG_UP[ROT[S.count][i]], spread:2.2, life:1, cols:[fgPc(i), '#FFD27A'], w:c.w, h:c.h, drag:1.5}) }, 140);
+}
+// contatore: il numero nuovo scorre dentro, con scintille sul +
+function fgCtr(i, k, up){
+  const cell = $(`.cell[data-i="${i}"]`), btn = cell && cell.querySelector(`.ppC [data-k="${k}"]`); if(!btn) return;
+  const b = btn.closest('.ppC').querySelector('b');
+  b.animate([{translate:`0 ${up ? 60 : -60}%`, opacity:0}, {translate:'0 0', opacity:1}], {duration:240, easing:'cubic-bezier(.2,.9,.25,1)'});
+  if(up){ const c = fgC(b); EMB.burst(c.x, c.y, {n:10, speed:200, life:.45, cols:['#FFD27A','#FFF3CC','#FF8A2A'], drag:4}) }
+}
+// inizio partita: il simbolo cade con un'onda d'urto, le schede escono dal centro, i punti vita salgono da zero
+function fgCount(el, to, dur, delay){
+  setTimeout(()=>{ const t0 = performance.now(); (function f(t){ const k = Math.min(1, (t - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if(k < 1 && INTRO) requestAnimationFrame(f); else el.textContent = to })(t0) }, delay);
+}
+function playIntroF(){
+  document.body.classList.remove('preintro');
+  const hub = $('#tokenBtn'), cells = [...document.querySelectorAll('#board .cell')], c = fgC(hub);
+  const skip = document.createElement('div'); skip.id = 'introSkip'; document.body.appendChild(skip);
+  const anims = [], T = [];
+  cells.forEach(el => el.style.opacity = 0);
+  const done = () => { if(!INTRO) return; INTRO = null; T.forEach(clearTimeout); anims.forEach(a => { try{ a.finish() }catch(e){} });
+    cells.forEach(el => el.style.opacity = ''); S.players.forEach((p, i) => updateCell(i)); skip.remove(); maybeTut() };
+  INTRO = {done};
+  skip.addEventListener('pointerdown', e => { e.preventDefault(); done() });
+  anims.push(hub.animate([{transform:'scale(5) rotate(-30deg)', opacity:0}, {opacity:1, offset:.4}, {transform:'none', opacity:1}], {duration:520, easing:'cubic-bezier(.55,0,1,.45)'}));
+  T.push(setTimeout(()=>{
+    if(!INTRO) return;
+    EMB.ring(c.x, c.y, '#FFD27A', Math.max(innerWidth, innerHeight) * .55, .7, 10); EMB.ring(c.x, c.y, '#FF4A1C', innerWidth * .4, .5, 6);
+    EMB.burst(c.x, c.y, {n:110, speed:620, life:.9, cols:['#FFC86A','#FFF3CC','#FF9A3C','#FF4A1C'], drag:2.6, g:120});
+    anims.push($('#board').animate([{translate:'0 0'},{translate:'-6px 5px'},{translate:'5px -4px'},{translate:'-3px 2px'},{translate:'0 0'}], {duration:320}));
+    buzz([40, 30, 20]); sfx('found');
+    cells.forEach((el, i) => { const r = fgC(el); el.style.opacity = '';
+      anims.push(el.animate([{transform:`translate(${c.x - r.x}px,${c.y - r.y}px) scale(.15) rotate(${i % 2 ? 14 : -14}deg)`, opacity:0}, {transform:'none', opacity:1}], {duration:620, delay:60 + i * 60, easing:FG_EASE.spring, fill:'backwards'}));
+      fgCount(el.querySelector('.life'), S.players[i].life, 650, 160 + i * 60) });
+    T.push(setTimeout(done, 60 + cells.length * 60 + 800));
+  }, 500));
+}
+// pedina rapida: le scintille convergono, la carta entra girando; conto alla rovescia e stampa lasciano scintille
+function fgTokStart(){ const c = fgC($('#ov-modal .fgRays')); EMB.converge(c.x, c.y, 90, ['#FFC86A','#FF8A2A','#FFF3CC','#FF4A1C'], .75) }
+function fgTokShow(seq){
+  const c = fgC($('#tmCard'));
+  EMB.ring(c.x, c.y, '#FFD27A', c.w, .6, 6); EMB.burst(c.x, c.y, {n:60, speed:480, life:.8, cols:['#FFD27A','#FFF3CC','#FF8A2A'], drag:2.6});
+  const t0 = performance.now();
+  (function f(t){
+    if(seq !== TM.seq || !['count','printing','wait'].includes(TM.phase)) return;
+    if(TM.phase === 'count'){ const b = $('#tmBar').parentNode.getBoundingClientRect(), k = Math.min(1, (t - t0) / 3000);
+      if(Math.random() < .55) EMB.burst(b.left + b.width * k, b.top + b.height / 2, {n:2, speed:150, dir:-1.57, spread:2.2, life:.5, cols:['#FFD27A','#FF8A2A','#FFF3CC'], g:420, drag:1}) }
+    if(TM.phase === 'printing'){ const s = $('#tmScan').getBoundingClientRect();
+      if(s.width && Math.random() < .7) EMB.burst(s.left + Math.random() * s.width, s.top + s.height / 2, {n:2, speed:160, dir:-1.57, spread:1.2, life:.4, cols:['#FFD27A','#FFF3CC'], g:300}) }
+    requestAnimationFrame(f);
+  })(t0);
+}
+function fgTokDone(){ const c = fgC($('#tmCard')); EMB.burst(c.x, c.y + c.h * .45, {n:50, speed:420, dir:-1.57, spread:2.6, life:.8, cols:['#FFD27A','#FFF3CC','#9CFF7A'], g:500}) }
+// vittoria: le lettere cadono una alla volta, fuochi d'artificio, la targhetta del vincitore sbatte
+function fgWin(i){
+  const hl = $('#ov-win h1 .hl'), nm = $('#wnName'), col = fgPc(i);
+  hl.innerHTML = [...'Vittoria'].map(ch => `<span>${ch}</span>`).join('');
+  nm.style.setProperty('--wc', col); nm.style.setProperty('--wt', COLORS[S.players[i].color].fg);
+  [...hl.children].forEach((sp, k) => sp.animate([{transform:'translateY(-140%) rotate(-25deg) scale(1.6)', opacity:0}, {transform:'none', opacity:1}], {duration:560, delay:80 + k * 70, easing:FG_EASE.spring, fill:'backwards'}));
+  nm.animate([{transform:'scale(2.2) skewX(-8deg)', opacity:0}, {transform:'scale(1) skewX(-8deg)', opacity:1}], {duration:420, delay:640, easing:'cubic-bezier(.55,0,1,.45)', fill:'backwards'});
+  setTimeout(()=>{ const c = fgC(nm); EMB.ring(c.x, c.y, col, 160, .6, 8); $('#ov-win .dlgCard').animate([{translate:'0 0'},{translate:'-5px 4px'},{translate:'4px -3px'},{translate:'0 0'}], {duration:260}) }, 1060);
+  for(let k = 0; k < 9; k++) setTimeout(()=>{ if(stack[stack.length - 1] !== 'win') return;
+    const x = innerWidth * (.15 + Math.random() * .7), y = innerHeight * (.1 + Math.random() * .3);
+    EMB.ring(x, y, '#FFD27A', 70 + Math.random() * 40, .5, 4); EMB.burst(x, y, {n:70, speed:360, life:1.1, cols:[['#FFD27A','#FFF3CC'],['#FF8A2A','#FFD27A'],[col,'#FFF3CC']][k % 3], drag:1.6, g:160, streak:.05}) }, 250 + k * 320);
+}
+
 /* ================= Animazione di inizio partita ================= */
 let INTRO = null;
 function playIntro(){
+  if(fgOn()) return playIntroF();
   document.body.classList.remove('preintro');
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){ maybeTut(); return }
   const hub = $('#tokenBtn'), cells = [...document.querySelectorAll('#board .cell')];
@@ -3127,7 +3277,8 @@ function playIntro(){
 }
 
 /* ================= Danni da comandante: effetto ================= */
-function cmdFx(v, n){
+function cmdFx(v, n, a){
+  if(fgOn() && a != null){ fgCmd(a, v); return }
   const fr = $(`.cell[data-i="${v}"] .frame`); if(!fr) return;
   fr.querySelector('.cmdFx')?.remove();
   const el = document.createElement('div'); el.className = 'cmdFx';

@@ -54,6 +54,18 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.18.0
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.17.x).
+- Forgia, pannello personale: chiudendolo con la linguetta la scheda non diventa più trasparente mentre scende. Lo sfondo della scheda ora è sempre pieno.
+- Forgia, pagina iniziale: le caselle perdono la sfocatura solo mentre si muovono e la riprendono appena si fermano, per alleggerire il passaggio tra le schede.
+- Forgia, nuove animazioni (il Classico non cambia):
+  - inizio partita: il simbolo centrale cade con un'onda d'urto e una pioggia di scintille, il tavolo trema, le schede escono dal centro e i punti vita salgono da zero (un tocco salta l'animazione);
+  - vita: il + fa salire scintille dorate verso il giocatore, il − fa cadere braci rosse; 5 punti persi di fila danno un colpo con due tagli di luce, lampo e scheda che trema;
+  - danni da comandante: mentre trascini il nome lasci una scia di braci del tuo colore; alla conferma una scia vola fino al bersaglio e lo colpisce;
+  - pannello personale: le caselle entrano a cascata con braci dalla linguetta; i contatori scorrono e il + fa scintille;
+  - pedina rapida: le scintille convergono, la carta entra girando, raggi che ruotano al posto dell'alone sfocato (più leggeri), scintille sulla barra del conto e sulla stampa;
+  - vittoria: le lettere cadono una alla volta, la targhetta del vincitore sbatte nel suo colore, fuochi d'artificio.
+
 ### v0.17.1
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.17.0).
 - Scheda giocatore: la chiusura scorre senza lo scatto iniziale. Prima il tavolo veniva ridisegnato da capo proprio mentre partiva l'animazione, e il primo tratto saltava (più evidente con il tema Forgia). Ora si ridisegna solo se nella scheda sono cambiati colore, nome, sfondo o partner, e prima che la scheda inizi a scorrere.
