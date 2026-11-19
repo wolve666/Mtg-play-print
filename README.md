@@ -56,7 +56,7 @@ Struttura:
 
 ### v0.19.0
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.17.x o successiva).
-- Pagina iniziale: in fondo ci sono i sei colori dei temi (Rosso, Verde, Blu, Nero, Bianco, Incolore), con simboli disegnati apposta. È acceso solo il colore del tema in uso; gli altri restano grigi finché i loro temi non sono pronti. Toccando il Rosso si passa a Forgia.
+- Pagina iniziale: in fondo ci sono i simboli di mana dei sei colori dei temi (Rosso, Verde, Blu, Nero, Bianco, Incolore), puri, senza tasto attorno. Il simbolo del tema in uso è colorato e luminoso, gli altri sono grigi finché i loro temi non sono pronti. Toccando il Rosso si passa a Forgia. I simboli vengono dal font Mana già incorporato (+1 kB).
 - Menu, alla voce «Tema»: oltre a Classico e Forgia compaiono i colori in arrivo, in grigio. Il Classico si sceglie solo da qui.
 - Forgia: il simbolo centrale delle pedine arde, con una corona di fiamme che gira, un bagliore che tremola e braci che salgono. Si ferma quando una finestra copre il tavolo.
 
