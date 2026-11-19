@@ -51,6 +51,15 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.16.1
+Cambia la parte nativa: serve la nuova APK. Correzioni nate dai dati della diagnostica raccolti su un Galaxy S21 Ultra.
+- L'app chiede ad Android la frequenza più alta dello schermo (120 Hz sui telefoni che la hanno). Prima girava a 60 Hz: metà dei fotogrammi in ogni animazione.
+- Pedina rapida: la preparazione dell'immagine per la stampa avviene dopo l'entrata della carta. Prima bloccava il telefono per circa 140 ms proprio durante l'animazione.
+- Pagina iniziale, «Vuoi continuare?», regole e vittoria: il primo disegno di sfondo e sfocature avviene con la finestra ancora invisibile, poi parte la dissolvenza. Prima dava uno scatto all'apertura.
+- Pedine: tra le versioni trovate viene scelta prima quella generica («Soldier», «Dog») invece di quelle con un nome proprio («Ajani's Pridemate», «Porthos»).
+- La ricerca libera confronta l'inizio delle parole: «dea» non trova più «Icingdeath».
+- Nuove parole capite: pirexiano, unicorno, falco.
+
 ### v0.16.0
 Cambia la parte nativa: serve la nuova APK.
 - «Esporta i dati raccolti» ora funziona anche nell'app: crea il file e apre il menu «Condividi» di Android, da cui lo mandi con WhatsApp, mail, Drive o altro. Prima nell'app il tasto non faceva nulla, perché la WebView non sa scaricare né condividere file.

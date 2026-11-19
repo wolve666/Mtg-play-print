@@ -3,6 +3,8 @@ package it.educk.magicplayprint;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Display;
+import android.view.WindowManager;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.Plugin;
@@ -20,6 +22,25 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SpeechPlugin.class); // dettatura con il riconoscimento vocale di Android
         registerPlugin(GesturesPlugin.class); // zone escluse dai gesti di sistema (linguette dello swipe)
         super.onCreate(savedInstanceState);
+        maxRefresh();
+    }
+
+    // Schermi a 90/120 Hz: Android tiene a 60 Hz le app che non chiedono di più (misurato sul Galaxy S21 Ultra).
+    // Chiedo la frequenza più alta disponibile alla stessa risoluzione.
+    private void maxRefresh() {
+        try {
+            Display d = Build.VERSION.SDK_INT >= 30 ? getDisplay() : getWindowManager().getDefaultDisplay();
+            if (d == null) return;
+            Display.Mode cur = d.getMode(), best = cur;
+            for (Display.Mode m : d.getSupportedModes()) {
+                if (m.getPhysicalWidth() == cur.getPhysicalWidth() && m.getPhysicalHeight() == cur.getPhysicalHeight()
+                        && m.getRefreshRate() > best.getRefreshRate()) best = m;
+            }
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.preferredDisplayModeId = best.getModeId();
+            lp.preferredRefreshRate = best.getRefreshRate();
+            getWindow().setAttributes(lp);
+        } catch (Exception ignored) {}
     }
 
     // Con la navigazione a gesti, uno swipe dal bordo sinistro o destro torna indietro.

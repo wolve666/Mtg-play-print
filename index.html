@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.16.0', APPN = 5;
+var APPV = '0.16.1', APPN = 6;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -377,6 +377,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 
 .wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .35s,visibility 0s .35s;padding-top:env(safe-area-inset-top)}
 .wz.open,.dlg.open{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .35s}
+.wz.prep,.dlg.prep{visibility:visible;opacity:.01;transition:none}
 .wzBg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 30% 20%,#3a2c52,#14121a 70%)}
 .wzBg i{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1s;animation:kb 26s ease-in-out -5s infinite alternate}
 /* sfondo visibile: livello proprio sulla scheda grafica, lo zoom non passa dal processo principale */
@@ -1337,7 +1338,12 @@ function openOv(id){
   // sopra la pagina iniziale (o un'altra finestra a schermo intero) i pannelli devono stare davanti
   const overWz = stack.some(s => $('#ov-' + s).matches('.wz,.dlg'));
   el.style.zIndex = (el.classList.contains('ov') && !overWz ? 20 : 45) + stack.length;
-  el.classList.add('open');
+  if(el.matches('.wz,.dlg') && !el.classList.contains('open')){
+    // il primo disegno di sfondo e sfocature è pesante: lo faccio fare con la finestra quasi invisibile,
+    // la dissolvenza parte due fotogrammi dopo, quando il lavoro è finito (prima dava uno scatto all'apertura)
+    el.classList.add('prep');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.classList.remove('prep'); if(stack.includes(id)) el.classList.add('open') }));
+  } else el.classList.add('open');
   stack.push(id);
   history.pushState({ov:id}, '');
 }
@@ -1828,7 +1834,7 @@ const DICT = [
   ['elefant[ei]','Elephant'],['rinoceront[ei]','Rhino'],['polp[oi]|piovr[ae]','Octopus'],['granch[io]|granchi','Crab'],['anguill[ae]','Eel'],
   ['tartarug[ae]|tartarughe','Turtle'],['mur[oi]|muri','Wall'],['gnom[oi]','Gnome'],['gigant[ei]','Giant'],['ogre|orch[ei]ssa','Ogre'],
   ['troll','Troll'],['minotaur[oi]','Minotaur'],['centaur[oi]','Centaur'],['satir[oi]','Satyr'],['ninf[ae]','Nymph'],['sfing[ei]','Sphinx'],
-  ['fenic[ei]','Phoenix'],['phyrexian[oi]|ferexian[oi]','Phyrexian'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
+  ['fenic[ei]','Phoenix'],['phyrexian[oi]|ferexian[oi]|pirexian[oi]|firexian[oi]','Phyrexian'],['unicorn[oi]','Unicorn'],['falc(o|hi)|falchi','Bird'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
   ['ombr[ae]','Shade'],['diavol[oi]','Devil'],['diavolett[oi]|imp','Imp'],['melm[ae]|ooze','Ooze'],['mutant[ei]','Mutant'],['robot','Robot'],
   ['mercenari[oi]?','Mercenary'],['furfant[ei]','Rogue'],['mutaform[ae]','Shapeshifter'],['verm[ei]','Worm'],['calamar[oi]|seppi[ae]','Squid'],
   ['stell[ae] marin[ae]','Starfish'],['aquil[ae]','Bird'],['vigliacc[oi]|codard[oi]','Coward'],['sopravvissut[oi]','Survivor'],
@@ -2216,9 +2222,16 @@ async function exportVlog(){
 
 /* ================= Pedina rapida: tieni premuto, mostra, stampa da sola ================= */
 const TM = {seq:0, phase:'idle', timer:null, entry:null};
+// pedina generica prima: il nome è proprio il tipo cercato («Soldier», «Dog»), poi chi lo contiene («Cat Beast»),
+// per ultime quelle con un nome proprio («Ajani's Pridemate», «Porthos»)
+function genScore(name, type){
+  if(!type) return 0;
+  const n = (name || '').toLowerCase(), t = type.toLowerCase();
+  return n === t ? 2 : new RegExp('\\b' + t + '\\b').test(n) ? 1 : 0;
+}
 function pickFirst(data, type){
   const ok = data.filter(c => (c.lang || 'en') === 'en');
-  const pool = ok.length ? ok : data;
+  const pool = (ok.length ? ok : data).map((c, i) => [c, i]).sort((a, b) => (genScore(b[0].name, type) - genScore(a[0].name, type)) || a[1] - b[1]).map(x => x[0]);
   const card = pool.find(c => c.image_uris) || pool[0];
   const f = card && faceOf(card, type);
   return f && {id:card.id, name:f.name, type_line:f.type_line, set:card.set_name, small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large};
@@ -2276,7 +2289,9 @@ async function quickToken(alts){
   if(!tk){ fail('Nessuna pedina trovata per «' + describe(req) + '».'); return }
   if(TM.entry){ TM.entry.chosen = {id:tk.id, name:tk.name, set:tk.set, auto:true}; saveVlog() }
   const qn = req.qty;
-  const bitsP = makeBits(tk.print).catch(()=>null);
+  // la preparazione per la stampa (dithering) blocca il telefono per ~140 ms: la faccio dopo l'entrata della carta,
+  // tanto c'è il conto alla rovescia di 3 secondi
+  const bitsP = sleep(700).then(()=>makeBits(tk.print)).catch(()=>null);
   await new Promise(res=>{ const im = $('#tmImg'); setTimeout(res, 12000); im.onload = res; im.onerror = ()=>{ if(tk.small && !im.src.startsWith('blob:')) im.src = tk.small; else res() }; im.src = tk.large || tk.print });
   if(seq !== TM.seq) return;
   $('#tmQty').textContent = qn > 1 ? '×' + qn : '';
@@ -2750,7 +2765,7 @@ async function arcResolve(t){
 const recentOf = t => t.local ? {...t, small:t.rs, large:t.rl, print:t.rp, local:false} : t;
 function arcSearch(r){
   const tl = e => e.t.toLowerCase(), fr = (r.free || '').toLowerCase();
-  const typeOk = r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : r.type === 'Emblem' && fr ? e => re.test(tl(e)) && tl(e).includes(fr.split(' ')[0]) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? e => e.n.toLowerCase().includes(fr) || tl(e).includes(fr) : () => true;
+  const typeOk = r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : r.type === 'Emblem' && fr ? e => re.test(tl(e)) && tl(e).includes(fr.split(' ')[0]) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? (w => e => w.test(e.n) || w.test(tl(e)))(new RegExp('\\b' + fr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')) : () => true;
   const cols = r.colors.filter(c => c !== 'C').sort().join(''), colorless = r.colors.includes('C') && !cols;
   const pt = e => r.pow === null || (e.p === String(r.pow) && e.o === String(r.tou));
   const col = e => !r.colors.length || (colorless ? e.c === '' : e.c === cols);
@@ -2759,7 +2774,7 @@ function arcSearch(r){
   const tries = [[[pt, col, kw], ''], [[pt, kw], 'senza filtro colore'], [[pt], 'senza colore e abilità'], [[], 'tutte le pedine del tipo']];
   for(const [fs, note] of tries){
     const res = ARC.list.filter(e => base(e) && fs.every(f => f(e)));
-    if(res.length) return {res:res.sort((a, b) => (/token/i.test(b.t) - /token/i.test(a.t)) || (b.r || '').localeCompare(a.r || '')), note};
+    if(res.length) return {res:res.sort((a, b) => (genScore(b.n, r.type) - genScore(a.n, r.type)) || (/token/i.test(b.t) - /token/i.test(a.t)) || (b.r || '').localeCompare(a.r || '')), note};
   }
   return {res:[], note:''};
 }
