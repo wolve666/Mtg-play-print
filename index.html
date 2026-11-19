@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.10', APPN = 4;
+var APPV = '0.16.0', APPN = 5;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -2178,21 +2178,38 @@ $('#sugSave').addEventListener('click', ()=>{
   VLOG.push({t:Date.now(), kind:'suggerimento', text:txt}); saveVlog();
   toast('Suggerimento salvato'); history.back();
 });
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true }catch(e){}
+  try{ const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0;top:0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok }catch(e){ return false }
+}
 async function exportVlog(){
   const errors = load('smtg-errors') || [], diag = load(DKEY) || [];
   if(!VLOG.length && !errors.length && !diag.length){ toast('Non ci sono ancora dati da esportare'); return }
-  const name = 'magic-play-print-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
+  const name = 'magic-play-print-dati-' + new Date().toISOString().slice(0,10) + '.json';
+  toast('Preparo i dati…');
   const entries = [];
   for(const en of VLOG){
     if(!en.clip){ entries.push(en); continue }
     const b = await clipGet(en.t);
     entries.push(b ? Object.assign({}, en, {audio:await blobToDataURL(b)}) : en);
   }
-  const blob = new Blob([JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries, errors, diagnostica:{dispositivo:diagDevice(), misure:diag}}, null, 1)], {type:'application/json'});
+  const txt = JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries, errors, diagnostica:{dispositivo:diagDevice(), misure:diag}}, null, 1);
+  // nell'app: scrivo il file nella cache e apro «Condividi» di Android (la WebView non sa scaricare né condividere file)
+  const P = NATIVE && Capacitor.Plugins;
+  if(P && P.Filesystem && P.Share){
+    try{
+      const w = await P.Filesystem.writeFile({path:name, data:txt, directory:'CACHE', encoding:'utf8'});
+      await P.Share.share({title:'Dati Magic Play&Print', files:[w.uri], dialogTitle:'Invia i dati raccolti'});
+      return;
+    }catch(e){ if(/cancel/i.test(String(e && e.message || e))) return; logErr('esportazione: ' + (e && e.message || e)) }
+  }
+  const blob = new Blob([txt], {type:'application/json'});
   const file = new File([blob], name, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[file]})){
     try{ await navigator.share({files:[file], title:'Dati Magic Play&Print'}); return }catch(e){ if(e.name === 'AbortError') return }
   }
+  // riserva nell'app (per esempio con l'APK vecchia): copio tutto negli appunti, si incolla in un messaggio
+  if(NATIVE){ if(await copyText(txt)) toast('Dati copiati negli appunti: incollali in un messaggio o in una mail', 5000); else toast('Esportazione non riuscita: aggiorna l\'app all\'ultima APK', 5000); return }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
 }
