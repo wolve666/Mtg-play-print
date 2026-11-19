@@ -54,6 +54,10 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.17.1
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.17.0).
+- Scheda giocatore: la chiusura scorre senza lo scatto iniziale. Prima il tavolo veniva ridisegnato da capo proprio mentre partiva l'animazione, e il primo tratto saltava (più evidente con il tema Forgia). Ora si ridisegna solo se nella scheda sono cambiati colore, nome, sfondo o partner, e prima che la scheda inizi a scorrere.
+
 ### v0.17.0
 Serve la nuova APK solo se non hai già la 0.16.1.
 - Nuovo tema **Forgia**, da scegliere nel Menu alla voce «Tema». Il tema Classico resta identico ed è quello predefinito.

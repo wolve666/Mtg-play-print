@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.17.0', APPN = 6;
+var APPV = '0.17.1', APPN = 6;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -1473,8 +1473,14 @@ function closeAllOv(){
 }
 function closeTop(){
   const id = stack.pop(); if(!id) return;
-  $('#ov-' + id).classList.remove('open');
-  if(id === 'player') renderBoard();
+  if(id === 'player'){
+    // Scheda giocatore: vita, contatori e stati sono già aggiornati sul tavolo. Il tavolo si ridisegna solo se sono
+    // cambiati colore, nome, sfondo o partner, e mentre la scheda copre ancora lo schermo: poi parte lo scorrimento.
+    // (Ridisegnarlo durante lo scorrimento bloccava il primo fotogramma e la scheda partiva a scatto.)
+    const el = $('#ov-player');
+    if(plDirty){ plDirty = false; renderBoard(); requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(!stack.includes('player')) el.classList.remove('open') })) }
+    else el.classList.remove('open');
+  } else $('#ov-' + id).classList.remove('open');
   if(id === 'modal') tmCleanup();
   if(id === 'bt') btStop();
   if(id === 'wizard' && WZ.step >= 2){ wzStep(WZ.step === 3 && WZ.fmt !== 'standard' ? 2 : 1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
@@ -1641,7 +1647,7 @@ $('#tkMenu').addEventListener('click', menuClick);
 $('#menuBody').addEventListener('change', e=>{ if(e.target.id === 'prModelSel'){ SET.prModel = e.target.value; printer.size = 0; saveSet() } });
 
 /* ================= Scheda giocatore ================= */
-let curP = 0;
+let curP = 0, plDirty = false;
 function openPlayer(i){
   curP = i; renderPlayer();
   // la scheda si apre girata verso il giocatore che l'ha toccata
@@ -1686,7 +1692,7 @@ function renderPlayer(){
 }
 $('#plBody').addEventListener('input', e=>{
   if(e.target.id !== 'plName') return;
-  S.players[curP].name = e.target.value.trim() || 'Giocatore ' + (curP+1);
+  S.players[curP].name = e.target.value.trim() || 'Giocatore ' + (curP+1); plDirty = true;
   $('#plTitle').textContent = S.players[curP].name; save();
 });
 $('#plBody').addEventListener('keydown', e=>{ if(e.target.id === 'plArtQ' && e.key === 'Enter'){ e.target.blur(); searchArt() } });
@@ -1702,11 +1708,11 @@ $('#plBody').addEventListener('click', e=>{
       if(f.unique && on) S.players.forEach(o => o.flags[v] = false);
       p.flags[v] = on; if(on) logEv(p.name + ': ' + f.label); break }
     case 'out': p.out = !p.out; if(p.out) logEv(p.name + ' eliminato'); break;
-    case 'color': p.color = +v; break;
-    case 'partner': p.partner = !p.partner; break;
-    case 'artdel': p.art = null; p.artName = ''; break;
+    case 'color': p.color = +v; plDirty = true; break;
+    case 'partner': p.partner = !p.partner; plDirty = true; break;
+    case 'artdel': p.art = null; p.artName = ''; plDirty = true; break;
     case 'artsearch': searchArt(); return;
-    case 'artpick': p.art = b.dataset.u; p.artName = b.dataset.n; break;
+    case 'artpick': p.art = b.dataset.u; p.artName = b.dataset.n; plDirty = true; break;
     default: return;
   }
   buzz(); save(); renderPlayer(); S.players.forEach((_,i)=>updateCell(i));
