@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.15.9', APPN = 4;
+var APPV = '0.15.10', APPN = 4;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -465,6 +465,8 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 @keyframes cfSlash{0%{transform:rotate(var(--a)) scaleX(0);opacity:1}60%{transform:rotate(var(--a)) scaleX(1);opacity:1}100%{transform:rotate(var(--a)) scaleX(1);opacity:0}}
 @keyframes cfIcon{0%{scale:.2;opacity:0}35%{scale:1.15;opacity:1}75%{scale:1;opacity:1}100%{scale:1;opacity:0}}
 #tut{position:fixed;inset:0;z-index:30;touch-action:none}
+/* diagnostica attiva: piccolo promemoria fisso in alto */
+body.diag::after{content:'DIAG';position:fixed;left:50%;top:calc(2px + env(safe-area-inset-top));transform:translateX(-50%);z-index:95;padding:1px 6px;border-radius:6px;background:rgba(224,96,74,.85);color:#fff;font:700 10px/1.4 var(--ui);letter-spacing:.08em;pointer-events:none}
 #tut .hole{position:absolute;border-radius:50%;box-shadow:0 0 0 200vmax rgba(5,6,10,.86),0 0 0 3px rgba(242,194,48,.85),0 0 24px 6px rgba(242,194,48,.35);transition:left .5s cubic-bezier(.3,.8,.3,1),top .5s cubic-bezier(.3,.8,.3,1),width .5s,height .5s}
 #tut .dot{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 0 12px rgba(255,255,255,.8);opacity:0;pointer-events:none}
 #tut .dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:3px solid #fff;opacity:0}
@@ -796,6 +798,50 @@ window.addEventListener('pagehide', ()=>{ if(saveT) saveNow() });
 function saveSet(){ try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
 function saveRecent(){ try{ localStorage.setItem(RKEY, JSON.stringify(RECENT)) }catch(e){} }
 function saveVlog(){ if(VLOG.length > 500) VLOG = VLOG.slice(-500); try{ localStorage.setItem(VKEY, JSON.stringify(VLOG)) }catch(e){} }
+
+/* ================= Diagnostica ================= */
+// Misura la fluidità sul telefono vero: dopo ogni azione registra per 1,2 s quanto dura ogni fotogramma.
+// Fuori da quelle finestre non gira nulla. I risultati finiscono in «Esporta i dati raccolti».
+const DKEY = 'smtg-diag', DIAG = {on:!!SET.diag, win:null, ref:0};
+function diagSave(e){ try{ const L = load(DKEY) || []; L.push(e); localStorage.setItem(DKEY, JSON.stringify(L.slice(-300))) }catch(_){} }
+function diagMark(label){
+  if(!DIAG.on || document.hidden) return;
+  const now = performance.now(), w = DIAG.win;
+  if(w){ w.labels.add(label); w.until = now + 1200; return }   // azioni ravvicinate: una finestra sola, più lunga
+  const win = DIAG.win = {labels:new Set([label]), t0:now, until:now + 1200, d:[], last:0, lt:0, ltMax:0};
+  const step = t => {
+    if(win.last) win.d.push(t - win.last); win.last = t;
+    if(t < win.until && !document.hidden) requestAnimationFrame(step); else diagEnd(win);
+  };
+  requestAnimationFrame(step);
+}
+function diagEnd(w){
+  if(DIAG.win === w) DIAG.win = null;
+  if(w.d.length < 3) return;
+  const d = w.d.slice().sort((a, b) => a - b), med = d[d.length >> 1];
+  // intervallo dello schermo: il fotogramma tipico più breve visto finora (8,3 ms a 120 Hz, 16,7 a 60 Hz)
+  DIAG.ref = DIAG.ref ? Math.min(DIAG.ref, med) : med;
+  const tot = w.d.reduce((a, b) => a + b, 0);
+  diagSave({t:Date.now(), v:VERSION, ev:[...w.labels].join(' + '), ms:Math.round(tot), fotogrammi:w.d.length,
+    fps:Math.round(1000 * w.d.length / tot), tipico:+med.toFixed(1), peggiore:+d[d.length - 1].toFixed(1), p95:+d[Math.floor(d.length * .95)].toFixed(1),
+    lenti:w.d.filter(x => x > DIAG.ref * 1.5).length, schermoMs:+DIAG.ref.toFixed(1), blocchi:w.lt, bloccoMax:w.ltMax});
+}
+// blocchi del processo principale oltre 50 ms (dove il telefono non riesce a disegnare)
+try{ new PerformanceObserver(l => { const w = DIAG.win; if(!w) return; for(const e of l.getEntries()){ w.lt++; w.ltMax = Math.max(w.ltMax, Math.round(e.duration)) } }).observe({entryTypes:['longtask']}) }catch(e){}
+function diagDevice(){
+  return {ua:navigator.userAgent, schermo:[screen.width, screen.height], densita:devicePixelRatio, finestra:[innerWidth, innerHeight],
+    core:navigator.hardwareConcurrency || null, memoriaGB:navigator.deviceMemory || null, schermoMs:DIAG.ref ? +DIAG.ref.toFixed(1) : null,
+    menoMovimento:matchMedia('(prefers-reduced-motion: reduce)').matches, nativa:NATIVE, versione:VERSION};
+}
+// aggancio le azioni da misurare: le funzioni restano le stesse, prima di eseguirle segno l'inizio della finestra
+[['wzStep', a => 'pagina iniziale: scheda ' + a[0]], ['openOv', a => 'apre ' + a[0]], ['closeTop', () => 'chiude finestra'],
+ ['openPP', () => 'apre pannello personale'], ['closePP', () => 'chiude pannello personale'], ['openPlayer', () => 'apre scheda completa'],
+ ['openDice', () => 'apre dadi'], ['quickToken', () => 'pedina rapida'], ['playIntro', () => 'animazione di inizio'],
+ ['showWinner', () => 'vittoria'], ['cmdFx', () => 'effetto danni da comandante'], ['openCmdQuick', () => 'finestrella danni'], ['startGame', () => 'avvio partita']
+].forEach(([n, lab]) => { const f = window[n]; if(typeof f !== 'function') return; window[n] = function(...a){ diagMark(lab(a)); return f.apply(this, a) } });
+document.addEventListener('pointerdown', e => { if(DIAG.on && e.target.closest && e.target.closest('#board .half')) diagMark('tocco vita') }, true);
+document.addEventListener('click', e => { if(DIAG.on && e.target.closest && e.target.closest('#dzCv')) diagMark('lancio dadi') }, true);
+if(DIAG.on) document.body.classList.add('diag');
 
 const $ = s => document.querySelector(s);
 function toast(msg, ms=2200){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'), ms) }
@@ -1408,6 +1454,8 @@ function renderMenu(){
     <button class="btn" data-act="guide">Guida alle funzioni</button>
   </div>
   <div class="sec"><h3>Voce e miglioramento dell'app</h3>
+    <div class="row"><span class="lbl">Diagnostica della fluidità</span>${tog('diag', SET.diag)}</div>
+    <p class="note">Misura quanto è fluida l'app su questo telefono. Attivala, usa l'app normalmente, poi tocca «Esporta i dati raccolti» e mandami il file.</p>
     <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
     <div class="row"><span class="lbl">Salva anche l'audio delle richieste</span>${tog('clips', SET.clips)}</div>
     <p class="note">Il microfono si accende solo mentre tieni premuto. Salvo cosa è stato sentito, cosa ho capito, cosa hai scelto e le correzioni scritte: ${VLOG.length} voci sul telefono, finché non le esporti.</p>
@@ -1456,13 +1504,14 @@ async function menuClick(e){
     case 'vlog': SET.voiceLog = !SET.voiceLog; saveSet(); break;
     case 'sound': SET.sound = !SET.sound; saveSet(); if(SET.sound) sfx('found'); break;
     case 'clips': SET.clips = !SET.clips; saveSet(); break;
+    case 'diag': SET.diag = DIAG.on = !SET.diag; saveSet(); document.body.classList.toggle('diag', DIAG.on); if(DIAG.on) toast('Diagnostica attiva: usa l\'app normalmente, poi esporta i dati', 3500); break;
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
     case 'scale': SET.scale = +v; saveSet(); break;
     case 'dh': SET.dh = !SET.dh; saveSet(); break;
     case 'page': SET.page = !SET.page; saveSet(); break;
     case 'arcdl': arcSync(); break;
     case 'arcdel': if(confirm('Eliminare l\'archivio offline delle pedine?')){ await arcClear(); toast('Archivio eliminato') } break;
-    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); try{ localStorage.removeItem('smtg-errors') }catch(e){} toast('Dati cancellati') } break;
+    case 'clearv': if(confirm('Cancellare tutti i dati vocali e i suggerimenti raccolti?')){ VLOG = []; saveVlog(); clipClear(); try{ localStorage.removeItem('smtg-errors'); localStorage.removeItem(DKEY) }catch(e){} toast('Dati cancellati') } break;
   }
   renderMenu();
 }
@@ -2130,8 +2179,8 @@ $('#sugSave').addEventListener('click', ()=>{
   toast('Suggerimento salvato'); history.back();
 });
 async function exportVlog(){
-  const errors = load('smtg-errors') || [];
-  if(!VLOG.length && !errors.length){ toast('Non ci sono ancora dati da esportare'); return }
+  const errors = load('smtg-errors') || [], diag = load(DKEY) || [];
+  if(!VLOG.length && !errors.length && !diag.length){ toast('Non ci sono ancora dati da esportare'); return }
   const name = 'magic-play-print-dati-voce-' + new Date().toISOString().slice(0,10) + '.json';
   const entries = [];
   for(const en of VLOG){
@@ -2139,7 +2188,7 @@ async function exportVlog(){
     const b = await clipGet(en.t);
     entries.push(b ? Object.assign({}, en, {audio:await blobToDataURL(b)}) : en);
   }
-  const blob = new Blob([JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries, errors}, null, 1)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({app:'Magic Play&Print', version:VERSION, exported:new Date().toISOString(), entries, errors, diagnostica:{dispositivo:diagDevice(), misure:diag}}, null, 1)], {type:'application/json'});
   const file = new File([blob], name, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[file]})){
     try{ await navigator.share({files:[file], title:'Dati Magic Play&Print'}); return }catch(e){ if(e.name === 'AbortError') return }

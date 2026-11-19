@@ -51,6 +51,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.15.10
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Nuova «Diagnostica della fluidità» nel Menu, sezione «Voce e miglioramento dell'app». Quando è attiva, dopo ogni azione (schede iniziali, finestre, pannello personale, tocchi sulla vita, dadi, pedina rapida, vittoria) misura per poco più di un secondo quanto dura ogni fotogramma e se il telefono si blocca. Fuori da quei momenti non gira nulla. In alto compare la scritta DIAG come promemoria.
+- Le misure, insieme ai dati del telefono, finiscono in «Esporta i dati raccolti». «Cancella i dati raccolti» cancella anche queste.
+
 ### v0.15.9
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Ingranaggio del pannello personale pieno, con il foro al centro, e centrato nel tasto anche con molti giocatori. Prima il margine interno predefinito del tasto lo spingeva a destra nei pannelli piccoli.
