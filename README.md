@@ -31,6 +31,9 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 - Stampanti termiche ESC/POS da 58 mm in Bluetooth classico. È stata provata sulla NetumScan NS1809DD.
 - Il ricollegamento è automatico. Nelle impostazioni puoi regolare luminosità, modalità di stampa (fluida, bilanciata, prudente) e dimensione della pedina.
 
+**Temi**
+- Due temi da scegliere nel Menu: Classico e Forgia (acciaio scuro, braci, angoli tagliati, animazioni particellari).
+
 **Aggiornamenti**
 - La versione è visibile accanto al nome. Toccandola, l'app verifica gli aggiornamenti.
 - L'app controlla anche da sola. Quando trova una nuova versione mostra un avviso con i tasti «Aggiorna» e «Dopo».
@@ -50,6 +53,13 @@ Struttura:
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v0.17.0
+Serve la nuova APK solo se non hai già la 0.16.1.
+- Nuovo tema **Forgia**, da scegliere nel Menu alla voce «Tema». Il tema Classico resta identico ed è quello predefinito.
+- Forgia: acciaio scuro e braci, angoli tagliati, numeri della vita inclinati, nomi su targhette, segnalini del comandante con la luce nel colore di chi ha colpito, simbolo centrale esagonale incandescente, colori dei giocatori più saturi. Pannello personale, finestrella dei danni, pulsanti e Menu nello stesso stile.
+- Forgia, pagina iniziale: le schede scorrono verso sinistra e le caselle entrano una dopo l'altra (indietro al contrario). Braci che salgono dal fondo, riflesso e scintille sulla casella toccata. Lo sfondo con le illustrazioni casuali che zoomano resta.
+- Le braci girano solo sulla pagina iniziale e su «Vuoi continuare?», e si spengono in mezzo secondo quando parte la partita.
 
 ### v0.16.1
 Cambia la parte nativa: serve la nuova APK. Correzioni nate dai dati della diagnostica raccolti su un Galaxy S21 Ultra.
