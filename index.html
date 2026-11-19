@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.16.0', APPN = 5;
+var APPV = '0.17.0', APPN = 6;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -377,6 +377,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 
 .wz,.dlg{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#14121a;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .35s,visibility 0s .35s;padding-top:env(safe-area-inset-top)}
 .wz.open,.dlg.open{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .35s}
+.wz.prep,.dlg.prep{visibility:visible;opacity:.01;transition:none}
 .wzBg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 30% 20%,#3a2c52,#14121a 70%)}
 .wzBg i{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1s;animation:kb 26s ease-in-out -5s infinite alternate}
 /* sfondo visibile: livello proprio sulla scheda grafica, lo zoom non passa dal processo principale */
@@ -489,6 +490,99 @@ body.diag::after{content:'DIAG';position:fixed;left:50%;top:calc(2px + env(safe-
 #tut .skip{color:var(--muted)}
 #tut .next{background:var(--gold);color:var(--gold-ink)}
 @media (prefers-reduced-motion:reduce){#tut .hole{transition:none}}
+
+/* ================= Tema Forgia =================
+   Tutto qui sotto vale solo con body.th-forgia: il tema Classico non cambia. */
+html:has(> body.th-forgia){background:#0B0A0D}
+body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;--text:#F3EFE8;--muted:#9A94A3;--gold:#FFC24A;--gold-ink:#140C06;--danger:#FF4A1C;--ok:#3FCB6E;
+  --ember:#FF4A1C;--ember2:#FF8A2A;--steel:#0F0E13;--fgGold:linear-gradient(135deg,#FFC24A,#C98A1E);--fgEmber:linear-gradient(135deg,#FF4A1C,#B8240A);
+  --notch:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+  --notchS:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);
+  --par:polygon(9px 0,100% 0,calc(100% - 9px) 100%,0 100%);--parS:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);
+  --hex:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%)}
+/* tavolo */
+.th-forgia .cell{border-radius:0;clip-path:var(--notch);background:linear-gradient(155deg,color-mix(in srgb,var(--pc),#fff 8%),var(--pc) 45%,color-mix(in srgb,var(--pc) 62%,#000))}
+.th-forgia .cell:not(.active):not(.withart):not(.dropT){box-shadow:inset 0 0 0 2px rgba(255,255,255,.13)}
+.th-forgia .frame{background-image:repeating-linear-gradient(-58deg,rgba(255,255,255,.05) 0 2px,transparent 2px 12px)}
+.th-forgia .cell.pp .frame{background-color:transparent;background-image:repeating-linear-gradient(-58deg,rgba(255,255,255,.05) 0 2px,transparent 2px 12px),linear-gradient(155deg,color-mix(in srgb,var(--pc),#fff 8%),var(--pc) 45%,color-mix(in srgb,var(--pc) 62%,#000))}
+.th-forgia .life{text-shadow:0 4px 0 rgba(0,0,0,.22),0 0 18px color-mix(in srgb,var(--pc) 60%,#fff)}
+.th-forgia .half{font-family:var(--num);font-weight:900}
+.th-forgia .pname{border-radius:0;clip-path:var(--par);background:rgba(0,0,0,.32);font-weight:700;letter-spacing:.02em;padding:.5em 1.35em}
+.th-forgia .spia{border-radius:0;clip-path:polygon(.45em 0,100% 0,calc(100% - .45em) 100%,0 100%);background:rgba(0,0,0,.38);font-family:var(--num);font-weight:900;padding:.15em .8em}
+.th-forgia .spia.cmdb{box-shadow:inset 0 -.16em 0 var(--kc)}
+.th-forgia .spia.cmdb::after{border-radius:0;box-shadow:inset 0 0 .7em .1em var(--kc)}
+.th-forgia .swz{border-radius:0;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 100%,0 100%);box-shadow:none;background:color-mix(in srgb,var(--pt) 18%,transparent)}
+.th-forgia .strip b{display:inline-block;transform:skewX(-7deg)}
+.th-forgia .strip span{text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+/* simbolo centrale: esagono incandescente */
+.th-forgia #tokenBtn{border-radius:0;clip-path:var(--hex);background:linear-gradient(135deg,#FFC24A,#FF4A1C 55%,#7a1405);box-shadow:none}
+.th-forgia #tokenBtn::after{content:'';position:absolute;inset:4px;clip-path:var(--hex);background:radial-gradient(circle at 50% 40%,#2a2026,#0c0a0e 72%);pointer-events:none}
+.th-forgia #tokenBtn::before{z-index:1}
+.th-forgia #tokenBtn img,.th-forgia #tokenBtn .orbit{z-index:2}
+.th-forgia #hub::before{content:'';position:absolute;left:50%;top:50%;width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;background:radial-gradient(circle,rgba(255,90,30,.36),transparent 65%);pointer-events:none;z-index:-1}
+/* pannello personale */
+.th-forgia .under{background:linear-gradient(180deg,#211F28,#17161C)}
+.th-forgia .ppC{border-radius:0;clip-path:var(--notchS);background:var(--steel)}
+.th-forgia .ppC b{transform:skewX(-7deg)}
+.th-forgia .ppC button{border-radius:0;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px);background:var(--surface2);font-family:var(--num);font-weight:900}
+.th-forgia .ppC button:last-of-type{background:var(--fgEmber);color:#fff}
+.th-forgia .ppF{border-radius:0;clip-path:var(--parS);background:var(--steel);opacity:1;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:800}
+.th-forgia .ppF.on{background:var(--fgGold);color:var(--gold-ink);box-shadow:none}
+.th-forgia .ppGear{border-radius:0;clip-path:var(--notchS);background:var(--fgGold)}
+.th-forgia .ppName{border-radius:0;border:0;clip-path:var(--parS);background:var(--steel);text-transform:uppercase;font-weight:700;letter-spacing:.04em}
+.th-forgia .ppSw{border-radius:0;border:0;clip-path:var(--hex)}
+.th-forgia .ppSw.sel{transform:scale(1.25);filter:brightness(1.15)}
+.th-forgia .ppCmd,.th-forgia .ppFull{border-radius:0;clip-path:var(--parS);text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+.th-forgia .ppFull{background:var(--fgGold)}
+/* finestrella dei danni */
+.th-forgia .cqPop{border-radius:0;clip-path:var(--notch);background:rgba(14,12,18,.84)}
+.th-forgia .cqTabs button{border-radius:0;clip-path:var(--parS);text-transform:uppercase;letter-spacing:.05em;font-weight:800;font-size:12px}
+.th-forgia .cqTabs button.sel{background:var(--fgGold);color:var(--gold-ink)}
+.th-forgia .cqRow button,.th-forgia .cqQuick button{border-radius:0;clip-path:var(--notchS);background:#24212b;font-family:var(--num);font-weight:900}
+.th-forgia .cqRow button[data-v="1"]{background:var(--fgEmber)}
+.th-forgia .cqQuick .ok{background:var(--fgGold);font-family:var(--ui);font-weight:800;letter-spacing:.08em}
+.th-forgia .cqRow output{transform:skewX(-7deg)}
+.th-forgia .pchip{border-radius:0;clip-path:var(--parS)}
+/* pannelli e comandi */
+.th-forgia .btn{border-radius:0;clip-path:var(--notch);font-weight:800;text-transform:uppercase;letter-spacing:.07em;font-size:14px}
+.th-forgia .btn.primary{background:var(--fgEmber);color:#fff}
+.th-forgia .chip{border-radius:0;clip-path:var(--parS);font-weight:800}
+.th-forgia .chip.sel{background:var(--fgGold)}
+.th-forgia .verBtn{border-radius:0;clip-path:var(--parS)}
+.th-forgia .back{border-radius:0;clip-path:var(--hex)}
+.th-forgia .ovHead h2{text-transform:uppercase;letter-spacing:.04em;font-weight:800}
+/* pagina iniziale e finestre a schermo intero */
+.th-forgia .wz,.th-forgia .dlg{background:#0B0A0D}
+.th-forgia .wzBg{background:radial-gradient(60% 45% at 70% 22%,rgba(255,90,30,.38),transparent 70%),radial-gradient(50% 40% at 18% 70%,rgba(120,40,200,.25),transparent 70%),linear-gradient(180deg,#1a0f12,#0b0a0d)}
+.th-forgia .wzBg::after{background:linear-gradient(180deg,rgba(11,10,13,.42),rgba(11,10,13,.9)),radial-gradient(60% 40% at 70% 20%,rgba(255,90,30,.2),transparent 70%)}
+.th-forgia .wz h1,.th-forgia .dlg h1{transform:skewX(-8deg);transform-origin:left}
+.th-forgia .dlg h1{transform-origin:center}
+.th-forgia .hl{background:linear-gradient(180deg,#FFE08A,#FF8A2A 45%,#FF4A1C 75%,#B8240A);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
+.th-forgia .wzBrand{align-items:center;text-transform:uppercase;letter-spacing:.14em;font-weight:800;font-size:12px}
+.th-forgia .wzBrand::before{content:'';flex:none;width:26px;height:3px;background:linear-gradient(90deg,#FF4A1C,#FFC24A);transform:skewX(-30deg)}
+.th-forgia .wzOpt{border-radius:0;border:0;clip-path:var(--notch);background:rgba(20,18,26,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);overflow:hidden}
+.th-forgia .wzOpt::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac,var(--ember))}
+.th-forgia .wzOpt::after{content:'';position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(100deg,transparent,rgba(255,200,120,.45),transparent);transform:translateX(-120%) skewX(-20deg);pointer-events:none}
+.th-forgia .wzOpt.swp::after{animation:fgSweep .52s cubic-bezier(.3,.6,.3,1)}
+@keyframes fgSweep{to{transform:translateX(260%) skewX(-20deg)}}
+.th-forgia .wzOpt:active{background:rgba(255,90,30,.26);transform:none;translate:4px 0}
+.th-forgia .wzOpt b{font-family:var(--num);font-weight:900;font-size:26px;line-height:1.05;text-transform:uppercase}
+.th-forgia .wzOpt[data-f=standard]{--ac:#FF8A2A}.th-forgia .wzOpt[data-f=commander]{--ac:#FF4A1C}.th-forgia .wzOpt[data-f=brawl]{--ac:#FFC24A}.th-forgia .wzOpt[data-f=oathbreaker]{--ac:#B86BFF}
+.th-forgia .wzOpts.nums .wzOpt::before,.th-forgia .wzExtra .wzOpt::before{display:none}
+.th-forgia .wzExtra .wzOpt{text-transform:uppercase;letter-spacing:.06em;font-size:14px;font-weight:800}
+.th-forgia .wzOpt .wzInfo{border-radius:0;border:0;clip-path:var(--hex);background:rgba(255,255,255,.16);font-family:var(--num);font-style:normal;font-weight:900}
+.th-forgia .wzBack{color:var(--gold);text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:13px}
+.th-forgia .wzName i{border-radius:0;clip-path:polygon(0 6px,100% 0,100% calc(100% - 6px),0 100%)}
+.th-forgia .wzName input{border-radius:0;border:0;clip-path:var(--par);background:rgba(15,14,19,.75);text-transform:uppercase;font-weight:700;letter-spacing:.05em}
+.th-forgia .wzGo .btn:not(.primary){background:rgba(255,255,255,.1)}
+.th-forgia .dlgCard{border-radius:0;border:0;clip-path:var(--notch);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.th-forgia .winName{transform:skewX(-8deg)}
+/* scorrimento delle schede iniziali verso sinistra, a caselle sfalsate (gestito da wzStepF) */
+.th-forgia .wzTrack{transform:none!important;transition:none!important}
+.th-forgia .wzStep{position:absolute;inset:0;visibility:hidden}
+.th-forgia .wzStep.cur{visibility:visible}
+#fx2{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:46;display:none}
+#fx2.on{display:block}
 </style>
 </head>
 <body>
@@ -640,18 +734,18 @@ body.diag::after{content:'DIAG';position:fixed;left:50%;top:calc(2px + env(safe-
     <div class="wzStep" id="wzStep1">
       <button class="wzBack" id="wzClose" hidden>‹ Indietro</button>
       <div class="wzBrand">Magic Play&amp;Print <button class="verBtn" id="wzVer"></button></div>
-      <h1>A cosa vuoi giocare?</h1>
+      <h1>A cosa vuoi <span class="hl">giocare?</span></h1>
       <div class="wzOpts" id="wzFormats"></div>
       <div class="wzExtra"><button class="wzOpt" id="wzTok">Stampa pedine</button><button class="wzOpt" id="wzDice">Dadi e moneta</button></div>
     </div>
     <div class="wzStep" id="wzStep2">
       <button class="wzBack" id="wzBack">‹ Cambia formato</button>
-      <h1>In quanti siete a giocare?</h1>
+      <h1>In quanti siete <span class="hl">a giocare?</span></h1>
       <div class="wzOpts nums" id="wzCounts"></div>
     </div>
     <div class="wzStep" id="wzStep3">
       <button class="wzBack" id="wzBack2">‹ Cambia giocatori</button>
-      <h1>Chi gioca?</h1>
+      <h1>Chi <span class="hl">gioca?</span></h1>
       <div class="wzNames" id="wzNames"></div>
       <div class="wzGo"><button class="btn" id="wzSkip">Salta</button><button class="btn primary" id="wzStart">Inizia</button></div>
     </div>
@@ -670,7 +764,7 @@ body.diag::after{content:'DIAG';position:fixed;left:50%;top:calc(2px + env(safe-
 <section id="ov-resume" class="dlg">
   <div class="wzBg" id="rsBg"><i></i></div>
   <div class="dlgCard">
-    <h1>Vuoi continuare la partita?</h1>
+    <h1>Vuoi continuare <span class="hl">la partita?</span></h1>
     <p id="rsInfo"></p>
     <button class="btn primary" id="rsGo">Continua</button>
     <button class="btn" id="rsNew">Nuova partita</button>
@@ -681,7 +775,7 @@ body.diag::after{content:'DIAG';position:fixed;left:50%;top:calc(2px + env(safe-
 <section id="ov-win" class="dlg win">
   <div class="wzBg" id="wnBg"><i></i></div>
   <div class="dlgCard">
-    <h1>Vittoria</h1>
+    <h1><span class="hl">Vittoria</span></h1>
     <div class="winName" id="wnName"></div>
     <p id="wnInfo"></p>
     <button class="btn primary" id="wnAgain">Rivincita</button>
@@ -781,6 +875,22 @@ if(!S){
 let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false, page:false}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:true, rad:false, tax:true}, SET.show || {});
 // 0.15.7: l'esperienza esce dal pannello personale e si sposta nella Scheda completa, quindi la accendo lì una volta per tutti
+/* ================= Tema ================= */
+const COLORS_C = COLORS.map(c => ({...c}));
+const COLORS_F = [{bg:'#E0321B', fg:'#FFF4EE'}, {bg:'#1E6BFF', fg:'#F0F6FF'}, {bg:'#1FA35A', fg:'#EFFAF0'}, {bg:'#F2E6C4', fg:'#2B2614'}, {bg:'#6B3FA0', fg:'#F3EEF8'}, {bg:'#8A93A0', fg:'#FFFFFF'}];
+const FORGIA = () => SET.theme === 'forgia';
+const RMOT = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function applyTheme(render){
+  const f = FORGIA();
+  document.body.classList.toggle('th-forgia', f);
+  COLORS.forEach((c, k) => Object.assign(c, f ? COLORS_F[k] : COLORS_C[k]));
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', f ? '#0B0A0D' : '#22252B');
+  if(!render) return;
+  renderBoard();
+  if($('#ov-wizard').classList.contains('open')){ wzStep.now = true; wzStep(WZ.step || 1) }
+  fgAmbient();
+}
+applyTheme(false);
 if(!SET.expMoved){ SET.show.exp = true; SET.expMoved = true; try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
 let RECENT = load(RKEY) || [];
 let VLOG = load(VKEY) || [];
@@ -892,6 +1002,7 @@ function placeEl(el, k, mir, hub){
   if(x > 80){ st.left = 'auto'; st.right = Math.max(3, 100 - x - 6) + '%'; st.transform = 'translateY(-50%)' }
   else if(x < 20){ st.right = 'auto'; st.left = Math.max(3, x - 6) + '%'; st.transform = 'translateY(-50%)' }
   else { st.right = 'auto'; st.left = x + '%'; st.transform = 'translate(-50%,-50%)' }
+  if((k === 'life' || k === 'delta') && FORGIA()) st.transform += ' skewX(-7deg)';
 }
 // il lato destro del layout guarda sempre verso il simbolo centrale: i pannelli che lo hanno dall'altra parte vengono specchiati
 function cellMirror(cell){
@@ -1337,15 +1448,22 @@ function openOv(id){
   // sopra la pagina iniziale (o un'altra finestra a schermo intero) i pannelli devono stare davanti
   const overWz = stack.some(s => $('#ov-' + s).matches('.wz,.dlg'));
   el.style.zIndex = (el.classList.contains('ov') && !overWz ? 20 : 45) + stack.length;
-  el.classList.add('open');
+  if(el.matches('.wz,.dlg') && !el.classList.contains('open')){
+    // il primo disegno di sfondo e sfocature è pesante: lo faccio fare con la finestra quasi invisibile,
+    // la dissolvenza parte due fotogrammi dopo, quando il lavoro è finito (prima dava uno scatto all'apertura)
+    el.classList.add('prep');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.classList.remove('prep'); if(stack.includes(id)) el.classList.add('open') }));
+  } else el.classList.add('open');
   stack.push(id);
   history.pushState({ov:id}, '');
+  fgAmbient();
 }
 // chiude il pannello in cima e apre il successivo nello stesso passo di cronologia
 function swapOv(id){
   const top = stack.pop(); if(top) $('#ov-' + top).classList.remove('open');
   $('#ov-' + id).classList.add('open'); stack.push(id);
   history.replaceState({ov:id}, '');
+  fgAmbient();
 }
 // chiude tutti i pannelli aperti e torna al tavolo in un colpo solo
 function closeAllOv(){
@@ -1360,6 +1478,7 @@ function closeTop(){
   if(id === 'modal') tmCleanup();
   if(id === 'bt') btStop();
   if(id === 'wizard' && WZ.step >= 2){ wzStep(WZ.step === 3 && WZ.fmt !== 'standard' ? 2 : 1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
+  fgAmbient();
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', ()=>history.back()));
 let lastBack = 0;
@@ -1450,6 +1569,7 @@ function renderMenu(){
     <div class="row"><span class="lbl">Vibrazione</span>${tog('vib', SET.vibrate)}</div>
     <div class="row"><span class="lbl">Schermo sempre acceso</span>${tog('wake', SET.wake)}</div>
     <div class="row"><span class="lbl">Suoni</span>${tog('sound', SET.sound)}</div>
+    <div class="row"><span class="lbl">Tema</span><div class="chips">${[['classico','Classico'],['forgia','Forgia']].map(([k,l])=>`<button class="chip ${(SET.theme || 'classico') === k ? 'sel' : ''}" data-act="theme" data-v="${k}">${l}</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Animazione di inizio partita</span>${tog('intro', SET.intro)}</div>
     <button class="btn" data-act="guide">Guida alle funzioni</button>
   </div>
@@ -1506,6 +1626,7 @@ async function menuClick(e){
     case 'clips': SET.clips = !SET.clips; saveSet(); break;
     case 'diag': SET.diag = DIAG.on = !SET.diag; saveSet(); document.body.classList.toggle('diag', DIAG.on); if(DIAG.on) toast('Diagnostica attiva: usa l\'app normalmente, poi esporta i dati', 3500); break;
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
+    case 'theme': if(v !== (SET.theme || 'classico')){ SET.theme = v; saveSet(); applyTheme(true); toast(v === 'forgia' ? 'Tema Forgia' : 'Tema Classico') } break;
     case 'scale': SET.scale = +v; saveSet(); break;
     case 'dh': SET.dh = !SET.dh; saveSet(); break;
     case 'page': SET.page = !SET.page; saveSet(); break;
@@ -1828,7 +1949,7 @@ const DICT = [
   ['elefant[ei]','Elephant'],['rinoceront[ei]','Rhino'],['polp[oi]|piovr[ae]','Octopus'],['granch[io]|granchi','Crab'],['anguill[ae]','Eel'],
   ['tartarug[ae]|tartarughe','Turtle'],['mur[oi]|muri','Wall'],['gnom[oi]','Gnome'],['gigant[ei]','Giant'],['ogre|orch[ei]ssa','Ogre'],
   ['troll','Troll'],['minotaur[oi]','Minotaur'],['centaur[oi]','Centaur'],['satir[oi]','Satyr'],['ninf[ae]','Nymph'],['sfing[ei]','Sphinx'],
-  ['fenic[ei]','Phoenix'],['phyrexian[oi]|ferexian[oi]','Phyrexian'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
+  ['fenic[ei]','Phoenix'],['phyrexian[oi]|ferexian[oi]|pirexian[oi]|firexian[oi]','Phyrexian'],['unicorn[oi]','Unicorn'],['falc(o|hi)|falchi','Bird'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
   ['ombr[ae]','Shade'],['diavol[oi]','Devil'],['diavolett[oi]|imp','Imp'],['melm[ae]|ooze','Ooze'],['mutant[ei]','Mutant'],['robot','Robot'],
   ['mercenari[oi]?','Mercenary'],['furfant[ei]','Rogue'],['mutaform[ae]','Shapeshifter'],['verm[ei]','Worm'],['calamar[oi]|seppi[ae]','Squid'],
   ['stell[ae] marin[ae]','Starfish'],['aquil[ae]','Bird'],['vigliacc[oi]|codard[oi]','Coward'],['sopravvissut[oi]','Survivor'],
@@ -2216,9 +2337,16 @@ async function exportVlog(){
 
 /* ================= Pedina rapida: tieni premuto, mostra, stampa da sola ================= */
 const TM = {seq:0, phase:'idle', timer:null, entry:null};
+// pedina generica prima: il nome è proprio il tipo cercato («Soldier», «Dog»), poi chi lo contiene («Cat Beast»),
+// per ultime quelle con un nome proprio («Ajani's Pridemate», «Porthos»)
+function genScore(name, type){
+  if(!type) return 0;
+  const n = (name || '').toLowerCase(), t = type.toLowerCase();
+  return n === t ? 2 : new RegExp('\\b' + t + '\\b').test(n) ? 1 : 0;
+}
 function pickFirst(data, type){
   const ok = data.filter(c => (c.lang || 'en') === 'en');
-  const pool = ok.length ? ok : data;
+  const pool = (ok.length ? ok : data).map((c, i) => [c, i]).sort((a, b) => (genScore(b[0].name, type) - genScore(a[0].name, type)) || a[1] - b[1]).map(x => x[0]);
   const card = pool.find(c => c.image_uris) || pool[0];
   const f = card && faceOf(card, type);
   return f && {id:card.id, name:f.name, type_line:f.type_line, set:card.set_name, small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large};
@@ -2276,7 +2404,9 @@ async function quickToken(alts){
   if(!tk){ fail('Nessuna pedina trovata per «' + describe(req) + '».'); return }
   if(TM.entry){ TM.entry.chosen = {id:tk.id, name:tk.name, set:tk.set, auto:true}; saveVlog() }
   const qn = req.qty;
-  const bitsP = makeBits(tk.print).catch(()=>null);
+  // la preparazione per la stampa (dithering) blocca il telefono per ~140 ms: la faccio dopo l'entrata della carta,
+  // tanto c'è il conto alla rovescia di 3 secondi
+  const bitsP = sleep(700).then(()=>makeBits(tk.print)).catch(()=>null);
   await new Promise(res=>{ const im = $('#tmImg'); setTimeout(res, 12000); im.onload = res; im.onerror = ()=>{ if(tk.small && !im.src.startsWith('blob:')) im.src = tk.small; else res() }; im.src = tk.large || tk.print });
   if(seq !== TM.seq) return;
   $('#tmQty').textContent = qn > 1 ? '×' + qn : '';
@@ -2595,6 +2725,7 @@ async function themeBg(box, q, url){
 function wzStep(n){
   if(n < 3) document.activeElement?.blur?.();
   WZ.step = n;
+  if(FORGIA()){ const now = wzStep.now === true; wzStep.now = false; wzStepF(n, now); return }
   const tr = $('#wzTrack'), now = wzStep.now === true, go = () => { tr.style.transform = `translateY(${-(n - 1) * 100}%)` };
   wzStep.now = false;
   $('#wzScroll').scrollTop = 0;
@@ -2602,6 +2733,35 @@ function wzStep(n){
   // la corsa parte al fotogramma successivo: il lavoro del tocco (nomi, vibrazione) è già fatto e il primo passo non va perso
   cancelAnimationFrame(wzStep.raf);
   if(now) go(); else wzStep.raf = requestAnimationFrame(go);
+}
+// Forgia: la scheda che esce scivola a sinistra e quella nuova entra da destra, una casella alla volta (indietro al contrario)
+const FG_EASE = {spring:'cubic-bezier(.2,1.25,.3,1)', in:'cubic-bezier(.5,0,.75,.2)'};
+const fgItems = st => [...st.children].flatMap(c => c.matches('.wzOpts,.wzNames') ? [...c.children] : [c]).filter(e => !e.hidden);
+const fgStop = st => st.getAnimations({subtree:true}).forEach(a => a.cancel());
+function fgEnter(st, dir, delay){
+  st.classList.add('cur');
+  fgItems(st).forEach((el, i) => el.animate([{translate:`${dir * 70}% 0`, opacity:0}, {translate:'0 0', opacity:1}], {duration:560, delay:delay + i * 55, easing:FG_EASE.spring, fill:'backwards'}));
+}
+function fgLeave(st, dir){
+  let end = 0;
+  fgItems(st).forEach((el, i) => { end = Math.max(end, i * 35 + 260); el.animate([{translate:'0 0', opacity:1}, {translate:`${-dir * 60}% 0`, opacity:0}], {duration:260, delay:i * 35, easing:FG_EASE.in, fill:'forwards'}) });
+  return end;
+}
+function wzStepF(n, now){
+  const steps = [1,2,3].map(k => $('#wzStep' + k)), to = steps[n - 1], prev = WZ.shown || 1, from = steps[prev - 1];
+  // un passaggio ancora in corso si chiude subito
+  if(wzStepF.p){ clearTimeout(wzStepF.p.t); wzStepF.p.done() }
+  $('#wzScroll').scrollTop = 0; to.scrollTop = 0;
+  WZ.shown = n;
+  if(now || prev === n || RMOT){
+    steps.forEach(st => { fgStop(st); st.classList.toggle('cur', st === to) });
+    if(now && !RMOT) fgEnter(to, 1, 140);
+    return;
+  }
+  const dir = n > prev ? 1 : -1, end = fgLeave(from, dir);
+  fgEnter(to, dir, 110);
+  const done = () => { wzStepF.p = null; if(from !== steps[WZ.shown - 1]) from.classList.remove('cur'); fgStop(from) };
+  wzStepF.p = {done, t:setTimeout(done, end + 30)};
 }
 // nomi dei giocatori: propongo gli ultimi usati, Salta lascia Giocatore 1, 2, 3...
 const NKEY = 'smtg-names';
@@ -2750,7 +2910,7 @@ async function arcResolve(t){
 const recentOf = t => t.local ? {...t, small:t.rs, large:t.rl, print:t.rp, local:false} : t;
 function arcSearch(r){
   const tl = e => e.t.toLowerCase(), fr = (r.free || '').toLowerCase();
-  const typeOk = r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : r.type === 'Emblem' && fr ? e => re.test(tl(e)) && tl(e).includes(fr.split(' ')[0]) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? e => e.n.toLowerCase().includes(fr) || tl(e).includes(fr) : () => true;
+  const typeOk = r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : r.type === 'Emblem' && fr ? e => re.test(tl(e)) && tl(e).includes(fr.split(' ')[0]) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? (w => e => w.test(e.n) || w.test(tl(e)))(new RegExp('\\b' + fr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')) : () => true;
   const cols = r.colors.filter(c => c !== 'C').sort().join(''), colorless = r.colors.includes('C') && !cols;
   const pt = e => r.pow === null || (e.p === String(r.pow) && e.o === String(r.tou));
   const col = e => !r.colors.length || (colorless ? e.c === '' : e.c === cols);
@@ -2759,7 +2919,7 @@ function arcSearch(r){
   const tries = [[[pt, col, kw], ''], [[pt, kw], 'senza filtro colore'], [[pt], 'senza colore e abilità'], [[], 'tutte le pedine del tipo']];
   for(const [fs, note] of tries){
     const res = ARC.list.filter(e => base(e) && fs.every(f => f(e)));
-    if(res.length) return {res:res.sort((a, b) => (/token/i.test(b.t) - /token/i.test(a.t)) || (b.r || '').localeCompare(a.r || '')), note};
+    if(res.length) return {res:res.sort((a, b) => (genScore(b.n, r.type) - genScore(a.n, r.type)) || (/token/i.test(b.t) - /token/i.test(a.t)) || (b.r || '').localeCompare(a.r || '')), note};
   }
   return {res:[], note:''};
 }
@@ -2879,6 +3039,58 @@ function fxBurst(x, y, n, cols, sp, life){ for(let i=0;i<n;i++){ const a = Math.
 function fxRing(x, y, col, max){ FX.P.push({ring:1, x, y, r:10, max, l:32, m:32, col}); fxRun() }
 function fxBurstAt(el, n, cols){ if(!el) return; const r = el.getBoundingClientRect(); fxBurst(r.left + r.width/2, r.top + r.height/2, n, cols, 4.5, 34) }
 window.addEventListener('resize', ()=>{ if(FX.on) fxSize() });
+
+/* ================= Forgia: particelle ================= */
+const EMB = (()=>{
+  const cv = document.createElement('canvas'); cv.id = 'fx2'; document.body.appendChild(cv);
+  const ctx = cv.getContext('2d'); let W = 0, H = 0, D = 1, P = [], run = false, last = 0, amb = null, ambT = 0;
+  function size(){ D = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = Math.round(W * D); cv.height = Math.round(H * D) }
+  size(); addEventListener('resize', size);
+  const pick = a => a[Math.random() * a.length | 0];
+  function go(){ if(run) return; run = true; cv.classList.add('on'); last = performance.now(); requestAnimationFrame(loop) }
+  function loop(t){
+    const dt = Math.min(.05, (t - last) / 1000); last = t;
+    if(amb){ ambT += dt; while(ambT > amb.every){ ambT -= amb.every; amb.spawn() } }
+    ctx.setTransform(D, 0, 0, D, 0, 0); ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
+    P = P.filter(p => {
+      p.a += dt; if(p.a >= p.life) return false; const k = p.a / p.life;
+      p.vy += (p.g || 0) * dt; const f = Math.exp(-(p.drag || 0) * dt); p.vx *= f; p.vy *= f;
+      if(p.wob) p.x += Math.sin(p.a * p.wob + p.ph) * 18 * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      const al = (1 - k) * (p.flick ? .65 + .35 * Math.sin(p.a * 22 + p.ph) : 1); ctx.globalAlpha = al;
+      if(p.streak){ ctx.strokeStyle = p.c; ctx.lineWidth = p.s; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x - p.vx * p.streak, p.y - p.vy * p.streak); ctx.lineTo(p.x, p.y); ctx.stroke() }
+      else { const r = p.s * (1 - k * .5); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill(); ctx.globalAlpha = al * .16; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.2, 0, 6.2832); ctx.fill() }
+      return true;
+    });
+    ctx.globalAlpha = 1;
+    if(!P.length && !amb){ ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on'); return }
+    requestAnimationFrame(loop);
+  }
+  const add = p => { if(P.length < 500){ p.a = 0; p.ph = Math.random() * 6.28; P.push(p) } };
+  return {
+    burst(x, y, o){ const n = RMOT ? Math.ceil(o.n / 4) : o.n; for(let i = 0; i < n; i++){ const a = (o.dir ?? 0) + (Math.random() - .5) * (o.spread ?? 6.28), v = o.speed * (.35 + Math.random() * .9);
+      add({x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 2.2, life:o.life * (.6 + Math.random() * .6), c:pick(o.cols), s:o.size ?? (1.2 + Math.random() * 1.6), streak:o.streak ?? .035}) } go() },
+    ambient(on, z){ if(z != null) cv.style.zIndex = z;
+      // spegnendo, le braci già in volo si dissolvono in mezzo secondo invece di salire sul tavolo
+      if(!on) P.forEach(p => { if(p.amb) p.life = Math.min(p.life, p.a + .45) });
+      amb = on && !RMOT ? {every:.07, spawn:() => add({amb:true, x:Math.random() * W, y:H + 6, vx:(Math.random() - .5) * 14, vy:-(28 + Math.random() * 46), drag:0, life:4 + Math.random() * 3, c:pick(['#FF7A2A','#FFB347','#FF4A1C','#FFD27A']), s:.8 + Math.random() * 1.6, flick:true, wob:1.5 + Math.random() * 2})} : null;
+      if(amb) go() },
+  };
+})();
+// braci solo con Forgia, solo mentre in cima c'è la pagina iniziale o «Vuoi continuare?», mai con l'app in secondo piano
+function fgAmbient(){
+  const top = stack[stack.length - 1], el = top && $('#ov-' + top);
+  const on = FORGIA() && !document.hidden && (top === 'wizard' || top === 'resume');
+  EMB.ambient(on, on ? (parseInt(el.style.zIndex) || 45) : null);
+}
+document.addEventListener('visibilitychange', fgAmbient);
+// tocco su una casella: riflesso che la attraversa e scintille dal dito
+['#ov-wizard', '#ov-resume', '#ov-win'].forEach(id => $(id).addEventListener('pointerdown', e => {
+  if(!FORGIA()) return;
+  const o = e.target.closest('.wzOpt,.btn'); if(!o) return;
+  if(o.classList.contains('wzOpt')){ o.classList.remove('swp'); void o.offsetWidth; o.classList.add('swp') }
+  EMB.burst(e.clientX, e.clientY, {n:14, speed:260, life:.45, cols:['#FFD27A','#FF8A2A','#FFF3CC'], drag:4});
+}));
 
 /* ================= Animazione di inizio partita ================= */
 let INTRO = null;
