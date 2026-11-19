@@ -54,6 +54,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.19.1
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
+- Forgia, simbolo centrale: tolta la corona di fiamme fissa. Ora il fuoco compare quando lo usi: al tocco un soffio di braci con un anello di luce, tenendolo premuto per parlare un vortice di braci che gira intorno (al posto dell'alone che pulsa nel Classico, che l'esagono di Forgia tagliava).
+- L'alone blu con le scintille a stampante collegata è rimasto com'era, anche in Forgia.
+
 ### v0.19.0
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.17.x o successiva).
 - Pagina iniziale: in fondo ci sono i simboli di mana dei sei colori dei temi (Rosso, Verde, Blu, Nero, Bianco, Incolore), puri, senza tasto attorno. Il simbolo del tema in uso è colorato e luminoso, gli altri sono grigi finché i loro temi non sono pronti. Toccando il Rosso si passa a Forgia. I simboli vengono dal font Mana già incorporato (+1 kB).
