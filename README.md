@@ -54,6 +54,12 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.19.0
+Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.17.x o successiva).
+- Pagina iniziale: in fondo ci sono i sei colori dei temi (Rosso, Verde, Blu, Nero, Bianco, Incolore), con simboli disegnati apposta. È acceso solo il colore del tema in uso; gli altri restano grigi finché i loro temi non sono pronti. Toccando il Rosso si passa a Forgia.
+- Menu, alla voce «Tema»: oltre a Classico e Forgia compaiono i colori in arrivo, in grigio. Il Classico si sceglie solo da qui.
+- Forgia: il simbolo centrale delle pedine arde, con una corona di fiamme che gira, un bagliore che tremola e braci che salgono. Si ferma quando una finestra copre il tavolo.
+
 ### v0.18.0
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK (se hai già la 0.17.x).
 - Forgia, pannello personale: chiudendolo con la linguetta la scheda non diventa più trasparente mentre scende. Lo sfondo della scheda ora è sempre pieno.
