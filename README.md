@@ -51,6 +51,12 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v0.16.0
+Cambia la parte nativa: serve la nuova APK.
+- «Esporta i dati raccolti» ora funziona anche nell'app: crea il file e apre il menu «Condividi» di Android, da cui lo mandi con WhatsApp, mail, Drive o altro. Prima nell'app il tasto non faceva nulla, perché la WebView non sa scaricare né condividere file.
+- Se la condivisione non è disponibile, i dati vengono copiati negli appunti, pronti da incollare in un messaggio.
+- Aggiunti i plugin ufficiali di Capacitor Filesystem e Share.
+
 ### v0.15.10
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.
 - Nuova «Diagnostica della fluidità» nel Menu, sezione «Voce e miglioramento dell'app». Quando è attiva, dopo ogni azione (schede iniziali, finestre, pannello personale, tocchi sulla vita, dadi, pedina rapida, vittoria) misura per poco più di un secondo quanto dura ogni fotogramma e se il telefono si blocca. Fuori da quei momenti non gira nulla. In alto compare la scritta DIAG come promemoria.
