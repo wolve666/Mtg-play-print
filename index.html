@@ -1997,20 +1997,27 @@ window.addEventListener('pointermove', e=>{
 });
 function dragMove(x, y){
   dragLine(drag.x, drag.y, x, y);
-  if(fgOn()) EMB.embers(x, y, {n:3, speed:50, spread:6.28, life:.55, cols:[fgPc(drag.i), '#FFD27A', '#FFF3CC'], drag:2.5, wob:4});
   const el = document.elementFromPoint(x, y)?.closest('.cell,.ntile');
   const j = el ? +el.dataset.i : null;
   if(j !== drag.target){ clearDrop(); drag.target = j; if(j !== null && j !== drag.i){ el.classList.add('dropT'); buzz(6) } }
+  if(fgOn()){
+    // il fulmine segue il dito e, sopra un avversario, si aggancia al suo centro
+    let tx = x, ty = y; if(j !== null && j !== drag.i){ const t = fgTo(j); if(t){ tx = t.x; ty = t.y } }
+    if(!drag.bolt) drag.bolt = EMB.bolt({x1:drag.x, y1:drag.y, x2:tx, y2:ty, live:true, br:1, w:.85, every:.06});
+    drag.bolt.x2 = tx; drag.bolt.y2 = ty;
+    if(Math.random() < .5) EMB.burst(tx, ty, {n:2, speed:220, life:.35, cols:ZAP, drag:3, g:200, streak:.03});
+  }
 }
 window.addEventListener('pointerup', ()=>{ if(drag && !drag.hub) dragEnd() });
 function dragEnd(){
-  const d = drag; drag = null; dragLine(null); clearDrop();
+  const d = drag; drag = null; dragLine(null); clearDrop(); EMB.stop(d.bolt);
   if(!d.moved){ openPlayer(d.i); return }
   if(d.target === null || d.target === d.i) return;
-  fxBurstAt($(`.cell[data-i="${d.target}"]`) || $(`.ntile[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
+  if(fgOn()){ const t = fgTo(d.target); if(t) fgZap(t, true) }
+  else fxBurstAt($(`.cell[data-i="${d.target}"]`) || $(`.ntile[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
   openCmdQuick(d.i, d.target);
 }
-window.addEventListener('pointercancel', ()=>{ if(drag && !drag.hub){ drag = null; dragLine(null); clearDrop() } });
+window.addEventListener('pointercancel', ()=>{ if(drag && !drag.hub){ EMB.stop(drag.bolt); drag = null; dragLine(null); clearDrop() } });
 
 function pchip(p){ const c = COLORS[p.color]; return `<span class="pchip" style="background:${c.bg};color:${c.fg}">${esc(p.name)}</span>` }
 // finestrella semitrasparente sul pannello di chi subisce, girata verso di lui
@@ -2039,11 +2046,11 @@ function openCmdQuick(a, v){
     if(k === 'dmg'){
       // danno da combattimento: toglie vita; il numero è quanto ho dato con questa finestrella
       const d = Math.max(-cqp.dmg, +b.dataset.v);
-      if(d){ cqp.dmg += d; changeLife(cqp.v, -d); buzz() }
+      if(d){ cqp.dmg += d; changeLife(cqp.v, -d); buzz(); if(d > 0 && fgOn()) fgStrike(cqp.a, cqp.v) }
     } else if(k.startsWith('c:')){
       // veleno e radiazioni: solo segnalini, la vita non cambia
       const c = k.slice(2), before = V.counters[c] || 0, after = Math.max(0, before + +b.dataset.v);
-      if(after !== before){ V.counters[c] = after; updateCell(cqp.v); save(); buzz(); if(after > before) logEv(`${S.players[cqp.a].name} → ${V.name}: +${after - before} ${c === 'poison' ? 'veleno' : 'radiazioni'}`) }
+      if(after !== before){ V.counters[c] = after; updateCell(cqp.v); save(); buzz(); if(after > before){ logEv(`${S.players[cqp.a].name} → ${V.name}: +${after - before} ${c === 'poison' ? 'veleno' : 'radiazioni'}`); if(fgOn()) fgStrike(cqp.a, cqp.v) } }
     } else {
       const before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
       if(after !== before){ V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before, cqp.a) }
@@ -2611,7 +2618,11 @@ function combatApply(){
   if(C.heal) lifeFx(C.by, C.heal);
   buzz([30, 50, 30]); sfx('done');
   CB = {by:C.by, to:C.to};
-  history.back(); if(stack.includes('player')) renderPlayer();
+  // Forgia: la pagina scorre via (anche la scheda, se il colpo partiva da lì) e parte il fulmine verso il bersaglio
+  const strike = fgOn() && (tot || C.poison || C.rad);
+  if(strike && stack.includes('player')){ history.back(); setTimeout(()=>history.back(), 40) }
+  else { history.back(); if(stack.includes('player')) renderPlayer() }
+  if(strike) setTimeout(()=>fgStrike(C.by, C.to), 300);
   toast(`${v.name}: ${parts.join(', ') || 'colpito'}`);
 }
 async function searchArt(){
@@ -4028,16 +4039,75 @@ const EMB = (()=>{
       return true;
     });
     ctx.globalAlpha = 1;
-    if(!P.length && !amb){ ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on'); return }
+    const nb = []; B = B.filter(b => drawB(b, dt, nb)).concat(nb);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
+    if(!P.length && !B.length && !amb){ ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on'); return }
     requestAnimationFrame(loop);
   }
   const add = p => { if(P.length < 500){ p.a = 0; p.ph = Math.random() * 6.28; P.push(p) } };
+  // ---- fulmine: spezzata irregolare tra due punti, ridisegnata di continuo, con rami; cuore blu e aloni bianchi
+  let B = [];
+  function zig(x1, y1, x2, y2, rough){
+    let pts = [[x1, y1], [x2, y2]], off = Math.hypot(x2 - x1, y2 - y1) * rough;
+    while(off > 2.5 && pts.length < 129){
+      const np = [pts[0]];
+      for(let i = 1; i < pts.length; i++){ const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, d = (Math.random() - .5) * 2 * off;
+        np.push([(a[0] + b[0]) / 2 - dy / l * d, (a[1] + b[1]) / 2 + dx / l * d], b) }
+      pts = np; off *= .52;
+    }
+    return pts;
+  }
+  function shape(b){
+    const main = zig(b.x1, b.y1, b.x2, b.y2, b.rough), L = Math.hypot(b.x2 - b.x1, b.y2 - b.y1), out = [{p:main, w:1}];
+    const nb = L < 60 ? 0 : b.br + (Math.random() < .5 ? 1 : 0);
+    for(let k = 0; k < nb; k++){
+      const i = Math.floor(main.length * (.2 + Math.random() * .6)), a = main[i], c = main[Math.min(main.length - 1, i + 2)];
+      const ang = Math.atan2(c[1] - a[1], c[0] - a[0]) + (Math.random() < .5 ? -1 : 1) * (.35 + Math.random() * .6), bl = L * (.12 + Math.random() * .25);
+      out.push({p:zig(a[0], a[1], a[0] + Math.cos(ang) * bl, a[1] + Math.sin(ang) * bl, b.rough * 1.1), w:.45});
+    }
+    return out;
+  }
+  const line = p => { ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]); for(let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]); ctx.stroke() };
+  function drawB(b, dt, nb){
+    b.a += dt; if(b.a >= b.life) return false; const k = b.a / b.life;
+    if(b.flash){ ctx.globalAlpha = b.v * (1 - k) * (1 - k); ctx.fillStyle = '#E4F0FF'; ctx.fillRect(0, 0, W, H); return true }
+    if(b.glow){ const r = b.r * (.6 + .4 * k), g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
+      g.addColorStop(0, 'rgba(235,245,255,.75)'); g.addColorStop(.35, 'rgba(120,180,255,.35)'); g.addColorStop(1, 'rgba(60,130,255,0)');
+      ctx.globalAlpha = 1 - k; ctx.fillStyle = g; ctx.fillRect(b.x - r, b.y - r, r * 2, r * 2); return true }
+    if(b.shock){
+      // scosse sul campo colpito: piccoli archi che nascono e muoiono in punti a caso, sempre più radi
+      b.t -= dt;
+      if(b.t <= 0){ b.t = .03 + k * .08; const r = b.r, n = 2 + (Math.random() < .7 - k * .6 ? 1 : 0);
+        for(let q = 0; q < n; q++){ const x = r.x + Math.random() * r.w, y = r.y + Math.random() * r.h, a = Math.random() * 6.283, l = (24 + Math.random() * 46) * b.sz;
+          nb.push({a:0, life:.12 + Math.random() * .14, x1:x, y1:y, x2:Math.min(r.x + r.w, Math.max(r.x, x + Math.cos(a) * l)), y2:Math.min(r.y + r.h, Math.max(r.y, y + Math.sin(a) * l)), rough:.4, br:Math.random() < .5 ? 1 : 0, w:.75, every:.035, t:0});
+          if(Math.random() < .5) add({x, y, vx:(Math.random() - .5) * 160, vy:-Math.random() * 120, g:420, drag:1.5, life:.35 + Math.random() * .3, c:pick(['#FFFFFF','#BFE0FF','#5AA2FF']), s:1.3, streak:.03}) }
+      }
+      return true;
+    }
+    b.t -= dt; if(b.t <= 0 || !b.s){ b.s = shape(b); b.t = b.every * (.6 + Math.random() * .8); b.fl = b.live ? .7 + Math.random() * .3 : .45 + Math.random() * .55 }
+    const al = b.fl * (b.live ? Math.min(1, b.a * 12) : Math.pow(1 - k, .6)) * (b.fade != null ? Math.max(0, 1 - (b.a - b.fade) / .12) : 1);
+    if(al <= 0) return b.fade == null || b.a - b.fade < .12;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#FFFFFF';
+    b.s.forEach(s => { ctx.globalAlpha = al * .16; ctx.lineWidth = 18 * b.w * s.w; line(s.p); ctx.globalAlpha = al * .5; ctx.lineWidth = 7 * b.w * s.w; line(s.p) });
+    ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#2F7DFF'; ctx.globalAlpha = al;
+    b.s.forEach(s => { ctx.lineWidth = Math.max(1, 2.8 * b.w * s.w); line(s.p) });
+    ctx.globalCompositeOperation = 'lighter';
+    return true;
+  }
   return {
     burst(x, y, o){ const n = RMOT ? Math.ceil(o.n / 4) : o.n; for(let i = 0; i < n; i++){ const a = (o.dir ?? 0) + (Math.random() - .5) * (o.spread ?? 6.28), v = o.speed * (.35 + Math.random() * .9);
       add({x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 2.2, life:o.life * (.6 + Math.random() * .6), c:pick(o.cols), s:o.size ?? (1.2 + Math.random() * 1.6), streak:o.streak ?? .035}) } go() },
     embers(x, y, o){ const n = RMOT ? Math.ceil(o.n / 4) : o.n; for(let i = 0; i < n; i++){ const a = (o.dir ?? -1.57) + (Math.random() - .5) * (o.spread ?? 1.2), v = o.speed * (.3 + Math.random() * .8);
       add({x:x + (Math.random() - .5) * (o.w ?? 0), y:y + (Math.random() - .5) * (o.h ?? 0), vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 1, life:o.life * (.6 + Math.random() * .7), c:pick(o.cols), s:o.size ?? (1.4 + Math.random() * 1.8), flick:true, wob:o.wob ?? 3}) } go() },
     ring(x, y, c, r1, life = .6, w = 8){ add({ring:1, x, y, r0:8, r1, c, life, w}); go() },
+    // fulmine tra due punti: live = segue il dito finché non lo spengo con stop()
+    bolt(o){ const b = {a:0, life:o.live ? 1e9 : o.life ?? .35, x1:o.x1, y1:o.y1, x2:o.x2, y2:o.y2, rough:o.rough ?? .24, br:o.br ?? 2, w:o.w ?? 1, every:o.every ?? .06, t:0, live:!!o.live};
+      if(B.length < 80) B.push(b); go(); return b },
+    stop(b){ if(b && b.fade == null) b.fade = b.a },
+    flash(v = .18, life = .2){ B.push({flash:1, a:0, v, life}); go() },
+    glow(x, y, r, life = .4){ B.push({glow:1, a:0, x, y, r, life}); go() },
+    shock(r, life = 1.2, sz = 1){ if(RMOT) return; B.push({shock:1, a:0, t:0, r, life, sz}); go() },
     converge(x, y, n, cols, dur = .7){ if(RMOT) n = Math.ceil(n / 4); for(let i = 0; i < n; i++){ const a = Math.random() * 6.28, rr = 120 + Math.random() * 160;
       add({x:x + Math.cos(a) * rr, y:y + Math.sin(a) * rr, vx:-Math.sin(a) * 120, vy:Math.cos(a) * 120, tx:x, ty:y, pull:26, life:dur * (.8 + Math.random() * .4), c:pick(cols), s:1.3 + Math.random() * 1.5, flick:true}) } go() },
     ambient(on){
@@ -4077,7 +4147,8 @@ function fgLife(i, d){
   if(d > 0) EMB.embers(c.x, c.y, {n:8, speed:170, dir:up, spread:.9, life:.9, cols:['#FFD27A','#FFF3CC','#9CFF7A'], w:c.w * .5, h:c.h * .3, drag:1.2});
   else EMB.burst(c.x, c.y, {n:10, speed:240, dir:up + Math.PI, spread:1.4, life:.6, cols:['#FF4A1C','#FF8A2A','#B8240A'], drag:3});
   const now = performance.now(), o = fgHits[i], h = fgHits[i] = o && now - o.t < 1300 ? {v:o.v + d, t:now, big:o.big} : {v:d, t:now};
-  if(d < 0 && h.v <= -5 && !h.big){ h.big = true; fgHit(cell, '#FFB347') }
+  // se è appena partito un fulmine verso questo giocatore il colpo lo fa già lui
+  if(d < 0 && h.v <= -5 && !h.big){ h.big = true; setTimeout(()=>{ if(performance.now() - fgLastStrike > 400) fgHit(cell, '#FFB347') }, 30) }
 }
 // colpo: due tagli di luce incrociati, lampo, la scheda trema, esplosione di scintille
 function fgHit(cell, col){
@@ -4090,13 +4161,40 @@ function fgHit(cell, col){
   const c = fgC(cell); EMB.burst(c.x, c.y, {n:44, speed:520, life:.7, cols:['#FF6A4A','#FFD27A','#FFF3CC', col], drag:2.8, g:200});
   buzz([25, 30, 45]);
 }
-// danni da comandante: scia di braci del colore di chi attacca, dal suo nome al numero del bersaglio, poi il colpo
+// danni da un giocatore a un altro: un fulmine (cuore blu, aloni bianchi) dall'elemento di chi attacca al bersaglio,
+// poi le scosse che si spargono sul campo colpito per poco più di un secondo
+const ZAP = ['#FFFFFF','#CFE6FF','#5AA2FF','#2F7DFF'];
+// da dove parte: in H&O l'elemento centrale, nel gioco su un telefono il nome di chi attacca
+function fgFrom(a){
+  const el = NV() ? $('#tokenBtn') : $(`.cell[data-i="${a}"] .pname`) || $(`.cell[data-i="${a}"]`);
+  return el ? fgC(el) : null;
+}
+// dove arriva: in H&O il quadratino in alto (o il mio campo), altrimenti la scheda del giocatore
+function fgTo(v){
+  const tile = NV() && $(`.ntile[data-i="${v}"]`), cell = $(`.cell[data-i="${v}"]`), el = tile || cell; if(!el) return null;
+  const life = !tile && cell.querySelector('.life'), c = fgC(el), t = life ? fgC(life) : c;
+  return {el, x:t.x, y:t.y, r:{x:c.x - c.w / 2, y:c.y - c.h / 2, w:c.w, h:c.h}, big:!tile};
+}
+let fgLastStrike = 0;
+function fgStrike(a, v){
+  const f = fgFrom(a), t = fgTo(v); if(!f || !t) return;
+  const now = performance.now(), again = now - fgLastStrike < 280; fgLastStrike = now;
+  EMB.bolt({x1:f.x, y1:f.y, x2:t.x, y2:t.y, life:again ? .22 : .4, br:again ? 1 : 3, w:again ? .9 : 1.25, every:.05});
+  if(!again){ EMB.flash(.16); EMB.glow(f.x, f.y, 70, .3) }
+  setTimeout(()=>fgZap(t, again), 40);
+}
+function fgZap(t, small){
+  const c = {x:t.x, y:t.y}, R = Math.max(t.r.w, t.r.h);
+  EMB.glow(c.x, c.y, R * (small ? .5 : .8), small ? .3 : .5);
+  EMB.burst(c.x, c.y, {n:small ? 14 : 36, speed:small ? 300 : 480, life:.6, cols:ZAP, drag:2.6, g:260, streak:.03});
+  if(!small) EMB.ring(c.x, c.y, '#BFE0FF', R * .55, .45, 6);
+  EMB.shock(t.r, small ? .6 : 1.6, t.big ? 1 : .6);
+  t.el.animate([{translate:'0 0'},{translate:'-5px 3px'},{translate:'4px -3px'},{translate:'-3px 2px'},{translate:'0 0'}], {duration:small ? 180 : 300});
+  buzz(small ? 15 : [25, 30, 45]);
+}
 function fgCmd(a, v){
-  const from = $(`.cell[data-i="${a}"] .pname`), cell = $(`.cell[data-i="${v}"]`); if(!from || !cell) return;
-  const f = fgC(from), t = fgC(cell.querySelector('.life')), col = fgPc(a);
-  for(let k = 0; k < 22; k++) setTimeout(()=>{ const q = k / 21, x = f.x + (t.x - f.x) * q, y = f.y + (t.y - f.y) * q - Math.sin(q * Math.PI) * 60;
-    EMB.embers(x, y, {n:3, speed:40, spread:6.28, life:.45, cols:[col, '#FFD27A', '#FFF3CC'], drag:2}) }, k * 11);
-  setTimeout(()=>{ fgHit(cell, col); cell.querySelector(`.spia.cmdb[data-o="${a}"]`)?.animate([{scale:1},{scale:1.5},{scale:1}], {duration:300}) }, 280);
+  fgStrike(a, v);
+  $(`.cell[data-i="${v}"] .spia.cmdb[data-o="${a}"]`)?.animate([{scale:1},{scale:1.5},{scale:1}], {duration:300, delay:60});
 }
 // pannello personale: le caselle entrano a cascata, braci dalla striscia
 function fgPPIn(i){
