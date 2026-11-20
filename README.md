@@ -69,6 +69,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.1.1 (V2 beta)
+- **Prima di tutto il gioco normale.** Aprendo l'app non si rientra più da soli nella partita su più telefoni: compare la domanda «Rientra nella partita» oppure «Esci e torna al menu» (sul principale «Chiudila e torna al menu»).
+- Uscire dalla partita condivisa riporta sempre alla pagina iniziale, da dove si crea una partita normale o se ne ospita una nuova. Vale anche per gli ospiti quando il principale chiude.
+- Ospiti: nel menu c'è «Esci dalla partita condivisa». Principale: nel menu c'è «Chiudi la partita condivisa». La riga del collegamento in cima ha una zona di tocco più alta.
+
 ### v2.1.0 (V2 beta)
 Solo la pagina dell'app: chi ha la 2.0.0 la riceve dentro l'app. Tutto vale solo per la partita su più telefoni (H&O); il gioco su un telefono solo non cambia. Temi: Classico e Forgia.
 - **Menu degli ospiti ridotto.** Chi si unisce vede solo le pedine (voce, testo, recenti), «Dadi e moneta», i contatori del pannello, i comandi del telefono (tenendo premuto, vibrazione, schermo, suoni, tema, animazione) e la guida. Niente stampante, archivio offline, nuova partita, giocatori, formato, vita iniziale, turni, registro, diagnostica, suggerimenti, dati e aggiornamenti: li decide il principale.

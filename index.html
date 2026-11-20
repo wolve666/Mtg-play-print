@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.1.0', APPN = 7;
+var APPV = '2.1.1', APPN = 7;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -622,11 +622,11 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
 .seed[data-seed=rosso]{--sc:#FF5A26}.seed[data-seed=verde]{--sc:#3FD16A}.seed[data-seed=blu]{--sc:#2FA8FF}.seed[data-seed=nero]{--sc:#B07CFF}.seed[data-seed=bianco]{--sc:#FFE9A8}.seed[data-seed=incolore]{--sc:#C9D3DC}
 .chip.soon{opacity:.42}
 /* V2: telefoni collegati. In alto i quadratini degli avversari, sotto il proprio campo in grande */
-#netBar{position:fixed;left:0;right:0;top:0;z-index:4;display:flex;gap:4px;padding:calc(12px + env(safe-area-inset-top)) 4px 0;height:calc(108px + env(safe-area-inset-top))}
+#netBar{position:fixed;left:0;right:0;top:0;z-index:4;display:flex;gap:4px;padding:calc(18px + env(safe-area-inset-top)) 4px 0;height:calc(112px + env(safe-area-inset-top))}
 #netBar[hidden]{display:none}
-body.netv #board{padding-top:calc(116px + env(safe-area-inset-top))}
+body.netv #board{padding-top:calc(120px + env(safe-area-inset-top))}
 /* stato del collegamento: una riga sottile in cima a tutto, verde o rossa; toccandola si apre la partita condivisa */
-.nline{position:absolute;left:0;right:0;top:0;height:calc(12px + env(safe-area-inset-top));padding:0}
+.nline{position:absolute;left:0;right:0;top:0;height:calc(18px + env(safe-area-inset-top));padding:0}
 .nline i{position:absolute;left:0;right:0;top:env(safe-area-inset-top);height:4px;background:var(--ok);box-shadow:0 0 10px var(--ok)}
 .nline.off i{background:var(--danger);box-shadow:0 0 10px var(--danger);animation:nlBlink 1.4s ease-in-out infinite}
 @keyframes nlBlink{50%{opacity:.35}}
@@ -1370,7 +1370,7 @@ function netClientMsg(ep, m){
       break;
     case 'seats': netSeats(m); break;
     case 'printed': toast(m.ok ? `${m.name}: stampata da ${NET.hostName || 'chi ospita'}` : `${m.name}: ${m.msg || 'stampa non riuscita'}`, 3000); if(m.ok) sfx('done'); break;
-    case 'bye': toast('Il telefono principale ha chiuso la partita condivisa', 3500); netLeave(); break;
+    case 'bye': toast('Il telefono principale ha chiuso la partita condivisa', 3500); netExit(); break;
   }
 }
 function netAck(acks){ const a = acks?.[NID()] || 0; NET.pend = NET.pend.filter(b => b.seq > a) }
@@ -1551,6 +1551,13 @@ function netLeave(){
     saveNow();
   }
   renderBoard(); renderNet();
+}
+// uscita dalla partita condivisa: si torna sempre alla pagina iniziale, come all'apertura dell'app
+function netExit(){
+  netLeave(); buzz(15);
+  const n = stack.length;
+  if(n) closeAllOv();
+  setTimeout(()=>openWizard(true), n ? 420 : 0);
 }
 // all'avvio: il principale torna visibile, gli altri cercano la loro partita
 function netBoot(){
@@ -2192,6 +2199,7 @@ function closeAllOv(){
 }
 function closeTop(){
   const id = stack.pop(); if(!id) return;
+  if(id === 'resume' && RS.net){ RS.net = false; netBoot(); renderBoard() }
   if(id === 'player'){
     // Scheda giocatore: vita, contatori e stati sono già aggiornati sul tavolo. Il tavolo si ridisegna solo se sono
     // cambiati colore, nome, sfondo o partner, e mentre la scheda copre ancora lo schermo: poi parte lo scorrimento.
@@ -2274,6 +2282,7 @@ function renderMenu(){
     <button class="btn" data-act="dice">Dadi e moneta</button>
     <button class="btn" data-act="log">Registro partita</button>
     ${NT.ok ? `<button class="btn" data-act="net">${NET.role ? 'Partita condivisa' : 'Gioca su più telefoni'}</button>` : ''}
+    ${NET.role === 'host' ? '<button class="btn danger" data-act="netexit">Chiudi la partita condivisa</button>' : ''}
   </div>
   <div class="sec"><h3>Giocatori</h3><div class="chips">${[2,3,4,5,6].map(n=>`<button class="chip ${n===S.count?'sel':''}" data-act="count" data-v="${n}">${n}</button>`).join('')}</div></div>
   <div class="sec"><h3>Formato</h3>
@@ -2330,6 +2339,7 @@ const menuCmd = () => `<div class="sec"><h3>Comandi</h3>
   </div>`;
 function guestMenu(){
   return `<div class="sec"><h3>Partita</h3><button class="btn" data-act="dice">Dadi e moneta</button>
+    <button class="btn danger" data-act="netexit">Esci dalla partita condivisa</button>
     <p class="note">Le pedine le stampa il telefono di ${esc(NET.hostName || 'chi ospita')}, che ha la stampante.</p></div>
   ${menuCtr()}${menuCmd()}`;
 }
@@ -2350,6 +2360,7 @@ async function menuClick(e){
   }
   switch(a){
     case 'net': openNet(); return;
+    case 'netexit': if(confirm(NET.role === 'host' ? 'Chiudere la partita condivisa? Gli altri telefoni vengono scollegati.' : 'Uscire dalla partita condivisa?')) netExit(); return;
     case 'count': if(+v !== S.count){ S.count = +v; resetGame(); toast(v + ' giocatori, nuova partita') } break;
     case 'fmt': if(v !== S.format){ S.format = v; S.startLife = FORMATS[v].life; S.cmdDamage = FORMATS[v].cmd; resetGame(); toast(FORMATS[v].label + ': vita ' + S.startLife) } break;
     case 'sl': S.startLife = Math.max(1, S.startLife + +v); resetGame(); break;
@@ -3686,14 +3697,24 @@ function startGame(fmt, n, names){
   setTimeout(()=>{ if(SET.intro) playIntro(); else maybeTut() }, 320);
 }
 function inProgress(){ return !S.over && (S.players.some(p=>p.hist.length) || S.turn.n > 1) }
-function openResume(){
+function openResume(net){
+  RS.net = !!net;
+  $('#ov-resume h1').innerHTML = net ? 'Partita su <span class="hl">più telefoni</span>' : 'Vuoi continuare <span class="hl">la partita?</span>';
+  $('#rsGo').textContent = net ? 'Rientra nella partita' : 'Continua';
+  $('#rsNew').textContent = net ? (NET.role === 'host' ? 'Chiudila e torna al menu' : 'Esci e torna al menu') : 'Nuova partita';
+  if(net){
+    $('#rsInfo').textContent = NET.role === 'host' ? `Stai ospitando una partita su più telefoni (${FORMATS[S.format].label}, ${S.count} giocatori).` : `Eri nella partita di ${NET.hostName || 'un altro telefono'}.`;
+    themeBg($('#rsBg'), ART_Q.resume); openOv('resume'); return;
+  }
   const st = S.gameStart || (S.players.flatMap(p=>p.hist.map(h=>h.t)).sort()[0]);
   $('#rsInfo').textContent = `${FORMATS[S.format].label}, ${S.count} giocatori` + (st ? `, iniziata alle ${hhmm(st)}` : '') + '.';
   themeBg($('#rsBg'), ART_Q.resume);
   openOv('resume');
 }
+const RS = {net:false};
+// «Rientra» (o il tasto indietro sulla domanda): ci si ricollega alla partita condivisa
 $('#rsGo').addEventListener('click', ()=>history.back());
-$('#rsNew').addEventListener('click', ()=>openWizard(true));
+$('#rsNew').addEventListener('click', ()=>{ if(RS.net){ RS.net = false; netExit(); return } openWizard(true) });
 
 let winT = null;
 function checkWinner(){
@@ -4445,7 +4466,7 @@ $('#netBody').addEventListener('click', e => {
     case 'no': netAccept(b.dataset.ep, false); break;
     case 'done': closeAllOv(); break;
     case 'leave':
-      if(confirm(NET.role === 'host' ? 'Chiudere la partita condivisa? Gli altri telefoni vengono scollegati.' : 'Uscire dalla partita condivisa? Su questo telefono torna la partita di prima.')){ netLeave(); netScan() }
+      if(confirm(NET.role === 'host' ? 'Chiudere la partita condivisa? Gli altri telefoni vengono scollegati.' : 'Uscire dalla partita condivisa?')){ netExit() }
       break;
   }
 });
@@ -4484,10 +4505,10 @@ $('#wzNet').hidden = !NT.ok;
 $('#wzNet').addEventListener('click', ()=>{ buzz(15); openNet() });
 
 renderBoard();
-// partita condivisa in corso: si torna subito al tavolo e ci si ricollega
+// prima di tutto il gioco normale: se c'era una partita condivisa si chiede se rientrare o uscire
 const netResume = !!NET.role && NT.ok;
-netBoot();
-if(!netResume){ if(inProgress()) openResume(); else openWizard() }
+if(!NT.ok) netBoot();
+if(netResume) openResume(true); else if(inProgress()) openResume(); else openWizard();
 updatePrinterUI();
 // arrivati qui l'avvio è riuscito: la versione scaricata in app è buona (confermo subito, senza aspettare)
 try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){}
