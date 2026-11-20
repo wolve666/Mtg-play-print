@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.1.1', APPN = 7;
+var APPV = '2.1.2', APPN = 7;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -706,8 +706,26 @@ body.netv .cell.pp .strip{height:64px}
 .th-forgia .bigPM{border-radius:0;clip-path:var(--hex);font-family:var(--num);font-weight:900}
 .th-forgia .q7 button{border-radius:0;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px);font-family:var(--num);font-weight:900}
 .th-forgia .qCb{background:var(--fgEmber)!important;color:#fff}
-.cbFoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
-.cbFoe{padding:12px 8px;border-radius:12px;background:var(--pc);color:var(--pt);font-weight:800;font-size:15px;display:grid;gap:2px;opacity:.5;transition:opacity .15s,box-shadow .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbTarget{border-radius:16px;background:var(--pc) center/cover;color:var(--pt);padding:14px 16px 12px;display:grid;gap:4px;justify-items:center;margin-bottom:12px}
+.cbTarget.art{color:#fff}
+.cbTN{font-weight:800;font-size:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbTL{font-family:var(--num);font-weight:900;font-size:56px;line-height:1;display:flex;align-items:center;gap:10px}
+.cbTL i{font-style:normal;font-size:30px;opacity:.7}
+.cbTL b{color:inherit;text-shadow:0 0 18px color-mix(in srgb,var(--danger) 70%,transparent)}
+.cbTS{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:26px}
+.cbSt{padding:3px 10px;border-radius:99px;background:rgba(0,0,0,.25);font-weight:700;font-size:14px;font-family:var(--num)}
+.cbSt .mi{margin-right:4px}
+.cbSt.up{background:rgba(0,0,0,.5);box-shadow:inset 0 0 0 2px var(--gold)}
+.cbGo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:18px;padding:16px}
+.cbGo svg{width:26px;height:26px}
+.cbGo[disabled]{opacity:.45}
+.th-forgia .cbTarget{border-radius:0;clip-path:var(--notch);background-image:repeating-linear-gradient(-58deg,rgba(255,255,255,.05) 0 2px,transparent 2px 12px),linear-gradient(155deg,color-mix(in srgb,var(--pc),#fff 8%),var(--pc) 45%,color-mix(in srgb,var(--pc) 62%,#000))}
+.th-forgia .cbTN{text-transform:uppercase;letter-spacing:.06em}
+.th-forgia .cbTL{transform:skewX(-7deg)}
+.th-forgia .cbSt{border-radius:0;clip-path:var(--parS)}
+.th-forgia .cbSt.up{box-shadow:none;background:var(--fgGold);color:var(--gold-ink)}
+.cbFoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:6px}
+.cbFoe{padding:9px 8px;border-radius:12px;background:var(--pc);color:var(--pt);font-weight:800;font-size:15px;display:grid;gap:2px;opacity:.5;transition:opacity .15s,box-shadow .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cbFoe span{font-family:var(--num);font-size:13px;font-weight:700;opacity:.85}
 .cbFoe.sel{opacity:1;box-shadow:0 0 0 3px var(--gold)}
 .th-forgia .cbFoe{border-radius:0;clip-path:var(--notchS);text-transform:uppercase;letter-spacing:.03em}
@@ -1370,7 +1388,7 @@ function netClientMsg(ep, m){
       break;
     case 'seats': netSeats(m); break;
     case 'printed': toast(m.ok ? `${m.name}: stampata da ${NET.hostName || 'chi ospita'}` : `${m.name}: ${m.msg || 'stampa non riuscita'}`, 3000); if(m.ok) sfx('done'); break;
-    case 'bye': toast('Il telefono principale ha chiuso la partita condivisa', 3500); netExit(); break;
+    case 'bye': buzz([40, 60, 40]); openResume('bye'); break;
   }
 }
 function netAck(acks){ const a = acks?.[NID()] || 0; NET.pend = NET.pend.filter(b => b.seq > a) }
@@ -1503,6 +1521,8 @@ NT.on('result', ({ep, ok}) => {
   if(!ok){ netJoinFail('Il telefono principale non ha accettato'); return }
   clearTimeout(NET.joinT);
   NET.joining.state = 'ok'; NET.hostEp = ep; NET.online = true; NET.err = '';
+  // ricollegato mentre c'era la domanda «collegamento perso»: la chiudo da solo
+  if(RS.net === 'lost' && stack[stack.length - 1] === 'resume'){ RS.net = null; history.back(); toast(`Di nuovo collegato a ${NET.hostName || 'chi ospita'}`) }
   netSend([ep], {t:'hello', id:NID(), name:netMyName(), gid:NET.joining.gid, pend:NET.gid === NET.joining.gid ? NET.pend : []});
   renderNet(); renderNetBar();
 });
@@ -1516,7 +1536,7 @@ NT.on('disconnected', ({ep}) => {
   }
   if(ep !== NET.hostEp) return;
   NET.hostEp = null; NET.online = false;
-  if(NET.role === 'client'){ toast('Collegamento perso con il telefono principale: lo cerco', 3000); netRejoin() }
+  if(NET.role === 'client'){ netRejoin(); buzz([40, 60, 40]); if(!stack.includes('resume')) openResume('lost') }
   renderNet(); renderNetBar();
 });
 NT.on('data', ({ep, data}) => {
@@ -1536,14 +1556,18 @@ function netErrMsg(e){
   if(/BLUETOOTH|RADIO|WIFI/i.test(s)) return 'Accendi Bluetooth e Wi‑Fi';
   return 'Collegamento non riuscito' + (s ? ` (${s})` : '');
 }
-function netLeave(){
+function netLeave(keep){
   if(NET.role === 'host') netSend(netEps(), {t:'bye'});
   const wasClient = NET.role === 'client';
   setTimeout(()=>NT.stopAll().catch(()=>{}), 300);
   clearTimeout(NET.kick); clearTimeout(NET.joinT);
   Object.assign(NET, NET_EMPTY(), NET_RUN());
   try{ localStorage.removeItem(NETK) }catch(e){}
-  if(wasClient){
+  if(wasClient && keep){
+    // «continua qui, offline»: la partita condivisa resta su questo telefono come partita normale
+    try{ localStorage.removeItem(SOLOK) }catch(e){}
+    PP.clear(); closeCqPop(); saveNow();
+  } else if(wasClient){
     // torna la partita che c'era su questo telefono prima di unirsi
     const solo = fixState(load(SOLOK));
     try{ localStorage.removeItem(SOLOK) }catch(e){}
@@ -2199,7 +2223,10 @@ function closeAllOv(){
 }
 function closeTop(){
   const id = stack.pop(); if(!id) return;
-  if(id === 'resume' && RS.net){ RS.net = false; netBoot(); renderBoard() }
+  // chiudendo la domanda (o col tasto indietro) si sceglie la prima risposta
+  if(id === 'resume' && RS.net){ const m = RS.net; RS.net = null;
+    if(m === 'boot'){ netBoot(); renderBoard() }
+    if(m === 'bye'){ netLeave(true); toast('Partita su questo telefono, senza collegamento') } }
   if(id === 'player'){
     // Scheda giocatore: vita, contatori e stati sono già aggiornati sul tavolo. Il tavolo si ridisegna solo se sono
     // cambiati colore, nome, sfondo o partner, e mentre la scheda copre ancora lo schermo: poi parte lo scorrimento.
@@ -2230,21 +2257,27 @@ const backExit = () => {
   lastBack = now; toast('Premi di nuovo indietro per uscire');
 };
 // nell'app il tasto indietro del telefono lo gestisco io: chiude finestre e menu, al doppio tocco esce
+// si esce dall'app solo dalla pagina di scelta del gioco; dal tavolo il tasto indietro porta lì
+const atHome = () => stack[stack.length - 1] === 'wizard' && WZ.step === 1;
+function backHome(){
+  // ospite: domanda se tornare al tavolo o uscire (la nuova partita la decide il principale)
+  if(NET.role === 'client'){ openResume('back'); return }
+  openWizard(true);
+}
 if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.addListener('backButton', ()=>{
   if(TUT){ endTut(); return }
+  if(atHome()){ backExit(); return }
   if(stack.length){ history.back(); return }
   if(backLocal()) return;
-  backExit();
+  backHome();
 });
 window.addEventListener('popstate', ()=>{
   if(TUT){ endTut(); history.pushState({guard:true}, ''); return }
+  if(atHome()){ history.pushState({ov:'wizard'}, ''); toast('Scegli a cosa giocare'); return }
   if(stack.length){ closeTop(); return }
-  if(backLocal()){ history.pushState({guard:true}, ''); return }
-  const now = Date.now();
-  if(now - lastBack < 2000){ if(NATIVE && Capacitor.Plugins.App) Capacitor.Plugins.App.exitApp(); else history.back(); return }
-  lastBack = now;
-  toast('Premi di nuovo indietro per uscire');
   history.pushState({guard:true}, '');
+  if(backLocal()) return;
+  backHome();
 });
 
 /* ================= Menu ================= */
@@ -2463,7 +2496,7 @@ $('#plBody').addEventListener('click', e=>{
     case 'partner': p.partner = !p.partner; plDirty = true; break;
     case 'artdel': p.art = null; p.artName = ''; plDirty = true; break;
     case 'artsearch': searchArt(); return;
-    case 'combat': openCombat(); return;
+    case 'combat': openCombat(null, curP); return;
     case 'artpick': p.art = b.dataset.u; p.artName = b.dataset.n; plDirty = true; break;
     default: return;
   }
@@ -2480,29 +2513,41 @@ const CB_ROWS = [
   {k:'heal', label:'Recupero di vita (per te)', x5:true, ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>'},
 ];
 let CB = null;
-function openCombat(){
-  const foes = S.players.map((_, i) => i).filter(i => i !== curP && !isOut(S.players[i]));
+// si apre toccando il quadratino di un avversario (lui è già scelto) o dal tasto della scheda completa
+function openCombat(to, by){
+  by = by ?? (NV() ? NET.me : curP);
+  const foes = S.players.map((_, i) => i).filter(i => i !== by && !isOut(S.players[i]));
   if(!foes.length){ toast('Nessun avversario in gioco'); return }
-  CB = {by:curP, to:CB && CB.by === curP && foes.includes(CB.to) ? CB.to : foes[0], dmg:0, cmd:0, poison:0, rad:0, heal:0, b:false};
+  if(!foes.includes(to)) to = CB && CB.by === by && foes.includes(CB.to) ? CB.to : foes[0];
+  CB = {by, to, dmg:0, cmd:0, poison:0, rad:0, heal:0, b:false};
   renderCombat(); openOv('combat');
 }
 function renderCombat(){
-  const me = S.players[CB.by], v = S.players[CB.to];
+  const me = S.players[CB.by], v = S.players[CB.to], c = COLORS[v.color];
   const rows = CB_ROWS.filter(r => r.k !== 'cmd' || S.cmdDamage);
   const st = r => `<div class="stepper">${r.x5 ? `<button class="x5" data-cb="${r.k}" data-v="-5">−5</button>` : ''}<button data-cb="${r.k}" data-v="-1">−</button><output>${CB[r.k]}</output><button data-cb="${r.k}" data-v="1">+</button>${r.x5 ? `<button class="x5" data-cb="${r.k}" data-v="5">+5</button>` : ''}</div>`;
-  const tot = CB.dmg + CB.cmd, bits = [];
-  if(tot) bits.push(`vita <b>${v.life} → ${v.life - tot}</b>`);
-  if(CB.cmd){ const k = CB.by + (CB.b ? 'b' : ''); bits.push(`danni da comandante <b>${(v.cmd[k] || 0) + CB.cmd}</b>`) }
-  if(CB.poison) bits.push(`veleno <b>${(v.counters.poison || 0) + CB.poison}</b>`);
-  if(CB.rad) bits.push(`radiazioni <b>${(v.counters.rad || 0) + CB.rad}</b>`);
-  $('#cbBody').innerHTML = `<div class="sec"><h3>Contro chi</h3><div class="cbFoes">${S.players.map((o, i) => i === CB.by || isOut(o) ? '' :
-      `<button class="cbFoe${i === CB.to ? ' sel' : ''}" data-to="${i}" style="--pc:${COLORS[o.color].bg};--pt:${COLORS[o.color].fg}">${esc(o.name)}<span>${o.life}</span></button>`).join('')}</div></div>
-    <div class="sec"><h3>Cosa gli arriva</h3>
+  const tot = CB.dmg + CB.cmd, ck = CB.by + (CB.b ? 'b' : ''), any = tot || CB.poison || CB.rad || CB.heal;
+  // come sta l'avversario adesso, e come starà dopo il colpo
+  const now = [[SPIA_ICON.poison, v.counters.poison || 0, CB.poison], [SPIA_ICON.rad, v.counters.rad || 0, CB.rad]];
+  if(S.cmdDamage) now.splice(0, 0, [SPIA_ICON.cmd, v.cmd[ck] || 0, CB.cmd]);
+  const stat = now.map(([ic, a, d]) => `<span class="cbSt${d ? ' up' : ''}">${ic}${a}${d ? ` → <b>${a + d}</b>` : ''}</span>`).join('');
+  $('#cbBody').innerHTML = `
+    <div class="cbTarget${v.art ? ' art' : ''}" style="--pc:${c.bg};--pt:${c.fg}${v.art ? `;background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.6)),url('${esc(v.art)}')` : ''}">
+      <div class="cbTN">${esc(v.name)}</div>
+      <div class="cbTL">${v.life}${tot ? `<i>→</i><b>${v.life - tot}</b>` : ''}</div>
+      <div class="cbTS">${stat}</div>
+    </div>
+    ${S.count > 2 ? `<div class="cbFoes">${S.players.map((o, i) => i === CB.by || isOut(o) ? '' :
+      `<button class="cbFoe${i === CB.to ? ' sel' : ''}" data-to="${i}" style="--pc:${COLORS[o.color].bg};--pt:${COLORS[o.color].fg}">${esc(o.name)}</button>`).join('')}</div>` : ''}
+    <div class="sec"><h3>Danni da ${esc(me.name)}</h3>
     ${rows.map(r => `<div class="cbRow"><span class="lbl">${r.ico}${r.label}</span>${st(r)}</div>${r.k === 'cmd' && me.partner ? `<div class="cbWho"><button class="chip${CB.b ? '' : ' sel'}" data-cbb="0">1° comandante</button><button class="chip${CB.b ? ' sel' : ''}" data-cbb="1">2° comandante</button></div>` : ''}`).join('')}</div>
-    <div class="cbSum">${bits.length || CB.heal ? `<b>${esc(v.name)}</b>: ${bits.join(', ') || 'nulla'}${CB.heal ? `<br><b>${esc(me.name)}</b>: vita <b>${me.life} → ${me.life + CB.heal}</b>` : ''}` : 'Segna i danni, poi conferma: arrivano tutti insieme.'}</div>
-    <button class="btn primary" data-cbgo ${bits.length || CB.heal ? '' : 'disabled'}>Colpisci ${esc(v.name)}</button>`;
+    ${CB.heal ? `<div class="cbSum"><b>${esc(me.name)}</b>: vita <b>${me.life} → ${me.life + CB.heal}</b></div>` : ''}
+    <button class="btn primary cbGo" data-cbgo ${any ? '' : 'disabled'}>${ICO_CB}<span>Combattimento</span></button>
+    <p class="note">${any ? `Arriva tutto insieme a ${esc(v.name)}.` : 'Segna i danni, poi tocca Combattimento: arrivano tutti insieme.'}</p>
+    <button class="btn" data-cbsheet>Scheda completa di ${esc(v.name)}</button>`;
 }
 $('#cbBody').addEventListener('click', e=>{
+  if(e.target.closest('[data-cbsheet]')){ const i = CB.to; history.back(); setTimeout(()=>openPlayer(i), 380); return }
   const t = e.target.closest('[data-to],[data-cb],[data-cbb],[data-cbgo]'); if(!t || !CB) return;
   if(t.dataset.to != null) CB.to = +t.dataset.to;
   else if(t.dataset.cb) CB[t.dataset.cb] = Math.max(0, Math.min(999, CB[t.dataset.cb] + +t.dataset.v));
@@ -2525,7 +2570,7 @@ function combatApply(){
   if(C.heal) lifeFx(C.by, C.heal);
   buzz([30, 50, 30]); sfx('done');
   CB = {by:C.by, to:C.to};
-  history.back(); renderPlayer();
+  history.back(); if(stack.includes('player')) renderPlayer();
   toast(`${v.name}: ${parts.join(', ') || 'colpito'}`);
 }
 async function searchArt(){
@@ -3683,7 +3728,7 @@ $('#wzTok').addEventListener('click', ()=>{ buzz(15); openTokens() });
 $('#wzDice').addEventListener('click', ()=>{ buzz(15); openDice() });
 function openRules(k){ const r = RULES[k]; $('#ruTitle').textContent = r.t; $('#ruBody').innerHTML = r.h; $('#ruBody').scrollTop = 0; buzz(10); openOv('rules') }
 $('#ruOk').addEventListener('click', ()=>history.back());
-$('#wzClose').addEventListener('click', ()=>history.back());
+$('#wzClose').addEventListener('click', ()=>{ WZ.step = 0; history.back() });
 function startGame(fmt, n, names){
   document.activeElement?.blur?.();
   S.format = fmt; S.count = n; S.cmdDamage = FORMATS[fmt].cmd;
@@ -3697,24 +3742,34 @@ function startGame(fmt, n, names){
   setTimeout(()=>{ if(SET.intro) playIntro(); else maybeTut() }, 320);
 }
 function inProgress(){ return !S.over && (S.players.some(p=>p.hist.length) || S.turn.n > 1) }
+// domanda sulla partita condivisa: all'avvio («boot»), col tasto indietro dell'ospite («back»),
+// quando il principale non risponde («lost») o quando ha chiuso («bye»)
 function openResume(net){
-  RS.net = !!net;
-  $('#ov-resume h1').innerHTML = net ? 'Partita su <span class="hl">più telefoni</span>' : 'Vuoi continuare <span class="hl">la partita?</span>';
-  $('#rsGo').textContent = net ? 'Rientra nella partita' : 'Continua';
-  $('#rsNew').textContent = net ? (NET.role === 'host' ? 'Chiudila e torna al menu' : 'Esci e torna al menu') : 'Nuova partita';
-  if(net){
-    $('#rsInfo').textContent = NET.role === 'host' ? `Stai ospitando una partita su più telefoni (${FORMATS[S.format].label}, ${S.count} giocatori).` : `Eri nella partita di ${NET.hostName || 'un altro telefono'}.`;
-    themeBg($('#rsBg'), ART_Q.resume); openOv('resume'); return;
+  RS.net = net === true ? 'boot' : net || null;
+  const m = RS.net, host = NET.hostName || 'chi ospita';
+  if(m){
+    const T = {
+      boot:['Partita su <span class="hl">più telefoni</span>', NET.role === 'host' ? `Stai ospitando una partita su più telefoni (${FORMATS[S.format].label}, ${S.count} giocatori).` : `Eri nella partita di ${host}.`, 'Rientra nella partita', NET.role === 'host' ? 'Chiudila e torna al menu' : 'Esci e torna al menu'],
+      back:['Partita su <span class="hl">più telefoni</span>', `Sei nella partita di ${host}.`, 'Torna al tavolo', 'Esci e torna al menu'],
+      lost:['Collegamento <span class="hl">perso</span>', `Il telefono di ${host} non risponde: continuo a cercarlo. Puoi restare e giocare offline, le modifiche arrivano appena si ricollega.`, 'Resta nella partita', 'Esci e torna al menu'],
+      bye:['Partita <span class="hl">chiusa</span>', `${host} ha chiuso la partita condivisa. Puoi continuarla qui, su questo telefono, senza collegamento.`, 'Continua qui, offline', 'Torna al menu'],
+    }[m];
+    $('#ov-resume h1').innerHTML = T[0]; $('#rsInfo').textContent = T[1]; $('#rsGo').textContent = T[2]; $('#rsNew').textContent = T[3];
+    themeBg($('#rsBg'), ART_Q.resume);
+    if(stack[stack.length - 1] !== 'resume') openOv('resume');
+    return;
   }
+  $('#ov-resume h1').innerHTML = 'Vuoi continuare <span class="hl">la partita?</span>';
+  $('#rsGo').textContent = 'Continua'; $('#rsNew').textContent = 'Nuova partita';
   const st = S.gameStart || (S.players.flatMap(p=>p.hist.map(h=>h.t)).sort()[0]);
   $('#rsInfo').textContent = `${FORMATS[S.format].label}, ${S.count} giocatori` + (st ? `, iniziata alle ${hhmm(st)}` : '') + '.';
   themeBg($('#rsBg'), ART_Q.resume);
   openOv('resume');
 }
-const RS = {net:false};
+const RS = {net:null};
 // «Rientra» (o il tasto indietro sulla domanda): ci si ricollega alla partita condivisa
 $('#rsGo').addEventListener('click', ()=>history.back());
-$('#rsNew').addEventListener('click', ()=>{ if(RS.net){ RS.net = false; netExit(); return } openWizard(true) });
+$('#rsNew').addEventListener('click', ()=>{ if(RS.net){ RS.net = null; netExit(); return } openWizard(true) });
 
 let winT = null;
 function checkWinner(){
@@ -4363,7 +4418,7 @@ function netTileFx(i, d){
 }
 $('#netBar').addEventListener('click', e => {
   if(e.target.closest('[data-net]')){ buzz(10); openNet(); return }
-  const t = e.target.closest('.ntile'); if(t){ buzz(10); openPlayer(+t.dataset.i) }
+  const t = e.target.closest('.ntile'); if(t){ buzz(10); openCombat(+t.dataset.i) }
 });
 // dopo un aggiornamento da un altro telefono rinfresco quello che è aperto (non mentre si sta scrivendo)
 function netRefreshOpen(){

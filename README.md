@@ -69,6 +69,12 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.1.2 (V2 beta)
+- **Tasto indietro**: si esce dall'app solo dalla pagina di scelta del gioco. Dal tavolo il tasto indietro porta lì; per un ospite chiede «Torna al tavolo» o «Esci e torna al menu».
+- **Principale scollegato**: all'ospite compare «Collegamento perso» con «Resta nella partita» (si gioca offline e l'app continua a cercarlo; quando si ricollega la finestra si chiude da sola) oppure «Esci e torna al menu».
+- **Principale che chiude la partita**: all'ospite compare «Partita chiusa» con «Continua qui, offline» (la partita resta sul suo telefono, con tutte le vite) oppure «Torna al menu».
+- **Danni dal quadratino**: toccando il quadratino di un avversario si apre la pagina dei danni con lui già scelto. In cima c'è la sua scheda: vita attuale e vita dopo il colpo, danni da comandante ricevuti da te, veleno e radiazioni, con il valore nuovo. Si segnano combattimento, comandante, veleno, radiazioni e recupero, poi il tasto **Combattimento** manda tutto insieme. In fondo «Scheda completa» di quel giocatore.
+
 ### v2.1.1 (V2 beta)
 - **Prima di tutto il gioco normale.** Aprendo l'app non si rientra più da soli nella partita su più telefoni: compare la domanda «Rientra nella partita» oppure «Esci e torna al menu» (sul principale «Chiudila e torna al menu»).
 - Uscire dalla partita condivisa riporta sempre alla pagina iniziale, da dove si crea una partita normale o se ne ospita una nuova. Vale anche per gli ospiti quando il principale chiude.
