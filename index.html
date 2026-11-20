@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.0.0', APPN = 7;
+var APPV = '2.1.0', APPN = 7;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -622,13 +622,36 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
 .seed[data-seed=rosso]{--sc:#FF5A26}.seed[data-seed=verde]{--sc:#3FD16A}.seed[data-seed=blu]{--sc:#2FA8FF}.seed[data-seed=nero]{--sc:#B07CFF}.seed[data-seed=bianco]{--sc:#FFE9A8}.seed[data-seed=incolore]{--sc:#C9D3DC}
 .chip.soon{opacity:.42}
 /* V2: telefoni collegati. In alto i quadratini degli avversari, sotto il proprio campo in grande */
-#netBar{position:fixed;left:0;right:0;top:0;z-index:4;display:flex;gap:4px;padding:calc(4px + env(safe-area-inset-top)) 4px 0;height:calc(78px + env(safe-area-inset-top))}
+#netBar{position:fixed;left:0;right:0;top:0;z-index:4;display:flex;gap:4px;padding:calc(12px + env(safe-area-inset-top)) 4px 0;height:calc(108px + env(safe-area-inset-top))}
 #netBar[hidden]{display:none}
-body.netv #board{padding-top:calc(86px + env(safe-area-inset-top))}
+body.netv #board{padding-top:calc(116px + env(safe-area-inset-top))}
+/* stato del collegamento: una riga sottile in cima a tutto, verde o rossa; toccandola si apre la partita condivisa */
+.nline{position:absolute;left:0;right:0;top:0;height:calc(12px + env(safe-area-inset-top));padding:0}
+.nline i{position:absolute;left:0;right:0;top:env(safe-area-inset-top);height:4px;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+.nline.off i{background:var(--danger);box-shadow:0 0 10px var(--danger);animation:nlBlink 1.4s ease-in-out infinite}
+@keyframes nlBlink{50%{opacity:.35}}
+.th-forgia .nline i{clip-path:polygon(0 0,100% 0,calc(100% - 4px) 100%,4px 100%)}
+/* il proprio campo nella vista su più telefoni: niente nome, vita in basso, sopra l'elemento centrale e gli indicatori */
+body.netv .pname{display:none}
+body.netv .half{padding-top:42cqh}
+body.netv .strip span{display:none}
+body.netv .spia[data-s=monarch],body.netv .spia[data-s=blessing],body.netv .spia[data-s=initiative],body.netv .spia[data-s=turn]{display:block!important}
+body.netv #tokenBtn{width:150px;height:56px;border-radius:18px}
+body.netv #tokenBtn::before{border-radius:13px;inset:5px}
+body.netv .orbit{border-radius:13px;inset:6px}
+body.netv #tokenBtn img{width:42px;height:42px}
+body.th-forgia.netv #tokenBtn,body.th-forgia.netv #tokenBtn::after{border-radius:0;clip-path:var(--notch)}
+body.th-forgia.netv #hub::before{width:190px;height:110px;margin:-55px 0 0 -95px}
+body.netv:has(#board .cell.pp) #hub{opacity:0;pointer-events:none}
+#hub{transition:opacity .2s}
+/* pannello personale stretto: alto quanto il suo contenuto, appoggiato in fondo, con la striscia attaccata sopra */
+body.netv .ppIn{height:auto;max-height:80%;justify-content:flex-start;font-size:18px;padding:.7em .7em calc(.8em + env(safe-area-inset-bottom))}
+body.netv .cell.pp .frame{transform:translate(-50%,-50%) translateY(calc(-1px * var(--pph,0) - 0px))}
+body.netv .cell.pp .strip{height:64px}
 #board.n1{grid-template:1fr / 1fr}
 .ntile{flex:1;min-width:0;position:relative;border-radius:12px;background:var(--pc) center/cover;color:var(--pt);display:grid;grid-template-rows:auto 1fr auto;place-items:center;padding:5px 3px 4px;overflow:hidden;transition:filter .3s}
 .ntN{font-size:11px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.92}
-.ntL{font-size:28px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums}
+.ntL{font-size:34px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums}
 .ntS{display:flex;gap:4px;font-size:11px;font-weight:700;min-height:13px;align-items:center;white-space:nowrap}
 .ntS .mi{font-size:11px;margin-right:1px;font-style:normal}
 .ntD{position:absolute;right:5px;top:3px;font-style:normal;font-weight:800;font-size:13px;opacity:0;transition:opacity .2s}
@@ -636,8 +659,13 @@ body.netv #board{padding-top:calc(86px + env(safe-area-inset-top))}
 .ntile.out{filter:saturate(.15) brightness(.55)}
 .ntile.active{box-shadow:inset 0 0 0 3px var(--gold)}
 .ntile.dropT{box-shadow:inset 0 0 0 4px #fff;filter:brightness(1.15)}
-.ntOff{position:absolute;left:5px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
-.ntOff.free{background:transparent;border:1.5px solid currentColor;opacity:.6}
+.ntOff{position:absolute;left:6px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.ntOff.on{background:var(--ok)}
+.ntOff.free{background:transparent;border:1.5px solid currentColor;box-shadow:none;opacity:.7}
+.th-forgia .ntile{border-radius:0;clip-path:var(--notchS)}
+.th-forgia .ntile.active{box-shadow:inset 0 0 0 3px var(--gold)}
+.th-forgia .ntL{font-family:var(--num);font-weight:900;transform:skewX(-7deg)}
+.th-forgia .ntN{text-transform:uppercase;letter-spacing:.05em;font-weight:800}
 .nstat{flex:none;width:22px;display:grid;place-items:center}
 .nstat i{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
 .nstat.off i{background:var(--danger);box-shadow:0 0 8px var(--danger)}
@@ -668,6 +696,37 @@ body.netv #board{padding-top:calc(86px + env(safe-area-inset-top))}
 .nlJoin{display:grid;gap:6px;justify-items:center;text-align:center;padding:16px;border-radius:12px;background:var(--surface)}
 .nlCode{font-size:40px;font-weight:800;letter-spacing:.15em;font-variant-numeric:tabular-nums;color:var(--gold)}
 /* prova generale scaduta: copre tutta l'app */
+/* scheda in H&O: +/− grandi ai lati della vita, tasto Combattimento tra −1 e +1 */
+.bigRow{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 12px}
+.bigRow .bigLife{margin:0;min-width:2.1ch}
+.bigPM{flex:none;width:64px;height:64px;border-radius:50%;background:var(--surface);font-size:36px;font-weight:700;line-height:1}
+.quick.q7{grid-template-columns:repeat(3,1fr) 1.25fr repeat(3,1fr)}
+.qCb{display:grid;place-items:center;background:var(--gold)!important;color:var(--gold-ink)}
+.qCb svg{width:26px;height:26px}
+.th-forgia .bigPM{border-radius:0;clip-path:var(--hex);font-family:var(--num);font-weight:900}
+.th-forgia .q7 button{border-radius:0;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px);font-family:var(--num);font-weight:900}
+.th-forgia .qCb{background:var(--fgEmber)!important;color:#fff}
+.cbFoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.cbFoe{padding:12px 8px;border-radius:12px;background:var(--pc);color:var(--pt);font-weight:800;font-size:15px;display:grid;gap:2px;opacity:.5;transition:opacity .15s,box-shadow .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbFoe span{font-family:var(--num);font-size:13px;font-weight:700;opacity:.85}
+.cbFoe.sel{opacity:1;box-shadow:0 0 0 3px var(--gold)}
+.th-forgia .cbFoe{border-radius:0;clip-path:var(--notchS);text-transform:uppercase;letter-spacing:.03em}
+.th-forgia .cbFoe.sel{box-shadow:inset 0 0 0 3px var(--gold)}
+.cbRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.cbRow .lbl{display:flex;align-items:center;gap:8px}
+.cbRow .lbl svg{width:20px;height:20px;flex:none}
+.cbRow .lbl .mi{flex:none;width:20px;font-size:20px;margin:0;text-align:center;color:var(--gold)}
+.cbRow .lbl svg{color:var(--gold)}
+.cbRow .stepper button{width:38px}
+.cbRow .stepper button.x5{font-size:14px;width:40px;color:var(--muted)}
+.th-forgia .cbRow .stepper button{border-radius:0;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px);font-family:var(--num);font-weight:900}
+.th-forgia .cbRow output{transform:skewX(-7deg)}
+.cbWho{display:flex;gap:8px;margin:2px 0 6px}
+.cbSum{margin:16px 0 12px;padding:12px 14px;border-radius:12px;background:var(--surface);line-height:1.5;font-size:15px}
+.cbSum b{font-family:var(--num)}
+.th-forgia .cbSum{border-radius:0;clip-path:var(--notch)}
+/* ospite: niente stampante sul suo telefono, stampa il principale */
+body.guest #menuBtn,body.guest #tkPrinter{display:none}
 #expired{position:fixed;inset:0;z-index:300;background:var(--bg);display:grid;place-items:center;padding:24px;text-align:center}
 #expired>div{max-width:360px;display:grid;gap:12px;justify-items:center}
 #expired img{width:96px;height:96px}
@@ -725,6 +784,15 @@ body.netv #board{padding-top:calc(86px + env(safe-area-inset-top))}
     <h2 id="plTitle">Giocatore</h2>
   </div>
   <div class="ovBody" id="plBody"></div>
+</section>
+
+<!-- Combattimento: tutti i danni verso un avversario in un colpo solo (partita su più telefoni) -->
+<section class="ov" id="ov-combat">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Combattimento</h2>
+  </div>
+  <div class="ovBody" id="cbBody"></div>
 </section>
 
 <!-- Pedine: ricerca -->
@@ -899,6 +967,8 @@ const REPO = window.APP_REPO === 'wolve666/Mtg-play-print' ? VETRINA : window.AP
 // canale: «stable» per tutti, «test» per la prova generale (pre-release che scade)
 const CHANNEL = window.APP_CHANNEL === 'test' ? 'test' : 'stable';
 const EXPIRES = CHANNEL === 'test' ? +window.APP_EXPIRES || 0 : 0;
+// uscite per i tester: «beta» (la V2 da mostrare) oppure la vecchia «prova» generale
+const TESTL = window.APP_LABEL === 'beta' ? 'beta' : 'prova', TESTN = TESTL === 'beta' ? 'beta' : 'prova generale';
 const APK_URL = REPO ? `https://github.com/${REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
 const VERSION = APPV, NATIVE_REV = APPN;
@@ -1237,6 +1307,7 @@ function netHostMsg(ep, m){
       netSave(); netSeatsOut(); renderNet(); renderNetBar();
       break;
     case 'ops': netHostOps(inf.id, m); break;
+    case 'print': netPrintQueue(inf.id, m); break;
     case 'ask':
       if(m.what === 'reset'){ toast(`${NET.names[inf.id] || 'Un giocatore'}: rivincita!`); closeAllOv(); resetGame() }
       break;
@@ -1298,6 +1369,7 @@ function netClientMsg(ep, m){
       netAck(m.acks); netRebuild(false);
       break;
     case 'seats': netSeats(m); break;
+    case 'printed': toast(m.ok ? `${m.name}: stampata da ${NET.hostName || 'chi ospita'}` : `${m.name}: ${m.msg || 'stampa non riuscita'}`, 3000); if(m.ok) sfx('done'); break;
     case 'bye': toast('Il telefono principale ha chiuso la partita condivisa', 3500); netLeave(); break;
   }
 }
@@ -1352,6 +1424,43 @@ function netRejoin(){
   if(NET.role !== 'client' || NET.online || NET.joining) return;
   NET.found = {}; NET.scanning = true;
   NT.discover().catch(e => { NET.scanning = false; NET.err = netErrMsg(e); renderNet(); setTimeout(netRejoin, 10000) });
+}
+// stampa condivisa: l'ospite manda la pedina e le copie, il principale la stampa con la sua stampante
+const NET_URL = /^https:\/\/[\w.-]+\.scryfall\.(io|com)\//;
+function netPrintAsk(t, n){
+  if(!NET.online){ toast('Telefono principale non collegato'); return false }
+  const r = recentOf(t), tk = {};
+  ['id', 'name', 'type_line', 'set'].forEach(k => tk[k] = String(r[k] || '').slice(0, 120));
+  ['small', 'large', 'print'].forEach(k => { if(NET_URL.test(r[k] || '')) tk[k] = r[k] });
+  netSend([NET.hostEp], {t:'print', tk, n:Math.max(1, Math.min(10, n | 0))});
+  toast(`Mandata a ${NET.hostName || 'chi ospita'}: ${tk.name}${n > 1 ? ' ×' + n : ''}`);
+  return true;
+}
+const NPQ = []; let npBusy = false;
+function netPrintQueue(id, m){
+  const tk = isObj(m.tk) ? m.tk : {};
+  ['small', 'large', 'print'].forEach(k => { if(!NET_URL.test(tk[k] || '')) delete tk[k] });
+  if(!tk.print) tk.print = tk.large || tk.small;
+  tk.name = String(tk.name || 'Pedina').slice(0, 120);
+  NPQ.push({id, tk, n:Math.max(1, Math.min(10, m.n | 0))});
+  netPrintRun();
+}
+async function netPrintRun(){
+  if(npBusy) return; npBusy = true;
+  while(NPQ.length){
+    const j = NPQ.shift(), who = NET.names[j.id] || 'Un giocatore', back = (ok, msg) => netSend([NET.eps[j.id]], {t:'printed', ok, msg, name:j.tk.name});
+    try{
+      const t = await arcResolve(j.tk);
+      if(!t.print){ back(false, 'immagine non disponibile'); continue }
+      if(!(await printer.ensure())){ toast(`${who} vuole stampare ${j.tk.name}: collega la stampante`, 4000); back(false, 'la stampante del principale non è collegata'); continue }
+      toast(`Stampo per ${who}: ${j.tk.name}${j.n > 1 ? ' ×' + j.n : ''}`, 2500);
+      const data = escposImg(await makeBits(t.print));
+      for(let k = 0; k < j.n; k++) await printer.write(data);
+      logEv(`Stampata pedina ${j.tk.name}${j.n > 1 ? ' ×' + j.n : ''} per ${who}`);
+      back(true);
+    }catch(e){ back(false, 'stampa interrotta') }
+  }
+  npBusy = false;
 }
 function netAsk(what){
   if(!NET.online){ toast('Telefono principale non collegato'); return }
@@ -1531,8 +1640,11 @@ const SPIA_ICON = {tax:MI('\ue904'), exp:MI('\ue981'), rad:MI('\uea50'), poison:
 const fz = (z, min, k=.55) => { const f = `min(${z}cqmin,${(z*k).toFixed(2)}cqmax)`; return min ? `max(${min}px,${f})` : f };
 const MINPX = {life:0, delta:0, name:15};
 // posiziona un elemento; vicino ai bordi si appoggia al bordo invece di uscire
+// vista su più telefoni: la vita scende verso la linguetta, sopra stanno l'elemento centrale e la fila degli indicatori
+const NVL = {life:[50,71,72]};
+const lifeZ = () => (NV() ? NVL : LAYOUT).life[2];
 function placeEl(el, k, mir, hub){
-  let [x, y, z] = LAYOUT[k]; if(mir) x = 100 - x;
+  let [x, y, z] = (NV() && NVL[k]) || LAYOUT[k]; if(mir) x = 100 - x;
   // se il simbolo centrale coprirebbe l'elemento, lo faccio scendere di una riga (o due)
   if(hub && k !== 'life' && k !== 'name'){
     const near = yy => Math.hypot((x - hub.x) / 100 * hub.w, (yy - hub.y) / 100 * hub.h) < hub.r + 22;
@@ -1568,6 +1680,7 @@ function hubInFrame(cell, mir){
 // riga in alto: le spie accese si mettono in fila una accanto all'altra, nello stesso ordine
 const ROW = ['tax','exp','rad','poison','energy','cmd'];
 function packRow(cell){
+  if(NV()){ packRowNV(cell); return }
   const frame = cell.querySelector('.frame'), W = frame.offsetWidth, H = frame.offsetHeight;
   const mir = cell.classList.contains('mir');
   const all = ROW.flatMap(k => [...cell.querySelectorAll(`.spia[data-s="${k}"]`)]);
@@ -1592,7 +1705,43 @@ function packRow(cell){
   const y = [13, 26, 39].find(clear) ?? 13;
   els.forEach(e=>{ e.style.top = y + '%'; e.style.right = 'auto'; e.style.left = left + 'px'; e.style.transform = 'translateY(-50%)'; left += e.offsetWidth + gap });
 }
+// H&O: vita in basso, l'elemento centrale (pedine e danni da comandante) appoggiato sopra, sopra ancora gli indicatori
+function placeNV(cell){
+  cell.classList.remove('mir');
+  cell.querySelectorAll('[data-k]').forEach(el => placeEl(el, el.dataset.k, false, null));
+  const frame = cell.querySelector('.frame'), H = frame.offsetHeight, lf = cell.querySelector('.life');
+  lifeSize(lf, S.players[+cell.dataset.i]);
+  const fs = parseFloat(getComputedStyle(lf).fontSize) || 100;
+  // cima delle cifre: le cifre occupano circa l'84% della grandezza del carattere
+  const top = H * NVL.life[1] / 100 - fs * .43, hb = $('#tokenBtn'), hh = hb.offsetHeight || 56;
+  const hy = top - 14 - hh / 2, fr = cell.getBoundingClientRect();
+  const hub = $('#hub'); hub.style.left = (fr.left + fr.width / 2) + 'px'; hub.style.top = (fr.top + hy) + 'px';
+  cell._rowY = hy - hh / 2 - 12;
+  packRowNV(cell);
+}
+// tutti gli indicatori in fila, grandi fino a un massimo; se sono tanti rimpiccioliscono, poi vanno su due righe
+const NV_ROW = [...ROW, 'monarch', 'blessing', 'initiative', 'turn'], NV_FMAX = 30, NV_FMIN = 15;
+function packRowNV(cell){
+  const frame = cell.querySelector('.frame'), W = frame.offsetWidth, room = W * .92, gap = 6;
+  const all = NV_ROW.flatMap(k => [...cell.querySelectorAll(`.spia[data-s="${k}"]`)]), els = all.filter(e => e.classList.contains('on'));
+  all.forEach(e => e.style.fontSize = NV_FMAX + 'px');
+  if(!els.length || cell._rowY == null) return;
+  const wid = L => L.reduce((a, e) => a + e.offsetWidth, 0) + gap * (L.length - 1);
+  const size = (L, f) => { L.forEach(e => e.style.fontSize = f + 'px'); const w = wid(L); return w > room ? Math.max(NV_FMIN, Math.floor(f * room / w)) : f };
+  let rows = [els], f = size(els, NV_FMAX);
+  size(els, f);
+  if(wid(els) > room){
+    const h = Math.ceil(els.length / 2); rows = [els.slice(0, h), els.slice(h)];
+    f = Math.min(size(rows[0], NV_FMAX), size(rows[1], NV_FMAX)); rows.forEach(L => size(L, f));
+  }
+  const eh = els[0].offsetHeight;
+  rows.slice().reverse().forEach((L, r) => {
+    let left = (W - wid(L)) / 2; const y = cell._rowY - eh / 2 - r * (eh + gap);
+    L.forEach(e => { e.style.top = y + 'px'; e.style.right = 'auto'; e.style.left = left + 'px'; e.style.transform = 'translateY(-50%)'; left += e.offsetWidth + gap });
+  });
+}
 function placeAll(){
+  if(NV()){ const c = $('#board .cell'); if(c) placeNV(c); gestureExcl(); return }
   document.querySelectorAll('#board .cell').forEach(cell=>{
     const mir = cellMirror(cell);
     cell.classList.toggle('mir', mir);
@@ -1627,6 +1776,7 @@ function hubSlots(){
   return pts.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
 }
 function placeHub(){
+  if(NV()){ const c = $('#board .cell'); if(c) placeNV(c); return }
   const hub = $('#hub'), sl = hubSlots();
   if(!sl.length) return;
   const pos = (SET.hubPos || {})[NV() ? 'net' : S.count], def = S.count === 2 ? 0 : 0;
@@ -1652,6 +1802,7 @@ function renderBoard(){
   const nv = NV();
   b.className = nv ? 'n1' : 'n' + S.count;
   document.body.classList.toggle('netv', nv);
+  document.body.classList.toggle('guest', NET.role === 'client');
   $('#hub').classList.toggle('col', S.count > 2 && !nv);
   if(nv) [...PP].forEach(i => { if(i !== NET.me) PP.delete(i) });
   b.innerHTML = (nv ? [NET.me] : S.players.map((_,i)=>i)).map(i=>{
@@ -1675,14 +1826,19 @@ function renderBoard(){
   updateTurnUI();
   renderNetBar();
 }
+// tre cifre (o un negativo a due) rimpiccioliscono il numero per restare nel pannello; dice se la grandezza è cambiata
+function lifeSize(lf, p){
+  const big = String(p.life).length >= 3, was = lf._big;
+  lf._big = big;
+  lf.style.fontSize = big ? `calc(${fz(lifeZ(), 0, .6)} * .72)` : fz(lifeZ(), 0, .6);
+  return was !== undefined && was !== big;
+}
 function updateCell(i){
   const p = S.players[i], cell = $(`.cell[data-i="${i}"]`);
   if(!cell){ if(NV()){ netTile(i); checkWinner() } return }
   const lf = cell.querySelector('.life'); lf.textContent = p.life;
   const sb = cell.querySelector('.strip b'); if(sb) sb.textContent = p.life;
-  // tre cifre (o un negativo a due) rimpiccioliscono il numero per restare nel pannello
-  const big = String(p.life).length >= 3;
-  lf.style.fontSize = big ? `calc(${fz(LAYOUT.life[2], 0, .6)} * .72)` : fz(LAYOUT.life[2], 0, .6);
+  if(lifeSize(lf, p) && NV()) placeNV(cell);
   // la linguetta è larga quanto il numero della vita
   const sw = cell.querySelector('.swz'); if(sw && lf.offsetWidth) sw.style.width = lf.offsetWidth + 'px';
   cell.classList.toggle('out', isOut(p));
@@ -1773,24 +1929,27 @@ $('#board').addEventListener('pointerdown', e=>{
   drag = {i:+n.closest('.cell').dataset.i, x:e.clientX, y:e.clientY, moved:false, target:null};
 });
 window.addEventListener('pointermove', e=>{
-  if(!drag) return;
+  if(!drag || drag.hub) return;
   if(!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 18) return;
   drag.moved = true;
-  dragLine(drag.x, drag.y, e.clientX, e.clientY);
-  if(fgOn()) EMB.embers(e.clientX, e.clientY, {n:3, speed:50, spread:6.28, life:.55, cols:[fgPc(drag.i), '#FFD27A', '#FFF3CC'], drag:2.5, wob:4});
-  const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell,.ntile');
+  dragMove(e.clientX, e.clientY);
+});
+function dragMove(x, y){
+  dragLine(drag.x, drag.y, x, y);
+  if(fgOn()) EMB.embers(x, y, {n:3, speed:50, spread:6.28, life:.55, cols:[fgPc(drag.i), '#FFD27A', '#FFF3CC'], drag:2.5, wob:4});
+  const el = document.elementFromPoint(x, y)?.closest('.cell,.ntile');
   const j = el ? +el.dataset.i : null;
   if(j !== drag.target){ clearDrop(); drag.target = j; if(j !== null && j !== drag.i){ el.classList.add('dropT'); buzz(6) } }
-});
-window.addEventListener('pointerup', ()=>{
-  if(!drag) return;
+}
+window.addEventListener('pointerup', ()=>{ if(drag && !drag.hub) dragEnd() });
+function dragEnd(){
   const d = drag; drag = null; dragLine(null); clearDrop();
   if(!d.moved){ openPlayer(d.i); return }
   if(d.target === null || d.target === d.i) return;
   fxBurstAt($(`.cell[data-i="${d.target}"]`) || $(`.ntile[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
   openCmdQuick(d.i, d.target);
-});
-window.addEventListener('pointercancel', ()=>{ if(drag){ drag = null; dragLine(null); clearDrop() } });
+}
+window.addEventListener('pointercancel', ()=>{ if(drag && !drag.hub){ drag = null; dragLine(null); clearDrop() } });
 
 function pchip(p){ const c = COLORS[p.color]; return `<span class="pchip" style="background:${c.bg};color:${c.fg}">${esc(p.name)}</span>` }
 // finestrella semitrasparente sul pannello di chi subisce, girata verso di lui
@@ -1878,6 +2037,8 @@ function renderPP(i){
         <button class="ppCmd ${online ? '' : 'off'}" data-pa="art"${p.art ? ` style="background-image:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.25)),url('${esc(p.art)}')"` : ''}>Comandante</button></div>`;
   }
   ppFit(box);
+  // H&O: il pannello è alto quanto il suo contenuto e la scheda sale solo di quanto serve
+  if(NV()) cell.style.setProperty('--pph', box.offsetHeight);
 }
 // se non ci sta, rimpicciolisco il testo quanto basta
 function ppFit(box){
@@ -2104,6 +2265,8 @@ function renderMenu(){
     <p class="note">Tutte le pedine ufficiali e gli emblemi, solo l'ultima versione di ognuno: poco meno di mille carte. Si scaricano circa 80-100 MB, meglio col Wi-Fi, e sul telefono ne restano circa 30-40. Senza rete l'app cerca e stampa dall'archivio; con la rete controlla una volta al giorno le pedine nuove e scarica solo quelle.</p>
   </div>
 `;
+  // ospite di una partita condivisa: solo ciò che serve al suo pannello e al suo telefono
+  if(GUEST()){ $('#tkMenu').innerHTML = guestMenu(); return }
   $('#tkMenu').innerHTML = `
   <div class="sec"><h3>Partita</h3>
     <button class="btn primary" data-act="new">Nuova partita</button>
@@ -2120,25 +2283,12 @@ function renderMenu(){
     <p class="note">Scorciatoia: trascina il nome di chi attacca sul pannello di chi subisce.</p>
     <p class="note">Cambiare giocatori, formato o vita iniziale fa ripartire la partita. Nomi, colori e immagini restano.</p>
   </div>
-  <div class="sec"><h3>Contatori nella scheda giocatore</h3>
-    ${COUNTERS.map(c=>`<div class="row"><span class="lbl">${c.label}</span>${tog('show', SET.show[c.k], c.k)}</div>`).join('')}
-    <p class="note">Sul tavolo compaiono solo i contatori diversi da zero.</p>
-  </div>
+  ${menuCtr()}
   <div class="sec"><h3>Turni</h3>
     <div class="row"><span class="lbl">Contatore turni e timer</span>${tog('turn', S.turn.on)}</div>
     <p class="note">Chi è di turno ha il bordo dorato e la spia ⌛ con numero del turno e tempo di partita: toccandola passa il turno al giocatore successivo.</p>
   </div>
-  <div class="sec"><h3>Comandi</h3>
-    <div class="row"><span class="lbl">Tenendo premuto</span><div class="chips">
-      <button class="chip ${SET.holdMode==='repeat'?'sel':''}" data-act="hold" data-v="repeat">ripete ±1</button>
-      <button class="chip ${SET.holdMode==='ten'?'sel':''}" data-act="hold" data-v="ten">±10</button></div></div>
-    <div class="row"><span class="lbl">Vibrazione</span>${tog('vib', SET.vibrate)}</div>
-    <div class="row"><span class="lbl">Schermo sempre acceso</span>${tog('wake', SET.wake)}</div>
-    <div class="row"><span class="lbl">Suoni</span>${tog('sound', SET.sound)}</div>
-    <div class="row"><span class="lbl">Tema</span><div class="chips">${[['classico','Classico'],['forgia','Forgia'],['verde','Verde'],['blu','Blu'],['nero','Nero'],['bianco','Bianco'],['incolore','Incolore']].map(([k,l],n)=>`<button class="chip ${(SET.theme || 'classico') === k ? 'sel' : ''}${n > 1 ? ' soon' : ''}" data-act="theme" data-v="${k}">${l}</button>`).join('')}</div></div>
-    <div class="row"><span class="lbl">Animazione di inizio partita</span>${tog('intro', SET.intro)}</div>
-    <button class="btn" data-act="guide">Guida alle funzioni</button>
-  </div>
+  ${menuCmd()}
   <div class="sec"><h3>Voce e miglioramento dell'app</h3>
     <div class="row"><span class="lbl">Diagnostica della fluidità</span>${tog('diag', SET.diag)}</div>
     <p class="note">Misura quanto è fluida l'app su questo telefono. Attivala, usa l'app normalmente, poi tocca «Esporta i dati raccolti» e mandami il file.</p>
@@ -2161,6 +2311,27 @@ function renderMenu(){
     </button>
   </div>`;
   updatePrinterUI();
+}
+const GUEST = () => NET.role === 'client';
+const menuCtr = () => `<div class="sec"><h3>Contatori nella scheda giocatore</h3>
+    ${COUNTERS.map(c=>`<div class="row"><span class="lbl">${c.label}</span>${tog('show', SET.show[c.k], c.k)}</div>`).join('')}
+    <p class="note">Sul tavolo compaiono solo i contatori diversi da zero.</p>
+  </div>`;
+const menuCmd = () => `<div class="sec"><h3>Comandi</h3>
+    <div class="row"><span class="lbl">Tenendo premuto</span><div class="chips">
+      <button class="chip ${SET.holdMode==='repeat'?'sel':''}" data-act="hold" data-v="repeat">ripete ±1</button>
+      <button class="chip ${SET.holdMode==='ten'?'sel':''}" data-act="hold" data-v="ten">±10</button></div></div>
+    <div class="row"><span class="lbl">Vibrazione</span>${tog('vib', SET.vibrate)}</div>
+    <div class="row"><span class="lbl">Schermo sempre acceso</span>${tog('wake', SET.wake)}</div>
+    <div class="row"><span class="lbl">Suoni</span>${tog('sound', SET.sound)}</div>
+    <div class="row"><span class="lbl">Tema</span><div class="chips">${[['classico','Classico'],['forgia','Forgia'],['verde','Verde'],['blu','Blu'],['nero','Nero'],['bianco','Bianco'],['incolore','Incolore']].map(([k,l],n)=>`<button class="chip ${(SET.theme || 'classico') === k ? 'sel' : ''}${n > 1 ? ' soon' : ''}" data-act="theme" data-v="${k}">${l}</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Animazione di inizio partita</span>${tog('intro', SET.intro)}</div>
+    <button class="btn" data-act="guide">Guida alle funzioni</button>
+  </div>`;
+function guestMenu(){
+  return `<div class="sec"><h3>Partita</h3><button class="btn" data-act="dice">Dadi e moneta</button>
+    <p class="note">Le pedine le stampa il telefono di ${esc(NET.hostName || 'chi ospita')}, che ha la stampante.</p></div>
+  ${menuCtr()}${menuCmd()}`;
 }
 async function menuClick(e){
   const b = e.target.closest('[data-act]'); if(!b) return;
@@ -2229,8 +2400,12 @@ function renderPlayer(){
   const p = S.players[curP];
   $('#plTitle').textContent = p.name;
   const ctrs = COUNTERS.filter(c => SET.show[c.k] && (c.k !== 'tax' || S.format !== 'standard'));
-  let h = `<div class="bigLife">${p.life}</div>
-    <div class="quick">${[-10,-5,-1,1,5,10].map(v=>`<button data-act="life" data-v="${v}">${v>0?'+':'−'}${Math.abs(v)}</button>`).join('')}</div>`;
+  const qb = v => `<button data-act="life" data-v="${v}">${v>0?'+':'−'}${Math.abs(v)}</button>`;
+  // partita su più telefoni: +/− grandi accanto alla vita e il calcolo unico dei danni verso un avversario
+  let h = NV() ? `<div class="bigRow"><button class="bigPM" data-act="life" data-v="-1" aria-label="Meno uno">−</button><div class="bigLife">${p.life}</div><button class="bigPM" data-act="life" data-v="1" aria-label="Più uno">+</button></div>
+    <div class="quick q7">${[-10,-5,-1].map(qb).join('')}<button class="qCb" data-act="combat" aria-label="Combattimento">${ICO_CB}</button>${[1,5,10].map(qb).join('')}</div>`
+  : `<div class="bigLife">${p.life}</div>
+    <div class="quick">${[-10,-5,-1,1,5,10].map(qb).join('')}</div>`;
   if(ctrs.length) h += `<div class="sec"><h3>Contatori</h3>${ctrs.map(c=>`<div class="row"><span class="lbl">${c.label}</span>${stepper('ctr', c.k, p.counters[c.k] || 0, c.step)}</div>`).join('')}</div>`;
   if(S.cmdDamage){
     h += `<div class="sec"><h3>Danni da comandante ricevuti</h3>`;
@@ -2277,11 +2452,71 @@ $('#plBody').addEventListener('click', e=>{
     case 'partner': p.partner = !p.partner; plDirty = true; break;
     case 'artdel': p.art = null; p.artName = ''; plDirty = true; break;
     case 'artsearch': searchArt(); return;
+    case 'combat': openCombat(); return;
     case 'artpick': p.art = b.dataset.u; p.artName = b.dataset.n; plDirty = true; break;
     default: return;
   }
   buzz(); save(); renderPlayer(); S.players.forEach((_,i)=>updateCell(i));
 });
+/* ---- Combattimento: un avversario, tutti i danni insieme ---- */
+// icona: due lame incrociate con lo scudo al centro (disegno nostro)
+const ICO_CB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg>';
+const CB_ROWS = [
+  {k:'dmg', label:'Danni da combattimento', x5:true, ico:ICO_CB},
+  {k:'cmd', label:'Danni da comandante', x5:true, ico:SPIA_ICON.cmd},
+  {k:'poison', label:'Veleno', ico:SPIA_ICON.poison},
+  {k:'rad', label:'Radiazioni', ico:SPIA_ICON.rad},
+  {k:'heal', label:'Recupero di vita (per te)', x5:true, ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>'},
+];
+let CB = null;
+function openCombat(){
+  const foes = S.players.map((_, i) => i).filter(i => i !== curP && !isOut(S.players[i]));
+  if(!foes.length){ toast('Nessun avversario in gioco'); return }
+  CB = {by:curP, to:CB && CB.by === curP && foes.includes(CB.to) ? CB.to : foes[0], dmg:0, cmd:0, poison:0, rad:0, heal:0, b:false};
+  renderCombat(); openOv('combat');
+}
+function renderCombat(){
+  const me = S.players[CB.by], v = S.players[CB.to];
+  const rows = CB_ROWS.filter(r => r.k !== 'cmd' || S.cmdDamage);
+  const st = r => `<div class="stepper">${r.x5 ? `<button class="x5" data-cb="${r.k}" data-v="-5">−5</button>` : ''}<button data-cb="${r.k}" data-v="-1">−</button><output>${CB[r.k]}</output><button data-cb="${r.k}" data-v="1">+</button>${r.x5 ? `<button class="x5" data-cb="${r.k}" data-v="5">+5</button>` : ''}</div>`;
+  const tot = CB.dmg + CB.cmd, bits = [];
+  if(tot) bits.push(`vita <b>${v.life} → ${v.life - tot}</b>`);
+  if(CB.cmd){ const k = CB.by + (CB.b ? 'b' : ''); bits.push(`danni da comandante <b>${(v.cmd[k] || 0) + CB.cmd}</b>`) }
+  if(CB.poison) bits.push(`veleno <b>${(v.counters.poison || 0) + CB.poison}</b>`);
+  if(CB.rad) bits.push(`radiazioni <b>${(v.counters.rad || 0) + CB.rad}</b>`);
+  $('#cbBody').innerHTML = `<div class="sec"><h3>Contro chi</h3><div class="cbFoes">${S.players.map((o, i) => i === CB.by || isOut(o) ? '' :
+      `<button class="cbFoe${i === CB.to ? ' sel' : ''}" data-to="${i}" style="--pc:${COLORS[o.color].bg};--pt:${COLORS[o.color].fg}">${esc(o.name)}<span>${o.life}</span></button>`).join('')}</div></div>
+    <div class="sec"><h3>Cosa gli arriva</h3>
+    ${rows.map(r => `<div class="cbRow"><span class="lbl">${r.ico}${r.label}</span>${st(r)}</div>${r.k === 'cmd' && me.partner ? `<div class="cbWho"><button class="chip${CB.b ? '' : ' sel'}" data-cbb="0">1° comandante</button><button class="chip${CB.b ? ' sel' : ''}" data-cbb="1">2° comandante</button></div>` : ''}`).join('')}</div>
+    <div class="cbSum">${bits.length || CB.heal ? `<b>${esc(v.name)}</b>: ${bits.join(', ') || 'nulla'}${CB.heal ? `<br><b>${esc(me.name)}</b>: vita <b>${me.life} → ${me.life + CB.heal}</b>` : ''}` : 'Segna i danni, poi conferma: arrivano tutti insieme.'}</div>
+    <button class="btn primary" data-cbgo ${bits.length || CB.heal ? '' : 'disabled'}>Colpisci ${esc(v.name)}</button>`;
+}
+$('#cbBody').addEventListener('click', e=>{
+  const t = e.target.closest('[data-to],[data-cb],[data-cbb],[data-cbgo]'); if(!t || !CB) return;
+  if(t.dataset.to != null) CB.to = +t.dataset.to;
+  else if(t.dataset.cb) CB[t.dataset.cb] = Math.max(0, Math.min(999, CB[t.dataset.cb] + +t.dataset.v));
+  else if(t.dataset.cbb != null) CB.b = t.dataset.cbb === '1';
+  else { combatApply(); return }
+  buzz(); renderCombat();
+});
+// si applica tutto in un passo solo: nella partita condivisa parte come un unico messaggio
+function combatApply(){
+  const C = CB, me = S.players[C.by], v = S.players[C.to], tot = C.dmg + C.cmd;
+  if(tot){ v.life -= tot; addHist(C.to, -tot) }
+  if(C.cmd){ const k = C.by + (C.b ? 'b' : ''); v.cmd[k] = (v.cmd[k] || 0) + C.cmd }
+  if(C.poison) v.counters.poison = (v.counters.poison || 0) + C.poison;
+  if(C.rad) v.counters.rad = (v.counters.rad || 0) + C.rad;
+  if(C.heal){ me.life += C.heal; addHist(C.by, C.heal) }
+  const parts = [C.dmg && C.dmg + ' da combattimento', C.cmd && C.cmd + ' da comandante', C.poison && C.poison + ' veleno', C.rad && C.rad + ' radiazioni'].filter(Boolean);
+  logEv(`${me.name} colpisce ${v.name}: ${parts.join(', ') || 'nessun danno'}${C.heal ? `, recupera ${C.heal}` : ''}`);
+  save(); updateCell(C.to); updateCell(C.by);
+  if(tot) lifeFx(C.to, -tot);
+  if(C.heal) lifeFx(C.by, C.heal);
+  buzz([30, 50, 30]); sfx('done');
+  CB = {by:C.by, to:C.to};
+  history.back(); renderPlayer();
+  toast(`${v.name}: ${parts.join(', ') || 'colpito'}`);
+}
 async function searchArt(){
   const q = ($('#plArtQ')?.value || '').trim(); if(!q) return;
   const box = $('#artRes'); box.innerHTML = '<p class="note">Ricerca su Scryfall…</p>';
@@ -2735,7 +2970,14 @@ function openTokens(){
   $('#heard').textContent = ''; $('#understood').textContent = ''; $('#tkInput').value = '';
   tkCollapse(true); renderRecent(); renderMenu(); openOv('tokens'); updatePrinterUI();
 }
-attachPTT($('#tokenBtn'), {onTap:openTokens, onText:quickToken, silent:true, drag:hubDrag});
+// H&O: l'elemento centrale è fisso; trascinandolo subito si danno i danni da comandante agli avversari in alto
+const cmdDrag = {
+  start(){ const r = $('#tokenBtn').getBoundingClientRect(); drag = {i:NET.me, x:r.left + r.width / 2, y:r.top + r.height / 2, moved:true, target:null, hub:true}; buzz(10) },
+  move(x, y){ if(drag?.hub) dragMove(x, y) },
+  end(){ if(drag?.hub) dragEnd() }
+};
+const hubOrCmd = {start(){ (NV() ? cmdDrag : hubDrag).start() }, move(x, y){ (NV() ? cmdDrag : hubDrag).move(x, y) }, end(x, y){ (NV() ? cmdDrag : hubDrag).end(x, y) }};
+attachPTT($('#tokenBtn'), {onTap:openTokens, onText:quickToken, silent:true, drag:hubOrCmd});
 attachPTT($('#micBtn'), {
   onTap: ()=>toast('Tieni premuto il microfono mentre parli'),
   onText: alts => { $('#tkInput').value = alts[0]; runRequest(alts, 'voce') }
@@ -2842,6 +3084,12 @@ async function openDetail(t, q){
 $('#qMinus').addEventListener('click', ()=>{ qty = Math.max(1, qty-1); $('#qOut').textContent = qty });
 $('#qPlus').addEventListener('click', ()=>{ qty = Math.min(10, qty+1); $('#qOut').textContent = qty });
 $('#dtPrint').addEventListener('click', async ()=>{
+  if(NET.role === 'client'){
+    if(!netPrintAsk(cur, qty)) return;
+    RECENT = [recentOf(cur), ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
+    if(curEntry){ curEntry.printed = qty; saveVlog() }
+    history.back(); return;
+  }
   if(!curBits) return;
   if(!printer.ch){ await connectPrinter(); if(!printer.ch) return }
   const btn = $('#dtPrint'); btn.disabled = true;
@@ -2992,6 +3240,16 @@ async function quickToken(alts){
     const bits = await bitsP;
     if(!bits){ fail('Immagine non disponibile.'); return }
     drawBits($('#tmBits'), bits);
+    if(NET.role === 'client'){
+      if(seq !== TM.seq) return;
+      const ok = netPrintAsk(tk, qn);
+      if(ok){ RECENT = [recentOf(tk), ...RECENT.filter(r => r.id !== tk.id)].slice(0, 12); saveRecent(); if(TM.entry){ TM.entry.printed = qn; saveVlog() } }
+      tmReveal(1); TM.phase = ok ? 'done' : 'msg';
+      tmSet('show', ok ? `Mandata a ${NET.hostName || 'chi ospita'}: la stampa lui` : 'Telefono principale non collegato');
+      sfx(ok ? 'done' : 'cancel');
+      TM.timer = setTimeout(()=>{ if(seq === TM.seq){ TM.phase = 'msg'; tmClose() } }, 1800);
+      return;
+    }
     if(!(await printer.ensure())){
       if(seq !== TM.seq) return;
       TM.phase = 'wait'; tmSet('show', 'Stampante non collegata.');
@@ -3911,8 +4169,8 @@ function endTut(){ if(!TUT) return; TUT.el.remove(); TUT = null; try{ localStora
 
 /* ================= Aggiornamenti ================= */
 const UPD = {remote:null, html:null, native:false, apk:'', final:false, same:false};
-// ultima release utile: per tutti l'ultima definitiva; per la prova generale anche le pre-release «-prova»
-const relVer = t => String(t || '').replace(/^v/, '').replace(/-prova$/, '');
+// ultima release utile: per tutti l'ultima definitiva; per i tester anche le pre-release «-beta» e «-prova»
+const relVer = t => String(t || '').replace(/^v/, '').replace(/-(prova|beta)$/, '');
 async function relLatest(){
   const apk = tag => `https://github.com/${REPO}/releases/download/${tag}/MagicPlayPrint.apk`;
   if(CHANNEL !== 'test'){
@@ -3921,10 +4179,10 @@ async function relLatest(){
     return {tag, ver:relVer(tag), apk:apk(tag), final:false};
   }
   const r = await fetchT(`https://api.github.com/repos/${REPO}/releases?per_page=30`, {cache:'no-store'});
-  const L = (await r.json()).filter(x => !x.draft && /^v\d+\.\d+\.\d+(-prova)?$/.test(x.tag_name || ''));
+  const L = (await r.json()).filter(x => !x.draft && /^v\d+\.\d+\.\d+(-prova|-beta)?$/.test(x.tag_name || ''));
   // la definitiva più nuova vince sulla prova con lo stesso numero
   const fin = L.filter(x => !x.prerelease).sort((a, b) => cmpVer(relVer(b.tag_name), relVer(a.tag_name)))[0];
-  const tst = L.filter(x => x.prerelease && /-prova$/.test(x.tag_name)).sort((a, b) => cmpVer(relVer(b.tag_name), relVer(a.tag_name)))[0];
+  const tst = L.filter(x => x.prerelease && /-(prova|beta)$/.test(x.tag_name)).sort((a, b) => cmpVer(relVer(b.tag_name), relVer(a.tag_name)))[0];
   const best = fin && (!tst || cmpVer(relVer(fin.tag_name), relVer(tst.tag_name)) >= 0) ? fin : tst;
   if(!best) throw new Error();
   return {tag:best.tag_name, ver:relVer(best.tag_name), apk:apk(best.tag_name), final:best === fin};
@@ -3934,7 +4192,7 @@ function showVer(){
   ['#verLbl','#verLbl2','#wzVer'].forEach(id=>{
     const el = $(id); if(!el) return;
     el.classList.toggle('upd', !!UPD.remote);
-    el.textContent = (UPD.remote ? `v${VERSION} · aggiorna` : 'v' + VERSION) + (CHANNEL === 'test' ? ' prova' : '');
+    el.textContent = (UPD.remote ? `v${VERSION} · aggiorna` : 'v' + VERSION) + (CHANNEL === 'test' ? ' ' + TESTL : '');
     el.title = UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Verifica aggiornamenti';
   });
 }
@@ -4011,7 +4269,7 @@ function expCheck(){
   if(left > 0){
     if(left < 5 * day){
       const k = 'smtg-expwarn', today = new Date().toDateString();
-      if(load(k) !== today){ try{ localStorage.setItem(k, JSON.stringify(today)) }catch(e){} setTimeout(()=>toast(`La prova generale scade il ${when}`, 4000), 1500) }
+      if(load(k) !== today){ try{ localStorage.setItem(k, JSON.stringify(today)) }catch(e){} setTimeout(()=>toast(`La ${TESTN} scade il ${when}`, 4000), 1500) }
     }
     clearTimeout(expCheck.t); expCheck.t = setTimeout(expCheck, Math.min(left + 1000, 6 * 3600000));
     return;
@@ -4023,7 +4281,7 @@ function expCheck(){
     el.addEventListener('click', e => { if(e.target.closest('[data-get]')) location.href = UPD.apk || APK_URL; if(e.target.closest('[data-chk]')) checkUpdate(true) });
   }
   const fin = UPD.final && UPD.remote;
-  el.innerHTML = `<div><img src="emblema.png" alt=""><h2>La prova generale è finita</h2>
+  el.innerHTML = `<div><img src="emblema.png" alt=""><h2>La ${TESTN} è finita</h2>
     <p>Grazie per aver provato Magic Play&amp;Print ${esc(VERSION)} in anteprima, dal vivo al tavolo.</p>
     ${fin ? `<button class="btn primary" data-get>Scarica la versione definitiva ${esc(UPD.remote)}</button>` :
       '<p>La versione definitiva arriva a breve: quando è pronta la trovi qui.</p><button class="btn" data-chk>Controlla di nuovo</button>'}</div>`;
@@ -4044,8 +4302,9 @@ function netTileHTML(i){
   const cmd = S.cmdDamage ? Math.max(0, ...Object.values(p.cmd)) : 0;
   const sp = [p.flags.monarch && SPIA_ICON.monarch, p.flags.initiative && SPIA_ICON.initiative, p.flags.blessing && SPIA_ICON.blessing,
     p.counters.poison && SPIA_ICON.poison + p.counters.poison, cmd && SPIA_ICON.cmd + cmd, p.counters.rad && SPIA_ICON.rad + p.counters.rad].filter(Boolean);
-  const st = !id ? 'free' : (NET.on[id] || id === NID()) ? '' : 'off';
-  return `<span class="ntN">${esc(p.name)}</span><b class="ntL">${p.life}</b><span class="ntS">${sp.join('')}</span><i class="ntD"></i>${st ? `<i class="ntOff ${st}"></i>` : ''}`;
+  // pallino: verde collegato, rosso scollegato, cerchio vuoto per il posto libero
+  const st = !id ? 'free' : (NET.on[id] || id === NID()) && (NET.role === 'host' || NET.online) ? 'on' : 'off';
+  return `<span class="ntN">${esc(p.name)}</span><b class="ntL">${p.life}</b><span class="ntS">${sp.join('')}</span><i class="ntD"></i><i class="ntOff ${st}"></i>`;
 }
 function netTileCls(el, i){
   const p = S.players[i];
@@ -4061,8 +4320,8 @@ function renderNetBar(){
   bar.hidden = !nv;
   if(!nv){ bar.innerHTML = ''; return }
   const ok = NET.role === 'host' || NET.online;
-  bar.innerHTML = S.players.map((_, i) => i === NET.me ? '' : `<button class="ntile" data-i="${i}">${netTileHTML(i)}</button>`).join('') +
-    `<button class="nstat ${ok ? 'on' : 'off'}" data-net aria-label="Partita condivisa"><i></i></button>`;
+  bar.innerHTML = `<button class="nline ${ok ? 'on' : 'off'}" data-net aria-label="Partita condivisa"><i></i></button>` +
+    S.players.map((_, i) => i === NET.me ? '' : `<button class="ntile" data-i="${i}">${netTileHTML(i)}</button>`).join('');
   bar.querySelectorAll('.ntile').forEach(el => netTileCls(el, +el.dataset.i));
 }
 // aggiorna un quadratino solo (si chiama da updateCell, quando il campo di quel giocatore non è sullo schermo)

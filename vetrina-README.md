@@ -7,7 +7,7 @@ App Android realizzata da **E-Duck Garage**.
 
 Scarica l'ultima `MagicPlayPrint.apk` da [Releases](../../releases/latest) e installala sul telefono. Android chiederà di consentire l'installazione da origini sconosciute.
 
-Le versioni segnate come «prova generale» sono riservate ai tester e smettono di funzionare alla data indicata.
+Le versioni segnate come «beta» o «prova generale» sono riservate ai tester e smettono di funzionare alla data indicata.
 
 ## Diritti
 

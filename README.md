@@ -49,6 +49,7 @@ L'APK viene compilata da GitHub Actions (`.github/workflows/build.yml`) e pubbli
 
 Tre uscite:
 - **push su `main`**: versione definitiva, release `v<versione>` nella vetrina, la ricevono tutti;
+- **a mano, «beta»**: come la prova generale, ma con tag `v<versione>-beta` e la scritta «beta» accanto alla versione. È la V2 da mostrare ai tester;
 - **a mano, «prova-generale»** (Actions, «Compila APK», «Run workflow», sul ramo scelto): pre-release `v<versione>-prova` nella vetrina. Scade dopo i giorni indicati (30 se non si cambia) e poi si ferma, proponendo la versione definitiva quando esce. Chi ha la definitiva non la riceve; chi ha la prova riceve i suoi aggiornamenti;
 - **a mano, «solo-allegato»**: nessuna release, l'APK resta tra gli allegati della compilazione.
 
@@ -67,6 +68,17 @@ Struttura:
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v2.1.0 (V2 beta)
+Solo la pagina dell'app: chi ha la 2.0.0 la riceve dentro l'app. Tutto vale solo per la partita su più telefoni (H&O); il gioco su un telefono solo non cambia. Temi: Classico e Forgia.
+- **Menu degli ospiti ridotto.** Chi si unisce vede solo le pedine (voce, testo, recenti), «Dadi e moneta», i contatori del pannello, i comandi del telefono (tenendo premuto, vibrazione, schermo, suoni, tema, animazione) e la guida. Niente stampante, archivio offline, nuova partita, giocatori, formato, vita iniziale, turni, registro, diagnostica, suggerimenti, dati e aggiornamenti: li decide il principale.
+- **Stampa condivisa.** Un ospite sceglie la pedina e le copie come sempre, ma la stampa il telefono principale con la sua stampantina. Sul principale compare «Stampo per Bea: …» e nel registro resta per chi è stata stampata; all'ospite arriva la conferma.
+- **Campo nuovo.** Quadratini degli avversari più alti e larghi tutto lo schermo, con un pallino: verde collegato, rosso scollegato, cerchio vuoto per il posto libero. Il collegamento è una riga sottile in cima (verde o rossa, toccandola si apre la partita condivisa). Il proprio nome non c'è più.
+- La vita scende verso la linguetta del pannello personale. Appoggiato sopra c'è l'elemento centrale fisso, arrotondato nel Classico e con gli angoli tagliati in Forgia: tocco per le pedine, dito fermo per la pedina a voce, dito che si muove subito per trascinare i danni da comandante sui quadratini.
+- Sopra ancora, in fila, tutti gli indicatori: veleno, energia, esperienza, radiazioni, tassa, danni da comandante, monarca, iniziativa, benedizione e turno. Grandi fino a un massimo; se sono tanti rimpiccioliscono e poi vanno su due righe.
+- **Pannello personale stretto**: alto quanto il suo contenuto, appoggiato in fondo, con la striscia della vita attaccata sopra.
+- **Scheda completa**: + e − grandi ai lati della vita e, tra −1 e +1, il tasto **Combattimento** (due spade incrociate). Si sceglie un avversario e si segnano insieme danni da combattimento, da comandante (con il partner si sceglie quale dei due comandanti), veleno, radiazioni e recupero di vita per chi attacca. Con «Colpisci» arriva tutto in un colpo solo, anche sugli altri telefoni.
+- Uscite per i tester: nuova uscita «beta» nella vetrina (tag `-beta`, scritta «beta» accanto alla versione). L'app riconosce sia le prove generali sia le beta.
 
 ### v2.0.0
 Prima versione della V2. Serve la nuova APK (cambia la parte nativa).
