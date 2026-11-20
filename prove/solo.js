@@ -1,0 +1,12 @@
+const { chromium } = require('playwright'); const fs=require('fs'), path=require('path');
+(async()=>{ const b=await chromium.launch(); const ctx=await b.newContext({viewport:{width:412,height:880},reducedMotion:'reduce'});
+await ctx.route('http://mpp.test/**', r=>{ const f=new URL(r.request().url()).pathname; const fp=require('path').resolve(__dirname, '..')+f; if(!fs.existsSync(fp)) return r.fulfill({status:200,body:''}); r.fulfill({status:200,contentType:f.endsWith('.html')?'text/html':'image/png',body:fs.readFileSync(fp)}) });
+await ctx.route(/^https?:\/\/(?!mpp\.test)/, r=>r.abort());
+await ctx.addInitScript(()=>localStorage.setItem('smtg-tut-014','1'));
+const p=await ctx.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message));
+await p.goto('http://mpp.test/index.html'); await p.waitForTimeout(500);
+console.log('Unisciti nascosto nel browser:', await p.isHidden('#wzNet'));
+await p.evaluate(()=>startGame('commander',4)); await p.waitForTimeout(600);
+await p.click('.cell[data-i="2"] .half.minus'); await p.waitForTimeout(300);
+console.log('celle:', await p.locator('#board .cell').count(), 'barra nascosta:', await p.isHidden('#netBar'), 'vita g3:', await p.evaluate(()=>S.players[2].life), 'NET.role:', await p.evaluate(()=>NET.role));
+await p.screenshot({path:'shots/solo.png'}); console.log('errori:', errs); await b.close(); })();
