@@ -5,7 +5,7 @@ App Android realizzata da **E-Duck Garage**.
 
 ## Download
 
-Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/Mtg-play-print/releases/latest) e installala sul telefono. Android chiederà di consentire l'installazione da origini sconosciute.
+Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/MagicPlayPrint-app/releases/latest) e installala sul telefono. Android chiederà di consentire l'installazione da origini sconosciute.
 
 ## Cosa fa
 
@@ -45,15 +45,21 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 
 ## Compilazione
 
-L'APK viene compilata da GitHub Actions (`.github/workflows/build.yml`) a ogni push su `main`. Il workflow pubblica la release `v<versione>`, leggendo la versione da `var APPV` in `index.html`.
+L'APK viene compilata da GitHub Actions (`.github/workflows/build.yml`) e pubblicata nella **vetrina**, `wolve666/MagicPlayPrint-app`: un repository pubblico che contiene solo le APK, la pagina dell'app per gli aggiornamenti e un README. Il codice sorgente resta in questo repository, privato. La versione si legge da `var APPV` in `index.html`.
 
-Sugli altri rami la compilazione si avvia a mano (Actions, «Compila APK», «Run workflow»): non pubblica nessuna release e lascia l'APK di prova tra gli allegati della compilazione.
+Tre uscite:
+- **push su `main`**: versione definitiva, release `v<versione>` nella vetrina, la ricevono tutti;
+- **a mano, «prova-generale»** (Actions, «Compila APK», «Run workflow», sul ramo scelto): pre-release `v<versione>-prova` nella vetrina. Scade dopo i giorni indicati (30 se non si cambia) e poi si ferma, proponendo la versione definitiva quando esce. Chi ha la definitiva non la riceve; chi ha la prova riceve i suoi aggiornamenti;
+- **a mano, «solo-allegato»**: nessuna release, l'APK resta tra gli allegati della compilazione.
 
 Prova della V2 senza telefoni: aprendo `index.html?nettest` nel browser, più schede si collegano tra loro come farebbero i telefoni.
 
 Segreti richiesti nel repository:
 - `KEYSTORE_B64`: il keystore di firma codificato in base64.
 - `KEYSTORE_PASS`: la password del keystore.
+- `VETRINA_TOKEN`: token GitHub con permesso di scrittura sui contenuti della vetrina.
+
+Variabile facoltativa `VETRINA` (Settings, Variables), se la vetrina cambia nome.
 
 Struttura:
 - `index.html`: tutta l'app (interfaccia e logica), basata su Capacitor.
@@ -74,6 +80,7 @@ Prima versione della V2. Serve la nuova APK (cambia la parte nativa).
 - Nuova partita, numero di giocatori e formato li decide il principale. La rivincita si può chiedere da qualsiasi telefono.
 - Uscendo dalla partita condivisa, su quel telefono torna la partita che c'era prima.
 - Non ancora: i colpi animati tra un telefono e l'altro e la stampa condivisa.
+- Aggiornamenti dalla vetrina `wolve666/MagicPlayPrint-app` (le app già installate ci arrivano da sole). Prova generale: pre-release con scadenza e la scritta «prova» accanto alla versione; dopo la scadenza l'app si ferma e porta alla versione definitiva.
 
 ### v0.19.1
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.

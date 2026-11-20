@@ -667,6 +667,12 @@ body.netv #board{padding-top:calc(86px + env(safe-area-inset-top))}
 .nlGame span,.nlJoin span{font-size:13px;color:var(--muted)}
 .nlJoin{display:grid;gap:6px;justify-items:center;text-align:center;padding:16px;border-radius:12px;background:var(--surface)}
 .nlCode{font-size:40px;font-weight:800;letter-spacing:.15em;font-variant-numeric:tabular-nums;color:var(--gold)}
+/* prova generale scaduta: copre tutta l'app */
+#expired{position:fixed;inset:0;z-index:300;background:var(--bg);display:grid;place-items:center;padding:24px;text-align:center}
+#expired>div{max-width:360px;display:grid;gap:12px;justify-items:center}
+#expired img{width:96px;height:96px}
+#expired h2{margin:0;font-size:22px}
+#expired p{margin:0;color:var(--muted);line-height:1.45}
 </style>
 </head>
 <body>
@@ -886,7 +892,14 @@ body.netv #board{padding-top:calc(86px + env(safe-area-inset-top))}
 // app Android (Capacitor): Bluetooth nativo veloce al posto di Web Bluetooth
 const NATIVE = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
 const SPP = NATIVE ? Capacitor.Plugins.BtSerial : null; // Bluetooth classico (seriale), molto più veloce sulle stampantine
-const APK_URL = window.APP_REPO ? `https://github.com/${window.APP_REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
+// Le APK e la pagina per gli aggiornamenti escono dalla «vetrina», un repository pubblico senza codice sorgente.
+// Le app installate prima della vetrina conoscono ancora il vecchio repository: le mando alla vetrina.
+const VETRINA = 'wolve666/MagicPlayPrint-app';
+const REPO = window.APP_REPO === 'wolve666/Mtg-play-print' ? VETRINA : window.APP_REPO || '';
+// canale: «stable» per tutti, «test» per la prova generale (pre-release che scade)
+const CHANNEL = window.APP_CHANNEL === 'test' ? 'test' : 'stable';
+const EXPIRES = CHANNEL === 'test' ? +window.APP_EXPIRES || 0 : 0;
+const APK_URL = REPO ? `https://github.com/${REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
 const VERSION = APPV, NATIVE_REV = APPN;
 // errori imprevisti: annoto gli ultimi 20, finiscono nei dati da esportare
@@ -3897,13 +3910,31 @@ function tutGo(i){
 function endTut(){ if(!TUT) return; TUT.el.remove(); TUT = null; try{ localStorage.setItem('smtg-tut-014', '1') }catch(e){} }
 
 /* ================= Aggiornamenti ================= */
-const UPD = {remote:null, html:null, native:false};
+const UPD = {remote:null, html:null, native:false, apk:'', final:false, same:false};
+// ultima release utile: per tutti l'ultima definitiva; per la prova generale anche le pre-release «-prova»
+const relVer = t => String(t || '').replace(/^v/, '').replace(/-prova$/, '');
+async function relLatest(){
+  const apk = tag => `https://github.com/${REPO}/releases/download/${tag}/MagicPlayPrint.apk`;
+  if(CHANNEL !== 'test'){
+    const r = await fetchT(`https://api.github.com/repos/${REPO}/releases/latest`, {cache:'no-store'});
+    const tag = (await r.json()).tag_name || ''; if(!relVer(tag)) throw new Error();
+    return {tag, ver:relVer(tag), apk:apk(tag), final:false};
+  }
+  const r = await fetchT(`https://api.github.com/repos/${REPO}/releases?per_page=30`, {cache:'no-store'});
+  const L = (await r.json()).filter(x => !x.draft && /^v\d+\.\d+\.\d+(-prova)?$/.test(x.tag_name || ''));
+  // la definitiva più nuova vince sulla prova con lo stesso numero
+  const fin = L.filter(x => !x.prerelease).sort((a, b) => cmpVer(relVer(b.tag_name), relVer(a.tag_name)))[0];
+  const tst = L.filter(x => x.prerelease && /-prova$/.test(x.tag_name)).sort((a, b) => cmpVer(relVer(b.tag_name), relVer(a.tag_name)))[0];
+  const best = fin && (!tst || cmpVer(relVer(fin.tag_name), relVer(tst.tag_name)) >= 0) ? fin : tst;
+  if(!best) throw new Error();
+  return {tag:best.tag_name, ver:relVer(best.tag_name), apk:apk(best.tag_name), final:best === fin};
+}
 function cmpVer(a, b){ const x = a.split('.').map(Number), y = b.split('.').map(Number); for(let i=0;i<3;i++){ if((x[i]||0) !== (y[i]||0)) return (x[i]||0) - (y[i]||0) } return 0 }
 function showVer(){
   ['#verLbl','#verLbl2','#wzVer'].forEach(id=>{
     const el = $(id); if(!el) return;
     el.classList.toggle('upd', !!UPD.remote);
-    el.textContent = UPD.remote ? `v${VERSION} · aggiorna` : 'v' + VERSION;
+    el.textContent = (UPD.remote ? `v${VERSION} · aggiorna` : 'v' + VERSION) + (CHANNEL === 'test' ? ' prova' : '');
     el.title = UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Verifica aggiornamenti';
   });
 }
@@ -3911,14 +3942,15 @@ async function checkUpdate(manual){
   if(manual) toast('Verifico gli aggiornamenti…');
   try{
     let m;
-    if(NATIVE){ // l'app controlla l'ultima release su GitHub
-      const r = await fetchT(`https://api.github.com/repos/${window.APP_REPO}/releases/latest`, {cache:'no-store'});
-      m = [0, ((await r.json()).tag_name || '').replace(/^v/, '')]; if(!m[1]) throw new Error();
-      UPD.html = null; UPD.native = false;
-      if(cmpVer(m[1], VERSION) > 0){
+    if(NATIVE){ // l'app controlla le release nella vetrina
+      const rel = await relLatest(); m = [0, rel.ver];
+      UPD.html = null; UPD.native = false; UPD.same = false; UPD.apk = rel.apk; UPD.final = rel.final;
+      // prova generale: quando esce la versione definitiva (anche con lo stesso numero) va installata l'APK, senza scadenza
+      if(rel.final && cmpVer(rel.ver, VERSION) >= 0){ UPD.native = true; m[1] = rel.ver; if(cmpVer(rel.ver, VERSION) === 0) UPD.same = true }
+      else if(cmpVer(m[1], VERSION) > 0){
         // scarico solo la pagina dell'app (circa 450 kB): se la parte nativa non cambia, niente APK
         // se lo scaricamento non riesce o arriva a metà non propongo nulla: riprovo al prossimo controllo
-        const hr = await fetchT(`https://raw.githubusercontent.com/${window.APP_REPO}/v${m[1]}/index.html`, {cache:'no-store'}, 30000);
+        const hr = await fetchT(`https://raw.githubusercontent.com/${REPO}/${rel.tag}/index.html`, {cache:'no-store'}, 30000);
         if(!hr.ok) throw new Error();
         const h = await hr.text();
         if(!/<\/html>\s*$/.test(h)) throw new Error();
@@ -3930,9 +3962,10 @@ async function checkUpdate(manual){
       m = (await r.text()).match(/var APPV = '([\d.]+)'/);
     }
     if(!m) throw new Error();
-    UPD.remote = cmpVer(m[1], VERSION) > 0 ? m[1] : null;
+    UPD.remote = cmpVer(m[1], VERSION) > 0 || UPD.same ? m[1] : null;
     if(!manual && UPD.remote) updNotice();
-    if(manual) toast(UPD.remote ? 'Disponibile la versione ' + UPD.remote : 'Hai già l\'ultima versione (' + VERSION + ')');
+    if(manual) toast(UPD.remote ? 'Disponibile la versione ' + UPD.remote + (UPD.final && CHANNEL === 'test' ? ' definitiva' : '') : 'Hai già l\'ultima versione (' + VERSION + ')');
+    if(EXPIRES) expCheck();
   }catch(e){ if(manual) toast('Impossibile verificare: controlla la connessione') }
   showVer(); if(['menu','tokens'].includes(stack[stack.length-1])) renderMenu();
 }
@@ -3940,7 +3973,7 @@ async function checkUpdate(manual){
 function updNotice(){
   if(localStorage.getItem('smtg-updseen') === UPD.remote || $('#updBar')) return;
   const b = document.createElement('div'); b.id = 'updBar';
-  b.innerHTML = `<span>Nuova versione ${esc(UPD.remote)} disponibile</span><button>Dopo</button><button class="go">Aggiorna</button>`;
+  b.innerHTML = `<span>${UPD.final && CHANNEL === 'test' ? `Pronta la versione definitiva ${esc(UPD.remote)}` : `Nuova versione ${esc(UPD.remote)} disponibile`}</span><button>Dopo</button><button class="go">Aggiorna</button>`;
   document.body.appendChild(b); requestAnimationFrame(()=>b.classList.add('show')); sfx('found'); buzz(30);
   const hide = () => { try{ localStorage.setItem('smtg-updseen', UPD.remote) }catch(e){} b.classList.remove('show'); setTimeout(()=>b.remove(), 400) };
   b.querySelector('button').onclick = hide;
@@ -3954,7 +3987,7 @@ async function applyUpdate(){
       toast('Aggiorno…'); setTimeout(()=>location.reload(), 400); return;
     }catch(e){ /* memoria piena: passo all'APK */ }
   }
-  if(NATIVE){ toast('Questa versione cambia anche la parte nativa: scarico l\'APK da installare', 4500); location.href = APK_URL; return }
+  if(NATIVE){ toast(UPD.final && CHANNEL === 'test' ? 'Scarico la versione definitiva da installare' : 'Questa versione cambia anche la parte nativa: scarico l\'APK da installare', 4500); location.href = UPD.apk || APK_URL; return }
   toast('Aggiorno…');
   try{
     const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
@@ -3971,6 +4004,31 @@ async function applyUpdate(){
   if(last && last !== VERSION) setTimeout(()=>toast('Aggiornata alla versione ' + VERSION, 3000), 800);
   try{ localStorage.setItem('smtg-lastver', VERSION) }catch(e){}
 })();
+// prova generale: dopo la scadenza l'app si ferma e porta alla versione definitiva, se è già uscita
+function expCheck(){
+  if(!EXPIRES) return;
+  const left = EXPIRES - Date.now(), day = 86400000, when = new Date(EXPIRES).toLocaleDateString('it-IT', {day:'numeric', month:'long'});
+  if(left > 0){
+    if(left < 5 * day){
+      const k = 'smtg-expwarn', today = new Date().toDateString();
+      if(load(k) !== today){ try{ localStorage.setItem(k, JSON.stringify(today)) }catch(e){} setTimeout(()=>toast(`La prova generale scade il ${when}`, 4000), 1500) }
+    }
+    clearTimeout(expCheck.t); expCheck.t = setTimeout(expCheck, Math.min(left + 1000, 6 * 3600000));
+    return;
+  }
+  let el = $('#expired');
+  if(!el){
+    el = document.createElement('div'); el.id = 'expired';
+    document.body.appendChild(el);
+    el.addEventListener('click', e => { if(e.target.closest('[data-get]')) location.href = UPD.apk || APK_URL; if(e.target.closest('[data-chk]')) checkUpdate(true) });
+  }
+  const fin = UPD.final && UPD.remote;
+  el.innerHTML = `<div><img src="emblema.png" alt=""><h2>La prova generale è finita</h2>
+    <p>Grazie per aver provato Magic Play&amp;Print ${esc(VERSION)} in anteprima, dal vivo al tavolo.</p>
+    ${fin ? `<button class="btn primary" data-get>Scarica la versione definitiva ${esc(UPD.remote)}</button>` :
+      '<p>La versione definitiva arriva a breve: quando è pronta la trovi qui.</p><button class="btn" data-chk>Controlla di nuovo</button>'}</div>`;
+}
+expCheck();
 showVer();
 setTimeout(()=>checkUpdate(false), 2500);
 setInterval(()=>{ if(document.visibilityState === 'visible') checkUpdate(false) }, 30*60*1000);
