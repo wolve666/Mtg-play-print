@@ -31,6 +31,10 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 - Stampanti termiche ESC/POS da 58 mm in Bluetooth classico. È stata provata sulla NetumScan NS1809DD.
 - Il ricollegamento è automatico. Nelle impostazioni puoi regolare luminosità, modalità di stampa (fluida, bilanciata, prudente) e dimensione della pedina.
 
+**Più telefoni (V2, primo pezzo)**
+- Ogni giocatore può usare il proprio telefono: uno crea la partita condivisa, gli altri si uniscono. I telefoni si collegano tra loro senza internet (Bluetooth e Wi‑Fi di Android).
+- Ognuno vede il proprio campo in grande e in alto i quadratini degli avversari, con vita, veleno, danni da comandante, monarca, iniziativa e benedizione.
+
 **Temi**
 - Due temi da scegliere nel Menu: Classico e Forgia (acciaio scuro, braci, angoli tagliati, animazioni particellari).
 
@@ -43,16 +47,33 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 
 L'APK viene compilata da GitHub Actions (`.github/workflows/build.yml`) a ogni push su `main`. Il workflow pubblica la release `v<versione>`, leggendo la versione da `var APPV` in `index.html`.
 
+Sugli altri rami la compilazione si avvia a mano (Actions, «Compila APK», «Run workflow»): non pubblica nessuna release e lascia l'APK di prova tra gli allegati della compilazione.
+
+Prova della V2 senza telefoni: aprendo `index.html?nettest` nel browser, più schede si collegano tra loro come farebbero i telefoni.
+
 Segreti richiesti nel repository:
 - `KEYSTORE_B64`: il keystore di firma codificato in base64.
 - `KEYSTORE_PASS`: la password del keystore.
 
 Struttura:
 - `index.html`: tutta l'app (interfaccia e logica), basata su Capacitor.
-- `native/`: la parte Java (Bluetooth classico, dettatura, esclusione dei gesti di sistema). Quando cambia, va alzato `APPN` in `index.html`.
+- `native/`: la parte Java (Bluetooth classico, dettatura, esclusione dei gesti di sistema, telefoni collegati con Nearby Connections). Quando cambia, va alzato `APPN` in `index.html`.
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v0.20.0
+Serve la nuova APK (cambia la parte nativa).
+- **V2, telefoni collegati (primo pezzo).** Dal Menu, «Gioca su più telefoni», poi «Condividi questa partita»: questo telefono diventa il principale e tiene la partita. Sugli altri telefoni, dalla pagina iniziale, «Unisciti a una partita».
+- Collegamento senza internet con le Nearby Connections di Android (Bluetooth e Wi‑Fi diretto). Chi si unisce vede un codice di 4 cifre, e sul principale compare lo stesso codice con «Accetta» e «Rifiuta».
+- Posti al tavolo: sul principale si trascina ogni telefono sul posto di chi lo usa (oppure si tocca il telefono e poi il posto). Il nome del telefono diventa il nome del giocatore.
+- Ognuno vede il proprio campo in grande e in alto i quadratini degli avversari, con vita, veleno, radiazioni, danni da comandante, monarca, iniziativa e benedizione. Toccando un quadratino si apre la scheda di quel giocatore. Il simbolo centrale sta nell'angolo in alto del proprio campo.
+- Vita, contatori, stati, turni e registro si aggiornano su tutti i telefoni. Se due telefoni cambiano la stessa vita insieme, le due modifiche si sommano.
+- Danni da comandante: si trascina il proprio nome sul quadratino dell'avversario.
+- Se un telefono si scollega o l'app si chiude, alla riapertura torna da solo al suo campo e alla partita. Le modifiche fatte nel frattempo arrivano appena si ricollega.
+- Nuova partita, numero di giocatori e formato li decide il principale. La rivincita si può chiedere da qualsiasi telefono.
+- Uscendo dalla partita condivisa, su quel telefono torna la partita che c'era prima.
+- Non ancora: i colpi animati tra un telefono e l'altro e la stampa condivisa.
 
 ### v0.19.1
 Solo la pagina dell'app: si aggiorna dentro l'app, senza APK.

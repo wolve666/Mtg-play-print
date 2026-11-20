@@ -2,6 +2,7 @@ name: Compila APK
 on:
   push:
     branches: [main]
+  # sugli altri rami si compila solo a mano: l'APK resta tra gli allegati della compilazione, senza release
   workflow_dispatch:
 permissions:
   contents: write
@@ -36,7 +37,12 @@ jobs:
         run: cp native/*.java android/app/src/main/java/it/educk/magicplayprint/
       - name: Permessi Bluetooth classico nel manifest (ricerca senza posizione da Android 12)
         run: |
-          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>\n</manifest>#' android/app/src/main/AndroidManifest.xml
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="32"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>\n</manifest>#' android/app/src/main/AndroidManifest.xml
+      - name: V2, telefoni collegati (Nearby Connections)
+        run: |
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>\n    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>\n    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation"/>\n</manifest>#' android/app/src/main/AndroidManifest.xml
+          sed -i '0,/^dependencies {/s##dependencies {\n    implementation "com.google.android.gms:play-services-nearby:19.3.0"#' android/app/build.gradle
+          grep -n "play-services-nearby" android/app/build.gradle
       - name: Permesso microfono e servizio vocale nel manifest
         run: |
           sed -i 's#</manifest>#    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <queries><intent><action android:name="android.speech.RecognitionService"/></intent></queries>\n</manifest>#' android/app/src/main/AndroidManifest.xml
@@ -55,7 +61,14 @@ jobs:
           BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
           $BT/zipalign -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
           $BT/apksigner sign --ks ks.jks --ks-pass "pass:${{ secrets.KEYSTORE_PASS }}" --out MagicPlayPrint.apk aligned.apk
+      - name: APK di prova (rami diversi da main)
+        if: github.ref != 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MagicPlayPrint-${{ steps.v.outputs.ver }}
+          path: MagicPlayPrint.apk
       - name: Pubblico la release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.v.outputs.ver }}

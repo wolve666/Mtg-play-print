@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '0.19.1', APPN = 6;
+var APPV = '0.20.0', APPN = 7;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -621,11 +621,58 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
 .seed.on{color:var(--sc);text-shadow:0 0 14px var(--sc),0 0 2px rgba(255,255,255,.6)}
 .seed[data-seed=rosso]{--sc:#FF5A26}.seed[data-seed=verde]{--sc:#3FD16A}.seed[data-seed=blu]{--sc:#2FA8FF}.seed[data-seed=nero]{--sc:#B07CFF}.seed[data-seed=bianco]{--sc:#FFE9A8}.seed[data-seed=incolore]{--sc:#C9D3DC}
 .chip.soon{opacity:.42}
+/* V2: telefoni collegati. In alto i quadratini degli avversari, sotto il proprio campo in grande */
+#netBar{position:fixed;left:0;right:0;top:0;z-index:4;display:flex;gap:4px;padding:calc(4px + env(safe-area-inset-top)) 4px 0;height:calc(78px + env(safe-area-inset-top))}
+#netBar[hidden]{display:none}
+body.netv #board{padding-top:calc(86px + env(safe-area-inset-top))}
+#board.n1{grid-template:1fr / 1fr}
+.ntile{flex:1;min-width:0;position:relative;border-radius:12px;background:var(--pc) center/cover;color:var(--pt);display:grid;grid-template-rows:auto 1fr auto;place-items:center;padding:5px 3px 4px;overflow:hidden;transition:filter .3s}
+.ntN{font-size:11px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.92}
+.ntL{font-size:28px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums}
+.ntS{display:flex;gap:4px;font-size:11px;font-weight:700;min-height:13px;align-items:center;white-space:nowrap}
+.ntS .mi{font-size:11px;margin-right:1px;font-style:normal}
+.ntD{position:absolute;right:5px;top:3px;font-style:normal;font-weight:800;font-size:13px;opacity:0;transition:opacity .2s}
+.ntD.show{opacity:1}
+.ntile.out{filter:saturate(.15) brightness(.55)}
+.ntile.active{box-shadow:inset 0 0 0 3px var(--gold)}
+.ntile.dropT{box-shadow:inset 0 0 0 4px #fff;filter:brightness(1.15)}
+.ntOff{position:absolute;left:5px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
+.ntOff.free{background:transparent;border:1.5px solid currentColor;opacity:.6}
+.nstat{flex:none;width:22px;display:grid;place-items:center}
+.nstat i{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.nstat.off i{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+.nlDot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:var(--danger);vertical-align:middle}
+.nlDot.on{background:var(--ok)}
+.nlErr{color:var(--danger)}
+.nlReq{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface);margin-bottom:8px}
+.nlReq div{flex:1;display:grid;gap:2px;min-width:0}.nlReq span{font-size:13px;color:var(--muted)}
+.nlTable{display:grid;gap:6px;height:min(44vh,300px);margin:0 0 10px}
+.nlTable.n2{grid-template:1fr 1fr / 1fr}
+.nlTable.n3{grid-template:1.4fr 1fr / 1fr 1fr}.nlTable.n3 .nlSeat:nth-child(3){grid-column:1 / 3}
+.nlTable.n4{grid-template:1fr 1fr / 1fr 1fr}
+.nlTable.n5{grid-template:1fr 1fr .9fr / 1fr 1fr}.nlTable.n5 .nlSeat:nth-child(5){grid-column:1 / 3}
+.nlTable.n6{grid-template:1fr 1fr 1fr / 1fr 1fr}
+.nlSeat{border-radius:12px;background:var(--pc);color:var(--pt);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px;min-height:0;transition:box-shadow .15s}
+.nlSeat b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nlSeat.hl,.nlPool.hl{box-shadow:inset 0 0 0 4px #fff}
+.nlChip{display:inline-block;padding:7px 12px;border-radius:999px;background:#fff;color:#1b1b1f;font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.35);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nlChip[data-id]{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.nlChip.sel{outline:3px solid var(--gold);outline-offset:1px}
+.nlChip.off{opacity:.55}
+.nlChip.lift{opacity:.3}
+.nlGhost{position:fixed;z-index:200;pointer-events:none;transform:translate(-50%,-70%) scale(1.1)}
+.nlFree{font-size:12px;opacity:.7}
+.nlPool{display:flex;flex-wrap:wrap;gap:8px;min-height:50px;padding:10px;border-radius:12px;border:1.5px dashed var(--line);align-items:center}
+.nlGame{display:grid;gap:2px;width:100%;text-align:left;padding:14px;border-radius:12px;background:var(--surface);margin-bottom:8px}
+.nlGame span,.nlJoin span{font-size:13px;color:var(--muted)}
+.nlJoin{display:grid;gap:6px;justify-items:center;text-align:center;padding:16px;border-radius:12px;background:var(--surface)}
+.nlCode{font-size:40px;font-weight:800;letter-spacing:.15em;font-variant-numeric:tabular-nums;color:var(--gold)}
 </style>
 </head>
 <body>
 
 <div id="board"></div>
+<div id="netBar" hidden></div>
 <div id="hub">
   <button id="tokenBtn" aria-label="Pedine: tocca per aprire, tieni premuto per parlare">
     <span class="orbit" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -749,6 +796,14 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
   </div>
   <div class="ovBody"><div id="btList"></div></div>
 </section>
+<!-- V2: telefoni collegati -->
+<section class="ov" id="ov-net">
+  <div class="ovHead">
+    <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2>Più telefoni</h2>
+  </div>
+  <div class="ovBody" id="netBody"></div>
+</section>
 <section class="ov" id="ov-suggest">
   <div class="ovHead">
     <button class="back" data-back aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -775,6 +830,7 @@ body.th-forgia{--bg:#0B0A0D;--surface:#17161C;--surface2:#211F28;--line:#34303D;
       <h1>A cosa vuoi <span class="hl">giocare?</span></h1>
       <div class="wzOpts" id="wzFormats"></div>
       <div class="wzExtra"><button class="wzOpt" id="wzTok">Stampa pedine</button><button class="wzOpt" id="wzDice">Dadi e moneta</button></div>
+      <div class="wzExtra"><button class="wzOpt" id="wzNet" hidden>Unisciti a una partita</button></div>
       <div class="wzSeeds" id="wzSeeds"></div>
     </div>
     <div class="wzStep" id="wzStep2">
@@ -950,13 +1006,437 @@ function saveNow(){
   try{ localStorage.setItem(KEY, JSON.stringify(S)) }
   catch(e){ if(!saveWarn){ saveWarn = true; toast('Memoria piena: la partita non viene salvata', 4000) } }
 }
-function save(){ clearTimeout(saveT); saveT = setTimeout(saveNow, 250) }
+function save(){ clearTimeout(saveT); saveT = setTimeout(saveNow, 250); netKick() }
 // se l'app va in secondo piano o viene chiusa salvo subito, senza aspettare
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && saveT) saveNow() });
 window.addEventListener('pagehide', ()=>{ if(saveT) saveNow() });
 function saveSet(){ try{ localStorage.setItem(SKEY, JSON.stringify(SET)) }catch(e){} }
 function saveRecent(){ try{ localStorage.setItem(RKEY, JSON.stringify(RECENT)) }catch(e){} }
 function saveVlog(){ if(VLOG.length > 500) VLOG = VLOG.slice(-500); try{ localStorage.setItem(VKEY, JSON.stringify(VLOG)) }catch(e){} }
+
+/* ================= V2: telefoni collegati ================= */
+// Un telefono principale tiene la partita vera; gli altri gli mandano le loro modifiche come differenze
+// (vita, contatori e danni come +/−, così due telefoni che toccano lo stesso numero insieme non si cancellano a vicenda)
+// e ricevono indietro lo stato aggiornato. Il trasporto è Nearby Connections nell'app; nel browser, con ?nettest, una prova tra schede.
+const NEARBY = NATIVE ? Capacitor.Plugins.Nearby : null;
+const NETTEST = !NATIVE && /[?&]nettest\b/.test(location.search) && !!window.BroadcastChannel;
+const NT = (()=>{
+  const h = {}, emit = (k, o) => { try{ h[k] && h[k](o) }catch(e){ logErr('rete ' + k + ': ' + e.message) } };
+  const api = {ok:false, on:(k, f)=>{ h[k] = f }};
+  if(NEARBY){
+    ['found','lost','initiated','result','disconnected','data'].forEach(k => NEARBY.addListener(k, o => emit(k, o)));
+    return Object.assign(api, {ok:true,
+      advertise:name => NEARBY.advertise({name}), stopAdvertise:() => NEARBY.stopAdvertise(),
+      discover:() => NEARBY.discover(), stopDiscover:() => NEARBY.stopDiscover(),
+      connect:(ep, name) => NEARBY.connect({ep, name}), accept:ep => NEARBY.accept({ep}), reject:ep => NEARBY.reject({ep}),
+      send:(eps, data) => NEARBY.send({eps, data}), disconnect:ep => NEARBY.disconnect({ep}), stopAll:() => NEARBY.stopAll()});
+  }
+  if(!NETTEST) return api;
+  // prova nel browser: le schede si parlano con un BroadcastChannel, con gli stessi passi di Nearby
+  const bc = new BroadcastChannel('mpp-nettest'), me = 'ep' + Math.random().toString(36).slice(2, 8);
+  let adv = null, disc = false;
+  const seen = new Map(), link = new Map();
+  const post = (to, t, o) => bc.postMessage(Object.assign({from:me, to, t}, o));
+  const up = ep => { const l = link.get(ep); if(l && l.mine && l.theirs && !l.up){ l.up = true; emit('result', {ep, ok:true}) } };
+  setInterval(()=>{
+    if(adv) post('*', 'adv', {name:adv});
+    const now = Date.now();
+    seen.forEach((t, ep) => { if(now - t > 3000){ seen.delete(ep); emit('lost', {ep}) } });
+  }, 700);
+  addEventListener('pagehide', ()=>link.forEach((_, ep) => post(ep, 'bye')));
+  bc.onmessage = ({data:m}) => {
+    if(m.to !== '*' && m.to !== me) return;
+    const l = link.get(m.from);
+    switch(m.t){
+      case 'adv': if(disc){ if(!seen.has(m.from)) emit('found', {ep:m.from, name:m.name}); seen.set(m.from, Date.now()) } break;
+      case 'req': if(!adv) return; link.set(m.from, {}); post(m.from, 'ini', {name:adv, digits:m.digits}); emit('initiated', {ep:m.from, name:m.name, digits:m.digits, incoming:true}); break;
+      case 'ini': if(!l) link.set(m.from, {}); emit('initiated', {ep:m.from, name:m.name, digits:m.digits, incoming:false}); break;
+      case 'acc': if(l){ l.theirs = true; up(m.from) } break;
+      case 'rej': if(l){ link.delete(m.from); emit('result', {ep:m.from, ok:false}) } break;
+      case 'msg': if(l?.up) emit('data', {ep:m.from, data:m.data}); break;
+      case 'bye': if(l){ link.delete(m.from); if(l.up) emit('disconnected', {ep:m.from}) } break;
+    }
+  };
+  const ok = () => Promise.resolve();
+  return Object.assign(api, {ok:true,
+    advertise:name => { adv = name; return ok() }, stopAdvertise:() => { adv = null; return ok() },
+    discover:() => { disc = true; return ok() }, stopDiscover:() => { disc = false; seen.clear(); return ok() },
+    connect:(ep, name) => { post(ep, 'req', {name, digits:String(1000 + Math.floor(Math.random() * 9000))}); return ok() },
+    accept:ep => { const l = link.get(ep); if(l){ l.mine = true; post(ep, 'acc'); up(ep) } return ok() },
+    reject:ep => { link.delete(ep); post(ep, 'rej'); return ok() },
+    send:(eps, data) => { eps.forEach(ep => link.get(ep)?.up && post(ep, 'msg', {data})); return ok() },
+    disconnect:ep => { if(link.delete(ep)) post(ep, 'bye'); return ok() },
+    stopAll:() => { link.forEach((_, ep) => post(ep, 'bye')); link.clear(); adv = null; disc = false; return ok() }});
+})();
+
+// stato della partita condivisa: la parte che resta dopo un riavvio dell'app, più quella che vive solo finché l'app è aperta
+const NETK = 'smtg-net', SOLOK = 'smtg-state-solo';
+const NET_KEEP = ['role','gid','me','seats','names','acks','seq','pend','base','hostName'];
+const NET_RUN = () => ({eps:{}, ids:{}, on:{}, reqs:[], found:{}, hostEp:null, online:false, joining:null, shadow:null, sent:null, parts:{}, kick:0, adv:false, scanning:false, pick:null, err:''});
+const NET_EMPTY = () => ({role:null, gid:'', me:null, seats:{}, names:{}, acks:{}, seq:0, pend:[], base:null, hostName:''});
+const NET = Object.assign(NET_EMPTY(), load(NETK) || {}, NET_RUN());
+if(!SET.netId){ SET.netId = Math.random().toString(36).slice(2, 10); saveSet() }
+const NID = () => SET.netId;
+const netMyName = () => (SET.netName || '').trim() || 'Telefono ' + NID().slice(0, 3).toUpperCase();
+const netClean = s => String(s || '').replace(/~/g, '-').slice(0, 20);
+// vista su più telefoni: ognuno vede il proprio campo in grande e gli altri nei quadratini in alto
+function NV(){ return !!NET.role && NET.me != null && NET.me < S.count }
+function netSave(){ try{ localStorage.setItem(NETK, JSON.stringify(Object.fromEntries(NET_KEEP.map(k => [k, NET[k]])))) }catch(e){} }
+const netEps = () => Object.values(NET.eps);
+const netClone = o => JSON.parse(JSON.stringify(o));
+
+// nomi con cui i telefoni si presentano: MPP~G~partita~nome~formato~giocatori (principale), MPP~P~telefono~nome (gli altri)
+function netParse(s){
+  const a = String(s || '').split('~');
+  if(a[0] !== 'MPP') return null;
+  if(a[1] === 'G') return {k:'G', gid:a[2], name:a[3] || 'Partita', fmt:a[4], n:+a[5] || 0};
+  if(a[1] === 'P' && a[2]) return {k:'P', id:a[2], name:a[3] || 'Telefono'};
+  return null;
+}
+
+// messaggi: oltre 12000 caratteri li spezzo (Nearby accetta al massimo 32 kB per volta)
+const NET_MAX = 12000;
+function netSend(eps, obj){
+  eps = eps.filter(Boolean); if(!eps.length) return;
+  const str = JSON.stringify(obj), fail = e => logErr('rete, invio: ' + (e?.message || e));
+  if(str.length <= NET_MAX){ NT.send(eps, str).catch(fail); return }
+  const id = Math.random().toString(36).slice(2, 8), n = Math.ceil(str.length / NET_MAX);
+  for(let k = 0; k < n; k++) NT.send(eps, JSON.stringify({t:'part', id, k, n, d:str.slice(k * NET_MAX, (k + 1) * NET_MAX)})).catch(fail);
+}
+
+// differenze tra due stati: vita, contatori e danni da comandante come +/−, il resto come valore nuovo
+// campi che cambiano l'aspetto del tavolo (nome, colore, sfondo): si ridisegna tutto
+const NET_LOOK = new Set(['name', 'color', 'art', 'partner']);
+const NUMD = /^players\.\d+\.(life|counters\.\w+|cmd\.\w+)$/;
+const NSKIP = /^(log|players\.\d+\.hist)$/;
+const BADK = new Set(['__proto__', 'constructor', 'prototype']);
+const isObj = v => !!v && typeof v === 'object';
+function netDiff(a, b, path = [], out = []){
+  for(const k of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])){
+    const p = path.concat(k), ps = p.join('.');
+    if(NSKIP.test(ps)) continue;
+    const x = a?.[k], y = b?.[k];
+    if(x === y) continue;
+    if(NUMD.test(ps) && typeof y === 'number' && (x === undefined || typeof x === 'number')) out.push({p, d:y - (x || 0)});
+    else if(isObj(x) && isObj(y) && Array.isArray(x) === Array.isArray(y)) netDiff(x, y, p, out);
+    else if(JSON.stringify(x) !== JSON.stringify(y)) out.push(y === undefined ? {p, del:1} : {p, v:y});
+  }
+  return out;
+}
+// righe nuove del registro dopo l'ultima già vista (null se il registro è ripartito da capo)
+function netLogAdd(last, log){
+  if(!last) return log.slice();
+  for(let k = log.length - 1; k >= 0; k--) if(log[k].t === last.t && log[k].txt === last.txt) return log.slice(k + 1);
+  return null;
+}
+function netApply(s, o){
+  if(o.log){ s.log.push(...o.log); if(s.log.length > 300) s.log.splice(0, s.log.length - 300); return true }
+  const p = o.p;
+  if(!Array.isArray(p) || !p.length || p.some(k => BADK.has(String(k)))) return false;
+  if(!['players', 'turn', 'over'].includes(p[0])) return false;
+  if(p[0] === 'players' && !(p.length > 2 && isObj(s.players[p[1]]))) return false;
+  let t = s;
+  for(let i = 0; i < p.length - 1; i++){ if(!isObj(t[p[i]])) t[p[i]] = {}; t = t[p[i]] }
+  const k = p[p.length - 1];
+  if('d' in o){ if(!Number.isFinite(o.d)) return false; t[k] = (typeof t[k] === 'number' ? t[k] : 0) + o.d }
+  else if(o.del) delete t[k];
+  else t[k] = o.v;
+  return true;
+}
+// sostituisce il contenuto di un oggetto lasciandolo lo stesso (chi lo sta usando continua a vederlo aggiornato)
+function netInPlace(t, src){ Object.keys(t).forEach(k => delete t[k]); return Object.assign(t, src) }
+
+// ogni modifica (save) arriva qui: dopo 40 ms parte la differenza, così i tocchi ravvicinati viaggiano insieme
+function netKick(){ if(!NET.role || NET.kick) return; NET.kick = setTimeout(netFlush, 40) }
+function netFlush(){
+  clearTimeout(NET.kick); NET.kick = 0;
+  if(NET.role === 'host'){ netPush(); netSave(); return }
+  if(NET.role !== 'client' || !NET.shadow) return;
+  const ops = netDiff(NET.shadow, S), sh = NET.shadow.log;
+  const add = netLogAdd(sh[sh.length - 1], S.log);
+  if(add?.length) ops.push({log:add});
+  if(!ops.length) return;
+  NET.shadow = netClone(S);
+  const b = {seq:++NET.seq, ops};
+  NET.pend.push(b); netSave();
+  if(NET.online) netSend([NET.hostEp], {t:'ops', seq:b.seq, ops});
+}
+
+/* ---- telefono principale ---- */
+const netPl = p => Object.assign({}, p, {hist:p.hist.slice(-40)});
+function netMeta(){ const m = Object.assign({}, S); delete m.players; delete m.log; return m }
+function netState(){ return Object.assign(netMeta(), {players:S.players.map(netPl), log:S.log.slice(-60)}) }
+function netPush(){
+  const sn = NET.sent, meta = JSON.stringify(netMeta()), acks = JSON.stringify(NET.acks), last = S.log[S.log.length - 1];
+  if(!sn || sn.pl.length !== S.count){
+    // partita nuova o giocatori cambiati: mando tutto, e chi aveva un posto che non c'è più lo perde
+    let lost = false;
+    for(const id in NET.seats) if(NET.seats[id] >= S.count){ delete NET.seats[id]; lost = true }
+    NET.me = NET.seats[NID()] ?? null;
+    NET.sent = {pl:S.players.map(p => JSON.stringify(netPl(p))), meta, acks, last};
+    if(sn) netSend(netEps(), {t:'full', S:netState(), seats:NET.seats, names:NET.names, on:netOn(), acks:NET.acks, gid:NET.gid});
+    if(lost){ renderBoard(); renderNet() }
+    return;
+  }
+  const up = {t:'up', acks:NET.acks}; let any = false;
+  S.players.forEach((p, i) => { const o = netPl(p), j = JSON.stringify(o); if(j !== sn.pl[i]){ sn.pl[i] = j; (up.pl || (up.pl = {}))[i] = o; any = true } });
+  if(meta !== sn.meta){ sn.meta = meta; up.meta = netMeta(); any = true }
+  const add = netLogAdd(sn.last, S.log);
+  if(add === null){ up.logAll = S.log.slice(-60); any = true } else if(add.length){ up.log = add; any = true }
+  sn.last = last;
+  if(acks !== sn.acks){ sn.acks = acks; any = true }
+  if(any) netSend(netEps(), up);
+}
+const netOn = () => Object.assign({}, NET.on, {[NID()]:true});
+function netSeatsOut(){ netSend(netEps(), {t:'seats', seats:NET.seats, names:NET.names, on:netOn()}) }
+// modifiche arrivate da un altro telefono: le applico come se le avessi fatte qui
+function netHostOps(id, m){
+  if(!(m.seq > (NET.acks[id] || 0))) return;
+  NET.acks[id] = m.seq;
+  let other = false;
+  const touched = new Set();
+  (Array.isArray(m.ops) ? m.ops : []).forEach(o => {
+    if(!netApply(S, o)) return;
+    if(o.p?.[0] === 'players'){
+      const i = +o.p[1]; touched.add(i);
+      if(NET_LOOK.has(o.p[2])) other = 'look';
+      if(o.p[2] === 'life' && o.d){ addHist(i, o.d); lifeFx(i, o.d) }
+    } else if(o.p) other = true;
+  });
+  if(other === 'look') renderBoard();
+  else {
+    if(other) S.players.forEach((_, i) => touched.add(i));
+    touched.forEach(i => updateCell(i));
+    if(other) updateTurnUI();
+  }
+  netRefreshOpen(); save();
+}
+function netHostMsg(ep, m){
+  const inf = NET.ids[ep]; if(!inf) return;
+  switch(m.t){
+    case 'hello':
+      if(m.id !== inf.id) return;
+      NET.names[inf.id] = netClean(m.name) || inf.name;
+      NET.on[inf.id] = true; NET.eps[inf.id] = ep;
+      netSend([ep], {t:'full', S:netState(), seats:NET.seats, names:NET.names, on:netOn(), acks:NET.acks, gid:NET.gid});
+      // modifiche fatte mentre era scollegato
+      if(m.gid === NET.gid) (Array.isArray(m.pend) ? m.pend : []).forEach(b => netHostOps(inf.id, b));
+      netSave(); netSeatsOut(); renderNet(); renderNetBar();
+      break;
+    case 'ops': netHostOps(inf.id, m); break;
+    case 'ask':
+      if(m.what === 'reset'){ toast(`${NET.names[inf.id] || 'Un giocatore'}: rivincita!`); closeAllOv(); resetGame() }
+      break;
+  }
+}
+function netAdvertise(){
+  if(NET.role !== 'host') return;
+  NT.advertise(`MPP~G~${NET.gid}~${netClean(netMyName())}~${S.format}~${S.count}`)
+    .then(()=>{ NET.adv = true; NET.err = ''; renderNet() })
+    .catch(e => { NET.adv = false; NET.err = netErrMsg(e); renderNet() });
+}
+function netHost(){
+  if(!NT.ok) return;
+  Object.assign(NET, NET_EMPTY(), NET_RUN(), {role:'host', gid:Math.random().toString(36).slice(2, 7), seats:{[NID()]:0}, names:{[NID()]:netClean(netMyName())}, me:0});
+  NET.hostName = NET.names[NID()];
+  if(/^Giocatore \d+$/.test(S.players[0].name)){ S.players[0].name = NET.hostName; save() }
+  netSave(); netAdvertise(); netPush(); renderBoard(); renderNet();
+}
+function netSeat(id, i){
+  for(const k in NET.seats) if(NET.seats[k] === i) delete NET.seats[k];
+  if(i == null) delete NET.seats[id]; else NET.seats[id] = i;
+  // il nome del telefono diventa il nome del giocatore, se era ancora quello predefinito
+  if(i != null && NET.names[id] && /^Giocatore \d+$/.test(S.players[i].name)){ S.players[i].name = NET.names[id]; save() }
+  NET.me = NET.seats[NID()] ?? null;
+  netFlush(); netSeatsOut(); renderBoard(); renderNet(); buzz(15);
+}
+function netAccept(ep, yes){
+  NET.reqs = NET.reqs.filter(r => r.ep !== ep);
+  if(yes) NT.accept(ep).catch(e => toast(netErrMsg(e)));
+  else { delete NET.ids[ep]; NT.reject(ep).catch(()=>{}) }
+  renderNet();
+}
+
+/* ---- gli altri telefoni ---- */
+function netClientMsg(ep, m){
+  if(ep !== NET.hostEp) return;
+  switch(m.t){
+    case 'full': {
+      const first = NET.role !== 'client' || NET.gid !== m.gid;
+      if(first){
+        // la partita che avevo su questo telefono la metto da parte: torna quando esco dalla partita condivisa
+        if(NET.role !== 'client') try{ localStorage.setItem(SOLOK, JSON.stringify(S)) }catch(e){}
+        NET.pend = []; NET.seq = 0;
+      }
+      NET.role = 'client'; NET.gid = m.gid; NET.hostName = NET.joining?.name || NET.hostName; NET.joining = null;
+      NET.seq = Math.max(NET.seq, m.acks?.[NID()] || 0);
+      NET.base = m.S; netAck(m.acks);
+      netSeats(m, true); netRebuild(true);
+      if(first) toast(`Sei nella partita di ${NET.hostName}`);
+      renderNet();
+      break;
+    }
+    case 'up':
+      if(!NET.base) return;
+      if(m.pl) for(const i in m.pl) if(NET.base.players[i]) NET.base.players[i] = m.pl[i];
+      if(m.meta) Object.assign(NET.base, m.meta);
+      if(m.logAll) NET.base.log = m.logAll;
+      else if(m.log){ NET.base.log.push(...m.log); if(NET.base.log.length > 300) NET.base.log.splice(0, NET.base.log.length - 300) }
+      netAck(m.acks); netRebuild(false);
+      break;
+    case 'seats': netSeats(m); break;
+    case 'bye': toast('Il telefono principale ha chiuso la partita condivisa', 3500); netLeave(); break;
+  }
+}
+function netAck(acks){ const a = acks?.[NID()] || 0; NET.pend = NET.pend.filter(b => b.seq > a) }
+function netSeats(m, quiet){
+  NET.seats = m.seats || {}; NET.names = m.names || {}; NET.on = m.on || {};
+  const was = NET.me; NET.me = NET.seats[NID()] ?? null;
+  netSave();
+  if(quiet) return;
+  if(was !== NET.me){
+    renderBoard();
+    if(NET.me != null){ toast(`Il tuo posto: ${S.players[NET.me]?.name || ''}`); if(stack[stack.length - 1] === 'net') closeAllOv() }
+  } else renderNetBar();
+  renderNet();
+}
+// stato mostrato = ultimo stato del principale + le mie modifiche che non ha ancora confermato
+function netRebuild(full){
+  if(NET.kick) netFlush();
+  const before = S.players.map(p => p.life), look = () => S.players.map(p => [...NET_LOOK].map(k => p[k]).join('|')).join('/'), was = look();
+  const next = netClone(NET.base);
+  NET.pend.forEach(b => b.ops.forEach(o => netApply(next, o)));
+  const structural = full || next.count !== S.count || next.players.length !== S.players.length;
+  if(structural){ const f = fixState(next); if(!f) return; S = f }
+  else {
+    next.players.forEach((p, i) => netInPlace(S.players[i], p));
+    for(const k in next) if(k !== 'players') S[k] = k === 'turn' && isObj(S.turn) ? netInPlace(S.turn, next.turn) : next[k];
+  }
+  NET.shadow = netClone(S);
+  if(structural){ PP.clear(); closeCqPop(); renderBoard() }
+  else {
+    if(look() !== was) renderBoard(); else { S.players.forEach((_, i) => updateCell(i)); updateTurnUI() }
+    S.players.forEach((p, i) => { const d = p.life - before[i]; if(d) lifeFx(i, d) });
+  }
+  netRefreshOpen(); save(); netSave();
+}
+function netConnect(ep, g){
+  clearTimeout(NET.joinT);
+  NET.joining = {ep, gid:g.gid, name:g.name, state:'ask', digits:''};
+  NT.stopDiscover().catch(()=>{}); NET.scanning = false;
+  NT.connect(ep, `MPP~P~${NID()}~${netClean(netMyName())}`).catch(e => netJoinFail(netErrMsg(e)));
+  // senza risposta entro 30 secondi rinuncio (e se ero già nella partita riprovo a cercarla)
+  NET.joinT = setTimeout(()=>{ if(NET.joining?.ep === ep && NET.joining.state !== 'ok'){ NT.disconnect(ep).catch(()=>{}); netJoinFail('Il telefono principale non risponde') } }, 30000);
+  renderNet();
+}
+function netJoinFail(msg){
+  clearTimeout(NET.joinT);
+  if(NET.joining){ NET.joining = null; NET.err = msg }
+  renderNet();
+  if(NET.role === 'client' && !NET.online) setTimeout(netRejoin, 3000);
+}
+function netRejoin(){
+  if(NET.role !== 'client' || NET.online || NET.joining) return;
+  NET.found = {}; NET.scanning = true;
+  NT.discover().catch(e => { NET.scanning = false; NET.err = netErrMsg(e); renderNet(); setTimeout(netRejoin, 10000) });
+}
+function netAsk(what){
+  if(!NET.online){ toast('Telefono principale non collegato'); return }
+  netSend([NET.hostEp], {t:'ask', what}); toast('Chiesto al telefono principale');
+}
+
+/* ---- eventi del trasporto ---- */
+NT.on('found', ({ep, name}) => {
+  const g = netParse(name); if(!g || g.k !== 'G') return;
+  NET.found[ep] = g;
+  // rientro automatico nella mia partita dopo un'interruzione
+  if(NET.role === 'client' && !NET.online && !NET.joining && g.gid === NET.gid){ netConnect(ep, g); return }
+  renderNet();
+});
+NT.on('lost', ({ep}) => { delete NET.found[ep]; renderNet() });
+NT.on('initiated', ({ep, name, digits, incoming}) => {
+  if(NET.role === 'host' && incoming){
+    const inf = netParse(name);
+    if(!inf || inf.k !== 'P'){ NT.reject(ep).catch(()=>{}); return }
+    NET.ids[ep] = {id:inf.id, name:netClean(inf.name)};
+    // chi era già nella partita rientra da solo, gli altri li accetta chi tiene il telefono principale
+    if(NET.names[inf.id]){ NT.accept(ep).catch(()=>{}); return }
+    NET.reqs = NET.reqs.filter(r => r.id !== inf.id).concat({ep, id:inf.id, name:netClean(inf.name), digits});
+    buzz([30, 40, 30]); sfx('found');
+    if(!stack.includes('net')) openNet(); else renderNet();
+    return;
+  }
+  if(NET.joining?.ep === ep){ NET.joining.digits = digits; NET.joining.state = 'confirm'; NT.accept(ep).catch(e => netJoinFail(netErrMsg(e))); renderNet(); return }
+  NT.reject(ep).catch(()=>{});
+});
+NT.on('result', ({ep, ok}) => {
+  if(NET.role === 'host'){
+    const inf = NET.ids[ep]; if(!inf) return;
+    NET.reqs = NET.reqs.filter(r => r.ep !== ep);
+    if(!ok){ delete NET.ids[ep]; renderNet(); return }
+    // il «ciao» con il nome arriva subito dopo
+    return;
+  }
+  if(NET.joining?.ep !== ep) return;
+  if(!ok){ netJoinFail('Il telefono principale non ha accettato'); return }
+  clearTimeout(NET.joinT);
+  NET.joining.state = 'ok'; NET.hostEp = ep; NET.online = true; NET.err = '';
+  netSend([ep], {t:'hello', id:NID(), name:netMyName(), gid:NET.joining.gid, pend:NET.gid === NET.joining.gid ? NET.pend : []});
+  renderNet(); renderNetBar();
+});
+NT.on('disconnected', ({ep}) => {
+  if(NET.role === 'host'){
+    const inf = NET.ids[ep]; if(!inf) return;
+    delete NET.ids[ep];
+    if(NET.eps[inf.id] === ep){ delete NET.eps[inf.id]; NET.on[inf.id] = false; toast(`${NET.names[inf.id] || inf.name} si è scollegato`) }
+    netSeatsOut(); renderNet(); renderNetBar();
+    return;
+  }
+  if(ep !== NET.hostEp) return;
+  NET.hostEp = null; NET.online = false;
+  if(NET.role === 'client'){ toast('Collegamento perso con il telefono principale: lo cerco', 3000); netRejoin() }
+  renderNet(); renderNetBar();
+});
+NT.on('data', ({ep, data}) => {
+  let m; try{ m = JSON.parse(data) }catch(e){ return }
+  if(m.t === 'part'){
+    const P = NET.parts[m.id] || (NET.parts[m.id] = {got:0, d:[]});
+    if(P.d[m.k] == null){ P.d[m.k] = m.d; P.got++ }
+    if(P.got < m.n) return;
+    delete NET.parts[m.id];
+    try{ m = JSON.parse(P.d.join('')) }catch(e){ return }
+  }
+  if(NET.role === 'host') netHostMsg(ep, m); else netClientMsg(ep, m);
+});
+function netErrMsg(e){
+  const s = String(e?.message || e || '');
+  if(e?.code === 'perm' || /permess/i.test(s)) return 'Serve il permesso «Dispositivi nelle vicinanze»';
+  if(/BLUETOOTH|RADIO|WIFI/i.test(s)) return 'Accendi Bluetooth e Wi‑Fi';
+  return 'Collegamento non riuscito' + (s ? ` (${s})` : '');
+}
+function netLeave(){
+  if(NET.role === 'host') netSend(netEps(), {t:'bye'});
+  const wasClient = NET.role === 'client';
+  setTimeout(()=>NT.stopAll().catch(()=>{}), 300);
+  clearTimeout(NET.kick); clearTimeout(NET.joinT);
+  Object.assign(NET, NET_EMPTY(), NET_RUN());
+  try{ localStorage.removeItem(NETK) }catch(e){}
+  if(wasClient){
+    // torna la partita che c'era su questo telefono prima di unirsi
+    const solo = fixState(load(SOLOK));
+    try{ localStorage.removeItem(SOLOK) }catch(e){}
+    if(solo){ S = solo; PP.clear(); closeCqPop() }
+    saveNow();
+  }
+  renderBoard(); renderNet();
+}
+// all'avvio: il principale torna visibile, gli altri cercano la loro partita
+function netBoot(){
+  if(!NET.role) return;
+  if(!NT.ok){ Object.assign(NET, NET_EMPTY()); try{ localStorage.removeItem(NETK) }catch(e){} return }
+  if(NET.role === 'host'){ netAdvertise(); netPush() }
+  else { NET.shadow = netClone(S); netRejoin() }
+}
 
 /* ================= Diagnostica ================= */
 // Misura la fluidità sul telefono vero: dopo ogni azione registra per 1,2 s quanto dura ogni fotogramma.
@@ -1017,6 +1497,8 @@ const ROT = {
   5:['r90','r270','r90','r270','r0'],
   6:['r90','r270','r90','r270','r90','r270'],
 };
+// V2: con i telefoni collegati ognuno vede solo il proprio campo, dritto davanti a sé
+const rotOf = i => NV() ? 'r0' : ROT[S.count][i];
 function isOut(p){
   if(p.out || p.life <= 0 || (p.counters.poison || 0) >= 10) return true;
   return S.cmdDamage && Object.values(p.cmd).some(v => v >= 21);
@@ -1057,14 +1539,14 @@ function placeEl(el, k, mir, hub){
 function cellMirror(cell){
   const r = cell.getBoundingClientRect(), h = $('#tokenBtn').getBoundingClientRect();
   const dx = (h.left + h.width/2) - (r.left + r.width/2), dy = (h.top + h.height/2) - (r.top + r.height/2);
-  const fx = {r0:[1,0], r90:[0,1], r180:[-1,0], r270:[0,-1]}[ROT[S.count][+cell.dataset.i]];
+  const fx = {r0:[1,0], r90:[0,1], r180:[-1,0], r270:[0,-1]}[rotOf(+cell.dataset.i)];
   return fx[0]*dx + fx[1]*dy < -1;
 }
 // posizione del simbolo centrale nelle coordinate del pannello (in %, come il layout)
 function hubInFrame(cell, mir){
   const r = cell.getBoundingClientRect(), h = $('#tokenBtn').getBoundingClientRect();
   const dx = (h.left + h.width/2) - (r.left + r.width/2), dy = (h.top + h.height/2) - (r.top + r.height/2);
-  const rot = ROT[S.count][+cell.dataset.i], side = rot === 'r90' || rot === 'r270';
+  const rot = rotOf(+cell.dataset.i), side = rot === 'r90' || rot === 'r270';
   const w = side ? r.height : r.width, hh = side ? r.width : r.height;
   const [fx, fy] = {r0:[dx, dy], r90:[dy, -dx], r180:[-dx, -dy], r270:[-dy, dx]}[rot];
   // coordinate "reali" del pannello: gli elementi specchiati vengono confrontati dopo lo specchio
@@ -1120,6 +1602,8 @@ function gestureExcl(){
 function hubSlots(){
   const cs = [...document.querySelectorAll('#board .cell')].map(c => c.getBoundingClientRect());
   if(!cs.length) return [];
+  // vista su più telefoni: dentro il proprio campo, in un angolo in alto (sopra ci sono i quadratini degli avversari)
+  if(NV()){ const r = cs[0], y = r.top + 56; return [[r.right - 56, y], [r.left + 56, y]] }
   if(S.count === 2) return [[54, innerHeight/2], [innerWidth/2, innerHeight/2], [innerWidth - 54, innerHeight/2]];
   const pts = [];
   cs.forEach(r => [[r.left, r.top], [r.right, r.top], [r.left, r.bottom], [r.right, r.bottom]].forEach(([x, y]) => {
@@ -1132,7 +1616,7 @@ function hubSlots(){
 function placeHub(){
   const hub = $('#hub'), sl = hubSlots();
   if(!sl.length) return;
-  const pos = (SET.hubPos || {})[S.count], def = S.count === 2 ? 0 : 0;
+  const pos = (SET.hubPos || {})[NV() ? 'net' : S.count], def = S.count === 2 ? 0 : 0;
   const [x, y] = sl[pos ?? def] || sl[def];
   hub.style.left = x + 'px'; hub.style.top = y + 'px';
 }
@@ -1144,7 +1628,7 @@ const hubDrag = {
     (this.dots || []).forEach(d => d.remove());
     const sl = hubSlots(); let k = 0;
     sl.forEach((p, i) => { if(Math.hypot(p[0]-x, p[1]-y) < Math.hypot(sl[k][0]-x, sl[k][1]-y)) k = i });
-    SET.hubPos = Object.assign({}, SET.hubPos, {[S.count]:k}); saveSet();
+    SET.hubPos = Object.assign({}, SET.hubPos, {[NV() ? 'net' : S.count]:k}); saveSet();
     const h = $('#hub'); h.classList.add('moving'); placeHub(); buzz(15);
     setTimeout(()=>{ h.classList.remove('moving'); placeAll() }, 260);
   }
@@ -1152,11 +1636,14 @@ const hubDrag = {
 window.addEventListener('resize', ()=>{ placeHub(); placeAll() });
 function renderBoard(){
   const b = $('#board');
-  b.className = 'n' + S.count;
-  $('#hub').classList.toggle('col', S.count > 2);
-  b.innerHTML = S.players.map((p,i)=>{
-    const c = COLORS[p.color];
-    return `<div class="cell ${ROT[S.count][i]}${p.art ? ' withart' : ''}${PP.has(i) ? ' pp' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}">
+  const nv = NV();
+  b.className = nv ? 'n1' : 'n' + S.count;
+  document.body.classList.toggle('netv', nv);
+  $('#hub').classList.toggle('col', S.count > 2 && !nv);
+  if(nv) [...PP].forEach(i => { if(i !== NET.me) PP.delete(i) });
+  b.innerHTML = (nv ? [NET.me] : S.players.map((_,i)=>i)).map(i=>{
+    const p = S.players[i], c = COLORS[p.color];
+    return `<div class="cell ${rotOf(i)}${p.art ? ' withart' : ''}${PP.has(i) ? ' pp' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}">
       <div class="frame${p.art ? ' hasart' : ''}"${p.art ? ` style="background-image:url('${esc(p.art)}')"` : ''}>
         <div class="half minus" data-d="-1">−</div>
         <div class="half plus" data-d="1">+</div>
@@ -1173,10 +1660,11 @@ function renderBoard(){
   S.players.forEach((_,i)=>updateCell(i));
   [...PP].forEach(i => i < S.count ? renderPP(i) : PP.delete(i));
   updateTurnUI();
+  renderNetBar();
 }
 function updateCell(i){
   const p = S.players[i], cell = $(`.cell[data-i="${i}"]`);
-  if(!cell) return;
+  if(!cell){ if(NV()){ netTile(i); checkWinner() } return }
   const lf = cell.querySelector('.life'); lf.textContent = p.life;
   const sb = cell.querySelector('.strip b'); if(sb) sb.textContent = p.life;
   // tre cifre (o un negativo a due) rimpiccioliscono il numero per restare nel pannello
@@ -1216,6 +1704,10 @@ const deltas = {};
 function changeLife(i, d){
   S.players[i].life += d;
   addHist(i, d); updateCell(i); save();
+  lifeFx(i, d);
+}
+function lifeFx(i, d){
+  if(NV() && i !== NET.me){ netTileFx(i, d); return }
   const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
   const el = cell.querySelector('.delta'), st = deltas[i] || (deltas[i] = {v:0});
   st.v += d;
@@ -1255,7 +1747,7 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden) endAllHo
 $('#board').addEventListener('contextmenu', e=>e.preventDefault());
 // nome: tocco = scheda giocatore; trascinato sul pannello di un avversario = danni da comandante
 let drag = null;
-const clearDrop = () => document.querySelectorAll('.cell.dropT').forEach(c=>c.classList.remove('dropT'));
+const clearDrop = () => document.querySelectorAll('.cell.dropT,.ntile.dropT').forEach(c=>c.classList.remove('dropT'));
 function dragLine(x1, y1, x2, y2){
   const sv = $('#dragLine'), l = sv.querySelector('line'), c = sv.querySelector('circle');
   if(x1 === null){ sv.classList.remove('on'); return }
@@ -1273,7 +1765,7 @@ window.addEventListener('pointermove', e=>{
   drag.moved = true;
   dragLine(drag.x, drag.y, e.clientX, e.clientY);
   if(fgOn()) EMB.embers(e.clientX, e.clientY, {n:3, speed:50, spread:6.28, life:.55, cols:[fgPc(drag.i), '#FFD27A', '#FFF3CC'], drag:2.5, wob:4});
-  const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell');
+  const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell,.ntile');
   const j = el ? +el.dataset.i : null;
   if(j !== drag.target){ clearDrop(); drag.target = j; if(j !== null && j !== drag.i){ el.classList.add('dropT'); buzz(6) } }
 });
@@ -1282,7 +1774,7 @@ window.addEventListener('pointerup', ()=>{
   const d = drag; drag = null; dragLine(null); clearDrop();
   if(!d.moved){ openPlayer(d.i); return }
   if(d.target === null || d.target === d.i) return;
-  fxBurstAt($(`.cell[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
+  fxBurstAt($(`.cell[data-i="${d.target}"]`) || $(`.ntile[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
   openCmdQuick(d.i, d.target);
 });
 window.addEventListener('pointercancel', ()=>{ if(drag){ drag = null; dragLine(null); clearDrop() } });
@@ -1292,10 +1784,10 @@ function pchip(p){ const c = COLORS[p.color]; return `<span class="pchip" style=
 let cqp = null;
 function openCmdQuick(a, v){
   closeCqPop();
-  const cell = $(`.cell[data-i="${v}"]`); if(!cell) return;
+  const cell = $(`.cell[data-i="${v}"]`) || (NV() && $(`.cell[data-i="${NET.me}"]`)); if(!cell) return;
   const el = document.createElement('div'); el.className = 'cqPop';
   // sta sul pannello di chi subisce, ma girata verso chi infligge il danno (di solito è lui a segnarlo)
-  const rot = ROT[S.count][a], side = rot === 'r90' || rot === 'r270', r = cell.getBoundingClientRect();
+  const rot = rotOf(a), side = rot === 'r90' || rot === 'r270', r = cell.getBoundingClientRect();
   el.style.setProperty('--rot', {r0:'0deg', r90:'90deg', r180:'180deg', r270:'-90deg'}[rot]);
   el.style.left = (r.left + r.width/2) + 'px'; el.style.top = (r.top + r.height/2) + 'px';
   el.style.width = Math.min(340, (side ? r.height : r.width) * .94) + 'px';
@@ -1441,7 +1933,7 @@ $('#board').addEventListener('pointerdown', e=>{
   const open = cell.classList.contains('pp');
   if(open || e.target.closest('.swz')){
     e.stopPropagation(); e.preventDefault();
-    ppG = {i:+cell.dataset.i, x:e.clientX, y:e.clientY, open, rot:PP_ROT[ROT[S.count][+cell.dataset.i]]};
+    ppG = {i:+cell.dataset.i, x:e.clientX, y:e.clientY, open, rot:PP_ROT[rotOf(+cell.dataset.i)]};
   }
 }, true);
 window.addEventListener('pointerup', e=>{
@@ -1486,6 +1978,7 @@ function whoStarts(){
   toast('Inizia ' + S.players[i].name, 3000);
 }
 function resetGame(){
+  if(NET.role === 'client'){ netAsk('reset'); return }
   S.players = freshPlayers(S.count, S.startLife, S.players);
   S.turn = freshTurn(S.turn.on); S.log = [];
   S.over = false; S.gameStart = Date.now();
@@ -1535,6 +2028,7 @@ function closeTop(){
   } else $('#ov-' + id).classList.remove('open');
   if(id === 'modal') tmCleanup();
   if(id === 'bt') btStop();
+  if(id === 'net') netScanStop();
   if(id === 'wizard' && WZ.step >= 2){ wzStep(WZ.step === 3 && WZ.fmt !== 'standard' ? 2 : 1); $('#ov-wizard').classList.add('open'); stack.push('wizard'); history.pushState({ov:'wizard'}, '') }
   fgAmbient();
 }
@@ -1603,6 +2097,7 @@ function renderMenu(){
     <button class="btn" data-act="starts">Chi inizia?</button>
     <button class="btn" data-act="dice">Dadi e moneta</button>
     <button class="btn" data-act="log">Registro partita</button>
+    ${NT.ok ? `<button class="btn" data-act="net">${NET.role ? 'Partita condivisa' : 'Gioca su più telefoni'}</button>` : ''}
   </div>
   <div class="sec"><h3>Giocatori</h3><div class="chips">${[2,3,4,5,6].map(n=>`<button class="chip ${n===S.count?'sel':''}" data-act="count" data-v="${n}">${n}</button>`).join('')}</div></div>
   <div class="sec"><h3>Formato</h3>
@@ -1667,6 +2162,10 @@ async function menuClick(e){
     case 'export': exportVlog(); return;
     case 'install': install(); return;
     case 'update': UPD.remote ? applyUpdate() : checkUpdate(true); return;
+    case 'count': case 'fmt': case 'sl': case 'cmd': if(NET.role === 'client'){ toast('Partita condivisa: lo decide il telefono principale', 3000); return }
+  }
+  switch(a){
+    case 'net': openNet(); return;
     case 'count': if(+v !== S.count){ S.count = +v; resetGame(); toast(v + ' giocatori, nuova partita') } break;
     case 'fmt': if(v !== S.format){ S.format = v; S.startLife = FORMATS[v].life; S.cmdDamage = FORMATS[v].cmd; resetGame(); toast(FORMATS[v].label + ': vita ' + S.startLife) } break;
     case 'sl': S.startLife = Math.max(1, S.startLife + +v); resetGame(); break;
@@ -1704,7 +2203,7 @@ let curP = 0, plDirty = false;
 function openPlayer(i){
   curP = i; renderPlayer();
   // la scheda si apre girata verso il giocatore che l'ha toccata
-  const el = $('#ov-player'), rot = ROT[S.count][i];
+  const el = $('#ov-player'), rot = rotOf(i);
   el.style.transition = 'none'; el.classList.remove('r90','r180','r270');
   if(rot !== 'r0') el.classList.add(rot);
   el.offsetWidth; el.style.transition = '';
@@ -2876,6 +3375,7 @@ const RULES = {
     <h3>Zona di comando</h3><ul><li>Oathbreaker e incantesimo distintivo iniziano lì e si lanciano da lì.</li><li>L'incantesimo distintivo si può lanciare solo se il tuo Oathbreaker è sul campo di battaglia.</li><li>Ognuno ha la sua tassa: 2 mana in più per ogni lancio precedente dalla zona di comando.</li><li>Quando l'incantesimo distintivo si risolve o lascia la pila, torna nella zona di comando.</li></ul>`},
 };
 function openWizard(swap){
+  if(swap && NET.role === 'client'){ toast('Partita condivisa: la nuova partita la crea il telefono principale', 3200); return }
   $('#wzFormats').innerHTML = [
     ['standard','Standard','20 punti vita, testa a testa'],
     ['commander','Commander','40 punti vita, danni da comandante'],
@@ -3182,7 +3682,7 @@ const fgHits = {};
 // vita: il + fa salire scintille dorate verso il giocatore, il − fa cadere braci rosse; 5 punti persi di fila = colpo
 function fgLife(i, d){
   const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
-  const c = fgC(cell.querySelector('.life')), up = FG_UP[ROT[S.count][i]];
+  const c = fgC(cell.querySelector('.life')), up = FG_UP[rotOf(i)];
   if(d > 0) EMB.embers(c.x, c.y, {n:8, speed:170, dir:up, spread:.9, life:.9, cols:['#FFD27A','#FFF3CC','#9CFF7A'], w:c.w * .5, h:c.h * .3, drag:1.2});
   else EMB.burst(c.x, c.y, {n:10, speed:240, dir:up + Math.PI, spread:1.4, life:.6, cols:['#FF4A1C','#FF8A2A','#B8240A'], drag:3});
   const now = performance.now(), o = fgHits[i], h = fgHits[i] = o && now - o.t < 1300 ? {v:o.v + d, t:now, big:o.big} : {v:d, t:now};
@@ -3212,7 +3712,7 @@ function fgPPIn(i){
   const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
   [...cell.querySelectorAll('.ppC,.ppF,.ppGear')].forEach((el, k) => el.animate([{translate:'0 40%', scale:.9, opacity:0}, {translate:'0 0', scale:1, opacity:1}], {duration:460, delay:120 + k * 40, easing:FG_EASE.spring, fill:'backwards'}));
   setTimeout(()=>{ const st = cell.querySelector('.strip'); if(!st) return; const c = fgC(st);
-    EMB.embers(c.x, c.y, {n:18, speed:90, dir:FG_UP[ROT[S.count][i]], spread:2.2, life:1, cols:[fgPc(i), '#FFD27A'], w:c.w, h:c.h, drag:1.5}) }, 140);
+    EMB.embers(c.x, c.y, {n:18, speed:90, dir:FG_UP[rotOf(i)], spread:2.2, life:1, cols:[fgPc(i), '#FFD27A'], w:c.w, h:c.h, drag:1.5}) }, 140);
 }
 // contatore: il numero nuovo scorre dentro, con scintille sul +
 function fgCtr(i, k, up){
@@ -3478,8 +3978,199 @@ setInterval(()=>{ if(document.visibilityState === 'visible') checkUpdate(false) 
 let lastChk = Date.now();
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && Date.now() - lastChk > 10*60*1000){ lastChk = Date.now(); checkUpdate(false) } });
 
+/* ================= V2: quadratini degli avversari e schermata dei collegamenti ================= */
+// telefono collegato a un posto: id del telefono per ogni posto
+const netSeatIds = () => Object.fromEntries(Object.entries(NET.seats).map(([id, i]) => [i, id]));
+function netTileHTML(i){
+  const p = S.players[i], id = netSeatIds()[i];
+  const cmd = S.cmdDamage ? Math.max(0, ...Object.values(p.cmd)) : 0;
+  const sp = [p.flags.monarch && SPIA_ICON.monarch, p.flags.initiative && SPIA_ICON.initiative, p.flags.blessing && SPIA_ICON.blessing,
+    p.counters.poison && SPIA_ICON.poison + p.counters.poison, cmd && SPIA_ICON.cmd + cmd, p.counters.rad && SPIA_ICON.rad + p.counters.rad].filter(Boolean);
+  const st = !id ? 'free' : (NET.on[id] || id === NID()) ? '' : 'off';
+  return `<span class="ntN">${esc(p.name)}</span><b class="ntL">${p.life}</b><span class="ntS">${sp.join('')}</span><i class="ntD"></i>${st ? `<i class="ntOff ${st}"></i>` : ''}`;
+}
+function netTileCls(el, i){
+  const p = S.players[i];
+  el.classList.toggle('out', isOut(p));
+  el.classList.toggle('active', S.turn.on && S.turn.active === i);
+  el.classList.toggle('withart', !!p.art);
+  el.style.setProperty('--pc', COLORS[p.color].bg); el.style.setProperty('--pt', COLORS[p.color].fg);
+  el.style.backgroundImage = p.art ? `linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.55)),url('${p.art.replace(/'/g, '%27')}')` : '';
+}
+function renderNetBar(){
+  const bar = $('#netBar'); if(!bar) return;
+  const nv = NV();
+  bar.hidden = !nv;
+  if(!nv){ bar.innerHTML = ''; return }
+  const ok = NET.role === 'host' || NET.online;
+  bar.innerHTML = S.players.map((_, i) => i === NET.me ? '' : `<button class="ntile" data-i="${i}">${netTileHTML(i)}</button>`).join('') +
+    `<button class="nstat ${ok ? 'on' : 'off'}" data-net aria-label="Partita condivisa"><i></i></button>`;
+  bar.querySelectorAll('.ntile').forEach(el => netTileCls(el, +el.dataset.i));
+}
+// aggiorna un quadratino solo (si chiama da updateCell, quando il campo di quel giocatore non è sullo schermo)
+function netTile(i){
+  const el = $(`.ntile[data-i="${i}"]`); if(!el) return;
+  const d = el.querySelector('.ntD'), keep = d && d.classList.contains('show') ? d.outerHTML : '';
+  el.innerHTML = netTileHTML(i);
+  if(keep) el.querySelector('.ntD').outerHTML = keep;
+  netTileCls(el, i);
+}
+const tdeltas = {};
+function netTileFx(i, d){
+  const el = $(`.ntile[data-i="${i}"]`); if(!el) return;
+  const st = tdeltas[i] || (tdeltas[i] = {v:0}); st.v += d;
+  const de = el.querySelector('.ntD'); de.textContent = (st.v > 0 ? '+' : '') + st.v; de.classList.add('show');
+  clearTimeout(st.t); st.t = setTimeout(()=>{ st.v = 0; $(`.ntile[data-i="${i}"] .ntD`)?.classList.remove('show') }, 1600);
+  el.querySelector('.ntL').animate([{scale:1}, {scale:d > 0 ? 1.15 : .85}, {scale:1}], {duration:220});
+}
+$('#netBar').addEventListener('click', e => {
+  if(e.target.closest('[data-net]')){ buzz(10); openNet(); return }
+  const t = e.target.closest('.ntile'); if(t){ buzz(10); openPlayer(+t.dataset.i) }
+});
+// dopo un aggiornamento da un altro telefono rinfresco quello che è aperto (non mentre si sta scrivendo)
+function netRefreshOpen(){
+  const typing = el => el && el.contains(document.activeElement) && document.activeElement.matches('input,textarea');
+  if(stack[stack.length - 1] === 'player' && curP < S.count && !typing($('#plBody'))) renderPlayer();
+  PP.forEach(i => { const b = $(`.cell[data-i="${i}"] .ppIn`); if(b && !typing(b)) renderPP(i) });
+  if(cqp && S.players[cqp.v] && S.players[cqp.a]) renderCqPop();
+  if(stack.includes('net')) renderNet();
+}
+
+function openNet(){
+  if(!NT.ok){ toast('Il gioco su più telefoni c\'è solo nell\'app Android'); return }
+  NET.err = ''; renderNet(); openOv('net');
+  if(!NET.role) netScan();
+}
+function netScan(){
+  if(NET.role || NET.joining) return;
+  NET.found = {}; NET.scanning = true; renderNet();
+  NT.discover().catch(e => { NET.scanning = false; NET.err = netErrMsg(e); renderNet() });
+}
+function netScanStop(){
+  if(!NET.scanning || NET.role === 'client') return;
+  NET.scanning = false; NT.stopDiscover().catch(()=>{});
+}
+const netChip = id => `<span class="nlChip${NET.pick === id ? ' sel' : ''}${id !== NID() && !NET.on[id] ? ' off' : ''}" data-id="${esc(id)}">${esc(id === NID() ? 'Questo telefono' : NET.names[id] || 'Telefono')}</span>`;
+function netTable(edit){
+  const ids = netSeatIds();
+  return `<div class="nlTable n${S.count}">${S.players.map((p, i) => {
+    const c = COLORS[p.color], id = ids[i];
+    return `<div class="nlSeat${edit ? ' ed' : ''}${id === NID() ? ' me' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}"><b>${esc(p.name)}</b>${id ? (edit ? netChip(id) : `<span class="nlChip">${esc(id === NID() ? 'Tu' : NET.names[id] || 'Telefono')}</span>`) : '<span class="nlFree">libero</span>'}</div>`;
+  }).join('')}</div>`;
+}
+function renderNet(){
+  const body = $('#netBody'); if(!body || !stack.includes('net')) return;
+  const err = NET.err ? `<p class="note nlErr">${esc(NET.err)}</p>` : '';
+  if(NET.role === 'host'){
+    const free = Object.keys(NET.names).filter(id => NET.seats[id] == null && (id === NID() || NET.on[id]));
+    body.innerHTML = `
+    <div class="sec"><h3>Partita condivisa</h3>
+      <div class="row"><span class="lbl"><i class="nlDot ${NET.adv ? 'on' : 'off'}"></i>${NET.adv ? 'Visibile ai telefoni vicini' : 'Non visibile'}</span>${NET.adv ? '' : '<button class="chip" data-na="adv">Riprova</button>'}</div>
+      ${err}
+      <p class="note">Questo è il telefono principale: tiene la partita. Sugli altri telefoni apri l'app e tocca «Unisciti a una partita».</p>
+    </div>
+    ${NET.reqs.length ? `<div class="sec"><h3>Vogliono unirsi</h3>${NET.reqs.map(r => `
+      <div class="nlReq"><div><b>${esc(r.name)}</b><span>Codice ${esc(r.digits)}: deve essere uguale sul suo telefono</span></div>
+      <button class="chip" data-na="no" data-ep="${esc(r.ep)}">Rifiuta</button><button class="chip sel" data-na="yes" data-ep="${esc(r.ep)}">Accetta</button></div>`).join('')}</div>` : ''}
+    <div class="sec"><h3>Posti al tavolo</h3>
+      ${netTable(true)}
+      <div class="nlPool" data-pool>${free.length ? free.map(netChip).join('') : '<span class="note" style="margin:0">Tutti i telefoni collegati hanno un posto.</span>'}</div>
+      <p class="note">Trascina ogni telefono al posto di chi lo usa (oppure tocca il telefono e poi il posto). Serve anche a far partire i colpi dal lato giusto. Riportalo qui sotto per togliergli il posto.</p>
+    </div>
+    <button class="btn primary" data-na="done">Torna al tavolo</button>
+    <button class="btn danger" data-na="leave">Chiudi la partita condivisa</button>`;
+    return;
+  }
+  if(NET.role === 'client'){
+    const seat = NET.me != null ? S.players[NET.me] : null;
+    body.innerHTML = `
+    <div class="sec"><h3>Partita condivisa</h3>
+      <div class="row"><span class="lbl"><i class="nlDot ${NET.online ? 'on' : 'off'}"></i>${NET.online ? `Collegato a ${esc(NET.hostName)}` : NET.joining ? 'Mi ricollego…' : `Cerco ${esc(NET.hostName)}…`}</span></div>
+      ${err}
+      <p class="note">${seat ? `Il tuo posto: <b>${esc(seat.name)}</b>.` : 'Aspetta: chi tiene il telefono principale ti assegna un posto al tavolo.'}</p>
+    </div>
+    <div class="sec"><h3>Posti al tavolo</h3>${netTable(false)}</div>
+    ${seat ? '<button class="btn primary" data-na="done">Torna al tavolo</button>' : ''}
+    <button class="btn danger" data-na="leave">Esci dalla partita condivisa</button>`;
+    return;
+  }
+  const j = NET.joining, games = Object.entries(NET.found);
+  body.innerHTML = `
+  <div class="sec"><h3>Il tuo nome</h3>
+    <input class="txt" id="netName" maxlength="20" placeholder="${esc(netMyName())}" value="${esc(SET.netName || '')}" enterkeyhint="done">
+    <p class="note">Lo vedono gli altri telefoni quando ti unisci.</p>
+  </div>
+  <div class="sec"><h3>Unisciti a una partita</h3>
+    ${j ? `<div class="nlJoin"><b>${esc(j.name)}</b><span>${j.state === 'ask' ? 'Chiedo di entrare…' : j.state === 'ok' ? 'Entro nella partita…' : 'Aspetto che il telefono principale accetti'}</span>
+      ${j.digits ? `<div class="nlCode">${esc(j.digits)}</div><span>Sul telefono principale deve comparire lo stesso codice.</span>` : ''}</div>`
+    : games.length ? games.map(([ep, g]) => `<button class="nlGame" data-na="join" data-ep="${esc(ep)}"><b>${esc(g.name)}</b><span>${esc(FORMATS[g.fmt]?.label || '')}${g.n ? `, ${g.n} giocatori` : ''}</span></button>`).join('')
+    : `<p class="note">${NET.scanning ? 'Cerco le partite vicine… Sul telefono principale deve essere aperta una partita condivisa.' : 'Ricerca ferma.'}</p>`}
+    ${!j && !NET.scanning ? '<button class="btn" data-na="scan">Cerca di nuovo</button>' : ''}
+    ${err}
+  </div>
+  <div class="sec"><h3>Oppure condividi la tua</h3>
+    <button class="btn primary" data-na="host">Condividi questa partita</button>
+    <p class="note">Questo telefono diventa il principale: tiene la partita in corso (${esc(FORMATS[S.format].label)}, ${S.count} giocatori) e gli altri si uniscono. Ognuno vede il proprio campo in grande e gli avversari in alto.</p>
+  </div>`;
+}
+$('#netBody').addEventListener('click', e => {
+  const seat = e.target.closest('.nlSeat.ed');
+  if(seat && NET.pick && !e.target.closest('.nlChip')){ const id = NET.pick; NET.pick = null; netSeat(id, +seat.dataset.i); return }
+  if(e.target.closest('[data-pool]') && NET.pick && !e.target.closest('.nlChip')){ const id = NET.pick; NET.pick = null; netSeat(id, null); return }
+  const b = e.target.closest('[data-na]'); if(!b) return;
+  buzz(10);
+  switch(b.dataset.na){
+    case 'host': netScanStop(); netHost(); break;
+    case 'join': { const g = NET.found[b.dataset.ep]; if(g) netConnect(b.dataset.ep, g); break }
+    case 'scan': NET.err = ''; netScan(); break;
+    case 'adv': netAdvertise(); break;
+    case 'yes': netAccept(b.dataset.ep, true); break;
+    case 'no': netAccept(b.dataset.ep, false); break;
+    case 'done': closeAllOv(); break;
+    case 'leave':
+      if(confirm(NET.role === 'host' ? 'Chiudere la partita condivisa? Gli altri telefoni vengono scollegati.' : 'Uscire dalla partita condivisa? Su questo telefono torna la partita di prima.')){ netLeave(); netScan() }
+      break;
+  }
+});
+$('#netBody').addEventListener('change', e => { if(e.target.id === 'netName'){ SET.netName = netClean(e.target.value.trim()); saveSet() } });
+// posti: il telefono si trascina sul posto (o si tocca il telefono e poi il posto)
+let nlDrag = null;
+$('#netBody').addEventListener('pointerdown', e => {
+  const c = e.target.closest('.nlChip[data-id]'); if(!c || NET.role !== 'host') return;
+  e.preventDefault();
+  nlDrag = {id:c.dataset.id, x:e.clientX, y:e.clientY, el:c, moved:false};
+});
+const nlHl = el => document.querySelectorAll('.nlSeat.hl,.nlPool.hl').forEach(s => s !== el && s.classList.remove('hl'));
+addEventListener('pointermove', e => {
+  if(!nlDrag) return;
+  if(!nlDrag.moved){
+    if(Math.hypot(e.clientX - nlDrag.x, e.clientY - nlDrag.y) < 10) return;
+    nlDrag.moved = true; NET.pick = null;
+    const g = nlDrag.g = nlDrag.el.cloneNode(true); g.classList.add('nlGhost'); document.body.appendChild(g);
+    nlDrag.el.classList.add('lift');
+  }
+  nlDrag.g.style.left = e.clientX + 'px'; nlDrag.g.style.top = e.clientY + 'px';
+  const t = document.elementFromPoint(e.clientX, e.clientY)?.closest('.nlSeat.ed,[data-pool]');
+  nlHl(t); t?.classList.add('hl');
+});
+addEventListener('pointerup', e => {
+  if(!nlDrag) return;
+  const d = nlDrag; nlDrag = null;
+  d.g?.remove(); d.el.classList.remove('lift'); nlHl(null);
+  if(!d.moved){ NET.pick = NET.pick === d.id ? null : d.id; buzz(8); renderNet(); return }
+  const t = document.elementFromPoint(e.clientX, e.clientY)?.closest('.nlSeat.ed,[data-pool]');
+  if(t?.matches('.nlSeat')) netSeat(d.id, +t.dataset.i);
+  else if(t) netSeat(d.id, null);
+});
+addEventListener('pointercancel', () => { if(nlDrag){ nlDrag.g?.remove(); nlDrag.el.classList.remove('lift'); nlDrag = null; nlHl(null) } });
+$('#wzNet').hidden = !NT.ok;
+$('#wzNet').addEventListener('click', ()=>{ buzz(15); openNet() });
+
 renderBoard();
-if(inProgress()) openResume(); else openWizard();
+// partita condivisa in corso: si torna subito al tavolo e ci si ricollega
+const netResume = !!NET.role && NT.ok;
+netBoot();
+if(!netResume){ if(inProgress()) openResume(); else openWizard() }
 updatePrinterUI();
 // arrivati qui l'avvio è riuscito: la versione scaricata in app è buona (confermo subito, senza aspettare)
 try{ if(window.__LIVE) localStorage.setItem('smtg-liveok', '1') }catch(e){}
