@@ -69,6 +69,10 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.1.3 (V2 beta)
+- **Corretto**: ogni tanto il trascinamento dei danni dall'elemento centrale non partiva (niente animazione né scia). Succedeva se il dito restava fermo un attimo prima di muoversi: l'app lo prendeva per una richiesta a voce. Ora, in H&O, se il dito si sposta il microfono si annulla e parte il trascinamento.
+- **Danno da combattimento dal trascinamento**: in H&O la finestrella che si apre trascinando su un avversario ha anche «Combattimento» (toglie vita, con +2 +3 +5). Nella partita Standard è la scelta di partenza; in Commander resta il comandante.
+
 ### v2.1.2 (V2 beta)
 - **Tasto indietro**: si esce dall'app solo dalla pagina di scelta del gioco. Dal tavolo il tasto indietro porta lì; per un ospite chiede «Torna al tavolo» o «Esci e torna al menu».
 - **Principale scollegato**: all'ospite compare «Collegamento perso» con «Resta nella partita» (si gioca offline e l'app continua a cercarlo; quando si ricollega la finestra si chiude da sola) oppure «Esci e torna al menu».
