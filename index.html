@@ -1340,9 +1340,21 @@ function netHostOps(id, m){
   }
   netRefreshOpen(); save();
 }
+// colpo animato verso un altro telefono: un messaggio piccolo, solo grafico, non tocca la partita
+function netEpOf(i){ const id = Object.keys(NET.seats).find(k => NET.seats[k] === i); return id && id !== NID() ? NET.eps[id] : null }
+function netZap(a, v, small){
+  const m = {t:'zap', a, v, th:SET.theme || 'classico', s:small ? 1 : 0};
+  if(NET.role === 'host'){ const ep = netEpOf(v); if(ep) netSend([ep], m) }
+  else if(NET.role === 'client' && NET.hostEp) netSend([NET.hostEp], m);
+}
+function netZapIn(m){ if(m.th === 'forgia' && Number.isInteger(m.a) && S.players[m.a]) fgIncoming(m.a, !!m.s) }
 function netHostMsg(ep, m){
   const inf = NET.ids[ep]; if(!inf) return;
   switch(m.t){
+    case 'zap':
+      if(!Number.isInteger(m.v)) return;
+      if(m.v === NET.me) netZapIn(m); else { const to = netEpOf(m.v); if(to && to !== ep) netSend([to], m) }
+      break;
     case 'hello':
       if(m.id !== inf.id) return;
       NET.names[inf.id] = netClean(m.name) || inf.name;
@@ -1415,6 +1427,7 @@ function netClientMsg(ep, m){
       netAck(m.acks); netRebuild(false);
       break;
     case 'seats': netSeats(m); break;
+    case 'zap': if(m.v === NET.me) netZapIn(m); break;
     case 'printed': toast(m.ok ? `${m.name}: stampata da ${NET.hostName || 'chi ospita'}` : `${m.name}: ${m.msg || 'stampa non riuscita'}`, 3000); if(m.ok) sfx('done'); break;
     case 'bye': buzz([40, 60, 40]); openResume('bye'); break;
   }
@@ -2013,7 +2026,7 @@ function dragEnd(){
   const d = drag; drag = null; dragLine(null); clearDrop(); EMB.stop(d.bolt);
   if(!d.moved){ openPlayer(d.i); return }
   if(d.target === null || d.target === d.i) return;
-  if(fgOn()){ const t = fgTo(d.target); if(t) fgZap(t, true) }
+  if(fgOn()){ const t = !NV() && fgTo(d.target); if(t) fgZap(t, true) }
   else fxBurstAt($(`.cell[data-i="${d.target}"]`) || $(`.ntile[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
   openCmdQuick(d.i, d.target);
 }
@@ -4023,26 +4036,32 @@ const EMB = (()=>{
   const pick = a => a[Math.random() * a.length | 0];
   function go(){ if(run) return; run = true; cv.classList.add('on'); last = performance.now(); requestAnimationFrame(loop) }
   function loop(t){
-    const dt = Math.min(.05, (t - last) / 1000); last = t;
+    try{ step(t) }catch(e){
+      // un errore nel disegno non deve bloccare per sempre gli effetti: pulisco e riparto da zero
+      logErr('effetti: ' + (e?.message || e)); P = []; B = []; ctx.setTransform(D, 0, 0, D, 0, 0); ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on'); return }
+    if(run) requestAnimationFrame(loop);
+  }
+  function step(t){
+    // il tempo del fotogramma può essere un filo prima dell'avvio: mai un passo negativo
+    const dt = Math.max(0, Math.min(.05, (t - last) / 1000)); last = t;
     if(amb){ ambT += dt; while(ambT > amb.every){ ambT -= amb.every; amb.spawn() } }
     ctx.setTransform(D, 0, 0, D, 0, 0); ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
     P = P.filter(p => {
       p.a += dt; if(p.a >= p.life) return false; const k = p.a / p.life;
-      if(p.ring){ const rr = p.r0 + (p.r1 - p.r0) * (1 - Math.pow(1 - k, 3)); ctx.globalAlpha = (1 - k) * .9; ctx.strokeStyle = p.c; ctx.lineWidth = p.w * (1 - k) + 1; ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, 6.2832); ctx.stroke(); return true }
+      if(p.ring){ const rr = Math.max(0, p.r0 + (p.r1 - p.r0) * (1 - Math.pow(1 - k, 3))); ctx.globalAlpha = (1 - k) * .9; ctx.strokeStyle = p.c; ctx.lineWidth = p.w * (1 - k) + 1; ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, 6.2832); ctx.stroke(); return true }
       if(p.tx != null){ p.vx += (p.tx - p.x) * p.pull * dt; p.vy += (p.ty - p.y) * p.pull * dt; const fa = Math.exp(-4 * dt); p.vx *= fa; p.vy *= fa }
       else { p.vy += (p.g || 0) * dt; const f = Math.exp(-(p.drag || 0) * dt); p.vx *= f; p.vy *= f }
       if(p.wob) p.x += Math.sin(p.a * p.wob + p.ph) * 18 * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
       const al = (1 - k) * (p.flick ? .65 + .35 * Math.sin(p.a * 22 + p.ph) : 1); ctx.globalAlpha = al;
       if(p.streak){ ctx.strokeStyle = p.c; ctx.lineWidth = p.s; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x - p.vx * p.streak, p.y - p.vy * p.streak); ctx.lineTo(p.x, p.y); ctx.stroke() }
-      else { const r = p.s * (1 - k * .5); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill(); ctx.globalAlpha = al * .16; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.2, 0, 6.2832); ctx.fill() }
+      else { const r = Math.max(0, p.s * (1 - k * .5)); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill(); ctx.globalAlpha = al * .16; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.2, 0, 6.2832); ctx.fill() }
       return true;
     });
     ctx.globalAlpha = 1;
     const nb = []; B = B.filter(b => drawB(b, dt, nb)).concat(nb);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
-    if(!P.length && !B.length && !amb){ ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on'); return }
-    requestAnimationFrame(loop);
+    if(!P.length && !B.length && !amb){ ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on') }
   }
   const add = p => { if(P.length < 500){ p.a = 0; p.ph = Math.random() * 6.28; P.push(p) } };
   // ---- fulmine: spezzata irregolare tra due punti, ridisegnata di continuo, con rami; cuore blu e aloni bianchi
@@ -4071,7 +4090,7 @@ const EMB = (()=>{
   function drawB(b, dt, nb){
     b.a += dt; if(b.a >= b.life) return false; const k = b.a / b.life;
     if(b.flash){ ctx.globalAlpha = b.v * (1 - k) * (1 - k); ctx.fillStyle = '#E4F0FF'; ctx.fillRect(0, 0, W, H); return true }
-    if(b.glow){ const r = b.r * (.6 + .4 * k), g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
+    if(b.glow){ const r = Math.max(1, b.r * (.6 + .4 * k)), g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
       g.addColorStop(0, 'rgba(235,245,255,.75)'); g.addColorStop(.35, 'rgba(120,180,255,.35)'); g.addColorStop(1, 'rgba(60,130,255,0)');
       ctx.globalAlpha = 1 - k; ctx.fillStyle = g; ctx.fillRect(b.x - r, b.y - r, r * 2, r * 2); return true }
     if(b.shock){
@@ -4089,9 +4108,10 @@ const EMB = (()=>{
     if(al <= 0) return b.fade == null || b.a - b.fade < .12;
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#FFFFFF';
-    b.s.forEach(s => { ctx.globalAlpha = al * .16; ctx.lineWidth = 18 * b.w * s.w; line(s.p); ctx.globalAlpha = al * .5; ctx.lineWidth = 7 * b.w * s.w; line(s.p) });
+    const HALO = [[44, .05], [26, .1], [14, .22], [7, .55]];
+    b.s.forEach(s => HALO.forEach(([lw, a]) => { ctx.globalAlpha = al * a; ctx.lineWidth = lw * b.w * s.w; line(s.p) }));
     ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#2F7DFF'; ctx.globalAlpha = al;
-    b.s.forEach(s => { ctx.lineWidth = Math.max(1, 2.8 * b.w * s.w); line(s.p) });
+    b.s.forEach(s => { ctx.lineWidth = Math.max(1, 3 * b.w * s.w); line(s.p) });
     ctx.globalCompositeOperation = 'lighter';
     return true;
   }
@@ -4107,6 +4127,9 @@ const EMB = (()=>{
     stop(b){ if(b && b.fade == null) b.fade = b.a },
     flash(v = .18, life = .2){ B.push({flash:1, a:0, v, life}); go() },
     glow(x, y, r, life = .4){ B.push({glow:1, a:0, x, y, r, life}); go() },
+    // esplosione a scossa: raggi di fulmine spezzati in tutte le direzioni, che si ridisegnano e si spengono
+    burstBolts(x, y, R, n = 9, life = .38){ for(let i = 0; i < n; i++){ const a = i / n * 6.283 + (Math.random() - .5) * .6, l = R * (.45 + Math.random() * .7);
+      if(B.length < 80) B.push({a:0, life:life * (.7 + Math.random() * .5), x1:x, y1:y, x2:x + Math.cos(a) * l, y2:y + Math.sin(a) * l, rough:.32, br:1, w:.7 + Math.random() * .3, every:.045, t:0}) } go() },
     shock(r, life = 1.2, sz = 1){ if(RMOT) return; B.push({shock:1, a:0, t:0, r, life, sz}); go() },
     converge(x, y, n, cols, dur = .7){ if(RMOT) n = Math.ceil(n / 4); for(let i = 0; i < n; i++){ const a = Math.random() * 6.28, rr = 120 + Math.random() * 160;
       add({x:x + Math.cos(a) * rr, y:y + Math.sin(a) * rr, vx:-Math.sin(a) * 120, vy:Math.cos(a) * 120, tx:x, ty:y, pull:26, life:dur * (.8 + Math.random() * .4), c:pick(cols), s:1.3 + Math.random() * 1.5, flick:true}) } go() },
@@ -4176,20 +4199,41 @@ function fgTo(v){
   return {el, x:t.x, y:t.y, r:{x:c.x - c.w / 2, y:c.y - c.h / 2, w:c.w, h:c.h}, big:!tile};
 }
 let fgLastStrike = 0;
+const fgAgain = () => { const now = performance.now(), again = now - fgLastStrike < 280; fgLastStrike = now; return again };
 function fgStrike(a, v){
+  // H&O: il fulmine parte da me, attraversa il quadratino ed esce dal bordo in alto; esplode sul telefono di chi è colpito
+  if(NV() && v !== NET.me){
+    const f = fgFrom(a), tile = $(`.ntile[data-i="${v}"]`), again = fgAgain();
+    if(f && tile){ const t = fgC(tile);
+      EMB.bolt({x1:f.x, y1:f.y, x2:t.x + (Math.random() - .5) * t.w * .3, y2:-40, life:again ? .22 : .4, br:again ? 1 : 3, w:again ? .9 : 1.25, every:.05});
+      if(!again) EMB.flash(.12);
+      tile.animate([{translate:'0 0'},{translate:'-3px 2px'},{translate:'2px -2px'},{translate:'0 0'}], {duration:160, delay:40});
+      buzz(again ? 10 : 20) }
+    netZap(a, v, again);
+    return;
+  }
   const f = fgFrom(a), t = fgTo(v); if(!f || !t) return;
-  const now = performance.now(), again = now - fgLastStrike < 280; fgLastStrike = now;
+  const again = fgAgain();
   EMB.bolt({x1:f.x, y1:f.y, x2:t.x, y2:t.y, life:again ? .22 : .4, br:again ? 1 : 3, w:again ? .9 : 1.25, every:.05});
-  if(!again){ EMB.flash(.16); EMB.glow(f.x, f.y, 70, .3) }
+  if(!again) EMB.flash(.16);
   setTimeout(()=>fgZap(t, again), 40);
 }
+// colpo che arriva da un altro telefono: il fulmine entra dal bordo in alto, sopra il quadratino di chi attacca, e scoppia sul mio campo
+function fgIncoming(a, small){
+  if(RMOT || document.hidden) return;
+  const t = fgTo(NET.me); if(!t) return;
+  const tile = $(`.ntile[data-i="${a}"]`), sx = tile ? fgC(tile).x : innerWidth / 2;
+  EMB.bolt({x1:sx, y1:-40, x2:t.x, y2:t.y, life:small ? .22 : .42, br:small ? 1 : 3, w:small ? .9 : 1.3, every:.05});
+  if(!small) EMB.flash(.18);
+  setTimeout(()=>fgZap(t, small), 60);
+}
 function fgZap(t, small){
-  const c = {x:t.x, y:t.y}, R = Math.max(t.r.w, t.r.h);
-  EMB.glow(c.x, c.y, R * (small ? .5 : .8), small ? .3 : .5);
+  const c = {x:t.x, y:t.y}, R = Math.min(Math.max(t.r.w, t.r.h), 520);
+  // esplosione a scossa, frastagliata: raggi di fulmine, scintille, il campo trema, poi le scosse si spargono
+  EMB.burstBolts(c.x, c.y, R * (small ? .22 : .42), small ? 5 : 10, small ? .26 : .42);
   EMB.burst(c.x, c.y, {n:small ? 14 : 36, speed:small ? 300 : 480, life:.6, cols:ZAP, drag:2.6, g:260, streak:.03});
-  if(!small) EMB.ring(c.x, c.y, '#BFE0FF', R * .55, .45, 6);
   EMB.shock(t.r, small ? .6 : 1.6, t.big ? 1 : .6);
-  t.el.animate([{translate:'0 0'},{translate:'-5px 3px'},{translate:'4px -3px'},{translate:'-3px 2px'},{translate:'0 0'}], {duration:small ? 180 : 300});
+  t.el.animate([{translate:'0 0'},{translate:'-6px 4px'},{translate:'5px -3px'},{translate:'-3px 2px'},{translate:'0 0'}], {duration:small ? 180 : 320});
   buzz(small ? 15 : [25, 30, 45]);
 }
 function fgCmd(a, v){
