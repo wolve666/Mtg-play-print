@@ -778,6 +778,135 @@ body.guest #menuBtn,body.guest #tkPrinter{display:none}
 #expired img{width:96px;height:96px}
 #expired h2{margin:0;font-size:22px}
 #expired p{margin:0;color:var(--muted);line-height:1.45}
+/* ================= Tema Selva (Verde): legno scuro, muschio, ambra; forme a foglia, foglie e lucciole =================
+   Tutto qui sotto vale solo con body.th-selva: Classico e Forgia non cambiano. */
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:800;src:url(data:font/woff2;base64,d09GMgABAAAAAENAAA8AAAAAjaAAAELgAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG55kHIEoBmA/U1RBVIEUAIROEQgKgdhcgbIVC4NsAAE2AiQDh1IEIAWGRAeGZQwHG2Z3JWPcbQwbBzB7oFcbibARjJR68f+fkhtjaA2Y1pEMMpSUocOmQ2nkBu97cxtdZRmiLwv+q+KBEu7kRoWf6KX32Qb9Ei8cLhIks1/c887ijKDkCIoUoUhLJEkwI9rQMFMyDR+HOzVgvPadOGomDtyukzJn/k94Oyo9A9tG/iQn7/A0t393Ly4WBQwYMSplAf0R2AiTwTYjaSNpMbEasBKxGqtQMbGxA/srGMUAv83+KaDOGiBGg4GFAWKhokSJEhGCNojR2Dnnyjnd3Fyki6yr+vd33Tz0rIX+od0QP48yJQ9oI2yBFboKU6HrVKypvBuEaI3M3D4gFRgVgSLFLCRbFKYO2JElFqZVrSrflX/vvkl3P5j+IxLKnAJ6w7aEcIjwf2POrE4aiRIp0SKvLxLxCvXfv6nJyQS8wQP8+vMP7vqStMUtiRPhMzyRt6jTdoC2oxiDKiFfu7brG0SwOcZKiZgIea3IPv5ZasISdN4268mMh8oICZUvVlkxP1xoqdi4A7mQtze4BqjselfEv0vl/v/PplVarVLvyMO1PgJrZv3e+FgHuRcw0kKQXXRB1v27pFJVd4sNsuwxDGo0KHtp4K3UgmvJ9gB6vMfk2SOQ7KH1onzIEAOHFyQUxxgBB8kFUXRxdjqGahTtO9RSzZipmJqz0fT5NKgG4RIKo3GaQDD/t4xpdYRb+187BAEnAcKoWOFxW4+ILCwY/uHAdkUu9DeZ3MsIKADwPGnRC7/uaAG+u74tGgp8IQCA+UPGzh8LhgKPNw1NCA18b1e1mSe67DwECI/dOsCfWohI8Qzb41CCfTmBL5P8Ge0dAf2GCPtgkL4a56nSB1qposFUWFaheIFR/OuN+lGPQlvpMq6lsbkXxmx1A375u1PaKho/ogJwDo6co/cNfut/VYzuTzgv784fDPtMM8RWFReX27P7vY9/C2efSiuCK6CK0vfTtmj7/J9hFD/17I1vKk5ri7VhpZ0+RvPey9QB+p8iyv6qF0RqEbVd+sw+aAHGpthU0H1GPV0IpPf4PDnvn3xe6igNHOVvOy3nFcxEcb4Yn8jobhVti4AK0M+i8rZrgqWz4Zn1sJRCp6LQ79hvQuVvDdQlUJuyWzyMF7kpcLbL1dCexfLnYqZiFrPeAzq2ACZW+ttFUjVZqRqICtW6WQWNf04N+3Jp7BGvzFTSKeI+pWeh9EuRkdxxZ/CZ+9tcL1j8SlAH47X5/rmHmsTDDjwXE+zjs/Wp9BRMd9osLc6ZLU/Udf2qte67H9SoBnWKmegQSLZpy/G9t35JZH/vYvm9tHNkr5cX9r3Op/Qwv6UL9+1vaSheT8FTHbWY2e3+43qMZtezyhSz9GUijX9dNT4hS7yUhdgH4XNESUSAb7UUq3wIb9KAA42AYgAQj4Wgg2IUNnY0h12T7Llmg7hqDwQiEISCYRRnC+FwhCfgwsvTnogURUYgOaEoCGRDKLZEyI5IKTnr4w6U7thIKiLiRGw4E8zFk+PKDc2dyHl4innywvEmiE/Kji8/m/gL4sEgtDbERQihaTwRLR2enkiEejLChBOIIK4iiUAUsRVNVGI8ncSjgUkiwZJJoBQSrB0J1F4PryCGJQLNAWFsJ8QOT2inXSi7PaFaBxAHU9AhJ5vklLObnnMRqwFE5BLBLhPaFU/OVdfQrhO5Gymk0R0jcdcjnjz23POFJshbH2t98gXjq2aCzZ5qInZLiDAXwVjijkuI8EBQBXEhXicnIbVS92iwAktbK+lQ9wKWYQfMSHTKFaK+iICbQIbO4YpsVBAxLyG0dQ4KSVQQZ35EwJ+IBRChQCIWlCkUrA3a6Dl8sS3msB2mMI/9MI9V2Bv74CCMxGEYqYdZjIMSYbYnhNVk9zRUEt3jo7BjTkqy9GXIFRPBPkSpibi6SSi3iMBtQrmjC2zFjIRSr1HegIg12YUWY6peHsUTAoDIObstV2WWsajtUM3KgInMBdsiLAk5O9tS0WIMIl/8Wi6G7m9Ev71swP4zaCcaAgDDtsnwfcni+7ek4/6I3d/QonlMaQlFbrWvqFllyOu8ljju+9QNWFjk4VGKlL7qzX1HcgRAm/0tApBLtqBS6Zb2BfEW58jJ0Lt+7ZcJEH/OFTCA1qmYA6rHE6GSLGoI7bE9+QukFe0NxNHDPuvBvLmwJyd0C83PzUi8Nbrd3QGTfm5D9xZ9Ttyh9L3UMIAbeicAFuJx0w9pM0FoKgf6mdfea836hQUAJ6if2zJrrzQA3EBmAqhLAADw8YwAADWI0pcEwEb1WzMGvff3wpEUAMD8NslC0aijP/cvoij0+redO1AQ3P535mBKCTFK44RFQ+ho0ZIE47aKHObyJpWCruuuUb/eItFuQNWpkAZDh/YJqAx0UoWxbPrz+6sa4qSNSHEUdKw6/AdSw5xH8kzeywdFpYJU0vNE7ah2UburvdU6dZTaGBJMuLvL3W1bWwFqIaLEU9IrsxSaSJcgAKbFj9X2aqfz0qoj14cDrd9uT9dsvQL8PfvGy43L5fo1f/0rLAcAgCdzRCL92OF93/2Q8pX3NQhcxACgGwBkAcBAswC1AirwcgKoxXnDm5bSVoEuE00TLR+fQKlGZEokUhRU7dp0yJdFSEakntZW3nyWXGrRA+dlm4fQ0NILnWup5c/LSFGs5CQauIozYIoJJulh1ArZhnXSScVku+nKTKmy2ByzZdilwkydzVlokVh71Nprn/0O2O6gww454qjjjjmhzi4nnXZKvTPOGuW488654KIGO113z133PfDQI5c89tQTzzz30guvvHbVG++89d4HH4301Gef/O+Lr65otsNl1VZLwcJGx1DMBZVzHwAAtAAAUF8BqhZw+xWAwH8AwBkAawAAAB1rfqWf4EPWGhQNYCQd0gRMm0gA0wiylnJpCmspL5qLqGYIu8hcGj1sRMClyfNQOtQh4RDVyhRr6JCmZYvqvcZmYCFgZBfERKE/b/BnokwrKolAqf0N89AuJaj+e2qDCqqvfJlxumjpeUs/XvLhBW95ptD9OUs5kBLH+jQ6TArTsnbqelTyPCylhhmdKwJYNp3O5kmTZI3JZ5PpgSp9AEWM1XVhvy98ppKdZNupUtUq/Ss3TccUQYaOwIdnxguu+aTWbLX3kLw1r22r3gMwo3wiu4ylDt3KpMMsk2SUhnLc/BNKeoUNbbuuycdHk5Bc7vMjXQKS9wDabVa2faQ0i4lxGPe87n6DjMRAso6poO9A9RfR63xLr8jQYlKqzACKOYwDhWoIr4LbaJL0qrNe4ply+11JHaDLQECpGMk0JbkaX29X1cG7TcIBAiv61ZIvZFlcv9NTa4+nEtBk5RzXld83IDqbQn3mRgB0U3f4NJ+X0mv+aoApcsbkegwC3pTWocIQqOo+/hjB2lmDGH9vDt1Y6+IV5Zrc1yAoaYHAbNz4jRtkAlh19Evp0GHQGaqWb3gkzoqveQWWP/oE5nb0Hlwzc+1qw+GMjQicnO+/13xxo8VsFeEFoT4hwWBb4X4Oe/rZ6AGk8r0AgB5XKDZeVleBquaEOic3OfHoRl9RUfsXBkT6F7fKWO+NF0gP9p+A1lGgjM7Zp38nMK7o5SCru0Kn1GHXPFEoTladXH/xGdFER70jSoH57ANDr4k28SnjtFP9L1ms4XxnpwM/J54fa0ojwqYXrtZwKGxcHlMflfCXPuMYNhc0KprBz2AwqcUwxmHV/UZSUWfik1WvXy3ppAqK9tUBbYNSfFdkSxtrW5RLvHbXZcyihgxsOGmKjsO+3T90DsDFnE6KOH7sROrG9zGibvdAHFbxVVeBhw7FSjruimToscZ36fJMgnnNfQzDehbp2mIAhH5MWtRx1V0ffFWppPxYxbLdb1HFteN83arLpqJjobrUwLaxmYMsXZCKXTSLNyUGWLV58r+BvKDvlwuZH6ADW5j/GDszNEI92kEhL7F5xhBPxCie66HhxikV/MJ14UB7Jy2kAK65C6hpz9hrx9TYcwD6vRljgG1bTNtwn+sZyTl2FbvNFn2V5NnL/GHcQJeD3XkHXZuBIFWdQqa29/vAbD4XzdaYUjRySFLyxOaAVtbj3S4+2Fn0qxJ5YjUPS0IKg0Z9iDVb5TjaoZ1ITIvUjbKKasohO8C42to4Jd8zR7zEizeVgFb2X++x6OJltP5seKwp6iwaQC23Nxwa/5rXOl1H+M3aclLQyu5wE7/rpgGp0Xw3cwf5ijr/VinLQy1UtFoJuE15RuUWE8x2ctpeF0GuWSzfyqJ8L/ejvsyBr9ppnRhFzvBeGlto4YsFgvHG4CxJjNFauhcruH80JghVsXh0ugvVgtyhCAhFCJ/1oWM8EwhrPk4ryyL3/rBFdfPRpQBqaMgAZsieaIGRIfoB6nHQLeFhuV7XIc9jLF5xv6Vf3f+Ta7zczw8CzSYe4Da36WROzTAm6dFK4rJunSAf4Z/zg2SHUlaYF3Q0/u1VAEHoCvKLKqzRj2AEuDfhhHAusIX1AREzZYHo0ZgO+NJIBGgr/gembyly8cNLsvTNrk3DOC1lI5R06MNmfT9xXmcVT91dsXQcCFX8yLqcPbQyFUkFH2FjedYaNmWFJn04d6WOnm7M1IXnDQ43Ae10fu+zGE3mLqRDDLv4FNtD8Ui5Htat8+HMCp/IhxvDGB5lHBupS6cQp/m4qbH/aAvs8xGPTZR8KL/bKUVMrNg+q1I42KQxThAUEgqzIx4hZmHpDN4yU3AZ7Nk7CeSu7N9sVCJtYj2bo5yZ8ZIci8RXScQVrRl1Oeaw4cUXCqJeOONpAwLbA0cOdM3dKXZXkLzTKQj7ZPM8Hqd80mdUSP2Mp0/VUkQPiE/KtxPbAbCtlmyGGVthgyGG7N+Mx3IAtHmOg2s0xTVfLwJXytW9sGFSMAYNdiHAKW6B0ve3cGg9b6h82WYQPV/ItCvh0efQzJ0HnzqmANCZuBx0rMuDc8BlLTzDMLPndTrMkJbxB5QXYgNBCkIzJAC+vbY/SvKmPyvlL8Z3n9aNxsehybdbMwzc18qYlcQK7SsPcdiLyo6wKhqgp1T0Kewmzq89Q8ZQ4uvQri74VZ/qxYfvkqeSKHmvFtmARYtPwYvI5hROlfPY0OMpBpNY/k5khdu5zPeKLSW0huip75ptjJtU+dP8k/A7e08+pCijTvGRnqVuMz1KczuU0xm+bOl5vSABuMkpaHRbS2ZOnq6afd9aNP4G4ycqqiYziegvz4E1qdlGCdW9GUhaDEsqoxKdoGkmzQTNqcAHKi4tDnhTDB15VWJQjV/jpROWi3ebdEA4OL9+8r4wWa2PaQG1FKEDf+2CyUkkL1OVtObEZQAXui/xjOuUqZhFdhUDlUhEbivwx/jV6RGg0Zc021stZvll0QFVEKYe0JLIXbH3VFq8sBKvtAdEI8iUtXethzE9FEp7D+rGCAo8QsW3SkNntOJsZG/Jt1LhcAIexi+xuAM0LfR4GvkRzikzwsKBp1/4m2zE3ybxIpUJHnEda1keJ3A7u0zeRnm6sfJN7GbR2q1+hN+axf7bqYuoOuF5k95ZWq/O3TCly6WTTc+lWNE0CJSNsLOq7qQMaIU3XddsFbSbvCBo7iPMLs059uVLmqMXm/t48IM/1NH0h+cZ7bx0+qCa/r0OVAFXGe0VVhfr7MXymvSwuRWxyAdFEp4mjV6CQT1Q5SRIk1qcXuTpJdfTSTl203lI9yJHTOnm8KANaeA32v9zbLq0pcUW5vADe5/g/WHzLQrkucYCM3+hpSUmtlv/yuKVJogumY3hNa2c0DKv8AbD3JQf9sadvlnFLvArwtCRqgDCW7TrjFWTK+JE36ss2YBJVXamIzkQBjSKf9y8R45ZLpRSbCV6KgHiNTNK6Qp4incEdugE7RJ1/53QGC57u1Jq9J+Qu9A0HsqWru0J5EQPMtFkMFMsnQoFjkAkX+TT/FV7eHdJpBsRiA5GIBGhoWtnNeQTyZ/NtOboazMjoSb+FOUY7CsXv9Hnpol19rsou+/norH6ObvJH4E/fV3OiPm7Buibl+7Fs+uCmUNmIN8xZvq4gOJOqboF4b10e1Wq+PUyIPTEAOFrRSQqHZPGMkFTLOTSXowNP2Qv2GSuU9z3P+JRqapzGJunv2Fudh/nMuHyD9DgMU789vqkAVwhpisG848Kaxf4soicoo0GD0tB7k0jaFEFk8tiv1MbfeJD6ZbZbVVclSxXRbstmq7yiUiXxTrTVye24Fhme2DHxR7lBi6QLboNwnHyjcEx3pyzm39EHsPZvbkOXaEVhr829RzPHZipKIuiuxewoo7FDOwe3wnAcJLyyO5y17sfxQBbbdk1pDtmxivI8gdDnRYV+1mGgWWAUUvoksQSg9lgqnBRG40kNs5Ca3zNsFXB/BeAHw8ayQGUt1NUOG3/SGlns2UGcwzxahKaiVYskucKA7jWRmyeBXF9QS6sypiEl2GRZGcr8ujYVJF6x3iKYWr2/YlUQjM+F5VmNbzRwjIwOEkRp+m8e91QXdnVdBSNrRkelX5INDNAliPKOMcIiolxG1UbBAnJDlUcxHEhZpFBc+IqytzDGmF0eq3dx48NAG2/21YYXyrxoeU3oMgUHA1JqsRJMG4KjW/AT/o3MFgoMAozUfCflZt3L4BBc7+r2mPiu8fwm+hMmdXYUKfpD7lU6xmL9UKivX9D/C4DBwLJgjIGXpy29REKb1BNXmmDDqKa99P60KqU5YJ0J264bjmupOmVB0fVKsLaOgP4KQyKWu7Gx9cjq7AFXL6Sb/eQv1GZf/FYwFpyFMna1uos1+u5Ix4YWFXUkNHTypL05XP57DsqwEzZINEUz83xG7zdO+1LPx5r5bCQN3ohITf3DVFHI6W27oZFQZner06yLU4LfINUp6/7QXtUQzcxRAT/RoefqsXihij8B3ovKhle3ORWBcJl1F3aj2oNooiDGaPrwMIIze7tsEC2QkYuA3YCcrLACRxyfMsq+bOcQZ07U3cita2u0cOyYew1S4/Gmi3pDgEpD3EjdUYMrB1wabL/KY9AtVumQQyIfTkSe/sccEQSS7JXGDj+mko6EQ7Ya0WH4lFyR8NAYwEC19NdVzVEBwDX422yEU7hi0Bq4N2mjkMLXYb+1sEeUJFz0t5kFQdJXhpJI6kMEb71iygi5uO4WiRPZObc79FrNVuW8sjGv+IXlgDgursKXYLr9tK4gZKqOhF+DJUa5+v0dEP45k9E1vW04va75khB20pVhML+HycPpWsa1/4nWdGS0EV5ktvx0dFSoR4C3ORBt5zmler7SpS7htSNLYL4dstuNGfGbBSJ8+4z7yMKw0062/RdhV1kui8cSey6vSonCMO13sGIc4mmK40Sp1gqVtq/JtaCWrHeFChqRbiADY9TFtm8h/YOQz8Rb2aNbWNU/319naiferbidJwmb7OpuOQQZAnzDAd4nXxkbIN8j/HRiw4flFhR9OGo+CNCDhIzZM9ItziE0yK5bwVVWuklxHhGeibtjgZ6iuNFAbpu0OHL571mXpu+kqz2b2L8AjBX1WqJw0YZwLD/WuLt32T+2O8npKLh2AhRYUhjlUgRJIZT/nnRfuKrzyBOJ18JGcOz35oH5gQ53s1d8LObwNCCnYkFoswC2ZnFkYAbw+ElCITufTWzKJ1YyqcAFlnJ7L8Hfv11o0Ly7F42LfBHoXfNvU8INBKH61GWLRsNlvr5V/yZV1MfiTrnhl5tD9hVbCpI67W2STYmTVI0gF3tPwkrZ1pKssaME4NLQGrmTSan+5G5nlushkd+R5fyXu41wk7f/q/SoOiIZcZ6itcVueN+jvIDwYk6XX9RzuLIybkSFruLbZzJenviTRXm2mRn77XV8JWADBCOAN+Zq0avBGffVlbVMrwrWJSAPfdgSt87NyLu6tW9vh3nfOZw042B6+aaJdBPTxPgVafmleoUAHvJBQgAfazvreDDawPJoOEBdU7/QBTS3RjOkJQownI/ubEIZCRVDiPnQDA8WDsdiEYiSTRJc/+WaqExIrMWwI72W4JKiEPFh5/U30qkoEA+9vYfg7Jd8aFlIVODdsl0tTfARNg7ffghDqJeNgVtOwCG4cGa6cAAJJJP085uXxulFwkB7Cscm1bpWW4GQyOZzwFG/H/blTX3zGY+rDaA4soFpDoRcSiouyWUxi/hR2T/HzBlgCU9GIlJbcKoUKFe1xITtUji8GfafcdUvyzaag6+eN9r6HqmAb3X064Tmo2GgZJcmB8qA1BIAbVoY/n1qlpkmZvnpX75um/K1iVxKH3vcuiCd59MsWd+NghaiAZbIDSPX7z2UAgmLgMr0ekO3kMS3nlGkIFkEwNS2vWUUVvVjJB5ei+hylvr5eZwpCPzOWOzy4IdFpR+nwFtI4R/EALN+OCxz9duHTzXY2FxFcUEnoxnTm9LTc4ScHJzbRxn7kqtKOAl6o9dk8BoPrKw2Qi9uqvL35zRCVWHMUTpAeh169tEevwgrpTit6GngKARP8A6iMzx5wvRcoazSa35Ei7cH+QXml5bG/RDXMd0BhyLLQhlxcmObQVNVatMp+7Us+kpTecu/3WWf2b+1346SIE1J1XZCRUNb3sJURClvfbH4CyQ6YywhdfkIOzLqFmbv0LLP8kBNCXT5L9jLgiFFF1w/qnwXobRlXlv+jWGzOXnegK8seeEzMDP5oRnITBnNDvkZLsLtqSk80t+CudTQFCPS0niXeI2j8/Nhih+EJHEenPJlBHMCvcL/mSCNQw04nJkhLjmzjGRlHvKx3G2Zo15GUxryBZSkhKHnwn5K9UiOyo7AXmX8D8aau8cFcm4t0SF4UWdtwogtJGtkEiJMSzh5IksP45YOiU7AQQVj+5xzzt8wQheWaP33nP8r/6LV9xzD10yeq1fYYTsO/JHf+e63+YHhpf8mXeiqDKfpJRg11q3YKI5/5nrxdX5NKUQcxhI+9ptWteNzwfOO3dk/KD9kImmbPaKt8uYp0b2Cz6b4RDiAOwl7m0meZkMIKgnOcSI8MkEr4RYT4CBSKOle1dirCO+l/ADB34BQfWjK555dUes4JU1Ru8Dx/9Ljes+2UcvGLw3rTBDDh75Lz0DfZ8fiOT906+utIpIVkuxBzsWktEcoP/p0poCukqcfBwYQcLVaVJ3j9WS28PKJmK1uVSvLivoJ3Bkn4HDLpzMRouGWLYVzWZguTHZpFzaX9GAMEJkKrkNwUUTjr+5TPEJGNK7a2NK+ckipyITwDZKmtG4YqwAqO9lb9P7PWG0HP1gDFEWF/L5mx95E/hG+HvJQ8CijMKz+xNxQJZCXIP71Jur+L1TSJzsKR8ySjXMEWO5sf7xMJtocJgrGBlV7dKK6D1Zt0Zlhyvbuy69KV9kGZFPoXBaDDUGCtlgX/1IiUYhTdG2c0duzrKY0urGUibW5pCbotZz7wyKViz1zRc/qwEE9SOOBo2cA8Mk1/wjQQFIpD2Wf6z3RGVuMgHAvnpvYAU52ILt4/lGJZRRBk6I98fakUg31juzSDoILZ0JpOyuiM4Ct09UMBAemTpD/T4ag/UQmtPexMN5OnCCBzYDMiCiSXrjfNHBu64DR59tCoP0YHq4YG56DbEWIKpXAdkzvZN30BFQR2pC0L3Zw3Vle1TqQ81scA6Iyq0F6bEFnf2HI37wGF/lz4GdeCNPDOK6hZJMYiWpok39Aqg9xus1Xq8QtGAdtkCYVfD2hgMjiBeKCAb8JCoSUy4M3NCnA7GNhLDNcCcMFliRFy5FocgqCPSD4S+nbFtuR0a50joqFupoQjqJnuYnQz+7OJZpjgQZkQnrITSkWZ+aFT5xotM6PrhkiSA/OP4i8VVZkkZ2hQY6mtZB2gATRM/HJcNWbvT55uScy1EwEP18CtAxRLrxLlHodP+5pOg9Yq8AsxL34t7Zg38lpKW7omyUTwwImscXbiqcOvOUTfOtDWanWa7s05PB0Ii7cyy0mPhIgwXDuHeQUASLi1d9fOYCkU0Sz1l62svU5DwyGOjTvilL8v+0XdfpujYqPIdxxAyZL+frFDl+nxLg36yxMmvY/g2edGE6NkxuMWV92ZVWHFu33u9ZT5X394WALPA7OqVleHBsOQ9RoA+XCXWLxHZ4rAib5g+OOOEVhdHmgYEPQO40rQDBieZUX/OIzKpRSvdqpgCJjAVHzg0lgPHSgYEnXaU0RQOPXj6S+qDpqMTHMaYCtYqdTiLkZSqrzrCGzm5MDf6skkOhtzBgdxq6Y9sAuilbahCSPBaXXJ/yCa7HOXDYS60jqLWKXEFqaLfXWV/6VrbCPtsCOLx8BvByHxLpOITkYYB7M6Vs8Gj/CQ8xGpa7IExXxc9P8rg9RVL7/lLVtRlzVR/UjexQV+VGDGO+TcbzmJize2djDpOKUxK56UDol7lJJQIGky8RqPM/jEvMY0YOGZ3UY81ynryFDC0CG9TIWJBsUNWWA/zapguGyhtV403vNY4dbtlN4dcBVXlu75h+XBCjh8gQYjQct7mRfgTg+ZI1Jxd0FBAy4FJhg2DI1C0179eVtWkqcyNakv8JyuAyMafXpmOOkNnJSVxcgNZ/Pquvg4jqX7iH4uFKLNz/OudQSlQVcrLl8YYrw1UjNS69cQIFDYQaMuzwJVNT332b48Hk2bpX14smO85UmM4ADQXe20+WQnlGMMt5wAQIdSY6dHmbB0MGmsxh2CgQNKDyt24OuwkhrNThpblxVUNetplYzGbmE/lieldMeyjmn/+I+FKOiMPghHu8X+qRhjmluBSUpht8c1QlCP+hY5BB7LjQbD4+p5A2mdTkVwttx/j46yKMYezR6QVnSHOWZ4V4jEWUb1S/r9v4znX7zGKycY3oYXBDf70zItQi/NWDkE/Jo3MlHFV9R0xpMkFWunhDNzb9XGdftcpr554qJrruahxLv6/yVCz7bfVbSDkIkcfRseM+eYJsYaU/F1BZnw30t/AxN5ZvRAYEjRlbnk1vBtgREzOkats81JcqlhQkudHiXZDoiJy+NsiboOuHHvIs3r34kxMRWXwZNSFMdQZYvNFx1CrdhqhI02Dr1EKPP6CbX5vIro3PZjb/Z9RkoEgh7wA1nCIPA1TZfQxcQJOb0kbTWlcDW/LgQFhfdRNfZK3gcMvKheKKKsBR32/A3qvskJooVYgiq26kq8M0mEs155ewGfkFfDHNGaMJSTxNyMOXc3QcJV6B1fFtMuiP29zGJZu6slF4KW0n/fvFLkyz26OQSrJv10yqK0pHa3ACgoZMmd+ciExuaiPypdJp3m8FOhBMwBiaETRkWEXHujbUgKrlujMUN1I1zT0Mnxu7FybdWMG1jo80Otc08GzS6wo7gNUiC4RWk8lgX4KwKQ4f3UsoN50WstQOW2eFz/LKU3sgrGQ3y5KKbzZn4Pi8PGYa+u75QOS93xO7LcoFynabT3miOeLS9FwhDoR0+BzL4spvNu/4ZaSys5hpoW/HAirzNNEpLfQt7vqRmcis/mdNxyE/wtvsxZ/cpBqPIu/WP/JsOhThm9x21uqNJZKPHEtizCXijVSlQP27lPrGxOirhubnMwY7Hj8onhx75Wh+PH2w89mjMm9zxWyyBXzeZt5vS85Vpmx1Ndnick4+j5jLucaQAY61/XbPVZLqk2d0VBBKwI0oAQ2dTc8qG3k8eJX9HxE4fSVy+5olPLvT56s+rCtrU1cSUIXl+e9jMrh0zJl9c9S5WSIPD7S/jswcZ3TnWRX07Tgq/yrCJRhgpXT3tQWJGxnwwB7ZJcdCpX3/9Fenz1V/UDe6Q12e889I1cGUTE/s2jf7pqEUp2I4+F/BBllHyVqLmMwXWqxGtY5BymWADJBxUgbmIbRFNsIfohe79XAeDoTMhE1s9ByUtrrz0WrkdU25Md3AJhwVl5Ma/btJywjsTJwsJbRzh85MbSvgBux1F3y75YknMYFhQUkopCCa3twwbM8pJH6LRxM1eGlgLbJXm9PCVMq7Z+nKbF6YN2aXnPckh51jXIT+WpgoRj2/3APYz2sgFGanRXuYtPRAp5zjnZ7aQeQFzLsLX73i0SRlWGKTSo0SxLRsHLblkPL/lbTuGmSfNrultHuersjm/5JiNh30ZA+LPChVAA5KpSjn9/QAOLtrMZxPBUEDnY4KDJ7ni38l7tN5bdcCUYaf14XehgAvpdjUtrwSzx+ddg7wNiU/E25oC9EipkkEVign3bpPsMI9nBvThRgi4/0diXmS8EqWnRBR7hqTUELuch9mVmk3xC70qgO8525a5+tHwXI+qpbphSCchkQ8Aw2Zv99OaHiRXDj06b63nnXxyDSc7v+BSTi/WKvuo9CvjwGrQKvxud4XJsTnv3+tqz4dhOPRHxKrIy3IeLB0HU6/9OQg/fNPdnvZI/TU0E9xwkfDHXoKiOF/tzQtO+6FeS2w6OLD1TtzAYN8Ch/ngw+ZpqHbd56+sdsAeu78eZsc4jqn2m6AQAv+ho0I5mbUf794E6LnIh7/afWjazI3L4xzWUduIUGJ5VR36Hx5dbPnz8W30U89N2G2hvwhQgx1mQpy2o3K86O/BAWJhJ/GUUE4nfnEdYbm/L8iGfFMYIn7rj0B14vCKLli/2tUlVxiVCdKSJPVHQpyVczM3/Pnv3W3luxwPgX0bTQL0vv38HVdpj9lPKkhZ66ExlXb6/gkCh2HmYsFdv529IumYloBvUESJmQtfJjATBBX5BrShNEiLDQjOEcWxgRx9T47IAaEYgaFzbDevPPaRRKn8sg2vBGJCvCIMIQzQPxp7y5IPMbRIC0kYP0LW+Mnm9eHea0Dw9t6rn74NLZ738dTVaoaUaFQTEn0TpLEi9oFC1S2C3njH7ZeGtjSNjhSsnes+OyQQsXvyRuYkreRVNKNxIft5vzR+JiQbqsFM85mfxw47nKxU9WYXiDsmGXqx+45Kp7M4IadZt6INzLKzza/1gS/nXM57fHzKQazhcY1a4nx/0oYoWE+Jg/WzEboDpdHVsdO2+yl44drFmOqiTdHlosQaU39O6cpkVXZhYB/cTOFP9baQTtWCGMvpZ4xFDcWC/UtZ6jOo99Zm07W2saXexLe5JO27Ig8rIaeci8m2MoJs8iD8XeoKfTgrMYQ69lmi7bfdku4yuGeU7dfJpaPHhP0rP3fSbC0l1dnKxjV6sJdBkKwGVN4MGxYspYsbemiRTscYIXNtJsBo5wQNvy9NLZL7iTgdeWmVaQHg6ZwzGjxtefpmy46vXy68FzQHZd5r9TdixqduoyjMrQCw0sBU7KcQiGPTV8ruEKOc+VbgWaI8DhZBh4nEaVnZErScRJ8Bk4mwQPyyVerTJqiSC/z2ot3QB4IKRQnHz0fEsWs0UDqb3gl7CliV3yWZ4j7sVjCOrDvbrIBZToJt9IqKqlvajKhdxQ3OoQlQfpVCMmboEJZDUmVyYFfBAOC+iSjQcEvMus5rKpaW3XhWneF3k8/Aya5mWI/gyBBGwMFbE+5/NazVF/Cqq6trSHdROdnm/2Cu+SL4EZhvCZ2M7ABvkUbz3Nt1S79CrJu42cUxGtjoN8LLmKbdRwmHW8Tf9WV5A3ADcIEjN5Wndp9I0njvnLmmEsP/a++XUp1pS7Ur4IoKNqngiLOgVVlZIwQsMspF9yomrQ/9//2QZfdyKxYf7Fd4dRa+XazAYVy8/6Yri+aSa+QP+i4g97v48loNN14IC+1z+jUHDqzDpRmXy3Le+vr2bRZHKzdI76r/rsw9Pp6Jlr/XbzUfawMNztGf+tdWR6gsrYDRMuV8ZckApLHPpE0SAAx6XeiJ2weEUgu8SOAOhsavGVbBQcbpcXoogx4Q12DOGCzEOex5aWniyy9InqsLc0Yq06N+zYadv9v2zBUUDAyzP/vi7Do79CpsWrij7eNLrb0nC5qdHrkYaHEzlrXYMBHGTC6KC22ZFvllmAgo9cXfq1p0+k70hcwA1Gsd2p6uLl/BXVkzeVsz5pP6fxblDQRvzVjN24xyflX+6Z53dy8aOxg9tacHZnTyS3ADSMZdAk2wQdpPsd4wXZROLWaPkgfpNZEMlxvww/0zUSf7QL+mCie2ggPwlpqKXi1zT0JoSSmP7yI6uC2dr7HBIKV4nZwG6qDDbJXHokIhzH9YMPTfH77kcBpkRsjnI80eGrnaoFTC2/mU9lini9iU/kcss/yGXBasTh3qI0avlwu95Ir5vii9b/55oCw9NAd9yKwmRKZKKskOYj0+5lYygRNVDFsl1ef7ngeLKhJFkfJ8eLy7O2Wj/fl49cu73IvOv7cErT6xQUN99r9M10P23bSeygwb4/Olc8W/9Z5+mpA1aMr+eiz6xWoG68kxTWz/2aeOFzhu31Rw+uLRV04uv/9o6LZxInIuG3RmhyJhJH2MjtdYl6nOusWctkO8R8KOPAybSdk+PEHVsTKShn08i3IkBU7IEOO3y6D7tlThrj8AJK/HP4o+/JRzqsbOxnZ5x4t/Dvw4PVSj5WrSn0OnftnqDca0t7QXa2fzpDNvtNX/9Pa5Z3fvpq0rUARWu7GlWdCUCLjG+huj+MmBybu6xvksRoM9ItDi8U3p2sV6jGdn8nVw80Fgx66jqddt+4SvhrXIXq+dNsTUXvrA8v8NsHzsZ38Vwt3PZC2wnf9NH+6a83akb+/jq/Y+efcuf+sWTPm+nPBsb0ce5kRFlXnT6MFnqrp+Tgqm8JT1sgmiJGzPhdqfzNpwQxn4hhcwOze4lMqmJ5vsUMYTr/t/qg194n/xG+DnJf5ODCtx204huT/r806BZAFpdQAH4gNnL9jriHNiEi38xxvnKK9mVe1sm4Iy4/jWDwh5fktRuhp/5BXn1URYEBi/SH+qmAhCIk6XDsh23GO+5oXEgOEunjZiQs+ulvwoU8ZTg+Gn80xpCD5p2WUy9ZDv53INYNgl/Yuu27gJsLbEuHOTdCDPCU6iHRqUOSr2FRdmtMvlkcBsQIHZlEk4H7qD5brW4YvSaAlDI9RGFRaYjwtozi+zLW9khVoh3R35EDbuhMTezmy1EJEpSqnSMqgBQs/cKp26cOk5vOrbXwGVG/pYkXKIrV57wg/6Jsvj2RGdHFragV0o2/xePdUqo9TdRKVFShlEIqKK3sSEvs4SfJCRBsHqgixQdopAZ+WGXXQvVOkL14vLICvnLvssWU665tblTmem+2N6OBEhXYnt5Bnj/V6YZeo1C5zibzqOE8AWzQ1gEwRMBrf69ZVBsJ4MrnAFCPyrC/8ZlAsgD1l3qTE+HJ37L46gCnCOBfUWRT7JaUZcyu8j+YOxG0nUeIpDJV2SWUsY3DkYr6h+eTvBcfmHsvLl8rLbCd/2HBc/tuYSfdmbxV2B7ZH1gelC8SkYA6CAoX6QYQnur9dKdXwHTmGhYzRBKW32A0mMSM0XRwsnkCWAXsfqyBOKtC23+2nLTR091341rJr21si24RcZnYwC2Qq9qRAZmcBYR3zE7b0X2q8oM10X4jJhjyj3itUPiPATIAsGKdA/SHoz+I2kkdQOysQPt1jlEWa2LAHjI1suYwbY0AUCsDIgmuELKksQPh9CJ0YS4lMicMWk/hpmuwCYoWDJLL39KryEsvK2zSSrDDvXFKIhYoBblaMw92AhGCO1cIukBkEV0PIjPxC4eNjj0z3+qRpohX0nuY7LLOc/cEvCji7GnLAVOSSb/fJN4lQhAMCLZjfmnPnrGWJOwPvjg64c3k6i1otGo7VT79tbD7Z3t97+9fBWwbviqumAX/r6PIjrmFQoq0uU4pa7Ma53EQqJpHNI5xBpX/ytdbbPAxfLL92+3DzRQWWk5wszvEwdq1ZolR3ndUZToEnwNlT7n8/eN2uv+dVod8Dre8WdhDQv5D7LpN0zEme82+AoGQSdSbssvcYbjHDFi7P2GfIVcTzEdyEQrQBK0ErCIK6JouhvMFCiOlmjWQxAB/Fyvvcmkktj9mxrpgOLu2MmqJfNq5y5ZLG8kKM2cDjhP3W58Xv1aUd57+tOHD0jci27NBpt50s7YLGsyP1sFbyYMpRqTgvk5uTZKWqCbPt1caob3jXruW39p/6KxvYKHY/5hqGxKqKSo3KXl/Tn4YpScw1zOSrMV+leaYNxQkNty8frrsoypIlp4tzPAyda3dTOpyndfqN7v7RB38U1iz9Pa8S/R5oY7fIg4BA959bmV9TRKCVU6/VsZpCTEORuY0AnFgN8kTCo71YxbkEEgnUP+p9Jz4asLHtDvy7LboOjH28v05Rr3mQA71dfcND3HCOL7CrQ76FqOMbiTlCZT24D07EvCBOY5UR8/PMRA3fTMxjW41l7lbEizroDXIs0GcTxEIOYivCFnyQWEBGnEjGuxzFQ+EgnqbLKKcKkFbAuJdiIFqLhHsJ7g5it7puWUBOB0E5pkwJeyaNpW4kN+foDFIAgu4QJqsB/NWIitEWYiX+yIpgIgoM3w8uBIf3TISIj91n9yuxYbuBuhF1/gkz79X3ym6YVU37lasmPzH1y/Gm9PfX/cc7T83eydk52f8gbqQcUZ+GQPI5AvMk1I9ylK208Oooe9ZXWcTyg27SgyHZVH02hCkij//ipIYqDTQKxg0RpFvvTcKRhoDgczDp85H9qbqRvgMzM4zkP/9g6kX+yhLLq6b92lUTn7j4xQRRW/4Kv1jnqZk7nTmgI8zinAgpRXVE96O6I2qBAU7p7nqPqfSrtz+dLovepK278+nEWd1kJhQkX51+ZVXMTbXBgNlEDWq7Wq/WsfuYVT7BE08ZTeLJca5MOsE1jmMUTY3zZHBlH585IpKom/TxlIr/P441IhGxhvsEgOdL+/L/xE1b9FSGQSKRyZjKSl2jsFCDwSsZFHx5k8CM2pFxqV+8Zm3qOv1t6crJb8X1U/IiibqEpldxqkQVFr3e0qgrrx6ZwK5kX+kW7DLbO05/XbU+h5CBHqE3dGNnn228YJvIQDfA9/CNxumvAb2mP9ANBu/tPH9U1JluRG/goyMRz8Z/xz0msne4QlYguwNL43015d0mETvp1XxHj1xIgQEmzc1NGekH+nqOMyvPww7NFLzzfD0z98JHgokEB8kkig9Q0hIkPJ3CU7Qo5kGLVcisEZUciPt34/2SwJleS/+FB8g9IC+tKwzvbEt1y2alTCHhJFIJW40XdOsjD/OSWxIwdf4z2zAKQ5EY1cZKcifXUb/2rXJj58NKwz6FRGDkiVSVul5tjp5UTB3Ym+85SjySL2ElKSUbaIncuZ/Wwu4Nao5oCCoQScihPLBOjUSARXU93q2QaQQOgnEhY4Sg8JG6gZNJqXZ58saSkpmQImxNV7pljwO5V7pbMCcC1zbn1QJLQHkOGpyIoYV4gEwwdvkpK7u/zqVPh2A3C/p6Rjt0APqAgimj6Uc0zn9g1cJ/AGwSR2llBXk1Rcz8yvI8CrWMmFfFoBNqykg0uN7RqzM1t6mUra0Gc1M3wFiO44SGNXLH/rXu9otBWZtF/AWE9UQ2x4CVcTgZm7JHxo0h4xdR8hyxkJp8/fretvVwfI5QzCcwUoKT39z2KhyiCCqGqyXlJ1ueBZK0gKvXbMfl8qoL7S2287fLetqu9K8619piv3S30vOrlhKvAu2RD8L60w8W8MTUeLVrrWwA3o87VMABius2NEFKTMQ8knKXYDx1NHV/A3teVVGzfEvRWyAMLfaVHDvujRcwvWcGIGBkq37X/FobkchWm2X5CToTWxw+jTvgYI7KldKtq3qkdV4JTO9eTCySrBYNJo+m7m8smlOVVS7dUPYWiMKKfSVXVvniqbbqoQQKVhSl2zm/r5OYV6Q0i/MTdcZRzmhMppZuWTECEVczAcxJml1DQdKfQ6XOEU8ZcZ6HBsHvV/fg5P2gez/duVrR+uxT0fr64VLt3IQOTE5k+L4GfR7xQ1Sr6PZQbRx2ICV5CzYuXBvfHr6q0j2cWKHeELO09baOYo9uGYGcnWl/HyeHnD5/Q6yVqzaXMIMyA0qmnW4kjwDH7tDNfT4i6EErAxmV2YDdze75s5f2NchWFsSa5RMXTyydufnb4KNpi4nJ6cv7bqTvTA4eC5oBmFAT0WuZ0M++Hu9ZCTFXw2E4fqBfUECXJ4OMbhfL/Q1ksJFGBsDWTibQg14IWEmVxQ50SQyyIpmP+zopiYRhLbbu7hwsl2bkqfp5NTHhKwUNtPo0PUKBQCdee0NRACKuqnc5k6miJlX0HnIji+RuPZwS41GAuFmfAXGA87bL9ZI182D7oImFOY+JtSYz4tIjo9AUrQqvTIyAWCH0cB/vMQM2BYE0wJ2GClr1j1lkniItpD21gE3t55BQt7unKL1ghl9mG+dXhOS7Yq6aRajyLd4RWBCeBg8O/dTbO4TGKCQVU9JSU2Ws/ESXDt3BWsQJekE5pG0AyHsKMhwF0fWnm60zdXtME4VqeDO+0RHYAKPKy0ebd1RPsg0FJIQdhgygMphm67x9xTxF0sCtOFO9fzOcpqgYa9pZPVlkAFibu34kChVLyCBFZeaztz0dR7rL3BEgIG++W/w3RLjD3NXXxrflsTOjMkg5OAoVUJ3uPdRwM74WhtqkU0pK+92ZKXmBknQPmVstCXCY+E4yM/bHBaqYhHBvjhPO6jijTWaif5jiFJvoLeI40ayO0wD0TEH2wF7CnFGRvY/r2wMIa65ThUIKTSii0gQiGkUgRFPEZguqWEyhiT4ARUJABut7O7UymVOj1nfoJJIOvYYfEUsT8WNZEZHRRTxBNAP4jPy71Wf4OruYrVwSo1yoL9KlFUYHQCkmfNEOpKwnqxjnSXz1gKC57kkyVofLobnEdyGjvhZCnX4uRA7ka68OfQxHw/yc0MZqlJRMiuKUbmXaHFCdrjjUMLuSXrYcK8VGDCuCPrjN8N9XqBguvUl5x76+iN9mO707eqFxlwREuttMmYhCVZxZuaiURAZTbroVIgZLrsQ7BWSKexqnRi6LanRFnke7Xotirk7/sikTHRvTGUUmaYsDJIu16DB8Ss7bt2t7mTaBh6L8U6VgrEMOQZxApM8j72W8+G7LNZWSD68NcS8PqHMmGQ0NmQxpiTws90P2TgC3dQtuPQc+k20BP8NZ5S4iDhYfmR8qdIHQTUPH3Czo7TM1EG5tzgwaPiD0owQPdWFA/uoruf97qz60ce/Abvcc3dFuGx3AKRFDJ2akyB+PnCRyo1JF3u3/hZ9gAfsXwsDR+c9M3ee6BjoufKpf0PSEyVM2eV4tjmVt9s9vOvrW2am7g2BPx9Ox2JxvitgTkC7kPOmCyY8DBnafRngl/ZGHQzrnVDN+k8Ejnro9ljOc6Lm5c53aoxeennDNhYL0eF72k9s6zVFNWePWFt35CzPAQyWbLomTlR5y2+uMQxlx1aGH8Z2XwyyReRgsfGCrG77mPInns26C792+BBbHumiy9Z6vMJ8BDGBSwLE2T7rsVB/G4npO8ZxlX2XIXeGCwSeEGcxwclmNbCCVP3KQbuKWZzfLWNjFswoa2iOXrr8y8lfN05H+lvO2ivm2yl+dLOrtvMIOuBEwAw7g9QDy6bmNVB3D2V+K395+rSGW9jzc+fe9zuGJl3X1LyqHah+eKGjE/LlywVP0yTH/1ZNFsXVmMK7J3xsRc/B9l9ExahR0Lus6W3ljYlIFpFG6BNubdqAwLzE1k7/p1DR3DwcB2CG9C9FyCuKQbgPyiI41Vp/YOXBk8eIzvBNP3mQ49mJk8Hjr7uONwdd3HM38lbXObtz25tNA7kVuw02ZeUepwbr4seLU2vsDlV8vijRBX7qlI5igMYfxrB4Mu2wNHTrlBhPgLH6J8MS93GfpbP7CeF3iikxK81yIyWRB1mQN9UjbhKqWmCwuTqnLR4ggOIXRQiMh7Z93AGMmN5xv3iaX7jmFYJKSNEDivx7TE991Sds0vpDoweKvAUb8/ssgPuJB0zOJhAsE+hD5JDMWs7/bAVp6KkVSY/lgiU4dXteEe1JzWXdxWk7vusXm3NfnGq1FL5lMmiMBdcRxLdITQBeLh4ulJGVgc+z6JjPJj/4pIt+/BRcOFIY/3a4Rak01ovO9DcQBpGWWgliN4Vzdv0mgH1IsrFevF64BiGR6TmhwnLEspe7WOZuNqb7T7R0AU3R9sxUHAIJlOuVtbiZA03wzANVKiP993CIVn7jnxeULYdF8ffaP9I1CRboy01ziucl7l+xPaXSKqGoHmqwGcDVeg2vwWrwOr9c3FK5DFRs2ZoHxgfLeFOHem8PLe0ukem/1o3FbjMTYvSGOASaTB/vIDI6QGdMNVBh/xYKxG8MF3psEe29m37g1f2tK1eJjpkwDmR5fZBmeL8vMCQ1Ntm/lN24Nq6mUMre1FPiorDQ3gCbjMlmFqhHsvsE9+wNwcu/WfoYPH5h76qt9Dj9E684YuzpqKe9qa73XmHOjGgfAF7aD/Y3rPTdcTZzjtOmWBc+X3fBE2c0YRlHZhWsC8I0Vq10F8Gbw0ceTSbL8UuR/c7Jp9QXdR8jVDNSKv5lBFP6Bg71XR713tT3ea6z2rnGhcZ3JZqgU/iSH4kdyqHkRNBnvkCPN36CM9kNCffTlY/O/V/j9to57a1y39ef91vubDtBfn3f7XqjD9YtfvYB2P8T2Wi76Or+6midvP8yvGMakum5VhCxb043K6jRk4VcOtIopmxqKVafLbOQY0P43+jatc3ad7Xxid1xMq9KYGs+K0ztSc1HNI6vovHakwlV1Dj1k+kZEtWlWXy+Tvjeakjfa1SIlaUylzoxJY7uL5HWuw7Odwzb1xZmtelkPmqWNfLR2yUyhqcsxcjJkBWlcS1wdzsWjabqZxiFLtG1G9+gWdT2vDPzWqo/Po6e5DogTcP4DePgpHTjxvOO+s6Xv9OLrrtJ/p0rcNvXxYAUndh0ttwWg357SWfcI5sS/UEh6RLzsuC9w38+a0xay1InnHU82bdF93004LODEKtwKAP3gMjS+moXyLnJ4nnQD8ppsIF8OTbXv6+RkQNbIRIa19ByuA6pvVVBivBmTAVkj4NTcgl4+GdvMCyC1uoeOZn/yGgo5LUObhkBayNXu8d5OBmSNr/UYyH4/dLgFnBoVbur/M/iIAsEoED1X127+U/cNivmfhcXPAQDuP6zNx9Vb3bgGMHtOLwAQNJBGby0eZm4wrm0AOjds3pzeyAkNENWBh+/bGapwnPhOo7h+ElBhHTNBwBGkXf4UVznAhc+aaMlH6LFyX0wq6FwWODHi5jOPWSCuFwgbfzaTRN5N23wuZDtxAruZopdg0guq1uLTCcGt41UbKbM/WDuQd3thbRWWdpzTbm+0SVj68j6mcDpmcupUVl0toO44iNbyqmwRFU0dq3jksv3XaYKqqvVrtu7PuoxKz3FlZ0SdPQnnDZfuBxcW4dOIXXe8oI9msfGENrHoo5fSMggMtTLjIGVMEJ4uAbl5dLiw9pLTlJXT5aggVUakAH3bYrgVReswtWOOFZ0jtymOODc48Qsfd23mPG/kIgC9VGm26D2NlNPAoU/yO133R5sEjFRQqbn2en7dQVwfgwu2ofQ++uZRfQxs1wuLkWD5FC2iG1xOnMoioE5Jrjn6Dsx5aHTX091XavUNTABkmrT3atNhcrsXP6O2GH/OXc3PpDfeCw45Xfd6wFh3hHWEruNH0Wn7KxspM5M2t3BLi8C8LKQatrGraftTQlvriCs0aS88P9JmE21xFb8JKcBtgY2t/CQlXeAl4ENIiULukfgSu97SNhQq4fSa9jTvy3ObwIkUN43aOhFcnDcCV4OjcxpANkJObrbEuZLItSpNV0N1uHNrr/3ZFLUjB4Yice4mfZWsxyZU0XC8RN/B9XkBVYYpIKfxuZ83Q2ot++l6a5wrTRC4nT4A4W5Ai/mIhqygw/lDQuFtvS1VUAqAlXHkuZkSErOaaeI40wwlRIwdMZsxbfDNRLAHzWJh1jdLOZlxkozciAsFYC8DzUHI0pyRMjYnvCipTg6R6mVv3uSS7ZqbCfFSy4sLQLoaVfSqsTjoVSpjxFGjmjSup0IzISs9u1pYevqh3MFJ1SjlsBJmdReXpkQZi5M4cHWHMGRIIJkN3kIlaJrK1HZ6ZDUqmdCpdL1qRjE7MiN8So5kHcKDalKFjOwAhmKQFIW8suLDWtxCPcJUdMWy2cPhklVwCanb5aA40JAMFvJn82g9GWQJi1Vz4kx4Gr15KSsKUVXCzJKAWzx6ZY0LrsNwSIkERQ16m9lrnkbSCokSahYbmfNJcxPcNcqZITEZr77SUENgpX31U0an6hmkRHCKniokmXS7pZ51zBya1VZOzbUsAS3c3X+vaYmW2Q+HYqwnL96BBwz2IKmkk6mjxfiPEQ0dg0hwF2EHfEuX4ODiBZIWWDohETFJEF3JyCkoqahtimLu1kBqyEg4c7HFHvKhZrBOqw8uyhwr9QoIxYqjoQPXVl9vSEOAl6ZWguum8jDTDLOIKNiwZUdJxrzlVZzwcFREpXh6vj6Z54DP1Fy5WRtixFGMhSEx2SSsiVZYaYppIQ0ZCdEfckfi755m38xm8Ja77pnjoUehCJuwDbtQhn04hGOowimcwyVcQ63CTh80qXTeNmdtl8XIxOy+cy5ocMUll+V54oZrdujnhVtu6u8rq+3y0VvVprsdbk6oC/fwMEC5ClUqVW+gbtuba3ao16BRU3gq06IV8Ziyk9N47x26lRlq4GO3wNYUfWURripxtaMuQ6SvGp5bYHVMR4DOJguGDT/edLIckaV+wODBuUNyi1jZWWLt0pyItZkVQ4lig9C/BrG/DYmA4DWDMwv7o3PrupiqesfhQoT8+j2YCxGfy8InyeqNxUW52UOyWKfhUJeLbtry/x0QTG/mKBucE+aqeFIwbOj9C0xluZ50VUMwZsJq1ccbzTn9swdnamvTwUb9cC5BaxMrdHVOIQaFCyELVqFOwVJtHlaxvgMkOZivfgYvlnmg1r5ozwY=) format('woff2')}
+html:has(> body.th-selva){background:#0A100B}
+body.th-selva{--bg:#0A100B;--surface:#142017;--surface2:#1C2B1F;--line:#2C3F2F;--text:#EEF3E4;--muted:#94A596;--gold:#E7BE5C;--gold-ink:#1A1406;--danger:#D4552B;--ok:#6CC24A;
+  --bark:#100D09;--svAmber:linear-gradient(135deg,#F2CB6E,#B98A2E);--svMoss:linear-gradient(135deg,#86CC4E,#3B7A2A);
+  --leaf:24px 6px 24px 6px;--leafM:16px 4px 16px 4px;--leafS:11px 3px 11px 3px;--seed:58% 42% 55% 45% / 52% 56% 44% 48%;
+  --snum:'Fraunces', Georgia, 'Times New Roman', serif}
+/* tavolo: schede come foglie, venatura del legno, ombra di sottobosco ai bordi */
+.th-selva .cell{border-radius:var(--leaf);background:linear-gradient(170deg,color-mix(in srgb,var(--pc),#fff 9%),var(--pc) 50%,color-mix(in srgb,var(--pc) 68%,#0b240b))}
+.th-selva .cell:not(.active):not(.withart):not(.dropT){box-shadow:inset 0 0 0 2px rgba(220,255,190,.12)}
+.th-selva .frame{background-image:radial-gradient(120% 95% at 50% 40%,transparent 52%,rgba(4,22,4,.42)),repeating-linear-gradient(93deg,rgba(255,255,255,.04) 0 1px,transparent 1px 7px,rgba(0,0,0,.035) 7px 8px,transparent 8px 13px),linear-gradient(170deg,color-mix(in srgb,var(--pc),#fff 9%),var(--pc) 50%,color-mix(in srgb,var(--pc) 68%,#0b240b))}
+.th-selva .life{font-family:var(--snum);font-weight:800;letter-spacing:-.03em;text-shadow:0 4px 0 rgba(0,0,0,.2),0 0 22px color-mix(in srgb,var(--pc) 40%,#d8ffb0)}
+.th-selva .pname{border-radius:var(--leafM);background:rgba(8,20,8,.32);font-weight:700;padding:.5em 1.3em}
+.th-selva .spia{border-radius:var(--leafS);background:rgba(8,20,8,.38);font-family:var(--snum);font-weight:800;padding:.15em .75em}
+.th-selva .spia.cmdb{box-shadow:inset 0 -.16em 0 var(--kc)}
+.th-selva .swz{border-radius:22px 22px 0 0 / 16px 16px 0 0;box-shadow:none;background:color-mix(in srgb,var(--pt) 18%,transparent)}
+.th-selva .strip b{font-family:var(--snum);font-weight:800}
+.th-selva .strip span{font-weight:800;letter-spacing:.04em}
+/* elemento centrale: un seme di legno con l'anello di muschio */
+.th-selva #tokenBtn{border-radius:var(--seed);background:linear-gradient(140deg,#C9EE8A,#5FAE3A 50%,#24561B);box-shadow:0 0 0 5px var(--bg),0 6px 18px rgba(0,0,0,.5)}
+.th-selva #tokenBtn::after{content:'';position:absolute;inset:4px;border-radius:var(--seed);background:radial-gradient(circle at 50% 38%,#2E2618,#120E09 74%);pointer-events:none}
+.th-selva #tokenBtn::before{z-index:1}
+.th-selva #tokenBtn img,.th-selva #tokenBtn .orbit{z-index:2}
+.th-selva #tokenBtn img{filter:hue-rotate(105deg) saturate(.85) brightness(1.1) drop-shadow(0 0 7px rgba(140,230,90,.5))}
+.th-selva #hub::before{content:'';position:absolute;left:50%;top:50%;width:136px;height:136px;margin:-68px 0 0 -68px;border-radius:50%;background:radial-gradient(circle,rgba(130,220,80,.3),transparent 65%);pointer-events:none;z-index:-1}
+body.th-selva.netv #tokenBtn,body.th-selva.netv #tokenBtn::after{border-radius:var(--leaf)}
+body.th-selva.netv #hub::before{width:190px;height:110px;margin:-55px 0 0 -95px}
+/* pannello personale */
+.th-selva .under{background:linear-gradient(180deg,#1C2B1F,#121C14)}
+.th-selva .ppC{border-radius:var(--leafM);background:var(--bark)}
+.th-selva .ppC b{font-family:var(--snum);font-weight:800}
+.th-selva .ppC button{border-radius:var(--leafS);background:var(--surface2);font-family:var(--num);font-weight:900}
+.th-selva .ppC button:last-of-type{background:var(--svMoss);color:#fff}
+.th-selva .ppF{border-radius:var(--leafS);background:var(--bark);opacity:1;color:var(--muted);font-weight:800}
+.th-selva .ppF.on{background:var(--svAmber);color:var(--gold-ink);box-shadow:none}
+.th-selva .ppGear{border-radius:var(--leafM);background:var(--svAmber)}
+.th-selva .ppName{border-radius:var(--leafS);border:0;background:var(--bark);font-weight:700}
+.th-selva .ppSw{border-radius:var(--seed);border:0}
+.th-selva .ppSw.sel{transform:scale(1.25);filter:brightness(1.15)}
+.th-selva .ppCmd,.th-selva .ppFull{border-radius:var(--leafS);font-weight:800}
+.th-selva .ppFull{background:var(--svAmber)}
+/* finestrella dei danni */
+.th-selva .cqPop{border-radius:var(--leaf);background:rgba(10,18,11,.86)}
+.th-selva .cqTabs button{border-radius:var(--leafS);font-weight:800;font-size:12px}
+.th-selva .cqTabs button.sel{background:var(--svAmber);color:var(--gold-ink)}
+.th-selva .cqRow button,.th-selva .cqQuick button{border-radius:var(--leafS);background:#1F2C21;font-family:var(--num);font-weight:900}
+.th-selva .cqRow button[data-v="1"]{background:var(--svMoss)}
+.th-selva .cqQuick .ok{background:var(--svAmber);font-family:var(--ui);font-weight:800;letter-spacing:.06em}
+.th-selva .cqRow output{font-family:var(--snum);font-weight:800}
+.th-selva .pchip{border-radius:var(--leafS)}
+/* pagine e tasti */
+.th-selva .btn{border-radius:var(--leafM);font-weight:800;letter-spacing:.03em}
+.th-selva .btn.primary{background:var(--svMoss);color:#fff}
+.th-selva .chip{border-radius:var(--leafS);font-weight:800}
+.th-selva .chip.sel{background:var(--svAmber)}
+.th-selva .verBtn{border-radius:var(--leafS)}
+.th-selva .back{border-radius:var(--seed)}
+.th-selva .ovHead h2{font-family:var(--snum);font-weight:800;letter-spacing:-.01em}
+/* pagina iniziale: luce che filtra tra le chiome */
+.th-selva .wz,.th-selva .dlg{background:#0A100B}
+.th-selva .wzBg{background:radial-gradient(60% 45% at 28% 18%,rgba(150,220,90,.32),transparent 70%),radial-gradient(50% 40% at 82% 72%,rgba(230,190,90,.18),transparent 70%),linear-gradient(180deg,#102012,#0a100b)}
+.th-selva .wzBg::after{background:linear-gradient(180deg,rgba(8,16,9,.4),rgba(8,16,9,.9)),radial-gradient(60% 40% at 28% 18%,rgba(150,220,90,.18),transparent 70%)}
+.th-selva .wz h1,.th-selva .dlg h1{font-family:var(--snum);font-weight:800;text-transform:none;letter-spacing:-.03em}
+.th-selva .hl{background:linear-gradient(180deg,#F2F9C8,#A6DC62 42%,#5AA43A 72%,#2D6224);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
+.th-selva .wzBrand{align-items:center;text-transform:uppercase;letter-spacing:.14em;font-weight:800;font-size:12px}
+.th-selva .wzBrand::before{content:'';flex:none;width:22px;height:10px;border-radius:12px 2px 12px 2px;background:var(--svMoss)}
+.th-selva .wzOpt{border-radius:var(--leaf);border:0;background:rgba(14,26,16,.55);box-shadow:inset 0 0 0 1px rgba(200,255,170,.14);overflow:hidden}
+.th-selva .wzOpt::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac,#6CC24A)}
+.th-selva .wzOpt::after{content:'';position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(100deg,transparent,rgba(200,255,150,.35),transparent);transform:translateX(-120%) skewX(-20deg);pointer-events:none}
+.th-selva .wzOpt.swp::after{animation:fgSweep .6s cubic-bezier(.3,.6,.3,1)}
+.th-selva .wzOpt:active{background:rgba(110,190,70,.24);transform:none;translate:4px 0}
+.th-selva .wzOpt b{font-family:var(--snum);font-weight:800;font-size:25px;line-height:1.1;letter-spacing:-.01em}
+.th-selva .wzOpt[data-f=standard]{--ac:#A6DC62}.th-selva .wzOpt[data-f=commander]{--ac:#4FA83A}.th-selva .wzOpt[data-f=brawl]{--ac:#E7BE5C}.th-selva .wzOpt[data-f=oathbreaker]{--ac:#5FC3A0}
+.th-selva .wzOpts.nums .wzOpt::before,.th-selva .wzExtra .wzOpt::before{display:none}
+.th-selva .wzOpts.nums .wzOpt{font-family:var(--snum);font-weight:800}
+.th-selva .wzExtra .wzOpt{letter-spacing:.03em;font-size:15px;font-weight:800}
+.th-selva .wzOpt .wzInfo{border:0;border-radius:var(--seed);background:rgba(220,255,190,.16);font-family:var(--snum);font-style:italic;font-weight:800}
+.th-selva .wzBack{color:var(--gold);text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:13px}
+.th-selva .wzName i{border-radius:10px 2px 10px 2px}
+.th-selva .wzName input{border-radius:var(--leafM);border:0;background:rgba(12,22,13,.75);font-weight:700}
+.th-selva .wzGo .btn:not(.primary){background:rgba(220,255,190,.1)}
+.th-selva .dlgCard{border-radius:var(--leaf);border:0;box-shadow:inset 0 0 0 1px rgba(200,255,170,.16)}
+/* passaggi della pagina iniziale una casella alla volta (come Forgia) */
+.th-selva .wzTrack{transform:none!important;transition:none!important}
+.th-selva .wzStep{position:absolute;inset:0;visibility:hidden}
+.th-selva .wzStep.cur{visibility:visible}
+.th-selva .wzStep.mv .wzOpt,.th-selva .wzStep.mv .wzName input{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(14,26,16,.78)}
+.th-selva #dragLine{display:none!important}
+/* pedina rapida: raggi di luce verde tra le foglie, carta che si apre */
+.th-selva .tkm .halo,.th-selva .tkm .sparks{display:none}
+.th-selva .fgRays{display:block;position:absolute;left:50%;top:44%;width:170vmin;aspect-ratio:1;translate:-50% -50%;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(170,240,110,.12) 0 9deg,transparent 9deg 24deg);-webkit-mask:radial-gradient(circle,#000 16%,transparent 60%);mask:radial-gradient(circle,#000 16%,transparent 60%)}
+.th-selva .tkm.open .fgRays{animation:fgSpin 30s linear infinite}
+.th-selva .tkmStage{perspective:900px}
+.th-selva .tkmCard{border-radius:var(--leaf);box-shadow:none;transform:rotateY(95deg) scale(.7);transition:transform .8s cubic-bezier(.2,1.1,.3,1),opacity .3s}
+.th-selva .tkm.show .tkmCard{transform:none}
+.th-selva .tkmCard::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 2px rgba(180,240,120,.5),inset 0 0 40px rgba(110,200,70,.25);pointer-events:none;z-index:3}
+.th-selva .qtyBadge{border-radius:var(--leafS)}
+.th-selva .tkmName{font-family:var(--snum);font-weight:800;font-size:27px}
+.th-selva .tkmBar{border-radius:var(--leafS);height:10px}
+.th-selva .tkmBar i{background:repeating-linear-gradient(-58deg,#5FAE3A 0 8px,#86CC4E 8px 16px)}
+.th-selva .winName{display:inline-block;padding:8px 26px;align-self:center;border-radius:var(--leaf);background:var(--wc,#4FA83A);color:var(--wt,#fff);font-family:var(--snum);font-weight:800}
+.th-selva .dlg.win h1 .hl span{display:inline-block}
+/* H&O */
+.th-selva .nline i{border-radius:0 0 4px 4px}
+.th-selva .ntile{border-radius:var(--leafM)}
+.th-selva .ntile.active{box-shadow:inset 0 0 0 3px var(--gold)}
+.th-selva .ntL{font-family:var(--snum);font-weight:800;letter-spacing:-.03em}
+.th-selva .ntN{font-weight:800}
+.th-selva .bigPM{border-radius:var(--seed);font-family:var(--num);font-weight:900}
+.th-selva .q7 button{border-radius:var(--leafS);font-family:var(--num);font-weight:900}
+.th-selva .qCb{background:var(--svMoss)!important;color:#fff}
+.th-selva .cbTarget{border-radius:var(--leaf);background-image:repeating-linear-gradient(93deg,rgba(255,255,255,.04) 0 1px,transparent 1px 8px),linear-gradient(170deg,color-mix(in srgb,var(--pc),#fff 9%),var(--pc) 50%,color-mix(in srgb,var(--pc) 68%,#0b240b))}
+.th-selva .cbTL{font-family:var(--snum)}
+.th-selva .cbSt{border-radius:var(--leafS)}
+.th-selva .cbSt.up{box-shadow:none;background:var(--svAmber);color:var(--gold-ink)}
+.th-selva .cbFoe{border-radius:var(--leafM)}
+.th-selva .cbFoe.sel{box-shadow:inset 0 0 0 3px var(--gold)}
+.th-selva .cbRow .stepper button{border-radius:var(--leafS);font-family:var(--num);font-weight:900}
+.th-selva .cbRow output{font-family:var(--snum)}
+.th-selva .cbSum{border-radius:var(--leafM)}
+/* graffio d'artiglio: il colpo grosso di Selva (5 punti persi di fila) */
+.svClaw{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.svClaw .fl{position:absolute;inset:0;background:radial-gradient(circle,rgba(120,200,70,.35),transparent 70%);animation:fgFlash .6s ease-out forwards}
+.svClaw .cl{position:absolute;left:50%;top:50%;width:120%;height:7px;margin:-3px 0 0 -60%;border-radius:50%;background:linear-gradient(90deg,transparent,#E8F7C0 30%,#2B1A0E 50%,#E8F7C0 70%,transparent);transform:translateY(var(--o)) rotate(-38deg) scaleX(0);animation:svClaw .5s cubic-bezier(.2,.9,.25,1) forwards}
+.svClaw .cl:nth-child(3){animation-delay:.05s}.svClaw .cl:nth-child(4){animation-delay:.1s}
+@keyframes svClaw{0%{transform:translateY(var(--o)) rotate(-38deg) scaleX(0);opacity:1}55%{transform:translateY(var(--o)) rotate(-38deg) scaleX(1);opacity:1}100%{transform:translateY(var(--o)) rotate(-38deg) scaleX(1);opacity:0}}
+.seed[data-seed=verde].on{text-shadow:0 0 14px var(--sc),0 0 2px rgba(255,255,255,.6)}
 </style>
 </head>
 <body>
@@ -1101,24 +1230,31 @@ SET.show = Object.assign({poison:true, energy:false, exp:true, rad:false, tax:tr
 // 0.15.7: l'esperienza esce dal pannello personale e si sposta nella Scheda completa, quindi la accendo lì una volta per tutti
 /* ================= Tema ================= */
 const COLORS_C = COLORS.map(c => ({...c}));
+// Selva: gli stessi sei colori, presi dal bosco (bacca, lago, muschio, betulla, erica, pietra)
+const COLORS_S = [{bg:'#C2402B', fg:'#FFF3EC'}, {bg:'#2D6FA3', fg:'#EEF6FF'}, {bg:'#3F8F37', fg:'#F0FAEC'}, {bg:'#E9DFB8', fg:'#2A2614'}, {bg:'#6A4A8C', fg:'#F3EEF8'}, {bg:'#7D857A', fg:'#FFFFFF'}];
 const COLORS_F = [{bg:'#E0321B', fg:'#FFF4EE'}, {bg:'#1E6BFF', fg:'#F0F6FF'}, {bg:'#1FA35A', fg:'#EFFAF0'}, {bg:'#F2E6C4', fg:'#2B2614'}, {bg:'#6B3FA0', fg:'#F3EEF8'}, {bg:'#8A93A0', fg:'#FFFFFF'}];
 const FORGIA = () => SET.theme === 'forgia';
+const SELVA = () => SET.theme === 'selva';
+// temi «ricchi»: hanno animazioni, particelle e colpo propri (Forgia = Rosso, Selva = Verde)
+const RICH = () => FORGIA() || SELVA();
+const TNAME = {classico:'Classico', forgia:'Forgia', selva:'Selva'};
 // i sei colori dei temi: per ora è pronto solo il Rosso (Forgia); il Classico si sceglie dal Menu
-const SEEDS = [['rosso','Rosso','forgia'], ['verde','Verde'], ['blu','Blu'], ['nero','Nero'], ['bianco','Bianco'], ['incolore','Incolore']];
+const SEEDS = [['rosso','Rosso','forgia'], ['verde','Verde','selva'], ['blu','Blu'], ['nero','Nero'], ['bianco','Bianco'], ['incolore','Incolore']];
 // simboli di mana del font Mana (ritaglio ManaSub già incorporato): bianco e600, blu e601, nero e602, rosso e603, verde e604, incolore e904
 const GLYPH = {rosso:'\ue603', verde:'\ue604', blu:'\ue601', nero:'\ue602', bianco:'\ue600', incolore:'\ue904'};
 function renderSeeds(){
   const el = document.getElementById('wzSeeds'); if(!el) return;   // gira anche prima che $ esista
-  el.innerHTML = `<small>Tema: ${FORGIA() ? 'Forgia' : 'Classico'}</small><div>${SEEDS.map(([k, l, th]) =>
+  el.innerHTML = `<small>Tema: ${TNAME[SET.theme] || 'Classico'}</small><div>${SEEDS.map(([k, l, th]) =>
     `<button class="seed${th && SET.theme === th ? ' on' : ''}" data-seed="${k}" aria-label="${l}${th ? '' : ', in arrivo'}">${GLYPH[k]}</button>`).join('')}</div>`;
 }
 const RMOT = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function applyTheme(render){
-  const f = FORGIA();
+  const f = FORGIA(), sv = SELVA();
   document.body.classList.toggle('th-forgia', f);
+  document.body.classList.toggle('th-selva', sv);
   renderSeeds();
-  COLORS.forEach((c, k) => Object.assign(c, f ? COLORS_F[k] : COLORS_C[k]));
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', f ? '#0B0A0D' : '#22252B');
+  COLORS.forEach((c, k) => Object.assign(c, f ? COLORS_F[k] : sv ? COLORS_S[k] : COLORS_C[k]));
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', f ? '#0B0A0D' : sv ? '#0A100B' : '#22252B');
   if(!render) return;
   renderBoard();
   if($('#ov-wizard').classList.contains('open')){ wzStep.now = true; wzStep(WZ.step || 1) }
@@ -1347,7 +1483,11 @@ function netZap(a, v, small){
   if(NET.role === 'host'){ const ep = netEpOf(v); if(ep) netSend([ep], m) }
   else if(NET.role === 'client' && NET.hostEp) netSend([NET.hostEp], m);
 }
-function netZapIn(m){ if(m.th === 'forgia' && Number.isInteger(m.a) && S.players[m.a]) fgIncoming(m.a, !!m.s) }
+function netZapIn(m){
+  if(!Number.isInteger(m.a) || !S.players[m.a]) return;
+  if(m.th === 'forgia') fgIncoming(m.a, !!m.s);
+  else if(m.th === 'selva') svIncoming(m.a, !!m.s);
+}
 function netHostMsg(ep, m){
   const inf = NET.ids[ep]; if(!inf) return;
   switch(m.t){
@@ -1731,6 +1871,7 @@ function placeEl(el, k, mir, hub){
   else if(x < 20){ st.right = 'auto'; st.left = Math.max(3, x - 6) + '%'; st.transform = 'translateY(-50%)' }
   else { st.right = 'auto'; st.left = x + '%'; st.transform = 'translate(-50%,-50%)' }
   if((k === 'life' || k === 'delta') && FORGIA()) st.transform += ' skewX(-7deg)';
+  if(k === 'life' && SELVA()) st.transform += ' scale(.86)';
 }
 // il lato destro del layout guarda sempre verso il simbolo centrale: i pannelli che lo hanno dall'altra parte vengono specchiati
 function cellMirror(cell){
@@ -2016,9 +2157,11 @@ function dragMove(x, y){
   if(fgOn()){
     // il fulmine segue il dito e, sopra un avversario, si aggancia al suo centro
     let tx = x, ty = y; if(j !== null && j !== drag.i){ const t = fgTo(j); if(t){ tx = t.x; ty = t.y } }
-    if(!drag.bolt) drag.bolt = EMB.bolt({x1:drag.x, y1:drag.y, x2:tx, y2:ty, live:true, br:1, w:.85, every:.06});
+    const sv = SELVA();
+    if(!drag.bolt) drag.bolt = sv ? EMB.root({x1:drag.x, y1:drag.y, x2:tx, y2:ty, live:true, br:1, w:.85}) : EMB.bolt({x1:drag.x, y1:drag.y, x2:tx, y2:ty, live:true, br:1, w:.85, every:.06});
     drag.bolt.x2 = tx; drag.bolt.y2 = ty;
-    if(Math.random() < .5) EMB.burst(tx, ty, {n:2, speed:220, life:.35, cols:ZAP, drag:3, g:200, streak:.03});
+    if(sv){ if(Math.random() < .12) EMB.burst(tx, ty, {n:1, speed:120, life:.9, cols:PAL.selva.spark, drag:2, leaf:true}) }
+    else if(Math.random() < .5) EMB.burst(tx, ty, {n:2, speed:220, life:.35, cols:ZAP, drag:3, g:200, streak:.03});
   }
 }
 window.addEventListener('pointerup', ()=>{ if(drag && !drag.hub) dragEnd() });
@@ -2026,7 +2169,7 @@ function dragEnd(){
   const d = drag; drag = null; dragLine(null); clearDrop(); EMB.stop(d.bolt);
   if(!d.moved){ openPlayer(d.i); return }
   if(d.target === null || d.target === d.i) return;
-  if(fgOn()){ const t = !NV() && fgTo(d.target); if(t) fgZap(t, true) }
+  if(fgOn()){ const t = !NV() && fgTo(d.target); if(t) SELVA() ? svGrip(t, true, null) : fgZap(t, true) }
   else fxBurstAt($(`.cell[data-i="${d.target}"]`) || $(`.ntile[data-i="${d.target}"]`), 26, ['#FFD27A','#FFF3CC']);
   openCmdQuick(d.i, d.target);
 }
@@ -2427,7 +2570,7 @@ const menuCmd = () => `<div class="sec"><h3>Comandi</h3>
     <div class="row"><span class="lbl">Vibrazione</span>${tog('vib', SET.vibrate)}</div>
     <div class="row"><span class="lbl">Schermo sempre acceso</span>${tog('wake', SET.wake)}</div>
     <div class="row"><span class="lbl">Suoni</span>${tog('sound', SET.sound)}</div>
-    <div class="row"><span class="lbl">Tema</span><div class="chips">${[['classico','Classico'],['forgia','Forgia'],['verde','Verde'],['blu','Blu'],['nero','Nero'],['bianco','Bianco'],['incolore','Incolore']].map(([k,l],n)=>`<button class="chip ${(SET.theme || 'classico') === k ? 'sel' : ''}${n > 1 ? ' soon' : ''}" data-act="theme" data-v="${k}">${l}</button>`).join('')}</div></div>
+    <div class="row"><span class="lbl">Tema</span><div class="chips">${[['classico','Classico'],['forgia','Forgia'],['selva','Selva'],['blu','Blu'],['nero','Nero'],['bianco','Bianco'],['incolore','Incolore']].map(([k,l],n)=>`<button class="chip ${(SET.theme || 'classico') === k ? 'sel' : ''}${n > 2 ? ' soon' : ''}" data-act="theme" data-v="${k}">${l}</button>`).join('')}</div></div>
     <div class="row"><span class="lbl">Animazione di inizio partita</span>${tog('intro', SET.intro)}</div>
     <button class="btn" data-act="guide">Guida alle funzioni</button>
   </div>`;
@@ -2472,8 +2615,8 @@ async function menuClick(e){
     case 'clips': SET.clips = !SET.clips; saveSet(); break;
     case 'diag': SET.diag = DIAG.on = !SET.diag; saveSet(); document.body.classList.toggle('diag', DIAG.on); if(DIAG.on) toast('Diagnostica attiva: usa l\'app normalmente, poi esporta i dati', 3500); break;
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
-    case 'theme': if(v !== 'classico' && v !== 'forgia'){ toast(`Tema ${v[0].toUpperCase() + v.slice(1)}: in arrivo`); break }
-      if(v !== (SET.theme || 'classico')){ SET.theme = v; saveSet(); applyTheme(true); toast(v === 'forgia' ? 'Tema Forgia' : 'Tema Classico') } break;
+    case 'theme': if(!TNAME[v]){ toast(`Tema ${v[0].toUpperCase() + v.slice(1)}: in arrivo`); break }
+      if(v !== (SET.theme || 'classico')){ SET.theme = v; saveSet(); applyTheme(true); toast('Tema ' + TNAME[v]) } break;
     case 'scale': SET.scale = +v; saveSet(); break;
     case 'dh': SET.dh = !SET.dh; saveSet(); break;
     case 'page': SET.page = !SET.page; saveSet(); break;
@@ -3683,12 +3826,12 @@ $('#wzSeeds').addEventListener('click', e => {
   const sd = SEEDS.find(x => x[0] === b.dataset.seed); buzz(10);
   if(!sd[2]){ toast(`Tema ${sd[1]}: in arrivo`); return }
   if(SET.theme === sd[2]) return;
-  SET.theme = sd[2]; saveSet(); applyTheme(true); toast('Tema Forgia');
+  SET.theme = sd[2]; saveSet(); applyTheme(true); toast('Tema ' + TNAME[sd[2]]);
 });
 function wzStep(n){
   if(n < 3) document.activeElement?.blur?.();
   WZ.step = n;
-  if(FORGIA()){ const now = wzStep.now === true; wzStep.now = false; wzStepF(n, now); return }
+  if(RICH()){ const now = wzStep.now === true; wzStep.now = false; wzStepF(n, now); return }
   const tr = $('#wzTrack'), now = wzStep.now === true, go = () => { tr.style.transform = `translateY(${-(n - 1) * 100}%)` };
   wzStep.now = false;
   $('#wzScroll').scrollTop = 0;
@@ -4054,6 +4197,11 @@ const EMB = (()=>{
       if(p.wob) p.x += Math.sin(p.a * p.wob + p.ph) * 18 * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
       const al = (1 - k) * (p.flick ? .65 + .35 * Math.sin(p.a * 22 + p.ph) : 1); ctx.globalAlpha = al;
+      if(p.leaf){ p.rot += p.spin * dt; const r = p.s, sq = .3 + .7 * Math.abs(Math.cos(p.a * p.fl + p.ph));
+        ctx.globalAlpha = Math.min(1, al * 1.4); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = p.c;
+        ctx.setTransform(D, 0, 0, D, D * p.x, D * p.y); ctx.rotate(p.rot); ctx.scale(1, sq);
+        ctx.beginPath(); ctx.moveTo(-r * 1.7, 0); ctx.quadraticCurveTo(0, -r * 1.15, r * 1.7, 0); ctx.quadraticCurveTo(0, r * 1.15, -r * 1.7, 0); ctx.fill();
+        ctx.setTransform(D, 0, 0, D, 0, 0); ctx.globalCompositeOperation = 'lighter'; return true }
       if(p.streak){ ctx.strokeStyle = p.c; ctx.lineWidth = p.s; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x - p.vx * p.streak, p.y - p.vy * p.streak); ctx.lineTo(p.x, p.y); ctx.stroke() }
       else { const r = Math.max(0, p.s * (1 - k * .5)); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill(); ctx.globalAlpha = al * .16; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.2, 0, 6.2832); ctx.fill() }
       return true;
@@ -4064,6 +4212,8 @@ const EMB = (()=>{
     if(!P.length && !B.length && !amb){ ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on') }
   }
   const add = p => { if(P.length < 500){ p.a = 0; p.ph = Math.random() * 6.28; P.push(p) } };
+  // Selva: la stessa particella diventa una foglia che gira e sventola (più grande, niente scia, cade piano)
+  const leafy = (o, p) => { if(o.leaf){ p.leaf = true; p.streak = 0; p.flick = false; p.s = (o.size ?? 2.2) * (1 + Math.random() * .9); p.rot = Math.random() * 6.28; p.spin = (Math.random() - .5) * 9; p.fl = 3 + Math.random() * 5; p.g = (p.g || 0) + 60; p.wob = 2.5 } return p };
   // ---- fulmine: spezzata irregolare tra due punti, ridisegnata di continuo, con rami; cuore blu e aloni bianchi
   let B = [];
   function zig(x1, y1, x2, y2, rough){
@@ -4086,10 +4236,56 @@ const EMB = (()=>{
     }
     return out;
   }
+  // ---- radici: forma fissa (fasi casuali scelte alla nascita) ricalcolata solo se cambiano gli estremi
+  function mkRoot(o){
+    const R = Math.random;
+    return {root:1, a:-(o.delay || 0), life:o.live ? 1e9 : o.life ?? 1, grow:o.grow ?? .35, ret:o.ret ?? .35, live:!!o.live, x1:o.x1, y1:o.y1, x2:o.x2, y2:o.y2, w:o.w ?? 1,
+      amp:o.amp ?? .09, f1:1 + R() * 1.5, f2:2.5 + R() * 2.5, p1:R() * 6.28, p2:R() * 6.28, brs:Array.from({length:o.br ?? 2}, () => ({t:.25 + R() * .55, side:R() < .5 ? -1 : 1, len:.14 + R() * .2, ang:.5 + R() * .5, bend:(R() - .5) * .8})), th:o.thorns ?? 1};
+  }
+  function rootPts(b){
+    const dx = b.x2 - b.x1, dy = b.y2 - b.y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, n = Math.max(8, Math.min(48, Math.round(L / 11))), pts = [];
+    for(let i = 0; i <= n; i++){ const t = i / n, e = Math.pow(Math.sin(Math.PI * t), .8), off = L * b.amp * e * (Math.sin(t * Math.PI * b.f1 + b.p1) * .65 + Math.sin(t * Math.PI * b.f2 + b.p2) * .35);
+      pts.push([b.x1 + dx * t - uy * off, b.y1 + dy * t + ux * off]) }
+    const brs = b.brs.map(r => { const i = Math.round(r.t * n), a = pts[i], c = pts[Math.min(n, i + 1)], ang = Math.atan2(c[1] - a[1], c[0] - a[0]) + r.side * r.ang, bl = L * r.len, q = [];
+      for(let k = 0; k <= 8; k++){ const t = k / 8, an = ang + r.bend * t; q.push([a[0] + Math.cos(an) * bl * t, a[1] + Math.sin(an) * bl * t]) } return {at:i / n, p:q} });
+    return {pts, brs, L};
+  }
+  const BARK = ['#1E140B', '#5E4026', '#8FD15A'];
+  function strokeRoot(p, g, w0, th){
+    const n = p.length - 1, m = g * n, full = Math.floor(m); if(m <= 0) return;
+    const pt = i => i <= full ? p[i] : [p[full][0] + (p[full + 1][0] - p[full][0]) * (m - full), p[full][1] + (p[full + 1][1] - p[full][1]) * (m - full)];
+    const wid = i => w0 * (1 - .8 * i / n) + .8;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // alone verde tenue (si vede su ogni colore), poi corteccia scura, legno, filo di muschio
+    ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#6FC040';
+    for(let i = 0; i < m; i++){ const a = pt(i), b = pt(Math.min(i + 1, m)); ctx.globalAlpha = .16; ctx.lineWidth = wid(i) * 3.2; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke() }
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    [[BARK[0], 1.5], [BARK[1], 1], [BARK[2], .28]].forEach(([c, f], q) => { ctx.strokeStyle = c; ctx.globalAlpha = q === 2 ? .7 : 1;
+      for(let i = 0; i < m; i++){ const a = pt(i), b = pt(Math.min(i + 1, m)); ctx.lineWidth = wid(i) * f + (q === 0 ? 2 : 0); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke() } });
+    // spine: triangolini scuri, a lati alterni, solo nella parte già cresciuta
+    if(th){ ctx.fillStyle = BARK[0]; ctx.globalAlpha = 1;
+      for(let i = 2; i < m - 1; i += 2){ const a = p[i], b = p[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, s = (i / 2) % 2 ? 1 : -1, wv = wid(i) * .5, tl = 4 + wid(i) * .9;
+        const nx = -dy / l * s, ny = dx / l * s; ctx.beginPath(); ctx.moveTo(a[0] + nx * wv, a[1] + ny * wv); ctx.lineTo(a[0] + nx * (wv + tl) + dx / l * tl * .6, a[1] + ny * (wv + tl) + dy / l * tl * .6); ctx.lineTo(a[0] + nx * wv + dx / l * tl * .9, a[1] + ny * wv + dy / l * tl * .9); ctx.fill() } }
+  }
+  function drawRoot(b, dt){
+    if(b.a < 0) return true;
+    let g;
+    if(b.live) g = Math.min(1, b.a / .18) * (b.fade != null ? Math.max(0, 1 - (b.a - b.fade) / .2) : 1);
+    else g = Math.min(1, b.a / b.grow) * (b.a > b.life - b.ret ? Math.max(0, (b.life - b.a) / b.ret) : 1);
+    if(b.fade != null && g <= 0) return false;
+    const easeG = 1 - Math.pow(1 - g, 2);
+    if(!b.s || b.s.x1 !== b.x1 || b.s.y1 !== b.y1 || b.s.x2 !== b.x2 || b.s.y2 !== b.y2){ b.s = rootPts(b); Object.assign(b.s, {x1:b.x1, y1:b.y1, x2:b.x2, y2:b.y2}) }
+    const w0 = Math.min(9, 3 + b.s.L / 60) * b.w;
+    strokeRoot(b.s.pts, easeG, w0, b.th);
+    b.s.brs.forEach(r => { const gb = (easeG - r.at) / (1 - r.at); if(gb > 0) strokeRoot(r.p, gb, w0 * .45, 0) });
+    ctx.globalCompositeOperation = 'lighter';
+    return true;
+  }
   const line = p => { ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]); for(let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]); ctx.stroke() };
   function drawB(b, dt, nb){
     b.a += dt; if(b.a >= b.life) return false; const k = b.a / b.life;
-    if(b.flash){ ctx.globalAlpha = b.v * (1 - k) * (1 - k); ctx.fillStyle = '#E4F0FF'; ctx.fillRect(0, 0, W, H); return true }
+    if(b.root) return drawRoot(b, dt);
+    if(b.flash){ ctx.globalAlpha = b.v * (1 - k) * (1 - k); ctx.fillStyle = b.c; ctx.fillRect(0, 0, W, H); return true }
     if(b.glow){ const r = Math.max(1, b.r * (.6 + .4 * k)), g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
       g.addColorStop(0, 'rgba(235,245,255,.75)'); g.addColorStop(.35, 'rgba(120,180,255,.35)'); g.addColorStop(1, 'rgba(60,130,255,0)');
       ctx.globalAlpha = 1 - k; ctx.fillStyle = g; ctx.fillRect(b.x - r, b.y - r, r * 2, r * 2); return true }
@@ -4117,48 +4313,63 @@ const EMB = (()=>{
   }
   return {
     burst(x, y, o){ const n = RMOT ? Math.ceil(o.n / 4) : o.n; for(let i = 0; i < n; i++){ const a = (o.dir ?? 0) + (Math.random() - .5) * (o.spread ?? 6.28), v = o.speed * (.35 + Math.random() * .9);
-      add({x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 2.2, life:o.life * (.6 + Math.random() * .6), c:pick(o.cols), s:o.size ?? (1.2 + Math.random() * 1.6), streak:o.streak ?? .035}) } go() },
+      add(leafy(o, {x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 2.2, life:o.life * (.6 + Math.random() * .6), c:pick(o.cols), s:o.size ?? (1.2 + Math.random() * 1.6), streak:o.streak ?? .035})) } go() },
     embers(x, y, o){ const n = RMOT ? Math.ceil(o.n / 4) : o.n; for(let i = 0; i < n; i++){ const a = (o.dir ?? -1.57) + (Math.random() - .5) * (o.spread ?? 1.2), v = o.speed * (.3 + Math.random() * .8);
-      add({x:x + (Math.random() - .5) * (o.w ?? 0), y:y + (Math.random() - .5) * (o.h ?? 0), vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 1, life:o.life * (.6 + Math.random() * .7), c:pick(o.cols), s:o.size ?? (1.4 + Math.random() * 1.8), flick:true, wob:o.wob ?? 3}) } go() },
+      add(leafy(o, {x:x + (Math.random() - .5) * (o.w ?? 0), y:y + (Math.random() - .5) * (o.h ?? 0), vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:o.g ?? 0, drag:o.drag ?? 1, life:o.life * (.6 + Math.random() * .7), c:pick(o.cols), s:o.size ?? (1.4 + Math.random() * 1.8), flick:true, wob:o.wob ?? 3})) } go() },
     ring(x, y, c, r1, life = .6, w = 8){ add({ring:1, x, y, r0:8, r1, c, life, w}); go() },
     // fulmine tra due punti: live = segue il dito finché non lo spengo con stop()
     bolt(o){ const b = {a:0, life:o.live ? 1e9 : o.life ?? .35, x1:o.x1, y1:o.y1, x2:o.x2, y2:o.y2, rough:o.rough ?? .24, br:o.br ?? 2, w:o.w ?? 1, every:o.every ?? .06, t:0, live:!!o.live};
       if(B.length < 80) B.push(b); go(); return b },
     stop(b){ if(b && b.fade == null) b.fade = b.a },
-    flash(v = .18, life = .2){ B.push({flash:1, a:0, v, life}); go() },
+    flash(v = .18, life = .2, c = '#E4F0FF'){ B.push({flash:1, a:0, v, life, c}); go() },
     glow(x, y, r, life = .4){ B.push({glow:1, a:0, x, y, r, life}); go() },
     // esplosione a scossa: raggi di fulmine spezzati in tutte le direzioni, che si ridisegnano e si spengono
     burstBolts(x, y, R, n = 9, life = .38){ for(let i = 0; i < n; i++){ const a = i / n * 6.283 + (Math.random() - .5) * .6, l = R * (.45 + Math.random() * .7);
       if(B.length < 80) B.push({a:0, life:life * (.7 + Math.random() * .5), x1:x, y1:y, x2:x + Math.cos(a) * l, y2:y + Math.sin(a) * l, rough:.32, br:1, w:.7 + Math.random() * .3, every:.045, t:0}) } go() },
+    // Selva: radice spinosa che cresce da un punto all'altro, resta un attimo e si ritira (live = segue il dito)
+    root(o){ const b = mkRoot(o); if(B.length < 80) B.push(b); go(); return b },
     shock(r, life = 1.2, sz = 1){ if(RMOT) return; B.push({shock:1, a:0, t:0, r, life, sz}); go() },
     converge(x, y, n, cols, dur = .7){ if(RMOT) n = Math.ceil(n / 4); for(let i = 0; i < n; i++){ const a = Math.random() * 6.28, rr = 120 + Math.random() * 160;
       add({x:x + Math.cos(a) * rr, y:y + Math.sin(a) * rr, vx:-Math.sin(a) * 120, vy:Math.cos(a) * 120, tx:x, ty:y, pull:26, life:dur * (.8 + Math.random() * .4), c:pick(cols), s:1.3 + Math.random() * 1.5, flick:true}) } go() },
-    ambient(on){
+    ambient(on, kind){
       // spegnendo, le braci già in volo si dissolvono in mezzo secondo invece di salire sul tavolo
-      if(!on) P.forEach(p => { if(p.amb) p.life = Math.min(p.life, p.a + .45) });
-      amb = on && !RMOT ? {every:.07, spawn:() => add({amb:true, x:Math.random() * W, y:H + 6, vx:(Math.random() - .5) * 14, vy:-(28 + Math.random() * 46), drag:0, life:4 + Math.random() * 3, c:pick(['#FF7A2A','#FFB347','#FF4A1C','#FFD27A']), s:.8 + Math.random() * 1.6, flick:true, wob:1.5 + Math.random() * 2})} : null;
+      if(!on || (amb && amb.kind !== kind)) P.forEach(p => { if(p.amb) p.life = Math.min(p.life, p.a + .45) });
+      // Selva: lucciole che vagano lente e qualche foglia che scende dall'alto
+      const sv = () => Math.random() < .22
+        ? add(leafy({leaf:true, size:2.6}, {amb:true, x:Math.random() * W, y:-12, vx:(Math.random() - .5) * 30, vy:26 + Math.random() * 30, drag:0, life:7 + Math.random() * 4, c:pick(['#5FAE3A','#86CC4E','#A0642A','#C9A13A']), s:3}))
+        : add({amb:true, x:Math.random() * W, y:H * (.25 + Math.random() * .75), vx:(Math.random() - .5) * 22, vy:-(4 + Math.random() * 14), drag:0, life:3 + Math.random() * 3, c:pick(['#D8F27A','#B8E07A','#F2F0A0','#9BE06A']), s:1 + Math.random() * 1.5, flick:true, wob:6 + Math.random() * 6});
+      const fg = () => add({amb:true, x:Math.random() * W, y:H + 6, vx:(Math.random() - .5) * 14, vy:-(28 + Math.random() * 46), drag:0, life:4 + Math.random() * 3, c:pick(['#FF7A2A','#FFB347','#FF4A1C','#FFD27A']), s:.8 + Math.random() * 1.6, flick:true, wob:1.5 + Math.random() * 2});
+      amb = on && !RMOT ? {kind, every:kind === 'selva' ? .12 : .07, spawn:kind === 'selva' ? sv : fg} : null;
       if(amb) go() },
   };
 })();
 // braci solo con Forgia, solo mentre in cima c'è la pagina iniziale o «Vuoi continuare?», mai con l'app in secondo piano
 function fgAmbient(){
   const top = stack[stack.length - 1], el = top && $('#ov-' + top);
-  const on = FORGIA() && !document.hidden && (top === 'wizard' || top === 'resume');
-  EMB.ambient(on);
+  const on = RICH() && !document.hidden && (top === 'wizard' || top === 'resume');
+  EMB.ambient(on, SET.theme);
 }
 document.addEventListener('visibilitychange', fgAmbient);
 // tocco su una casella: riflesso che la attraversa e scintille dal dito
 ['#ov-wizard', '#ov-resume', '#ov-win'].forEach(id => $(id).addEventListener('pointerdown', e => {
-  if(!FORGIA()) return;
+  if(!RICH()) return;
   const o = e.target.closest('.wzOpt,.btn'); if(!o) return;
   if(o.classList.contains('wzOpt')){ o.classList.remove('swp'); void o.offsetWidth; o.classList.add('swp') }
-  EMB.burst(e.clientX, e.clientY, {n:14, speed:260, life:.45, cols:['#FFD27A','#FF8A2A','#FFF3CC'], drag:4});
+  const P = pal(); EMB.burst(e.clientX, e.clientY, {n:P.leaf ? 7 : 14, speed:P.leaf ? 170 : 260, life:P.leaf ? .8 : .45, cols:P.spark, drag:4, leaf:P.leaf});
 }));
 
 
 /* ================= Forgia: effetti ================= */
 // tutti gli effetti passano dal canvas delle braci (EMB), solo posizione e trasparenza, a tempo reale
-const fgOn = () => FORGIA() && !RMOT;
+const fgOn = () => RICH() && !RMOT;
+// colori delle particelle per tema; in Selva le particelle «di materia» sono foglie
+const PAL = {
+  forgia:{leaf:false, spark:['#FFD27A','#FF8A2A','#FFF3CC'], up:['#FFD27A','#FFF3CC','#9CFF7A'], down:['#FF4A1C','#FF8A2A','#B8240A'], hit:'#FFB347', ring:['#FFD27A','#FF4A1C'],
+    big:['#FFC86A','#FFF3CC','#FF9A3C','#FF4A1C'], hub:['#FFD27A','#FF8A2A','#FF4A1C','#FFF3CC'], hubRing:'#FFB347', done:['#FFD27A','#FFF3CC','#9CFF7A'], fw:[['#FFD27A','#FFF3CC'],['#FF8A2A','#FFD27A']], glow:['#FFC86A','#FF8A2A','#FFF3CC','#FF4A1C']},
+  selva:{leaf:true, spark:['#B8E07A','#7CC84A','#E8F5C0'], up:['#9BE06A','#5FB83F','#D9F2A0'], down:['#A0642A','#C98A3A','#7A5A2A','#6B8A3A'], hit:'#8FD15A', ring:['#C9EE8A','#4FA83A'],
+    big:['#B8E07A','#E8F5C0','#6FBF4A','#3E8E3A','#E7BE5C'], hub:['#C9EE8A','#7CC84A','#E8F5C0','#E7BE5C'], hubRing:'#A6DC62', done:['#B8E07A','#E8F5C0','#E7BE5C'], fw:[['#B8E07A','#E8F5C0'],['#E7BE5C','#C9EE8A']], glow:['#D8F27A','#B8E07A','#F2F0A0','#9BE06A']},
+};
+const pal = () => PAL[SET.theme] || PAL.forgia;
 const fgC = el => { const r = el.getBoundingClientRect(); return {x:r.left + r.width / 2, y:r.top + r.height / 2, w:r.width, h:r.height} };
 const FG_UP = {r0:-Math.PI / 2, r180:Math.PI / 2, r90:0, r270:Math.PI};   // «verso chi gioca» sullo schermo
 const fgPc = i => COLORS[S.players[i].color].bg;
@@ -4167,14 +4378,21 @@ const fgHits = {};
 function fgLife(i, d){
   const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
   const c = fgC(cell.querySelector('.life')), up = FG_UP[rotOf(i)];
-  if(d > 0) EMB.embers(c.x, c.y, {n:8, speed:170, dir:up, spread:.9, life:.9, cols:['#FFD27A','#FFF3CC','#9CFF7A'], w:c.w * .5, h:c.h * .3, drag:1.2});
-  else EMB.burst(c.x, c.y, {n:10, speed:240, dir:up + Math.PI, spread:1.4, life:.6, cols:['#FF4A1C','#FF8A2A','#B8240A'], drag:3});
+  const P = pal();
+  if(P.leaf){
+    // Selva: col + spuntano foglie verdi verso il giocatore, col − cadono foglie secche
+    if(d > 0) EMB.embers(c.x, c.y, {n:6, speed:150, dir:up, spread:1, life:1.1, cols:P.up, w:c.w * .5, h:c.h * .3, drag:1.6, leaf:true, size:2.4});
+    else EMB.burst(c.x, c.y, {n:6, speed:170, dir:up + Math.PI, spread:1.6, life:1, cols:P.down, drag:2.4, leaf:true, size:2.4});
+  }
+  else if(d > 0) EMB.embers(c.x, c.y, {n:8, speed:170, dir:up, spread:.9, life:.9, cols:P.up, w:c.w * .5, h:c.h * .3, drag:1.2});
+  else EMB.burst(c.x, c.y, {n:10, speed:240, dir:up + Math.PI, spread:1.4, life:.6, cols:P.down, drag:3});
   const now = performance.now(), o = fgHits[i], h = fgHits[i] = o && now - o.t < 1300 ? {v:o.v + d, t:now, big:o.big} : {v:d, t:now};
   // se è appena partito un fulmine verso questo giocatore il colpo lo fa già lui
-  if(d < 0 && h.v <= -5 && !h.big){ h.big = true; setTimeout(()=>{ if(performance.now() - fgLastStrike > 400) fgHit(cell, '#FFB347') }, 30) }
+  if(d < 0 && h.v <= -5 && !h.big){ h.big = true; setTimeout(()=>{ if(performance.now() - fgLastStrike > 400) fgHit(cell, pal().hit) }, 30) }
 }
 // colpo: due tagli di luce incrociati, lampo, la scheda trema, esplosione di scintille
 function fgHit(cell, col){
+  if(SELVA()) return svClaw(cell);
   const fr = cell.querySelector('.frame'); if(!fr) return;
   fr.querySelector('.fgHit')?.remove();
   const fx = document.createElement('div'); fx.className = 'fgHit'; fx.style.setProperty('--kc', col);
@@ -4201,6 +4419,7 @@ function fgTo(v){
 let fgLastStrike = 0;
 const fgAgain = () => { const now = performance.now(), again = now - fgLastStrike < 280; fgLastStrike = now; return again };
 function fgStrike(a, v){
+  if(SELVA()) return svStrike(a, v, fgAgain());
   // H&O: il fulmine parte da me, attraversa il quadratino ed esce dal bordo in alto; esplode sul telefono di chi è colpito
   if(NV() && v !== NET.me){
     const f = fgFrom(a), tile = $(`.ntile[data-i="${v}"]`), again = fgAgain();
@@ -4217,6 +4436,54 @@ function fgStrike(a, v){
   EMB.bolt({x1:f.x, y1:f.y, x2:t.x, y2:t.y, life:again ? .22 : .4, br:again ? 1 : 3, w:again ? .9 : 1.25, every:.05});
   if(!again) EMB.flash(.16);
   setTimeout(()=>fgZap(t, again), 40);
+}
+// Selva: la radice parte da me; in H&O attraversa il quadratino ed esce dal bordo, sul telefono colpito le radici si prendono il campo
+function svStrike(a, v, again){
+  const f = fgFrom(a); if(!f) return;
+  if(NV() && v !== NET.me){
+    const tile = $(`.ntile[data-i="${v}"]`); if(tile){ const t = fgC(tile);
+      EMB.root({x1:f.x, y1:f.y, x2:t.x + (Math.random() - .5) * t.w * .3, y2:-30, life:again ? .55 : .8, grow:again ? .18 : .26, ret:.3, br:again ? 1 : 2, w:again ? .8 : 1});
+      setTimeout(()=>{ EMB.burst(t.x, t.y + t.h * .3, {n:again ? 4 : 8, speed:200, life:1, cols:PAL.selva.spark, drag:2, leaf:true}); tile.animate([{translate:'0 0'},{translate:'-3px 2px'},{translate:'2px -2px'},{translate:'0 0'}], {duration:160}) }, 160);
+      buzz(again ? 10 : 20) }
+    netZap(a, v, again);
+    return;
+  }
+  const t = fgTo(v); if(!t) return;
+  EMB.root({x1:f.x, y1:f.y, x2:t.x, y2:t.y, life:again ? .6 : .9, grow:again ? .18 : .28, ret:.3, br:again ? 1 : 2, w:again ? .8 : 1});
+  setTimeout(()=>svGrip(t, again, null), again ? 150 : 240);
+}
+// le radici escono dai bordi del campo e lo stringono, poi si ritirano; il numero della vita resta libero
+function svGrip(t, small, fromX){
+  const r = t.r, cx = r.x + r.w / 2, cy = r.y + r.h / 2, n = small ? 4 : 8, life = small ? .9 : 1.8, m = Math.min(r.w, r.h);
+  for(let k = 0; k < n; k++){
+    const q = (k + Math.random() * .6) / n, per = 2 * (r.w + r.h), d = q * per;
+    let x, y; if(d < r.w){ x = r.x + d; y = r.y } else if(d < r.w + r.h){ x = r.x + r.w; y = r.y + d - r.w } else if(d < 2 * r.w + r.h){ x = r.x + r.w - (d - r.w - r.h); y = r.y + r.h } else { x = r.x; y = r.y + r.h - (d - 2 * r.w - r.h) }
+    const depth = .3 + Math.random() * .16, tx = x + (cx - x) * depth + (Math.random() - .5) * m * .15, ty = y + (cy - y) * depth + (Math.random() - .5) * m * .15;
+    EMB.root({x1:x, y1:y, x2:tx, y2:ty, delay:Math.random() * (small ? .08 : .22), life, grow:small ? .22 : .42, ret:small ? .25 : .45, br:small ? 0 : 1 + (Math.random() < .5 ? 1 : 0), w:t.big ? 1.25 : .7, amp:.14});
+  }
+  if(fromX != null) EMB.root({x1:fromX, y1:r.y - 30, x2:fromX + (cx - fromX) * .5, y2:r.y + r.h * .3, life, grow:.3, ret:.45, br:2, w:t.big ? 1.1 : .7});
+  EMB.burst(t.x, t.y, {n:small ? 6 : 16, speed:small ? 220 : 360, life:1.3, cols:[...PAL.selva.down, ...PAL.selva.spark], drag:2, leaf:true, size:2.3});
+  EMB.burst(t.x, t.y, {n:small ? 6 : 18, speed:small ? 260 : 420, life:.45, cols:['#2B1A0E','#5E4026','#E8F5C0'], drag:3, streak:.04});
+  if(!small) EMB.flash(.1, .3, '#3E7A2A');
+  t.el.animate([{translate:'0 0'},{translate:'-5px 3px'},{translate:'4px -4px'},{translate:'-2px 2px'},{translate:'0 0'}], {duration:small ? 200 : 360});
+  buzz(small ? 15 : [20, 40, 30, 40]);
+}
+function svIncoming(a, small){
+  if(RMOT || document.hidden) return;
+  const t = fgTo(NET.me); if(!t) return;
+  const tile = $(`.ntile[data-i="${a}"]`), sx = tile ? fgC(tile).x : innerWidth / 2;
+  svGrip(t, small, sx);
+}
+// graffio d'artiglio: tre segni paralleli sulla scheda, lampo verde, la scheda trema
+function svClaw(cell){
+  const fr = cell.querySelector('.frame'); if(!fr) return;
+  fr.querySelector('.svClaw')?.remove();
+  const fx = document.createElement('div'); fx.className = 'svClaw';
+  fx.innerHTML = '<i class="fl"></i><i class="cl" style="--o:-22px"></i><i class="cl" style="--o:0px"></i><i class="cl" style="--o:22px"></i>';
+  fr.appendChild(fx); setTimeout(()=>fx.remove(), 800);
+  cell.animate([{translate:'0 0'},{translate:'-6px 4px'},{translate:'5px -3px'},{translate:'-2px 1px'},{translate:'0 0'}], {duration:300, delay:60});
+  const c = fgC(cell); EMB.burst(c.x, c.y, {n:18, speed:380, life:1.1, cols:PAL.selva.down, drag:2.4, g:120, leaf:true});
+  buzz([25, 30, 45]);
 }
 // colpo che arriva da un altro telefono: il fulmine entra dal bordo in alto, sopra il quadratino di chi attacca, e scoppia sul mio campo
 function fgIncoming(a, small){
@@ -4245,14 +4512,14 @@ function fgPPIn(i){
   const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
   [...cell.querySelectorAll('.ppC,.ppF,.ppGear')].forEach((el, k) => el.animate([{translate:'0 40%', scale:.9, opacity:0}, {translate:'0 0', scale:1, opacity:1}], {duration:460, delay:120 + k * 40, easing:FG_EASE.spring, fill:'backwards'}));
   setTimeout(()=>{ const st = cell.querySelector('.strip'); if(!st) return; const c = fgC(st);
-    EMB.embers(c.x, c.y, {n:18, speed:90, dir:FG_UP[rotOf(i)], spread:2.2, life:1, cols:[fgPc(i), '#FFD27A'], w:c.w, h:c.h, drag:1.5}) }, 140);
+    const P = pal(); EMB.embers(c.x, c.y, {n:P.leaf ? 10 : 18, speed:90, dir:FG_UP[rotOf(i)], spread:2.2, life:P.leaf ? 1.3 : 1, cols:P.leaf ? P.up : [fgPc(i), '#FFD27A'], w:c.w, h:c.h, drag:1.5, leaf:P.leaf}) }, 140);
 }
 // contatore: il numero nuovo scorre dentro, con scintille sul +
 function fgCtr(i, k, up){
   const cell = $(`.cell[data-i="${i}"]`), btn = cell && cell.querySelector(`.ppC [data-k="${k}"]`); if(!btn) return;
   const b = btn.closest('.ppC').querySelector('b');
   b.animate([{translate:`0 ${up ? 60 : -60}%`, opacity:0}, {translate:'0 0', opacity:1}], {duration:240, easing:'cubic-bezier(.2,.9,.25,1)'});
-  if(up){ const c = fgC(b); EMB.burst(c.x, c.y, {n:10, speed:200, life:.45, cols:['#FFD27A','#FFF3CC','#FF8A2A'], drag:4}) }
+  if(up){ const c = fgC(b), P = pal(); EMB.burst(c.x, c.y, {n:P.leaf ? 5 : 10, speed:P.leaf ? 150 : 200, life:P.leaf ? .8 : .45, cols:P.spark, drag:4, leaf:P.leaf}) }
 }
 // inizio partita: il simbolo cade con un'onda d'urto, le schede escono dal centro, i punti vita salgono da zero
 function fgCount(el, to, dur, delay){
@@ -4271,8 +4538,14 @@ function playIntroF(){
   anims.push(hub.animate([{transform:'scale(5) rotate(-30deg)', opacity:0}, {opacity:1, offset:.4}, {transform:'none', opacity:1}], {duration:520, easing:'cubic-bezier(.55,0,1,.45)'}));
   T.push(setTimeout(()=>{
     if(!INTRO) return;
-    EMB.ring(c.x, c.y, '#FFD27A', Math.max(innerWidth, innerHeight) * .55, .7, 10); EMB.ring(c.x, c.y, '#FF4A1C', innerWidth * .4, .5, 6);
-    EMB.burst(c.x, c.y, {n:110, speed:620, life:.9, cols:['#FFC86A','#FFF3CC','#FF9A3C','#FF4A1C'], drag:2.6, g:120});
+    const P = pal();
+    EMB.ring(c.x, c.y, P.ring[0], Math.max(innerWidth, innerHeight) * .55, .7, 10); EMB.ring(c.x, c.y, P.ring[1], innerWidth * .4, .5, 6);
+    if(P.leaf){
+      // Selva: il seme germoglia, radici che si aprono in tutte le direzioni e una pioggia di foglie
+      for(let k = 0; k < 7; k++){ const a = k / 7 * 6.283 + Math.random() * .4, l = Math.min(innerWidth, innerHeight) * (.3 + Math.random() * .15);
+        EMB.root({x1:c.x, y1:c.y, x2:c.x + Math.cos(a) * l, y2:c.y + Math.sin(a) * l, life:1.1, grow:.4, ret:.4, br:1, w:.8}) }
+      EMB.burst(c.x, c.y, {n:40, speed:420, life:1.4, cols:P.big, drag:2.2, g:40, leaf:true, size:2.6});
+    } else EMB.burst(c.x, c.y, {n:110, speed:620, life:.9, cols:P.big, drag:2.6, g:120});
     anims.push($('#board').animate([{translate:'0 0'},{translate:'-6px 5px'},{translate:'5px -4px'},{translate:'-3px 2px'},{translate:'0 0'}], {duration:320}));
     buzz([40, 30, 20]); sfx('found');
     cells.forEach((el, i) => { const r = fgC(el); el.style.opacity = '';
@@ -4282,17 +4555,17 @@ function playIntroF(){
   }, 500));
 }
 // pedina rapida: le scintille convergono, la carta entra girando; conto alla rovescia e stampa lasciano scintille
-function fgTokStart(){ const c = fgC($('#ov-modal .fgRays')); EMB.converge(c.x, c.y, 90, ['#FFC86A','#FF8A2A','#FFF3CC','#FF4A1C'], .75) }
+function fgTokStart(){ const c = fgC($('#ov-modal .fgRays')); EMB.converge(c.x, c.y, 90, pal().glow, .75) }
 function fgTokShow(seq){
   const c = fgC($('#tmCard'));
-  EMB.ring(c.x, c.y, '#FFD27A', c.w, .6, 6); EMB.burst(c.x, c.y, {n:60, speed:480, life:.8, cols:['#FFD27A','#FFF3CC','#FF8A2A'], drag:2.6});
+  const P = pal(); EMB.ring(c.x, c.y, P.ring[0], c.w, .6, 6); EMB.burst(c.x, c.y, {n:P.leaf ? 30 : 60, speed:480, life:P.leaf ? 1.2 : .8, cols:P.spark, drag:2.6, leaf:P.leaf});
   const t0 = performance.now();
   (function f(t){
     if(seq !== TM.seq || !['count','printing','wait'].includes(TM.phase)) return;
     if(TM.phase === 'count'){ const b = $('#tmBar').parentNode.getBoundingClientRect(), k = Math.min(1, (t - t0) / 3000);
-      if(Math.random() < .55) EMB.burst(b.left + b.width * k, b.top + b.height / 2, {n:2, speed:150, dir:-1.57, spread:2.2, life:.5, cols:['#FFD27A','#FF8A2A','#FFF3CC'], g:420, drag:1}) }
+      if(Math.random() < (P.leaf ? .2 : .55)) EMB.burst(b.left + b.width * k, b.top + b.height / 2, {n:P.leaf ? 1 : 2, speed:150, dir:-1.57, spread:2.2, life:P.leaf ? .9 : .5, cols:P.spark, g:420, drag:1, leaf:P.leaf}) }
     if(TM.phase === 'printing'){ const s = $('#tmScan').getBoundingClientRect();
-      if(s.width && Math.random() < .7) EMB.burst(s.left + Math.random() * s.width, s.top + s.height / 2, {n:2, speed:160, dir:-1.57, spread:1.2, life:.4, cols:['#FFD27A','#FFF3CC'], g:300}) }
+      if(s.width && Math.random() < (P.leaf ? .25 : .7)) EMB.burst(s.left + Math.random() * s.width, s.top + s.height / 2, {n:P.leaf ? 1 : 2, speed:160, dir:-1.57, spread:1.2, life:P.leaf ? .8 : .4, cols:P.spark, g:300, leaf:P.leaf}) }
     requestAnimationFrame(f);
   })(t0);
 }
@@ -4301,22 +4574,22 @@ function fgTokShow(seq){
 const fgHub = {t:0};
 function fgHubC(){ const r = $('#tokenBtn').getBoundingClientRect(); return {x:r.left + r.width / 2, y:r.top + r.height / 2, r:r.width / 2} }
 $('#tokenBtn').addEventListener('pointerdown', () => {
-  if(!fgOn()) return; const c = fgHubC();
-  EMB.ring(c.x, c.y, '#FFB347', c.r * 1.9, .45, 5);
-  for(let k = 0; k < 14; k++){ const a = k / 14 * 6.283; EMB.embers(c.x + Math.cos(a) * c.r * .8, c.y + Math.sin(a) * c.r * .8, {n:2, speed:150, dir:a + .5, spread:.5, life:.55, cols:['#FFD27A','#FF8A2A','#FF4A1C','#FFF3CC'], drag:2.6, size:2}) }
+  if(!fgOn()) return; const c = fgHubC(), P = pal();
+  EMB.ring(c.x, c.y, P.hubRing, c.r * 1.9, .45, 5);
+  for(let k = 0; k < (P.leaf ? 8 : 14); k++){ const a = k / (P.leaf ? 8 : 14) * 6.283; EMB.embers(c.x + Math.cos(a) * c.r * .8, c.y + Math.sin(a) * c.r * .8, {n:P.leaf ? 1 : 2, speed:150, dir:a + .5, spread:.5, life:P.leaf ? .9 : .55, cols:P.hub, drag:2.6, size:2, leaf:P.leaf}) }
 });
 function fgSwirl(on){
   clearInterval(fgHub.t); fgHub.t = 0;
   if(!on || !fgOn()) return;
   fgHub.t = setInterval(() => {
     if(!$('#tokenBtn').classList.contains('listening') || !fgOn()){ clearInterval(fgHub.t); fgHub.t = 0; return }
-    const c = fgHubC();
-    for(let k = 0; k < 5; k++){ const a = Math.random() * 6.283, rr = c.r * (1 + Math.random() * .3);
-      EMB.embers(c.x + Math.cos(a) * rr, c.y + Math.sin(a) * rr, {n:1, speed:160, dir:a + 1.75, spread:.35, life:.8, cols:['#FFD27A','#FF8A2A','#FF4A1C','#FFF3CC'], drag:1.4, g:-90, size:1.6 + Math.random() * 1.4}) }
+    const c = fgHubC(), P = pal();
+    for(let k = 0; k < (P.leaf ? 2 : 5); k++){ const a = Math.random() * 6.283, rr = c.r * (1 + Math.random() * .3);
+      EMB.embers(c.x + Math.cos(a) * rr, c.y + Math.sin(a) * rr, {n:1, speed:160, dir:a + 1.75, spread:.35, life:P.leaf ? 1.1 : .8, cols:P.hub, drag:1.4, g:P.leaf ? -150 : -90, size:P.leaf ? 2 : 1.6 + Math.random() * 1.4, leaf:P.leaf}) }
   }, 40);
 }
 new MutationObserver(() => fgSwirl($('#tokenBtn').classList.contains('listening'))).observe($('#tokenBtn'), {attributes:true, attributeFilter:['class']});
-function fgTokDone(){ const c = fgC($('#tmCard')); EMB.burst(c.x, c.y + c.h * .45, {n:50, speed:420, dir:-1.57, spread:2.6, life:.8, cols:['#FFD27A','#FFF3CC','#9CFF7A'], g:500}) }
+function fgTokDone(){ const c = fgC($('#tmCard')), P = pal(); EMB.burst(c.x, c.y + c.h * .45, {n:P.leaf ? 26 : 50, speed:420, dir:-1.57, spread:2.6, life:P.leaf ? 1.3 : .8, cols:P.done, g:500, leaf:P.leaf}) }
 // vittoria: le lettere cadono una alla volta, fuochi d'artificio, la targhetta del vincitore sbatte
 function fgWin(i){
   const hl = $('#ov-win h1 .hl'), nm = $('#wnName'), col = fgPc(i);
@@ -4327,7 +4600,8 @@ function fgWin(i){
   setTimeout(()=>{ const c = fgC(nm); EMB.ring(c.x, c.y, col, 160, .6, 8); $('#ov-win .dlgCard').animate([{translate:'0 0'},{translate:'-5px 4px'},{translate:'4px -3px'},{translate:'0 0'}], {duration:260}) }, 1060);
   for(let k = 0; k < 9; k++) setTimeout(()=>{ if(stack[stack.length - 1] !== 'win') return;
     const x = innerWidth * (.15 + Math.random() * .7), y = innerHeight * (.1 + Math.random() * .3);
-    EMB.ring(x, y, '#FFD27A', 70 + Math.random() * 40, .5, 4); EMB.burst(x, y, {n:70, speed:360, life:1.1, cols:[['#FFD27A','#FFF3CC'],['#FF8A2A','#FFD27A'],[col,'#FFF3CC']][k % 3], drag:1.6, g:160, streak:.05}) }, 250 + k * 320);
+    const P = pal(); EMB.ring(x, y, P.ring[0], 70 + Math.random() * 40, .5, 4);
+    EMB.burst(x, y, {n:P.leaf ? 32 : 70, speed:360, life:P.leaf ? 1.8 : 1.1, cols:[...P.fw, [col, P.fw[0][1]]][k % 3], drag:1.6, g:P.leaf ? 60 : 160, streak:.05, leaf:P.leaf, size:2.4}) }, 250 + k * 320);
 }
 
 /* ================= Animazione di inizio partita ================= */

@@ -37,6 +37,7 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 
 **Temi**
 - Due temi da scegliere nel Menu: Classico e Forgia (acciaio scuro, braci, angoli tagliati, animazioni particellari).
+- In prova (prerelease): Selva, il tema del Verde (legno e muschio, foglie e lucciole, colpo di radici e spine).
 
 **Aggiornamenti**
 - La versione è visibile accanto al nome. Toccandola, l'app verifica gli aggiornamenti.
