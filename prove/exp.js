@@ -13,7 +13,7 @@ for (const [name, c] of [['scaduta', `window.APP_REPO='wolve666/MagicPlayPrint-a
   await p.goto('http://mpp.test/index.html'); await p.waitForTimeout(2000);
   const info = await p.evaluate(()=>({canale:CHANNEL, repo:REPO, bloccata:!!document.querySelector('#expired'), ver:document.querySelector('#wzVer').textContent, toast:document.querySelector('#toast').textContent}));
   console.log(name, JSON.stringify(info));
-  if(name==='scaduta') await p.screenshot({path:'shots/scaduta.png'});
+  if(name==='scaduta') await p.screenshot({path:require('path').join(__dirname,'out','shots')+'/scaduta.png'});
   await p.close();
 }
 console.log('errori:', errs); await b.close(); })();
