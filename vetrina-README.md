@@ -5,7 +5,7 @@ App Android realizzata da **E-Duck Garage**.
 
 ## Download
 
-Scarica l'ultima `MagicPlayPrint.apk` da [Releases](../../releases/latest) e installala sul telefono. Android chiederà di consentire l'installazione da origini sconosciute.
+Serve **Android 12 o successivo**. Scarica l'ultima `MagicPlayPrint.apk` da [Releases](../../releases/latest) e installala sul telefono. Android chiederà di consentire l'installazione da origini sconosciute.
 
 Le versioni segnate come «beta» o «prova generale» sono riservate ai tester e smettono di funzionare alla data indicata.
 

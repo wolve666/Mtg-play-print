@@ -72,6 +72,10 @@ jobs:
           echo "window.APP_REPO='$VETRINA';window.APP_CHANNEL='$CH';window.APP_EXPIRES=${{ steps.c.outputs.exp }};window.APP_LABEL='${{ steps.c.outputs.label }}';" > www/app-config.js
       - run: npm install
       - run: npx cap add android
+      - name: Android 12 come minimo (deciso il 20 novembre 2026)
+        run: |
+          sed -i 's/minSdkVersion = [0-9]*/minSdkVersion = 31/' android/variables.gradle
+          grep -q "minSdkVersion = 31" android/variables.gradle || { echo "::error::minSdkVersion non trovato in variables.gradle"; exit 1; }
       - name: Modulo Bluetooth classico (cartella native)
         run: cp native/*.java android/app/src/main/java/it/educk/magicplayprint/
       - name: Permessi Bluetooth classico nel manifest (ricerca senza posizione da Android 12)

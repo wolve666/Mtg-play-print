@@ -70,6 +70,7 @@ Struttura:
 ## Registro delle modifiche
 
 ### v2.1.3 (V2 beta)
+- **Android 12 come minimo**: da questa APK l'app si installa solo su Android 12 o successivo (telefoni da fine 2021 in poi, circa l'80% di quelli in uso). Chi ha Android 11 o precedente tiene la versione che ha.
 - **Corretto**: ogni tanto il trascinamento dei danni dall'elemento centrale non partiva (niente animazione né scia). Succedeva se il dito restava fermo un attimo prima di muoversi: l'app lo prendeva per una richiesta a voce. Ora, in H&O, se il dito si sposta il microfono si annulla e parte il trascinamento.
 - **Danno da combattimento dal trascinamento**: in H&O la finestrella che si apre trascinando su un avversario ha anche «Combattimento» (toglie vita, con +2 +3 +5). Nella partita Standard è la scelta di partenza; in Commander resta il comandante.
 
