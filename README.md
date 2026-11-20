@@ -62,8 +62,8 @@ Struttura:
 
 ## Registro delle modifiche
 
-### v0.20.0
-Serve la nuova APK (cambia la parte nativa).
+### v2.0.0
+Prima versione della V2. Serve la nuova APK (cambia la parte nativa).
 - **V2, telefoni collegati (primo pezzo).** Dal Menu, «Gioca su più telefoni», poi «Condividi questa partita»: questo telefono diventa il principale e tiene la partita. Sugli altri telefoni, dalla pagina iniziale, «Unisciti a una partita».
 - Collegamento senza internet con le Nearby Connections di Android (Bluetooth e Wi‑Fi diretto). Chi si unisce vede un codice di 4 cifre, e sul principale compare lo stesso codice con «Accetta» e «Rifiuta».
 - Posti al tavolo: sul principale si trascina ogni telefono sul posto di chi lo usa (oppure si tocca il telefono e poi il posto). Il nome del telefono diventa il nome del giocatore.

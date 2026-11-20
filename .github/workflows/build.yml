@@ -61,12 +61,15 @@ jobs:
           BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
           $BT/zipalign -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
           $BT/apksigner sign --ks ks.jks --ks-pass "pass:${{ secrets.KEYSTORE_PASS }}" --out MagicPlayPrint.apk aligned.apk
-      - name: APK di prova (rami diversi da main)
+      - name: APK di prova con la versione nel nome (rami diversi da main)
+        if: github.ref != 'refs/heads/main'
+        run: cp MagicPlayPrint.apk MagicPlayPrint-${{ steps.v.outputs.ver }}.apk
+      - name: Allego l'APK di prova
         if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: MagicPlayPrint-${{ steps.v.outputs.ver }}
-          path: MagicPlayPrint.apk
+          path: MagicPlayPrint-${{ steps.v.outputs.ver }}.apk
       - name: Pubblico la release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
