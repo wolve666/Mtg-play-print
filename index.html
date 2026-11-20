@@ -744,6 +744,33 @@ body.netv .cell.pp .strip{height:64px}
 .cbSum{margin:16px 0 12px;padding:12px 14px;border-radius:12px;background:var(--surface);line-height:1.5;font-size:15px}
 .cbSum b{font-family:var(--num)}
 .th-forgia .cbSum{border-radius:0;clip-path:var(--notch)}
+/* ---- prova sugli schermi (21 novembre 2026) ---- */
+/* schermi bassi (360×640 e simili): la pagina iniziale scorre e i simboli dei temi stanno in fondo, sotto i tasti */
+@media (max-height:720px){
+  .wzStep{overflow-y:auto;justify-content:flex-start;gap:16px}
+  #wzStep1 .wzSeeds{position:static;margin-top:auto;padding-top:6px}
+}
+/* schermi stretti: l'intestazione del menu non spinge fuori «Collega stampante» */
+@media (max-width:380px){
+  .ovHead{gap:6px;padding:10px 10px}
+  .ovHead h2{min-width:0;font-size:18px}
+  #tkPrinter{padding:6px 9px!important;font-size:12px!important}
+  .cbRow{flex-wrap:wrap}
+  .cbRow .stepper{margin-left:auto}
+}
+/* H&O su schermi grandi (pieghevoli aperti, tablet): quadratini, elemento centrale e pannello crescono con lo schermo */
+body.netv{--nbH:clamp(112px,13vw,170px)}
+body.netv #netBar{height:calc(var(--nbH) + env(safe-area-inset-top))}
+body.netv #board{padding-top:calc(var(--nbH) + 8px + env(safe-area-inset-top))}
+.ntN{font-size:clamp(11px,2.2vw,18px)}
+.ntL{font-size:clamp(34px,6vw,58px)!important}
+.ntS{font-size:clamp(11px,1.8vw,16px)}
+body.netv #tokenBtn{width:clamp(150px,26vw,230px);height:clamp(56px,9vw,84px);border-radius:clamp(18px,3vw,26px)}
+body.netv #tokenBtn img{width:clamp(42px,6.5vw,62px);height:clamp(42px,6.5vw,62px)}
+body.netv .ppIn{font-size:clamp(18px,3vw,26px)}
+body.netv .ppF,body.netv .ppGear,body.netv .ppCmd{min-height:36px}
+body.netv .ppGear{min-width:36px}
+@media (min-width:700px){ body.netv .ovBody{width:100%;max-width:640px;margin:0 auto} }
 /* ospite: niente stampante sul suo telefono, stampa il principale */
 body.guest #menuBtn,body.guest #tkPrinter{display:none}
 #expired{position:fixed;inset:0;z-index:300;background:var(--bg);display:grid;place-items:center;padding:24px;text-align:center}
@@ -1752,9 +1779,11 @@ function placeNV(cell){
   packRowNV(cell);
 }
 // tutti gli indicatori in fila, grandi fino a un massimo; se sono tanti rimpiccioliscono, poi vanno su due righe
-const NV_ROW = [...ROW, 'monarch', 'blessing', 'initiative', 'turn'], NV_FMAX = 30, NV_FMIN = 15;
+const NV_ROW = [...ROW, 'monarch', 'blessing', 'initiative', 'turn'], NV_FMIN = 15;
 function packRowNV(cell){
   const frame = cell.querySelector('.frame'), W = frame.offsetWidth, room = W * .92, gap = 6;
+  // grandi fino a un massimo, che cresce un po' sugli schermi larghi
+  const NV_FMAX = Math.round(Math.min(46, Math.max(30, W * .055)));
   const all = NV_ROW.flatMap(k => [...cell.querySelectorAll(`.spia[data-s="${k}"]`)]), els = all.filter(e => e.classList.contains('on'));
   all.forEach(e => e.style.fontSize = NV_FMAX + 'px');
   if(!els.length || cell._rowY == null) return;
