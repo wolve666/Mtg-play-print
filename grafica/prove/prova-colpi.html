@@ -702,15 +702,23 @@ TH.mox = {
   bigName:'Colpo grosso: il pugno',
   // colpo grosso: il pugno del colosso cala dall'alto (si avvicina al tappeto, quindi rimpicciolisce), sfonda il tappeto e si spacca in pezzi
   big(){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), fist = I('mox', 'fist', 0), D = .7, FW = W * .62;
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), fist = I('mox', 'fist', 0), D = .8, FW = W * .62;
     if(RM){ flash('#EFFFFF', .95, 1); damage(8); return }
-    // 1. arriva: l'ombra si allarga e si fa scura, il tappeto trema sempre di più, il pugno scende accelerando
-    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > D) return false; const k = ei(x / D);
-      const g = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, FW * (1.4 - .8 * k)); g.addColorStop(0, `rgba(0,0,0,${.15 + .55 * k})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(o.x, o.y + W * .05, FW * (1.4 - .8 * k), FW * (1 - .6 * k), 0, 0, TAU); c.fill();
+    // 1. arriva ad arco dalla parte alta dello schermo, da un lato a caso: grosso e inclinato, rimpicciolisce e si raddrizza mentre accelera verso il centro;
+    //    la sua ombra scivola sul tappeto verso il punto d'impatto e si fa sempre più scura
+    const side = sgn(), P0 = [o.x + side * W * .75, -H * .35], P1 = [o.x + side * W * .45, o.y - H * .32], path = u => { const v = 1 - u; return [v * v * P0[0] + 2 * v * u * P1[0] + u * u * o.x, v * v * P0[1] + 2 * v * u * P1[1] + u * u * o.y] }, hist = [];
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > D) return false; const k = ei(x / D), sx = lerp(o.x + side * W * .35, o.x, k), rr = FW * (1.3 - .7 * k);
+      const g = c.createRadialGradient(sx, o.y, 0, sx, o.y, rr); g.addColorStop(0, `rgba(0,0,0,${.12 + .6 * k})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(sx, o.y + W * .05, rr, rr * .7, 0, 0, TAU); c.fill();
       st('V').dark = Math.max(st('V').dark, .35 * k); if(R() < dt * 30 * k){ SP.vJx.v += (R() - .5) * 60 * k; SP.vJy.v += (R() - .5) * 60 * k }
-      lit('V', o.x, o.y, W * .5, [.5, 1, 1.1], .4 * k * (.6 + .4 * Math.sin(x * 30))); return true });
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > D) return false; const k = ei(x / D), sc = lerp(3.2, 1, k);
-      img(c, fist, o.x, o.y - W * .1 * (1 - k), FW * sc, .25 * (1 - k), Math.min(1, x / .15)); glow(c, o.x, o.y, W * .25 * sc, '160,250,255', .35 * k); return true });
+      lit('V', sx, o.y, W * .5, [.5, 1, 1.1], .4 * k * (.6 + .4 * Math.sin(x * 30))); return true });
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > D) return false; const k = ei(x / D), p = path(k), q = path(Math.max(0, k - .04)), sc = lerp(3.4, 1, eo(k)), rot = side * .55 * (1 - eo(k)) + Math.sin(x * 9) * .04 * (1 - k);
+      hist.push([p[0], p[1], sc, rot]); if(hist.length > 4) hist.shift();
+      const ang = Math.atan2(p[1] - q[1], p[0] - q[0]);
+      c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(200,240,255,${.35 * k})`; c.lineCap = 'round';
+      for(let i = 0; i < 7; i++){ const off = (i - 3) * FW * sc * .12, l = FW * sc * (.5 + .4 * R()); c.lineWidth = 1.5 + R() * 1.5; const bx = p[0] - Math.cos(ang) * FW * sc * .45 - Math.sin(ang) * off, by = p[1] - Math.sin(ang) * FW * sc * .45 + Math.cos(ang) * off;
+        c.beginPath(); c.moveTo(bx, by); c.lineTo(bx - Math.cos(ang) * l, by - Math.sin(ang) * l); c.stroke() } c.restore();
+      hist.slice(0, -1).forEach((h, i) => img(c, fist, h[0], h[1], FW * h[2], h[3], .12 * (i + 1)));
+      img(c, fist, p[0], p[1], FW * sc, rot, Math.min(1, x / .12)); glow(c, p[0], p[1], W * .25 * sc, '160,250,255', .35 * k); return true });
     after(D, () => {
       // 2. impatto: il tappeto sfonda (rottura in pezzi più forte del colpo normale), onde d'urto, cratere, polvere
       impact(PI / 2, 2.4); SP.vPunch.v -= 2.2; flash('#FFFFFF', .9, .25, true); flash('#E8FFFF', .5, 1.2);
