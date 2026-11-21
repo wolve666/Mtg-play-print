@@ -58,6 +58,8 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
 .field{position:absolute;left:2.5cqw;right:2.5cqw;top:16%;bottom:1.5%;border-radius:8cqw 2.4cqw 8cqw 2.4cqw;overflow:hidden;
   background:radial-gradient(120% 95% at 50% 40%,transparent 52%,rgba(0,0,0,.4)),linear-gradient(170deg,color-mix(in srgb,var(--pc),#fff 9%),var(--pc) 50%,color-mix(in srgb,var(--pc) 68%,#000))}
 .scr .fxu{z-index:2}
+.scr .fgl{z-index:1}
+.scr .mid{z-index:3}
 .hub{position:absolute;left:50%;top:50%;translate:-50% -50%;width:62cqw;z-index:3;pointer-events:none;display:grid;place-items:center}
 .hub img{grid-area:1/1;display:block}
 .hub .plate{width:100%;height:auto;filter:drop-shadow(0 1.5cqw 2cqw rgba(0,0,0,.5))}
@@ -78,7 +80,7 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
   <div class="intro">
     <span class="lbl">Magic Play&amp;Print · V2 prerelease</span>
     <h1>I colpi dei temi, con le immagini vere</h1>
-    <p>Scegli il tema, poi trascina dall'elemento centrale di Bea fino al quadratino di Federico in alto e lascia. Oppure tocca «Guarda il colpo». Seconda versione: molle elastiche (il campo si schiaccia e rimbalza, la vita sobbalza, lo schermo è spinto nella direzione del colpo), oggetti con altezza e ombra che rimbalzano, particelle a codice, crepe e venature che si aprono dal centro. Abisso rifatto, Selva aggiunta.</p>
+    <p>Scegli il tema, poi trascina dall'elemento centrale di Bea fino al quadratino di Federico in alto e lascia. Oppure tocca «Guarda il colpo». Terza versione: il campo è una superficie viva disegnata dalla scheda grafica. I colpi lo illuminano (o lo spengono), le onde d'urto lo piegano, l'acqua lo increspa, il calore lo fa tremolare, Mox lo rompe in pezzi, la Selva lo stritola. Le macchie a terra fanno parte del campo e si deformano con lui.</p>
   </div>
   <section aria-labelledby="tsel">
     <span class="lbl" id="tsel">Tema</span>
@@ -91,6 +93,7 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
     <div class="row">
       <button class="btn" id="goLaunch">Guarda il colpo</button>
       <button class="btn alt" id="goHit">Solo l'arrivo</button>
+      <button class="btn alt" id="goBig" hidden>Colpo grosso: la spada</button>
       <button class="btn alt" id="goGob" hidden>Sorpresa: il goblin</button>
       <label class="chk"><input type="checkbox" id="slow"> Al rallentatore</label>
     </div>
@@ -107,6 +110,7 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
         <div class="field" id="fV" style="--pc:#2D6FA3"></div>
         <canvas class="full fxu" id="cvV"></canvas>
         <div class="hub" id="hubV"><img class="plate" alt=""><img class="emb" alt=""></div>
+        <canvas class="full mid" id="cvVm"></canvas>
         <div class="life" id="lifeV">40</div>
         <canvas class="full fxo" id="cvV2"></canvas>
         <div class="delta" id="dV">−3</div>
@@ -125,10 +129,10 @@ const R = Math.random, TAU = Math.PI * 2, PI = Math.PI;
 const pick = a => a[R() * a.length | 0];
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, k) => a + (b - a) * k;
+const lerp3 = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
 const eo = k => 1 - Math.pow(1 - clamp(k), 3);
 const ei = k => Math.pow(clamp(k), 2);
-const eb = k => { k = clamp(k); const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2) };          // supera e torna
-const el = k => k <= 0 ? 0 : k >= 1 ? 1 : Math.pow(2, -9 * k) * Math.sin((k * 9 - .75) * TAU / 3) + 1;                                 // elastico
+const eb = k => { k = clamp(k); const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2) };
 const env = (x, a, h, b) => x < 0 ? 0 : x < a ? x / a : x < a + h ? 1 : Math.max(0, 1 - (x - a - h) / b);
 const sgn = () => R() < .5 ? -1 : 1;
 
@@ -139,13 +143,10 @@ const L = (t, k) => (MAN[t][k] || []).map(x => IM[x.k]);
 const I = (t, k, i) => { const l = L(t, k); return l[(i ?? (R() * l.length | 0)) % l.length] };
 const ok = im => im && (im.getContext || (im.complete && im.naturalWidth));
 const iw = im => im.naturalWidth || im.width, ih = im => im.naturalHeight || im.height;
-
-// sagoma nera sfocata di un'immagine, per le ombre sul campo
 const SIL = new Map();
 function sil(im){ let s = SIL.get(im); if(s) return s; if(!ok(im)) return null; const w = Math.min(600, iw(im)), h = Math.round(w * ih(im) / iw(im)), p = 14;
   const c = document.createElement('canvas'); c.width = w + p * 2; c.height = h + p * 2; const x = c.getContext('2d'); x.filter = 'blur(6px)'; x.drawImage(im, p, p, w, h); x.filter = 'none';
   x.globalCompositeOperation = 'source-in'; x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height); c.pad = p; c.iw = w; c.ih = h; SIL.set(im, c); return c }
-// bagliori pronti (costano poco da disegnare)
 const GS = {};
 function gsp(col){ if(GS[col]) return GS[col]; const s = document.createElement('canvas'); s.width = s.height = 64; const c = s.getContext('2d'), g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
   g.addColorStop(0, `rgba(${col},1)`); g.addColorStop(.3, `rgba(${col},.45)`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(0, 0, 64, 64); return GS[col] = s }
@@ -154,9 +155,8 @@ function smk(col){ if(SM[col]) return SM[col]; const s = document.createElement(
   for(let i = 0; i < 7; i++){ const x = 48 + (R() - .5) * 30, y = 48 + (R() - .5) * 30, r = 18 + R() * 22, g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${col},.42)`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(0, 0, 96, 96) }
   return SM[col] = s }
 
-// ---------- canvas a misura
-function fit(cv){ const w = cv.clientWidth, h = cv.clientHeight; if(cv._w !== w || cv._h !== h){ cv._w = w; cv._h = h; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR) } const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); return c }
-// immagine centrata (ax, ay = punto di aggancio), larga w; sx/sy schiacciano lungo la direzione «ang»
+// ---------- disegno 2D
+function fit(cv){ const w = cv.clientWidth, h = cv.clientHeight; if(cv._w !== w || cv._h !== h){ cv._w = w; cv._h = h; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR) } const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, w, h); return c }
 function img(c, im, x, y, w, rot = 0, a = 1, blend, ax = .5, ay = .5, sx = 1, sy = 1, ang = 0){
   if(!ok(im) || a <= 0 || w <= 0) return; const h = w * ih(im) / iw(im);
   c.save(); c.globalAlpha = Math.min(1, a); if(blend) c.globalCompositeOperation = blend; c.translate(x, y);
@@ -168,57 +168,154 @@ function stretch(c, im, x0, y0, x1, y1, H, a = 1, blend){
   c.save(); c.globalAlpha = Math.min(1, a); if(blend) c.globalCompositeOperation = blend; c.translate(x0, y0); c.rotate(Math.atan2(y1 - y0, x1 - x0)); c.drawImage(im, 0, -H / 2, l, H); c.restore();
 }
 function glow(c, x, y, r, col, a){ if(a <= 0 || r <= 0) return; c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = Math.min(1, a); c.drawImage(gsp(col), x - r, y - r, r * 2, r * 2); c.restore() }
-// immagine che si apre dal centro con un bordo frastagliato: crepe, venature, buchi «crescono» invece di ingrandirsi
 function reveal(c, im, x, y, w, rot, a, k, seed = 1, blend){
   if(!ok(im) || a <= 0 || k <= 0) return; const h = w * ih(im) / iw(im), Rm = Math.hypot(w, h) / 2 * k;
   c.save(); c.translate(x, y); c.beginPath();
   for(let i = 0; i <= 48; i++){ const t = i / 48 * TAU, n = 1 + .22 * Math.sin(t * 5 + seed) + .14 * Math.sin(t * 11 + seed * 2.3) + .08 * Math.sin(t * 23 + seed * 4.1); c.lineTo(Math.cos(t) * Rm * n, Math.sin(t) * Rm * n) }
   c.clip(); c.globalAlpha = Math.min(1, a); if(blend) c.globalCompositeOperation = blend; c.rotate(rot); c.drawImage(im, -w / 2, -h / 2, w, h); c.restore();
 }
-// linea spezzata: lunghezze, punto e direzione a una certa distanza
 function prep(pts){ const Ls = [0]; for(let i = 1; i < pts.length; i++) Ls.push(Ls[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); pts.L = Ls; return pts }
 function at(pts, s){
   const Ls = pts.L, n = pts.length - 1;
-  if(s <= 0){ const a = Math.atan2(pts[1][1] - pts[0][1], pts[1][0] - pts[0][0]); return [pts[0][0] + Math.cos(a) * s, pts[0][1] + Math.sin(a) * s, a] }
-  if(s >= Ls[n]){ const a = Math.atan2(pts[n][1] - pts[n - 1][1], pts[n][0] - pts[n - 1][0]); return [pts[n][0] + Math.cos(a) * (s - Ls[n]), pts[n][1] + Math.sin(a) * (s - Ls[n]), a] }
+  if(s <= 0){ const a = Math.atan2(pts[1][1] - pts[0][1], pts[1][0] - pts[0][0]); return [pts[0][0] + Math.cos(a) * s, pts[0][1] + Math.sin(a) * s, a, 0] }
+  if(s >= Ls[n]){ const a = Math.atan2(pts[n][1] - pts[n - 1][1], pts[n][0] - pts[n - 1][0]); return [pts[n][0] + Math.cos(a) * (s - Ls[n]), pts[n][1] + Math.sin(a) * (s - Ls[n]), a, n] }
   let lo = 0, hi = n; while(hi - lo > 1){ const m = (lo + hi) >> 1; if(Ls[m] <= s) lo = m; else hi = m }
-  const k = (s - Ls[lo]) / (Ls[hi] - Ls[lo] || 1); return [pts[lo][0] + (pts[hi][0] - pts[lo][0]) * k, pts[lo][1] + (pts[hi][1] - pts[lo][1]) * k, Math.atan2(pts[hi][1] - pts[lo][1], pts[hi][0] - pts[lo][0])];
+  const k = (s - Ls[lo]) / (Ls[hi] - Ls[lo] || 1); return [pts[lo][0] + (pts[hi][0] - pts[lo][0]) * k, pts[lo][1] + (pts[hi][1] - pts[lo][1]) * k, Math.atan2(pts[hi][1] - pts[lo][1], pts[hi][0] - pts[lo][0]), lo];
 }
 const plen = pts => pts.L[pts.L.length - 1];
-// immagine stesa lungo una curva (si piega con lei): da s0 a s1, alta H; «from» nasconde l'inizio
+// immagine stesa lungo una curva; se la curva ha «dep» (profondità), i tratti dietro il campo non si vedono
 function along(c, im, pts, s0, s1, H, flip = 1, a = 1, shadow = false, from = -1e9, blend){
   if(!ok(im) || s1 - s0 < 2 || a <= 0) return;
   let src = im, sx0 = 0, sw, sh = ih(im), hk = 1;
   if(shadow){ src = sil(im); if(!src) return; sx0 = src.pad; sw = src.iw; sh = src.height; hk = src.height / src.ih } else sw = iw(im);
   const N = 28, st = sw / N, len = (s1 - s0) / N, Hh = H * hk;
-  c.save(); c.globalAlpha = Math.min(1, a) * (shadow ? .3 : 1); if(blend) c.globalCompositeOperation = blend;
+  c.save(); if(blend) c.globalCompositeOperation = blend;
   for(let i = 0; i < N; i++){ const s = s0 + i * len; if(s + len < from) continue; const p = at(pts, s), q = at(pts, s + len), ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
+    let va = 1; if(pts.dep){ const d = pts.dep[p[3]]; va = clamp((d + .22) / .3); if(va <= 0) continue }
+    c.globalAlpha = Math.min(1, a) * va * (shadow ? .3 : 1);
     c.save(); c.translate(p[0] + (shadow ? 4 : 0), p[1] + (shadow ? 7 : 0)); c.rotate(ang); c.scale(1, flip); c.drawImage(src, sx0 + i * st, 0, st + 1, sh, 0, -Hh / 2, len + 1.6, Hh); c.restore() }
   c.restore();
 }
-// corpo lungo fatto di più copie in fila, dalla punta all'indietro
-function chain(c, ims, pts, tip, Lb, H, flip, a = 1, shadow = false, from = -1e9){
+function chain(c, ims, pts, tip, Lb, H, flip, a = 1, shadow = false, from = -1e9, maxN = 9){
   const im0 = ims[0]; if(!ok(im0)) return; const seg = H * iw(im0) / ih(im0) * .95, pcs = [];
-  for(let j = 0, e = tip; e > tip - Lb && j < 9; j++, e -= seg * .88) pcs.push([e - seg, e, ims[j % ims.length], j % 2 ? -flip : flip, H * (1 + j * .05)]);
+  for(let j = 0, e = tip; e > tip - Lb && j < maxN; j++, e -= seg * .88) pcs.push([e - seg, e, ims[j % ims.length], j % 2 ? -flip : flip, H * (1 + (j < 3 ? j * .05 : .1))]);
   pcs.reverse(); if(shadow) pcs.forEach(q => along(c, q[2], pts, q[0], q[1], q[4], q[3], a, true, from)); pcs.forEach(q => along(c, q[2], pts, q[0], q[1], q[4], q[3], a, false, from));
 }
 
-// ---------- molle: tutto quello che si muove «di gomma»
+// ================= IL CAMPO VIVO (WebGL) =================
+// il campo non è più uno sfondo: lo disegna la scheda grafica, e i colpi lo illuminano, lo piegano, lo increspano, lo rompono, lo stringono.
+// le macchie a terra (bruciature, venature, schiuma…) si disegnano su un livello che entra nel campo e si deforma con lui.
+const VSH = `attribute vec2 a; uniform vec2 uRes; varying vec2 vP; void main(){ vP = vec2((a.x * .5 + .5) * uRes.x, (.5 - a.y * .5) * uRes.y); gl_Position = vec4(a, 0., 1.); }`;
+const FSH = `precision highp float;
+varying vec2 vP;
+uniform vec2 uRes, uRad; uniform vec4 uField; uniform vec3 uC0, uC1, uC2;
+uniform sampler2D uG; uniform float uT, uPunch;
+uniform vec4 uW[6]; uniform float uWW[6];
+uniform vec4 uRip; uniform vec3 uHeat; uniform vec4 uSh; uniform vec4 uPin;
+uniform vec4 uL[4]; uniform vec3 uLC[4];
+uniform vec4 uFl; uniform float uWith, uDark, uChr;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1., 0.)), f.x), mix(h(i + vec2(0., 1.)), h(i + vec2(1., 1.)), f.x), f.y); }
+float sdRR(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r; }
+void main(){
+  vec2 c = uField.xy + uField.zw * .5;
+  vec2 p = c + (vP - c) / uPunch;
+  if(uPin.y > 0.){ float dy = p.y - uPin.x; float k = exp(-dy * dy / (uPin.z * uPin.z)) * (.7 + .3 * cos(dy * 6.2832 / uPin.w)); p.x = c.x + (p.x - c.x) * (1. + uPin.y * k); }
+  vec2 fp = p - c;
+  float rr0 = (fp.x < 0.) == (fp.y < 0.) ? uRad.x : uRad.y;
+  float md = sdRR(fp, uField.zw * .5, rr0);
+  if(md > 1.){ gl_FragColor = vec4(0.); return; }
+  float edge = clamp(.5 - md, 0., 1.);
+  vec2 off = vec2(0.); float shine = 0.;
+  for(int i = 0; i < 6; i++){ vec4 w = uW[i]; if(w.w == 0.) continue; vec2 d = p - w.xy; float l = length(d) + .001; float x = (l - w.z) / uWW[i]; float g = exp(-x * x); off -= d / l * w.w * x * g; shine += abs(w.w) * .012 * g * max(0., -x + .3); }
+  if(uRip.z > 0.){ vec2 d = p - uRip.xy; float l = length(d) + .001; float s = sin(l * .085 - uRip.w * 6.5); float a = uRip.z * exp(-l * .003) * (1. - smoothstep(uRip.w * 260. - 60., uRip.w * 260. + 40., l)); off += d / l * a * s; shine += a * .045 * max(0., s) * max(0., s); }
+  if(uHeat.z > 0.){ vec2 d = p - uHeat.xy; float k = exp(-dot(d, d) / 26000.); off += (vec2(n2(p * .06 + vec2(0., uT * 4.)), n2(p * .06 + vec2(5.2, uT * 4.))) - .5) * uHeat.z * k * 2.; }
+  float crack = 0.;
+  if(uSh.z > 0.){ vec2 d = p - uSh.xy; float l = length(d); float an = atan(d.y, d.x) / 6.2832 + .5;
+    float rp = pow(l / 38., .72) + n2(vec2(an * 9., uSh.w)) * .7; float ring = floor(rp); float sc = 6. + ring * 2.;
+    float sa = an * sc + ring * .37 + uSh.w + n2(vec2(l * .02, uSh.w)) * .3; vec2 id = vec2(floor(sa), ring); float rr = h(id + uSh.w);
+    float on = step(14., l);
+    off += (normalize(d + .001) * (3. + 10. * rr) + (vec2(h(id + 1.7), h(id + 2.9)) - .5) * 16.) * uSh.z * on;
+    float fa = fract(sa), fr = fract(rp); crack = max(1. - smoothstep(0., .05, min(fa, 1. - fa)), 1. - smoothstep(0., .07, min(fr, 1. - fr))) * uSh.z * on; shine += crack * .25 * h(id) * uSh.z; }
+  vec2 q = p + off;
+  vec2 uv = (q - uField.xy) / uField.zw;
+  float g = clamp(uv.y * .94 + uv.x * .06, 0., 1.);
+  vec3 base = g < .5 ? mix(uC0, uC1, g * 2.) : mix(uC1, uC2, (g - .5) * 2.);
+  vec2 e = (uv - vec2(.5, .4)) / vec2(1.2, .95); base *= 1. - .4 * smoothstep(.26, .5, length(e));
+  base *= .965 + .07 * n2(q * .28) + .03 * n2(q * 1.3);
+  vec2 tu = q / uRes; vec4 gr = texture2D(uG, tu);
+  if(uChr > 0.){ vec2 cd = (q - c) / uRes * uChr * .012; gr.r = texture2D(uG, tu + cd).r; gr.b = texture2D(uG, tu - cd).b; }
+  vec3 col = base * (1. - gr.a) + gr.rgb;
+  col = mix(col, col * .3, clamp(crack, 0., 1.));
+  col += vec3(.8, .92, 1.) * shine;
+  float lum = dot(col, vec3(.3, .59, .11)); col = mix(col, vec3(lum) * vec3(.8, .76, .92), uWith * .85); col *= 1. - uWith * .4;
+  col *= 1. - uDark * smoothstep(0., 1., length((vP - c) / uField.zw * 1.5));
+  vec3 Lt = vec3(0.);
+  for(int i = 0; i < 4; i++){ vec4 l = uL[i]; if(l.w == 0.) continue; float d = length(vP - l.xy) / l.z; Lt += uLC[i] * l.w / (1. + d * d * 6.) * (1. - smoothstep(.6, 1.6, d)); }
+  Lt *= .55; col = max(col * (1. + Lt) + Lt * .07, 0.);
+  float mx = max(col.r, max(col.g, col.b)); if(mx > .9) col *= (.9 + (1. - exp(-(mx - .9) * 1.6)) * .35) / mx;
+  col = mix(col, uFl.rgb, uFl.a);
+  gl_FragColor = vec4(col * edge, edge);
+}`;
+function hex3(hx){ const n = parseInt(hx.slice(1), 16); return [(n >> 16) / 255, (n >> 8 & 255) / 255, (n & 255) / 255] }
+function makeField(scr, pcol){
+  const fdiv = scr.querySelector('.field'), cv = document.createElement('canvas'); cv.className = 'full fgl'; fdiv.after(cv);
+  let gl = null; try{ gl = cv.getContext('webgl', {premultipliedAlpha:true, alpha:true, antialias:false}) }catch(e){}
+  if(!gl){ cv.remove(); return null }
+  try{
+    const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if(!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o };
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VSH)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FSH)); gl.linkProgram(pr); if(!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+    gl.useProgram(pr);
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const al = gl.getAttribLocation(pr, 'a'); gl.enableVertexAttribArray(al); gl.vertexAttribPointer(al, 2, gl.FLOAT, false, 0, 0);
+    const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR)); [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    const U = {}; ['uRes', 'uField', 'uRad', 'uC0', 'uC1', 'uC2', 'uG', 'uT', 'uPunch', 'uW', 'uWW', 'uRip', 'uHeat', 'uSh', 'uPin', 'uL', 'uLC', 'uFl', 'uWith', 'uDark', 'uChr'].forEach(n => U[n] = gl.getUniformLocation(pr, n));
+    fdiv.style.visibility = 'hidden';
+    const c = hex3(pcol);
+    return {scr, cv, gl, U, tex, gnd:document.createElement('canvas'), col:[lerp3(c, [1, 1, 1], .09), c, lerp3(c, [0, 0, 0], .32)], st:null, lights:[], waves:[]};
+  }catch(e){ console.warn('Campo senza WebGL:', e); cv.remove(); return null }
+}
+function resetF(F){ F.st = {rip:[0, 0, 0, 0], heat:[0, 0, 0], sh:[0, 0, 0, 0], pin:[0, 0, 0, 1], fl:[0, 0, 0, 0], with:0, dark:0, chr:0}; F.lights.length = 0; F.waves.length = 0 }
+function gndCtx(F){ const W = F.scr.clientWidth, H = F.scr.clientHeight, g = F.gnd, pw = Math.round(W * DPR), ph = Math.round(H * DPR); if(g.width !== pw || g.height !== ph){ g.width = pw; g.height = ph } const c = g.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H); return c }
+function renderF(F, punch, t){
+  const gl = F.gl, U = F.U, W = F.scr.clientWidth, H = F.scr.clientHeight, cv = F.cv, pw = Math.round(W * DPR), ph = Math.round(H * DPR);
+  if(cv.width !== pw || cv.height !== ph){ cv.width = pw; cv.height = ph }
+  gl.viewport(0, 0, pw, ph);
+  gl.bindTexture(gl.TEXTURE_2D, F.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, F.gnd);
+  const fb = fieldBox(F.scr);
+  gl.uniform2f(U.uRes, W, H); gl.uniform4f(U.uField, fb.x, fb.y, fb.w, fb.h); gl.uniform2f(U.uRad, W * .08, W * .024);
+  gl.uniform3fv(U.uC0, F.col[0]); gl.uniform3fv(U.uC1, F.col[1]); gl.uniform3fv(U.uC2, F.col[2]); gl.uniform1i(U.uG, 0); gl.uniform1f(U.uT, t); gl.uniform1f(U.uPunch, punch);
+  const wv = new Float32Array(24), ww = new Float32Array(6).fill(1); F.waves.slice(0, 6).forEach((w, i) => { wv.set(w.slice(0, 4), i * 4); ww[i] = w[4] }); gl.uniform4fv(U.uW, wv); gl.uniform1fv(U.uWW, ww);
+  const Ls = F.lights.sort((a, b) => Math.abs(b[3]) - Math.abs(a[3])).slice(0, 4), lv = new Float32Array(16), lc = new Float32Array(12); Ls.forEach((l, i) => { lv.set(l.slice(0, 4), i * 4); lc.set(l[4], i * 3) }); gl.uniform4fv(U.uL, lv); gl.uniform3fv(U.uLC, lc);
+  const s = F.st; gl.uniform4fv(U.uRip, s.rip); gl.uniform3fv(U.uHeat, s.heat); gl.uniform4fv(U.uSh, s.sh); gl.uniform4fv(U.uPin, s.pin); gl.uniform4fv(U.uFl, s.fl); gl.uniform1f(U.uWith, s.with); gl.uniform1f(U.uDark, s.dark); gl.uniform1f(U.uChr, s.chr);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+// luce sul campo (intensità negativa = buio), onda d'urto sul campo
+function lit(ph, x, y, r, col, i){ const F = FLD[ph]; if(F && i) F.lights.push([x, y, r, i, col]) }
+function wave(ph, x, y, r, amp, w){ const F = FLD[ph]; if(F && amp) F.waves.push([x, y, r, amp, w]) }
+const st = ph => FLD[ph] ? FLD[ph].st : {rip:[], heat:[], sh:[], pin:[], fl:[0, 0, 0, 0], with:0, dark:0, chr:0};
+function lightAt(F, x, y){ const o = [0, 0, 0]; if(!F) return o; F.lights.forEach(l => { const d = Math.hypot(x - l[0], y - l[1]) / l[2], k = l[3] / (1 + d * d * 6) * (1 - clamp((d - .6) / 1)); o[0] += l[4][0] * k; o[1] += l[4][1] * k; o[2] += l[4][2] * k }); return o }
+
+// ---------- molle
 const spr = (t, k = 200, d = 12) => ({x:t, v:0, t, k, d});
 function stepS(s, dt){ const n = Math.max(1, Math.ceil(dt / .008)), h = dt / n; for(let i = 0; i < n; i++){ s.v += (-s.k * (s.x - s.t) - s.d * s.v) * h; s.x += s.v * h } }
-const SP = {vPunch:spr(1, 230, 11), vJx:spr(0, 150, 9), vJy:spr(0, 150, 9), vLife:spr(1, 260, 10), vLifeR:spr(0, 190, 8), vHub:spr(1, 240, 10), aHub:spr(1, 260, 10), aJx:spr(0, 170, 10), aJy:spr(0, 170, 10)};
+const SP = {vPunch:spr(1, 230, 11), vJx:spr(0, 150, 9), vJy:spr(0, 150, 9), vLife:spr(1, 260, 10), vLifeR:spr(0, 190, 8), vHub:spr(1, 240, 10), aHub:spr(1, 260, 10), aPunch:spr(1, 260, 12)};
 let rumble = null;
-function impact(ang, pow){
-  const W = pV.clientWidth;
+// colpo: lo schermo spinto nella direzione, il campo che si schiaccia, un'onda d'urto che lo piega, i colori che si sdoppiano un attimo
+function impact(ang, pow, x, y){
+  const W = pV.clientWidth, o = x == null ? fieldO(pV) : {x, y};
   SP.vJx.v += Math.cos(ang) * pow * W * 1.3; SP.vJy.v += Math.sin(ang) * pow * W * 1.3;
   SP.vPunch.v -= pow * 1.3; SP.vLife.v += pow * 3.2; SP.vLifeR.v += sgn() * pow * 45; SP.vHub.v -= pow * 3;
   rumble = {a:0, dur:.25 + pow * .35, amt:pow};
+  add('V', function(c, dt){ this.a += dt; const k = this.a / .9; if(k > 1) return false; wave('V', o.x, o.y, W * (.05 + 1.4 * eo(k)), pow * 20 * (1 - k), W * .09);
+    st('V').chr = Math.max(st('V').chr, pow * 7 * Math.pow(1 - Math.min(1, this.a / .35), 2)); return true });
 }
-// punta che insegue il dito con un po' di ritardo e di rimbalzo
 function follow(d, tx, ty, dt){ if(!d.tip) d.tip = {x:tx, y:ty, vx:0, vy:0}; const t = d.tip, n = Math.max(1, Math.ceil(dt / .008)), h = dt / n;
   for(let i = 0; i < n; i++){ t.vx += (420 * (tx - t.x) - 24 * t.vx) * h; t.vy += (420 * (ty - t.y) - 24 * t.vy) * h; t.x += t.vx * h; t.y += t.vy * h } return t }
 
-// ---------- sprite (immagini che volano, saltano, cadono) con altezza e ombra
+// ---------- sprite e particelle
 function sp(o){ return Object.assign({a:0, life:1, vx:0, vy:0, g:0, drag:0, rot:0, spin:0, w:20, alpha:1, fin:.06, fout:.35, grow:0, flut:0, sway:0, ph:R() * TAU, delay:0, z:0, vz:0, gz:0, rest:.35, sh:false, pop:0}, o) }
 function drawSprites(list, c, dt){
   for(let i = list.length - 1; i >= 0; i--){ const p = list[i];
@@ -226,6 +323,7 @@ function drawSprites(list, c, dt){
     p.a += dt; if(p.a > p.life){ list.splice(i, 1); continue }
     const f = Math.exp(-p.drag * dt); p.vx *= f; p.vy = p.vy * f + p.g * dt; p.x += (p.vx + (p.sway ? Math.sin(p.a * 2.4 + p.ph) * p.sway : 0)) * dt; p.y += p.vy * dt; p.rot += p.spin * dt;
     if(p.gz){ p.vz -= p.gz * dt; p.z += p.vz * dt; if(p.z < 0){ p.z = 0; if(p.vz < -40){ p.vz = -p.vz * p.rest; p.vx *= .6; p.vy *= .6; p.spin *= .5; p.land && p.land(p) } else { p.vz = 0; const fr = Math.exp(-7 * dt); p.vx *= fr; p.vy *= fr; p.spin *= fr } } }
+    if(p.lit) lit('V', p.x, p.y - p.z, p.lit[0], p.lit[1], p.lit[2] * (1 - p.a / p.life));
     if(!ok(p.im)) continue;
     const k = p.a / p.life, al = p.alpha * Math.min(1, p.a / p.fin) * Math.min(1, (1 - k) / p.fout) * (p.flick ? .55 + .45 * Math.sin(p.a * 40 + p.ph) : 1);
     let w = p.w * (1 + p.grow * k) * (1 + p.z / 260) * (p.pop ? eb(p.a / p.pop) : 1);
@@ -236,16 +334,14 @@ function drawSprites(list, c, dt){
     c.drawImage(p.im, -w / 2, -h / 2, w, h); c.restore();
   }
 }
-// ---------- particelle a codice: scintille, bagliori, gocce, cerchi d'onda, fumo, briciole, gocce sul vetro
 function pt(list, o){ list.push(Object.assign({a:0, life:1, x:0, y:0, z:0, vx:0, vy:0, vz:0, g:0, gz:0, drag:0, rest:.35, r:2, k:'mote', col:'255,255,255', al:1, fout:.35, grow:0, delay:0, ph:R() * TAU}, o)) }
 function drawPts(list, c, dt){
   for(let i = list.length - 1; i >= 0; i--){ const p = list[i];
     if(p.delay > 0){ p.delay -= dt; continue }
     p.a += dt; if(p.a > p.life){ list.splice(i, 1); continue }
     const f = Math.exp(-p.drag * dt); p.vx *= f; p.vy = p.vy * f + p.g * dt;
-    if(p.k === 'glass'){ // goccia sul vetro: scivola a scatti e lascia la scia
-      if(p.mv > 0){ p.mv -= dt; p.y += p.sp * dt; p.x += Math.sin(p.a * 9 + p.ph) * 6 * dt } else if(R() < dt * 1.6){ p.mv = .2 + R() * .6; p.sp = 25 + R() * 60 }
-    } else { p.x += p.vx * dt; p.y += p.vy * dt }
+    if(p.k === 'glass'){ if(p.mv > 0){ p.mv -= dt; p.y += p.sp * dt; p.x += Math.sin(p.a * 9 + p.ph) * 6 * dt } else if(R() < dt * 1.6){ p.mv = .2 + R() * .6; p.sp = 25 + R() * 60 } }
+    else { p.x += p.vx * dt; p.y += p.vy * dt }
     if(p.gz){ p.vz -= p.gz * dt; p.z += p.vz * dt; if(p.z < 0){ p.z = 0; if(p.vz < -40){ p.vz = -p.vz * p.rest; p.vx *= .55; p.vy *= .55; if(p.land && !p.landed){ p.landed = 1; p.land(p) } } else { p.vz = 0; const fr = Math.exp(-8 * dt); p.vx *= fr; p.vy *= fr } } }
     const k = p.a / p.life, a = clamp(p.al * Math.min(1, (1 - k) / p.fout) * Math.min(1, p.a / .04));
     if(a <= 0) continue;
@@ -255,7 +351,7 @@ function drawPts(list, c, dt){
       case 'mote': { const r = p.r * (1 + p.grow * k) * (p.tw ? .6 + .4 * Math.sin(p.a * 14 + p.ph) : 1); glow(c, p.x, y, r, p.col, a); break }
       case 'drop': {
         if(p.z > 1){ c.globalAlpha = a * .22; c.fillStyle = '#012'; c.beginPath(); c.ellipse(p.x, p.y + p.r, p.r * .9, p.r * .4, 0, 0, TAU); c.fill() }
-        const st = 1 + Math.min(.8, Math.abs(p.vz) / 600); c.save(); c.translate(p.x, y); c.scale(1 / Math.sqrt(st), st);
+        const sv = 1 + Math.min(.8, Math.abs(p.vz) / 600); c.save(); c.translate(p.x, y); c.scale(1 / Math.sqrt(sv), sv);
         c.globalAlpha = a * .7; c.fillStyle = `rgba(${p.col},1)`; c.beginPath(); c.arc(0, 0, p.r, 0, TAU); c.fill();
         c.globalAlpha = a * .55; c.strokeStyle = 'rgba(10,50,90,1)'; c.lineWidth = Math.max(.6, p.r * .25); c.beginPath(); c.arc(0, 0, p.r * .9, .2, PI - .2); c.stroke();
         c.globalAlpha = a; c.fillStyle = '#fff'; c.beginPath(); c.arc(-p.r * .35, -p.r * .38, p.r * .3, 0, TAU); c.fill(); c.restore(); c.globalAlpha = 1; break }
@@ -274,58 +370,70 @@ function drawPts(list, c, dt){
   c.globalAlpha = 1;
 }
 
-// ---------- tempo della simulazione (il rallentatore rallenta tutto)
+// ---------- tempo e telefoni
 let T = 0, last = performance.now(), slow = false;
 const Q = [];
 function after(d, f){ Q.push({t:T + d, f}) }
-
-// ---------- i due telefoni
-const pA = document.getElementById('pA'), pV = document.getElementById('pV'), cvA = document.getElementById('cvA'), cvV = document.getElementById('cvV'), cvV2 = document.getElementById('cvV2');
-const fV = document.getElementById('fV'), fA = pA.querySelector('.field'), lifeV = document.getElementById('lifeV'), dV = document.getElementById('dV'), aTile = document.getElementById('aTile'), hubA = document.getElementById('hubA'), hubV = document.getElementById('hubV');
+const pA = document.getElementById('pA'), pV = document.getElementById('pV'), cvA = document.getElementById('cvA'), cvV = document.getElementById('cvV'), cvVm = document.getElementById('cvVm'), cvV2 = document.getElementById('cvV2');
+const fV = document.getElementById('fV'), lifeV = document.getElementById('lifeV'), lifeA = pA.querySelector('.life'), dV = document.getElementById('dV'), aTile = document.getElementById('aTile'), hubA = document.getElementById('hubA'), hubV = document.getElementById('hubV');
 function hubBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x:W / 2, y:H * .5, w:W * .62, h:W * .21} }
 function fieldBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x:W * .025, y:H * .16, w:W * .95, h:H * .825} }
-// punto d'impatto: al centro del campo, tra l'elemento centrale e la vita
 function fieldO(scr){ const fb = fieldBox(scr); return {x:fb.x + fb.w / 2, y:scr.clientHeight * .6} }
 function rel(e, el){ const r = el.getBoundingClientRect(); return [(e.clientX - r.left) * el.clientWidth / r.width, (e.clientY - r.top) * el.clientHeight / r.height] }
 function tileRect(scr){ const t = scr.querySelector('.tile'), r = t.getBoundingClientRect(), s = scr.getBoundingClientRect(), k = scr.clientWidth / s.width; return {x:(r.left - s.left) * k, y:(r.top - s.top) * k, w:r.width * k, h:r.height * k} }
 function overTile(p){ const t = tileRect(pA); return p[0] > t.x - 6 && p[0] < t.x + t.w + 6 && p[1] > t.y - 6 && p[1] < t.y + t.h + 14 }
-
-// effetti in corso: ognuno ha draw(c, dt) che dice se è ancora vivo
-const FX = {A:[], V:[], V2:[], sA:[], sV:[], sV2:[], pA:[], pV:[], pV2:[]};
+const FLD = {A:makeField(pA, '#B23A2A'), V:makeField(pV, '#2D6FA3')};
+if(FLD.V) cvV.style.display = 'none';
+// V = a terra (dentro il campo), M = sopra l'elemento centrale ma sotto la vita, V2 = sopra tutto
+const FX = {A:[], V:[], M:[], V2:[], sA:[], sV:[], sM:[], sV2:[], pA:[], pV:[], pV2:[]};
 const add = (k, draw, delay = 0) => FX[k].push({a:-delay, draw});
 let wither = null, life = 40;
 function damage(n = 3){
   life -= n; if(life < 10) life = 40; lifeV.textContent = life; aTile.textContent = life; dV.textContent = '−' + n; dV.classList.remove('on'); void dV.offsetWidth; dV.classList.add('on');
-  SP.aHub.v += 1.5; if(navigator.vibrate) try{ navigator.vibrate([20, 40, 30]) }catch(e){}
+  SP.aHub.v += 1.5; if(navigator.vibrate) try{ navigator.vibrate(n > 5 ? [40, 30, 80, 40, 120] : [20, 40, 30]) }catch(e){}
 }
-function flash(col, peak, dur, top){ add(top ? 'V2' : 'V', function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; c.save(); c.globalAlpha = peak * (k < .06 ? k / .06 : Math.pow(1 - (k - .06) / .94, 1.6)); c.fillStyle = col; c.fillRect(0, 0, pV.clientWidth, pV.clientHeight); c.restore(); return true }) }
+function rgbOf(col){ if(col[0] === '#'){ const c = hex3(col); return c } const m = col.match(/[\d.]+/g); return [m[0] / 255, m[1] / 255, m[2] / 255] }
+function flash(col, peak, dur, top){
+  const env2 = k => peak * (k < .06 ? k / .06 : Math.pow(1 - (k - .06) / .94, 1.6));
+  if(top || !FLD.V){ add(top ? 'V2' : 'V', function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; c.save(); c.globalAlpha = env2(k); c.fillStyle = col; c.fillRect(0, 0, pV.clientWidth, pV.clientHeight); c.restore(); return true }); return }
+  const rgb = rgbOf(col); add('V', function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; const a = env2(k), f = st('V').fl; if(a > f[3]){ f[0] = rgb[0]; f[1] = rgb[1]; f[2] = rgb[2]; f[3] = a } return true });
+}
 const W_ = () => pV.clientWidth;
 
 // ================= I TEMI =================
 const TH = {};
 
-// ---------- SANTUARIO: raggio di grazia
+// ---------- SANTUARIO
+function clouds(cx, top, dur, gapMax){
+  const W = W_(), cl = I('santuario', 'clouds', 0);
+  add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > dur) return false; const k = env(x, .25, dur - 1.05, .8), gap = W * gapMax * eo((x - .22) / .5) - W * .04 * eo((x - dur + 1.2) / 1), w = W * 1.15, h = ok(cl) ? w * ih(cl) / iw(cl) : 0, y = top + W * .07 - h / 2;
+    glow(c, cx, top + W * .08, W * (.2 + .25 * eo((x - .2) / .5)), '255,236,170', k * .8); lit('V', cx, top + W * .1, W * .8, [1, .85, .5], k * 1.1);
+    [-1, 1].forEach(s => { c.save(); c.beginPath(); c.rect(s < 0 ? 0 : cx, 0, s < 0 ? cx : W, top + h + W * .2); c.clip(); img(c, cl, cx + s * gap, y + h / 2 + Math.sin(x * 1.5 + s) * 2, w, 0, k); c.restore() });
+    return true });
+}
 TH.santuario = {
   name:'Santuario', sub:'Bianco · luce e angeli', col:'#F2D27A',
-  desc:'Raggio di grazia. Trascinando, il filo di luce si carica e si allarga (con la molla: si gonfia e assesta), i granelli di luce corrono lungo il raggio, la sfera cresce; sopra il quadratino l\'aureola scatta e si aggancia. Da Federico le nuvole si aprono davvero in due, il raggio scende, raggi che girano, il campo si schiaccia e rimbalza, granelli che salgono e piume che scendono.',
+  desc:'Raggio di grazia. La luce che carichi illumina davvero il campo di Bea, sempre di più. Da Federico le nuvole si aprono, il raggio scende e accende il campo d\'oro dove tocca; l\'onda d\'urto piega il campo, raggi che girano, aureole, piume. «Colpo grosso: la spada» fa calare la spada celeste che trafigge il campo.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), ch = d.charge = clamp((T - d.t0 - .1) / 1.3), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
     d.bw = d.bw || spr(0, 260, 9); d.bw.t = W * (.035 + .13 * ch); stepS(d.bw, dt);
     d.hs = d.hs || spr(0, 300, 11); if(on && d.hs.t === 0) SP.aHub.v += 1; d.hs.t = on ? 1 : 0; stepS(d.hs, dt);
+    lit('A', hb.x, hb.y, W * (.45 + .4 * ch), [1, .82, .45], .5 + 1.1 * ch); lit('A', t.x, t.y, W * .45, [1, .9, .6], .4 + .8 * ch);
     glow(c, hb.x, hb.y, W * (.14 + .2 * ch), '255,230,160', .5 + .3 * ch);
     img(c, I('santuario', 'orb', 0), hb.x, hb.y, W * (.12 + .2 * ch) * (1 + .06 * Math.sin(T * 9)), T * .6, .55 + .45 * ch, 'lighter');
     const Hh = Math.max(1, d.bw.x) * (1 + .1 * Math.sin(T * 34) * ch), ang = Math.atan2(t.y - hb.y, t.x - hb.x), len = Math.hypot(t.x - hb.x, t.y - hb.y);
     stretch(c, I('santuario', 'beam', 0), hb.x, hb.y, t.x, t.y, Hh, (.55 + .45 * ch) * (.85 + .15 * Math.sin(T * 50)), 'lighter');
     glow(c, t.x, t.y, W * (.06 + .08 * ch), '255,245,210', .8);
-    if(R() < dt * (20 + 50 * ch)){ const sp0 = 260 + R() * 200; pt(FX.pA, {k:'mote', x:hb.x + (R() - .5) * 6, y:hb.y + (R() - .5) * 6, vx:Math.cos(ang) * sp0 + (R() - .5) * 30, vy:Math.sin(ang) * sp0 + (R() - .5) * 30, life:len / sp0, r:W * (.012 + R() * .02), col:'255,236,180', fout:.2}) }
-    if(d.hs.x > .02){ img(c, I('santuario', 'halo', 0), tg[0], tg[1], tr.w * 1.1 * Math.max(0, d.hs.x), T * .4, Math.min(1, d.hs.x), 'lighter') }
+    if(R() < dt * (20 + 50 * ch)){ const v = 260 + R() * 200; pt(FX.pA, {k:'mote', x:hb.x + (R() - .5) * 6, y:hb.y + (R() - .5) * 6, vx:Math.cos(ang) * v + (R() - .5) * 30, vy:Math.sin(ang) * v + (R() - .5) * 30, life:len / v, r:W * (.012 + R() * .02), col:'255,236,180', fout:.2}) }
+    if(d.hs.x > .02) img(c, I('santuario', 'halo', 0), tg[0], tg[1], tr.w * 1.1 * Math.max(0, d.hs.x), T * .4, Math.min(1, d.hs.x), 'lighter');
     if(ch >= 1 && R() < dt * 30){ const a = R() * TAU; pt(FX.pA, {k:'spark', x:t.x, y:t.y, vx:Math.cos(a) * 220, vy:Math.sin(a) * 220, drag:4, life:.3, r:1.4, col:'255,235,170'}) }
   },
   launch(d){
     const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ch = d.charge || 0, ex = tr.x + tr.w / 2, ty = tr.y + tr.h / 2;
     const k = (-20 - hb.y) / (ty - hb.y), x1 = hb.x + (ex - hb.x) * k, H = W * (.08 + .16 * ch), im = I('santuario', 'beam', 0), bw = spr(0, 320, 9); bw.t = 1;
-    SP.aHub.v -= 3.5;
+    SP.aHub.v -= 3.5; SP.aPunch.v -= .8;
     add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > .85) return false; stepS(bw, dt); const al = x < .4 ? 1 : 1 - (x - .4) / .45, w = Math.max(0, bw.x);
+      lit('A', hb.x, hb.y, W * .9, [1, .85, .5], 2.2 * al); lit('A', ex, ty + W * .2, W * .6, [1, .9, .6], 1.4 * al);
       glow(c, hb.x, hb.y, W * .3, '255,240,200', al * .7);
       stretch(c, im, hb.x, hb.y, x1, -20, H * w, al, 'lighter'); stretch(c, im, hb.x, hb.y, x1, -20, H * w * .4, al, 'lighter');
       img(c, I('santuario', 'halo', 0), ex, ty, tr.w * (1 + eo(x / .6) * 1.4), 0, al, 'lighter'); return true });
@@ -335,41 +443,82 @@ TH.santuario = {
     return .5;
   },
   hit(tx){
-    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), top = fb.y - W * .02, cx = clamp(tx, W * .3, W * .7), cl = I('santuario', 'clouds', 0);
+    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), top = fb.y - W * .02, cx = clamp(tx, W * .3, W * .7);
     if(RM){ flash('#FFF8E8', .9, 1.2); damage(); return }
-    // le nuvole arrivano e poi si aprono in due
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false; const k = env(x, .25, 2.1, .8), gap = W * .16 * eo((x - .22) / .5) - W * .04 * eo((x - 2) / 1), w = W * 1.15, h = ok(cl) ? w * ih(cl) / iw(cl) : 0, y = top + W * .07 - h / 2;
-      glow(c, cx, top + W * .08, W * (.2 + .25 * eo((x - .2) / .5)), '255,236,170', k * .8);
-      [-1, 1].forEach(s => { c.save(); c.beginPath(); c.rect(s < 0 ? 0 : cx, 0, s < 0 ? cx : W, top + h + W * .2); c.clip(); img(c, cl, cx + s * gap, y + h / 2 + Math.sin(x * 1.5 + s) * 2, w, 0, k); c.restore() });
-      return true });
+    clouds(cx, top, 3.2, .16);
     const beam = I('santuario', 'beam', 0), bw = spr(0, 280, 8); bw.t = 1;
-    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.4) return false; if(x < 0) return true; stepS(bw, dt);
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.4) return false; if(x < 0) return true; stepS(bw, dt);
       const al = x < .6 ? 1 : Math.max(0, 1 - (x - .6) / .8), y1 = lerp(top + W * .05, o.y, eo(x / .12)), w = Math.max(0, bw.x);
       stretch(c, beam, cx, top + W * .05, o.x, y1, W * .3 * w, al, 'lighter'); stretch(c, beam, cx, top + W * .05, o.x, y1, W * .11 * w, al, 'lighter');
-      if(R() < dt * 60) pt(FX.pV, {k:'mote', x:lerp(cx, o.x, R()) + (R() - .5) * W * .1, y:top + W * .05, vx:(o.x - cx) * 1.5, vy:(o.y - top) * 1.5, life:.6, r:W * .015, col:'255,240,200'});
-      glow(c, o.x, o.y, W * .35, '255,245,210', al * .8); return true }, .3);
+      for(let i = 0; i < 3; i++) lit('V', lerp(cx, o.x, i / 2), lerp(top, y1, i / 2), W * .55, [1, .88, .55], 1.3 * al * w);
+      if(R() < dt * 60) pt(FX.pV2, {k:'mote', x:lerp(cx, o.x, R()) + (R() - .5) * W * .1, y:top + W * .05, vx:(o.x - cx) * 1.5, vy:(o.y - top) * 1.5, life:.6, r:W * .015, col:'255,240,200'});
+      return true }, .3);
     after(.42, () => {
-      // raggi di luce che girano piano
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.8) return false; const k = env(x, .05, .5, 1.2);
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.2) return false; const k = env(x, .05, .5, 1.6);
+        lit('V', o.x, o.y, W * (.6 + .5 * eo(x)), [1, .85, .5], 2.4 * k);
         c.save(); c.globalCompositeOperation = 'lighter'; c.translate(o.x, o.y); c.rotate(x * .35);
-        for(let i = 0; i < 14; i++){ c.rotate(TAU / 14); const l = W * (.7 + .3 * Math.sin(i * 2.3 + x * 3)), g = c.createLinearGradient(0, 0, l, 0); g.addColorStop(0, `rgba(255,240,190,${.5 * k})`); g.addColorStop(1, 'rgba(255,240,190,0)');
+        for(let i = 0; i < 14; i++){ c.rotate(TAU / 14); const l = W * (.7 + .3 * Math.sin(i * 2.3 + x * 3)), g = c.createLinearGradient(0, 0, l, 0); g.addColorStop(0, `rgba(255,240,190,${.45 * k})`); g.addColorStop(1, 'rgba(255,240,190,0)');
           c.fillStyle = g; c.beginPath(); c.moveTo(0, 0); c.lineTo(l, -l * .07); c.lineTo(l, l * .07); c.fill() } c.restore(); return true });
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.2) return false; img(c, I('santuario', 'burst', 0), o.x, o.y, W * 1.25 * eb(x / .4), x * .3, x < .35 ? 1 : 1 - (x - .35) / .85, 'lighter'); return true });
-      [0, .2, .45].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; if(x < 0) return true; const k = eo(x / 1.3); img(c, I('santuario', 'halo', 0), o.x, o.y, W * (.2 + (1.4 - i * .3) * k), 0, (1 - k) * (1 - i * .25), 'lighter'); return true }, dl));
-      flash('#FFF8EA', .88, 1.8);
-      for(let i = 0; i < 9; i++) FX.sV.push(sp({im:I('santuario', 'feath'), x:fb.x + R() * fb.w, y:fb.y + R() * fb.h * .45, vx:(R() - .5) * 20, vy:25 + R() * 25, g:8, w:W * (.08 + R() * .06), life:2.6 + R(), flut:.6, sway:50, delay:.2 + R() * .5, fout:.3}));
-      for(let i = 0; i < 12; i++){ const a = R() * TAU, v = 60 + R() * 160; FX.sV.push(sp({im:I('santuario', 'down'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.6, g:14, w:W * (.035 + R() * .03), life:1.6 + R(), spin:(R() - .5) * 3, blend:'lighter', sway:20})) }
+      [0, .2, .45].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; if(x < 0) return true; const k = eo(x / 1.3); img(c, I('santuario', 'halo', 0), o.x, o.y, W * (.2 + (1.4 - i * .3) * k), 0, (1 - k) * (1 - i * .25), 'lighter'); wave('V', o.x, o.y, W * (.1 + (.7 - i * .15) * k), 6 * (1 - k), W * .04); return true }, dl));
+      flash('#FFF8EA', .75, 1.6);
+      for(let i = 0; i < 9; i++) FX.sV2.push(sp({im:I('santuario', 'feath'), x:fb.x + R() * fb.w, y:fb.y + R() * fb.h * .45, vx:(R() - .5) * 20, vy:25 + R() * 25, g:8, w:W * (.08 + R() * .06), life:2.6 + R(), flut:.6, sway:50, delay:.2 + R() * .5, fout:.3}));
+      for(let i = 0; i < 12; i++){ const a = R() * TAU, v = 60 + R() * 160; FX.sV2.push(sp({im:I('santuario', 'down'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.6, g:14, w:W * (.035 + R() * .03), life:1.6 + R(), spin:(R() - .5) * 3, blend:'lighter', sway:20})) }
       for(let i = 0; i < 40; i++) pt(FX.pV, {k:'mote', x:fb.x + R() * fb.w, y:fb.y + fb.h * (.3 + R() * .7), vx:(R() - .5) * 10, vy:-20 - R() * 40, life:1.2 + R() * 1.6, r:W * (.008 + R() * .016), col:'255,236,180', tw:1, delay:R() * .6});
       impact(PI / 2, .75); damage();
     });
+  },
+  // colpo grosso: la spada celeste cala e trafigge il campo
+  big(){
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), swd = I('santuario', 'sword', 0), top = fb.y - W * .02;
+    if(RM){ flash('#FFFFFF', .95, 1.4); damage(8); return }
+    // 1. il cielo si fa buio, la luce si raccoglie al centro
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 4.2) return false; st('V').dark = Math.max(st('V').dark, .6 * env(x, .5, .5, .5)); lit('V', o.x, o.y, W * (.25 + .3 * eo(x / .95)), [1, .85, .5], x < .95 ? 1.4 * eo(x / .95) : 0); return true });
+    for(let i = 0; i < 60; i++){ const x = fb.x + R() * fb.w, y = fb.y + R() * fb.h, d = .5 + R() * .4; pt(FX.pV, {k:'mote', x, y, vx:(o.x - x) / d, vy:(o.y - y) / d, life:d, r:W * (.01 + R() * .014), col:'255,236,180', tw:1, fout:.1, delay:R() * .35}) }
+    clouds(o.x, top, 4.2, .22);
+    // 2. la spada cala dall'alto (si avvicina, quindi si rimpicciolisce) e si pianta; poi vibra
+    const S = {q:spr(0, 140, 3.2)}, len = W * 1.15, D0 = .85, D = .2;
+    // la spada sta sotto il numero della vita, così resta leggibile
+    add('M', function(c, dt){ this.a += dt; const x = this.a - D0; if(x > 3.1) return false; if(x < 0) return true; stepS(S.q, dt);
+      const k = Math.min(1, x / D), tipY = lerp(-H * .15, o.y, ei(k)), sc = lerp(2.1, 1, ei(k)), al = x < 2.4 ? 1 : 1 - (x - 2.4) / .7, rot = PI / 2 + S.q.x;
+      if(x < D) for(let i = 0; i < 4; i++) img(c, swd, o.x, tipY - (i + 1) * W * .16 * sc, len * sc, PI / 2, .14 * (4 - i), 'lighter', 1, .5);
+      glow(c, o.x, tipY - len * sc * .45, W * .45 * sc, '255,240,200', .35 * al);
+      img(c, swd, o.x, tipY, len * sc, rot, al, null, 1, .5);
+      if(x > 2.1) img(c, swd, o.x, tipY, len * sc, rot, clamp((x - 2.1) / .5) * al * 1.6, 'lighter', 1, .5);
+      lit('V', o.x, tipY - len * sc * .4, W * .7, [1, .9, .65], .9 * al);
+      if(x >= D) glow(c, o.x, o.y, W * (.13 + .03 * Math.sin(x * 20)), '255,245,210', .9 * al);
+      return true });
+    after(D0 + D, () => {
+      S.q.v += sgn() * 2.4;
+      impact(PI / 2, 1.9); flash('#FFFFFF', .95, .3, true); flash('#FFF2D0', .55, 1.8);
+      [.12, .3].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const k = this.a / 1.1; if(k > 1) return false; if(k < 0) return true; wave('V', o.x, o.y, W * (.05 + 1.2 * eo(k)), 16 * (1 - k) / (i + 1), W * .07); return true }, dl));
+      // fenditure di luce che si aprono nel campo dalla punta, pulsano e poi si richiudono
+      const cracks = Array.from({length:10}, (_, i) => { let a = i / 10 * TAU + R() * .4, x = 0, y = 0; const pts = [[0, 0]], n = 6 + (R() * 5 | 0), stp = W * (.045 + R() * .03);
+        for(let j = 0; j < n; j++){ a += (R() - .5) * .8; x += Math.cos(a) * stp; y += Math.sin(a) * stp * .85; pts.push([x, y]) } return pts });
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false; const g = x < 2.4 ? eo(x / .3) : 1 - ei((x - 2.4) / .8), pul = .75 + .25 * Math.sin(x * 9);
+        lit('V', o.x, o.y, W * (.7 + .3 * g), [1, .86, .5], 3 * g * pul);
+        c.save(); c.translate(o.x, o.y); c.lineCap = 'round'; c.lineJoin = 'round';
+        cracks.forEach(pts => { const m = Math.max(2, Math.round(pts.length * g)); const path = () => { c.beginPath(); for(let i = 0; i < m; i++) i ? c.lineTo(pts[i][0], pts[i][1]) : c.moveTo(0, 0) };
+          c.globalCompositeOperation = 'source-over'; c.strokeStyle = 'rgba(40,24,0,.55)'; c.lineWidth = W * .022; path(); c.stroke();
+          c.globalCompositeOperation = 'lighter'; [[W * .04, `rgba(255,210,120,${.25 * pul})`], [W * .014, `rgba(255,235,170,${.9 * pul})`], [W * .005, 'rgba(255,255,255,1)']].forEach(([lw, s]) => { c.strokeStyle = s; c.lineWidth = lw; path(); c.stroke() });
+          if(R() < dt * 8 && g > .5){ const p = pts[1 + (R() * (m - 1) | 0)]; pt(FX.pV, {k:'mote', x:o.x + p[0], y:o.y + p[1], vx:(R() - .5) * 20, vy:-40 - R() * 40, life:1, r:W * .015, col:'255,236,180', tw:1}) } });
+        c.restore(); return true });
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; img(c, I('santuario', 'burst', 0), o.x, o.y, W * 1.5 * eb(x / .35), x * .3, x < .35 ? 1 : 1 - (x - .35) / .95, 'lighter'); return true });
+      for(let i = 0; i < 22; i++){ const a = R() * TAU, v = 120 + R() * 280; FX.sV2.push(sp({im:I('santuario', 'feath'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.8, g:14, w:W * (.06 + R() * .06), life:2.4 + R(), flut:.6, sway:40, fout:.3})) }
+      for(let i = 0; i < 40; i++){ const a = R() * TAU, v = 200 + R() * 500; pt(FX.pV2, {k:'spark', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:100 + R() * 250, gz:1200, drag:2, life:.6 + R() * .5, r:1.2 + R(), col:'255,235,170'}) }
+      damage(8);
+    });
+    // 3. la spada si scioglie in luce e piume che salgono
+    after(D0 + 2.45, () => { for(let i = 0; i < 18; i++){ const u = R(); FX.sV2.push(sp({im:I('santuario', R() < .5 ? 'feath' : 'down'), x:o.x + (R() - .5) * W * .08, y:o.y - len * u, vx:(R() - .5) * 60, vy:-30 - R() * 50, w:W * (.04 + R() * .05), life:1.8 + R(), flut:.6, sway:40, blend:'lighter'})) }
+      for(let i = 0; i < 40; i++) pt(FX.pV2, {k:'mote', x:o.x + (R() - .5) * W * .06, y:o.y - len * R(), vx:(R() - .5) * 40, vy:-40 - R() * 80, life:1.2 + R(), r:W * (.01 + R() * .015), col:'255,240,200', tw:1}) });
   }
 };
 
-// ---------- MOX: bomba a orologeria
+// ---------- MOX
 function arcF(a, b, lift){ const cx = (a[0] + b[0]) / 2, cy = Math.min(a[1], b[1]) - lift; return u => { const v = 1 - u; return [v * v * a[0] + 2 * v * u * cx + u * u * b[0], v * v * a[1] + 2 * v * u * cy + u * u * b[1]] } }
 TH.mox = {
   name:'Mox', sub:'Incolore · artefatti e macchine', col:'#9FE7F0',
-  desc:'Bomba a orologeria. La bomba segue il dito con un po\' di ritardo e si deforma con la velocità; il mirino scatta sul quadratino. Da Federico cade con la sua ombra, rimbalza schiacciandosi, ticchetta tre volte (ogni tic un sobbalzo), si apre ed esplode: scintille e pezzi che rimbalzano sul campo, fumo, il vetro si crepa dal centro, le schegge cadono, poi le crepe si richiudono verso il centro.',
+  desc:'Bomba a orologeria. Da Federico la bomba cade con la sua ombra e rimbalza; a ogni tic il nucleo accende di ciano il campo intorno. Poi esplode: il campo si illumina di bianco e poi d\'arancio, l\'onda d\'urto lo piega e il campo stesso si rompe in pezzi spostati (non solo le crepe disegnate), le schegge cadono, poi tutto si ricompone verso il centro.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, d.p[0], d.p[1] - W * .05, dt), f = arcF([hb.x, hb.y], [t.x, t.y], W * .25);
     c.save(); for(let i = 0; i < 26; i++){ const u = ((i + T * 3) % 26) / 26, p = f(u); c.globalAlpha = .35 + .65 * Math.sin(PI * u); c.fillStyle = i % 2 ? '#C9A45A' : '#9FF3FF'; c.beginPath(); c.arc(p[0], p[1], W * .009 * (.6 + .6 * Math.sin(PI * u)), 0, TAU); c.fill() } c.restore();
@@ -378,7 +527,7 @@ TH.mox = {
       for(let i = 0; i < 12; i++){ c.rotate(TAU / 12); c.beginPath(); c.moveTo(r, 0); c.lineTo(r + (i % 3 ? 4 : 10), 0); c.stroke() } c.restore() }
     const v = Math.hypot(t.vx, t.vy), s = 1 + Math.min(.4, v / 2200);
     img(c, I('mox', 'bomb', 0), t.x, t.y, W * .2, Math.sin(T * 5) * .15 + t.vx / 3000, 1, null, .5, .5, s, 1 / s, Math.atan2(t.vy, t.vx));
-    glow(c, t.x, t.y + W * .01, W * .06, '160,250,255', .4 + .3 * Math.sin(T * 9));
+    const bl = .5 + .5 * Math.sin(T * 9); glow(c, t.x, t.y + W * .01, W * .06, '160,250,255', .4 + .3 * bl); lit('A', t.x, t.y + W * .1, W * .35, [.5, 1, 1.1], .5 + .6 * bl);
   },
   launch(d){
     const W = pA.clientWidth, tr = tileRect(pA), p0 = d.tip ? [d.tip.x, d.tip.y] : d.p.slice(), ex = tr.x + tr.w / 2, hist = [];
@@ -386,43 +535,45 @@ TH.mox = {
     add('A', function(c, dt){ this.a += dt; const k = this.a / .45; if(k > 1) return false; const y = lerp(p0[1], -W * .2, ei(k)), x = lerp(p0[0], ex, eo(k)), r = k * 10;
       hist.push([x, y, r]); if(hist.length > 5) hist.shift();
       hist.forEach((h, i) => img(c, I('mox', 'bomb', 0), h[0], h[1], W * .2, h[2], .12 * (i + 1)));
-      img(c, I('mox', 'bomb', 0), x, y, W * .2 * (1 + .25 * Math.sin(PI * k)), r, 1, null, .5, .5, 1.25, .8, -PI / 2); return true });
+      img(c, I('mox', 'bomb', 0), x, y, W * .2 * (1 + .25 * Math.sin(PI * k)), r, 1, null, .5, .5, 1.25, .8, -PI / 2); lit('A', x, y, W * .4, [.5, 1, 1.1], .8 * (1 - k)); return true });
     for(let i = 0; i < 3; i++) FX.sA.push(sp({im:I('mox', 'parts'), x:p0[0], y:p0[1], vx:(R() - .5) * 90, vy:-60 - R() * 60, g:500, w:W * .05, life:.9, spin:(R() - .5) * 12, delay:i * .05}));
     return .55;
   },
   hit(tx){
     const W = W_(), H = pV.clientHeight, o = fieldO(pV);
     if(RM){ flash('#E8FFFF', .9, .9, true); damage(); return }
-    // la bomba: cade dall'alto (altezza z), ombra che si stringe, rimbalza schiacciandosi
-    const B = {x:clamp(tx, W * .2, W * .8), z:H * .75, vz:0, sq:spr(1, 380, 9), open:0, rot:0, landed:0};
+    const B = {x:clamp(tx, W * .2, W * .8), z:H * .75, vz:0, sq:spr(1, 380, 9), rot:0};
     const blinks = [1.05, 1.35, 1.56];
     add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.86) return false;
       B.x = lerp(B.x, o.x, 1 - Math.exp(-dt * 7)); B.vz -= 2600 * dt; B.z += B.vz * dt;
-      if(B.z < 0){ B.z = 0; if(B.vz < -150){ B.sq.v -= B.vz * .006; impact(PI / 2, Math.min(.5, -B.vz / 2400)); B.vz = -B.vz * .34; for(let i = 0; i < 6; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * W * .08, y:o.y + W * .07, vx:Math.cos(a) * 60, vy:Math.sin(a) * 20, drag:2, r:W * .05, grow:1.5, life:.7, col:'150,150,150', al:.5}) } } else B.vz = 0 }
+      if(B.z < 0){ B.z = 0; if(B.vz < -150){ B.sq.v -= B.vz * .006; impact(PI / 2, Math.min(.5, -B.vz / 2400), o.x, o.y + W * .1); B.vz = -B.vz * .34; for(let i = 0; i < 6; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * W * .08, y:o.y + W * .07, vx:Math.cos(a) * 60, vy:Math.sin(a) * 20, drag:2, r:W * .05, grow:1.5, life:.7, col:'150,150,150', al:.5}) } } else B.vz = 0 }
       stepS(B.sq, dt); B.rot = B.z > 0 ? B.rot + dt * 5 : B.rot * Math.exp(-dt * 8);
-      blinks.forEach(b => { if(x >= b && !B['b' + b]){ B['b' + b] = 1; B.sq.v -= 2; impact(0, .1); pt(FX.pV2, {k:'ripple', x:o.x, y:o.y, r:W * .1, grow:W * .25, life:.35, col:'170,250,255', lw:2}) } });
+      blinks.forEach(b => { if(x >= b && !B['b' + b]){ B['b' + b] = 1; B.sq.v -= 2; impact(0, .1); pt(FX.pV, {k:'ripple', x:o.x, y:o.y + W * .08, r:W * .1, grow:W * .3, life:.4, col:'170,250,255', lw:2}) } });
       const sh = 1 - Math.min(1, B.z / H);
       c.save(); c.globalAlpha = .45 * sh; c.fillStyle = '#000'; c.beginPath(); c.ellipse(o.x + B.z * .08, o.y + W * .1, W * .13 * (.4 + .6 * sh), W * .04 * (.4 + .6 * sh), 0, 0, TAU); c.fill(); c.restore();
       const open = x > 1.7, s = B.sq.x, bs = W * .26 * (1 + B.z / H * .5) * (open ? eb((x - 1.7) / .16) * 1.2 : 1);
       img(c, open ? I('mox', 'bomb2', 0) : I('mox', 'bomb', 0), B.x, o.y - B.z, bs, B.rot + (x > 1.4 ? Math.sin(x * 50) * .04 : 0), 1, null, .5, .8, 1 / s, s, 0);
-      blinks.forEach(b => { const q = x - b; if(q > 0 && q < .14) glow(c, B.x, o.y - B.z - bs * .3, W * .22, '170,250,255', 1 - q / .14) });
-      if(open) glow(c, B.x, o.y - bs * .3, W * .35, '220,255,255', (x - 1.7) / .16);
+      lit('V', B.x, o.y + W * .06, W * .35, [.45, .95, 1.05], .35 + .25 * Math.sin(x * 6));
+      blinks.forEach(b => { const q = x - b; if(q > 0 && q < .16){ glow(c, B.x, o.y - B.z - bs * .3, W * .22, '170,250,255', 1 - q / .16); lit('V', B.x, o.y, W * .8, [.5, 1, 1.1], 2.2 * (1 - q / .16)) } });
+      if(open){ glow(c, B.x, o.y - bs * .3, W * .35, '220,255,255', (x - 1.7) / .16); lit('V', B.x, o.y, W, [.7, 1, 1.1], 3 * (x - 1.7) / .16) }
       return true });
     after(1.86, () => {
       const e = {x:o.x, y:o.y - W * .08};
-      flash('#EFFFFF', .95, .5, true); impact(R() * TAU, 1.3);
+      flash('#EFFFFF', .9, .45, true); impact(R() * TAU, 1.4, e.x, e.y);
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.2) return false; lit('V', e.x, e.y, W * 1.2, lerp3([.9, 1.1, 1.2], [1.2, .55, .2], clamp(x / .5)), 3.2 * Math.exp(-x * 2.4)); return true });
       [0, .07].forEach((dl, i) => add('V2', function(c, dt){ this.a += dt; const k = this.a / .42; if(k > 1) return false; if(k < 0) return true; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(170,250,255,${1 - k})`; c.lineWidth = W * (.05 - i * .03) * (1 - k) + 1; c.beginPath(); c.arc(e.x, e.y, W * (.1 + (1 - i * .3) * eo(k)), 0, TAU); c.stroke(); c.restore(); return true }, dl));
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.1) return false; img(c, I('mox', 'blast', 0), e.x, e.y + W * .05, W * 1.0 * eb(x / .3), 0, x < .4 ? 1 : 1 - (x - .4) / .7); return true });
       for(let i = 0; i < 46; i++){ const a = R() * TAU, v = 250 + R() * 650; pt(FX.pV2, {k:'spark', x:e.x, y:e.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 300, gz:1400, rest:.3, drag:2.2, life:.5 + R() * .6, r:1.2 + R() * 1.4, col:R() < .6 ? '170,250,255' : '255,210,120'}) }
       for(let i = 0; i < 10; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:e.x, y:e.y, vx:Math.cos(a) * (80 + R() * 120), vy:Math.sin(a) * (60 + R() * 90), drag:1.8, r:W * (.07 + R() * .05), grow:2.2, life:1.4 + R() * .6, col:'70,74,80', al:.75}) }
       for(let i = 0; i < 12; i++){ const a = R() * TAU, v = 160 + R() * 320; FX.sV2.push(sp({im:I('mox', 'parts'), x:e.x, y:e.y + W * .08, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:250 + R() * 400, gz:1300, rest:.4, drag:.6, w:W * (.05 + R() * .05), life:1.6, spin:(R() - .5) * 18, sh:1, fout:.25})) }
-      // lo schermo si frantuma dal centro
-      const cr = I('mox', R() < .5 ? 'crack' : 'crack2', 0), S = Math.max(W, H) * 1.3, rot = R() * TAU, seed = R() * 9, holes = [];
+      // il campo si rompe davvero: pezzi spostati (scheda grafica) + le crepe disegnate sopra il vetro
+      const cr = I('mox', R() < .5 ? 'crack' : 'crack2', 0), S = Math.max(W, H) * 1.3, rot = R() * TAU, seed = R() * 9, holes = [], sseed = R() * 50;
       add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.3) return false;
         const g = x < 1.75 ? eo(x / .14) : 1 - ei((x - 1.75) / .4), al = x < 2.15 ? 1 : 1 - (x - 2.15) / .15;
-        holes.forEach(h => { const hk = x < 1.75 ? 1 : g; c.save(); c.globalAlpha = .55 * al * hk; c.fillStyle = '#05080B'; c.beginPath(); c.moveTo(h[0][0], h[0][1]); h.forEach(p => c.lineTo(p[0], p[1])); c.fill(); c.restore() });
+        const s = st('V'); s.sh[0] = e.x; s.sh[1] = e.y; s.sh[2] = g * (x < .14 ? 1.4 : 1); s.sh[3] = sseed;
+        holes.forEach(h => { c.save(); c.globalAlpha = .55 * al * (x < 1.75 ? 1 : g); c.fillStyle = '#05080B'; c.beginPath(); c.moveTo(h[0][0], h[0][1]); h.forEach(p => c.lineTo(p[0], p[1])); c.fill(); c.restore() });
         reveal(c, cr, e.x, e.y, S, rot, al, g, seed);
-        if(x > 1.75){ c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(210,255,255,${.8 * g})`; c.lineWidth = 2.5; c.beginPath(); c.arc(e.x, e.y, Math.hypot(W, H) * .65 * g, 0, TAU); c.stroke(); c.restore() }
+        if(x > 1.75){ c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(210,255,255,${.8 * g})`; c.lineWidth = 2.5; c.beginPath(); c.arc(e.x, e.y, Math.hypot(W, H) * .65 * g, 0, TAU); c.stroke(); c.restore(); lit('V', e.x, e.y, Math.hypot(W, H) * .65 * g + W * .2, [.6, 1, 1.1], .8 * g) }
         return true });
       after(.5, () => { for(let i = 0; i < 13; i++){ const a = R() * TAU, r = W * (.08 + R() * .45), x = e.x + Math.cos(a) * r, y = e.y + Math.sin(a) * r * 1.3, s = W * (.08 + R() * .09);
         holes.push(Array.from({length:5}, (_, j) => { const b = j / 5 * TAU + R() * .6; return [x + Math.cos(b) * s * .45 * (.6 + R() * .5), y + Math.sin(b) * s * .45 * (.6 + R() * .5)] }));
@@ -433,22 +584,18 @@ TH.mox = {
   }
 };
 
-// ---------- ABISSO: l'onda
+// ---------- ABISSO
 function wavyPath(a, b, amp, t, n = 32){ const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
   for(let i = 0; i <= n; i++){ const u = i / n, o = (Math.sin(u * PI * 2.2 - t * 6) * amp + Math.sin(u * PI) * amp * .9) * Math.sin(PI * u); pts.push([a[0] + dx * u + nx * o, a[1] + dy * u + ny * o]) } return prep(pts) }
-function caustics(c, x0, y0, w, h, t, a){
-  if(a <= 0) return; c.save(); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round';
-  for(let i = 0; i < 16; i++){ const vert = i % 2, ph = i * 1.7; c.strokeStyle = `rgba(150,225,255,${a * (.12 + .08 * Math.sin(t * 2 + ph))})`; c.lineWidth = 1.5 + (i % 3) * 1.5; c.beginPath();
-    for(let j = 0; j <= 24; j++){ const u = j / 24; if(vert){ const x = x0 + w * ((i / 16) + .06 * Math.sin(u * 9 + t * 2.2 + ph)), y = y0 + h * u; j ? c.lineTo(x, y) : c.moveTo(x, y) } else { const y = y0 + h * ((i / 16) + .05 * Math.sin(u * 8 - t * 2 + ph)), x = x0 + w * u; j ? c.lineTo(x, y) : c.moveTo(x, y) } }
-    c.stroke() } c.restore() }
 TH.abisso = {
   name:'Abisso', sub:'Blu · acqua e onde', col:'#5CC8F2',
-  desc:'L\'onda. Dal tuo elemento centrale esce un getto d\'acqua che ondeggia e si piega, con l\'onda in punta che insegue il dito e spruzza gocce vere (salgono, ricadono, fanno il cerchietto). Da Federico prima arriva l\'ombra, poi l\'onda gigante si abbatte: il campo si schiaccia e rimbalza, corona di gocce, cerchi d\'onda che si allargano, schiuma che si spande e si scioglie, riflessi dell\'acqua, il velo d\'acqua che scola e le gocce che scivolano a scatti sul vetro.',
+  desc:'L\'onda. Il getto d\'acqua ondeggia e spruzza gocce vere, e la sua luce azzurra scorre sul campo di Bea. Da Federico arriva l\'ombra, poi l\'onda si abbatte: il campo stesso si increspa a cerchi che si allargano (tutto quello che c\'è sopra ondeggia con lui), con riflessi di luce sulle creste; corona di gocce, schiuma che si spande, velo d\'acqua che scola e gocce che scivolano sul vetro.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .85] : d.p, t = follow(d, tg[0], tg[1], dt);
     d.wave = d.wave ?? (R() * 4 | 0);
     const pts = wavyPath([hb.x, hb.y], [t.x, t.y], W * .05, T), Lp = plen(pts), end = at(pts, Lp), tr2 = I('abisso', 'trail', 0);
     along(c, tr2, pts, 0, Lp, W * .15, 1, .35, true); along(c, tr2, pts, 0, Lp, W * (.13 + .02 * Math.sin(T * 7)), 1, .95);
+    for(let i = 1; i <= 3; i++){ const p = at(pts, Lp * i / 3); lit('A', p[0], p[1], W * .35, [.35, .75, 1.1], .7) }
     const im = I('abisso', 'wave' + d.wave, 0), sq = 1 + .06 * Math.sin(T * 11);
     img(c, im, end[0], end[1], W * .5, end[2], 1, null, .78, .55, sq, 1 / sq, end[2]);
     if(R() < dt * (on ? 60 : 30)){ const a = end[2] + (R() - .5) * 1.6, v = 60 + R() * 140; pt(FX.pA, {k:'drop', x:end[0], y:end[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:80 + R() * 160, gz:900, rest:.2, life:.9, r:W * (.008 + R() * .01), col:'190,235,255', land:p => pt(FX.pA, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * .05, life:.4, col:'210,245,255', lw:1})}) }
@@ -456,10 +603,11 @@ TH.abisso = {
   },
   launch(d){
     const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ex = tr.x + tr.w / 2, p0 = d.tip ? [d.tip.x, d.tip.y] : d.p.slice(), im = I('abisso', 'wave' + (d.wave ?? 0), 0);
-    SP.aHub.v -= 2.5;
+    SP.aHub.v -= 2.5; SP.aPunch.v -= .6;
     add('A', function(c, dt){ this.a += dt; const k = this.a / .42; if(k > 1.3) return false; const kk = Math.min(1, k), x = lerp(p0[0], ex, eo(kk)), y = lerp(p0[1], -W * .4, ei(kk)), al = k > 1 ? 1 - (k - 1) / .3 : 1;
       const pts = wavyPath([hb.x, hb.y], [x, y], W * .05 * (1 - kk), T), Lp = plen(pts), end = at(pts, Lp), from = Lp * ei(Math.max(0, k - .2) / .8);
       along(c, I('abisso', 'trail', 0), pts, 0, Lp, W * .14, 1, .95 * al, false, from); img(c, im, end[0], end[1], W * .5, end[2], al, null, .78, .55, 1.2, .85, end[2]);
+      lit('A', end[0], Math.max(end[1], hb.y * .5), W * .5, [.35, .75, 1.1], al);
       if(R() < dt * 80) pt(FX.pA, {k:'drop', x:end[0], y:end[1], vx:(R() - .5) * 160, vy:R() * 80, vz:100 + R() * 150, gz:900, life:.7, r:W * .01, col:'190,235,255'}); return true });
     return .45;
   },
@@ -467,27 +615,28 @@ TH.abisso = {
     const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), im = I('abisso', 'wave' + (R() * 4 | 0), 0);
     if(RM){ flash('#6CC8FF', .6, .9); damage(); return }
     const D = .4;
-    // l'ombra dell'onda che arriva, poi l'onda che cresce (si avvicina) e si abbatte
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > D + .1) return false; const k = clamp(x / D), y = lerp(fb.y - W * .2, o.y, ei(k));
-      const g = c.createLinearGradient(0, y - W * .6, 0, y + W * .1); g.addColorStop(0, 'rgba(0,20,45,0)'); g.addColorStop(.8, `rgba(0,20,45,${.45 * k})`); g.addColorStop(1, 'rgba(0,20,45,0)'); c.fillStyle = g; c.fillRect(0, y - W * .6, W, W * .7); return true });
+      const g = c.createLinearGradient(0, y - W * .6, 0, y + W * .1); g.addColorStop(0, 'rgba(0,20,45,0)'); g.addColorStop(.8, `rgba(0,20,45,${.5 * k})`); g.addColorStop(1, 'rgba(0,20,45,0)'); c.fillStyle = g; c.fillRect(0, y - W * .6, W, W * .7);
+      wave('V', o.x, y, W * .2, 5 * k, W * .15); return true });
     add('V2', function(c, dt){ this.a += dt; const k = this.a / D; if(k > 1.12) return false; const kk = Math.min(1, k), x = lerp(x0, o.x, kk), y = lerp(-W * .35, o.y - W * .05, ei(kk)), al = k > 1 ? 1 - (k - 1) / .12 : 1, s = 1 + .9 * ei(kk);
       const pts = wavyPath([x0, -W * .6], [x, y], W * .06, T * 2), Lp = plen(pts), end = at(pts, Lp);
       along(c, I('abisso', 'trail', 0), pts, 0, Lp, W * .22 * s, 1, .9 * al); img(c, im, end[0], end[1], W * .62 * s, end[2], al, null, .8, .55, 1.15, .9, end[2]);
+      lit('V', end[0], Math.max(end[1], fb.y), W * .7, [.4, .8, 1.15], 1.2 * al);
       if(R() < dt * 90) pt(FX.pV2, {k:'drop', x:end[0] + (R() - .5) * W * .3, y:end[1], vx:(R() - .5) * 90, vy:120 + R() * 160, life:.4, r:W * (.008 + R() * .012), col:'190,235,255'}); return true });
     after(D, () => {
       impact(PI / 2, 1.15);
+      // il campo s'increspa davvero: anelli che si allargano dal punto dello schianto, con i riflessi sulle creste
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.6) return false; const s = st('V'); s.rip[0] = o.x; s.rip[1] = o.y; s.rip[2] = 10 * Math.pow(1 - x / 3.6, 1.4); s.rip[3] = x;
+        lit('V', o.x, o.y, W * (.5 + .4 * eo(x)), [.35, .8, 1.1], 1.4 * Math.exp(-x * 1.2)); return true });
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; img(c, I('abisso', 'burst', 0), o.x, o.y, W * 1.25 * eb(x / .32), x * .5, x < .35 ? 1 : 1 - (x - .35) / .95); return true });
       [0, .14, .3].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.4) return false; if(x < 0) return true; const k = eo(x / 1.4); img(c, I('abisso', 'ring', 0), o.x, o.y, W * (.3 + (1.6 - i * .3) * k), i, (1 - k) * .9); return true }, dl));
-      for(let i = 0; i < 7; i++) pt(FX.pV, {k:'ripple', x:o.x, y:o.y, r:W * .05, grow:W * (.5 + R() * .6), life:1.2 + R() * .8, col:'215,245,255', lw:2.2, delay:i * .12, al:.8});
-      // corona di gocce: salgono, ricadono e lasciano il cerchietto dove toccano
       for(let i = 0; i < 52; i++){ const a = R() * TAU, v = 90 + R() * 300; pt(FX.pV2, {k:'drop', x:o.x + Math.cos(a) * W * .08, y:o.y + Math.sin(a) * W * .06, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:180 + R() * 380, gz:1150, rest:.2, life:1.1 + R() * .5, r:W * (.007 + R() * .016), col:'185,232,255',
-        land:p => pt(FX.pV, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * (.04 + R() * .05), life:.6, col:'225,248,255', lw:1.3, sq:.85})}) }
+        land:p => { pt(FX.pV, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * (.04 + R() * .05), life:.6, col:'225,248,255', lw:1.3, sq:.85}); const q = {x:p.x, y:p.y}; add('V', function(c, dt){ this.a += dt; if(this.a > .5) return false; wave('V', q.x, q.y, W * (.01 + .12 * this.a), 3 * (1 - this.a / .5), W * .02); return true }) }}) }
       for(let i = 0; i < 7; i++){ const a = i / 7 * TAU + R() * .5, r = W * (.16 + R() * .22); FX.sV.push(sp({im:I('abisso', 'splash'), x:o.x + Math.cos(a) * r, y:o.y + Math.sin(a) * r, vx:Math.cos(a) * 70, vy:Math.sin(a) * 70, drag:2.4, w:W * (.16 + R() * .1), life:1, pop:.22, fout:.5, rot:a + PI / 2, delay:R() * .12})) }
       for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 50 + R() * 90; FX.sV.push(sp({im:I('abisso', 'foam'), x:o.x + Math.cos(a) * W * .1, y:o.y + Math.sin(a) * W * .1, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.1, w:W * (.2 + R() * .12), life:3.2 + R(), pop:.3, fout:.55, alpha:.9, rot:R() * TAU, spin:(R() - .5) * .5, grow:.5, delay:.05 + R() * .2})) }
-      // riflessi dell'acqua e velo che scola verso il basso
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false; const k = env(x, .15, 1.6, 1.4); caustics(c, fb.x, fb.y, fb.w, fb.h, T, k);
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false;
         const y = fb.y + fb.h * ei(x / 3.2) * 1.1, g = c.createLinearGradient(0, y - fb.h * .6, 0, y); g.addColorStop(0, 'rgba(40,140,220,0)'); g.addColorStop(1, `rgba(40,140,220,${.38 * (1 - x / 3.2)})`); c.fillStyle = g; c.fillRect(0, y - fb.h * .6, W, fb.h * .6); return true });
-      flash('rgba(90,190,255,1)', .35, .9);
+      flash('rgba(90,190,255,1)', .3, .9);
       for(let i = 0; i < 14; i++) pt(FX.pV2, {k:'glass', x:W * (.06 + R() * .88), y:H * (.12 + R() * .62), r:W * (.012 + R() * .022), life:2.8 + R() * 1.4, fout:.25, delay:.05 + R() * .3});
       for(let i = 0; i < 4; i++) FX.sV2.push(sp({im:I('abisso', 'drop'), x:W * (.1 + R() * .8), y:H * (.2 + R() * .5), vy:6, g:10 + R() * 14, w:W * (.06 + R() * .04), life:3 + R(), fout:.3, alpha:.9, delay:.1 + R() * .3}));
       damage();
@@ -495,14 +644,16 @@ TH.abisso = {
   }
 };
 
-// ---------- CRIPTA: il dardo di anime
+// ---------- CRIPTA
 TH.cripta = {
   name:'Cripta', sub:'Nero · demoni e oscurità', col:'#B784F2',
-  desc:'Il dardo di anime. Il fumo si contorce lungo una scia che ondeggia, con sbuffi che si staccano e salgono; sopra il quadratino le anime ci girano intorno. Da Federico il dardo si pianta, il campo sussulta, il teschio scatta fuori, le venature nere si allargano dal centro e pulsano come un cuore, le anime escono a spirale, il campo avvizzisce e poi torna.',
+  desc:'Il dardo di anime. Dove passa il fumo il campo di Bea si spegne. Da Federico il dardo si pianta e il buio si allarga dal centro: la luce del campo si spegne davvero, le venature pulsano come un cuore e a ogni battito il campo sussulta e i colori si sdoppiano, le anime escono a spirale, il campo avvizzisce e poi torna.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .8] : d.p, t = follow(d, tg[0], tg[1], dt);
     d.dart = d.dart ?? (R() < .5 ? 'dart' : 'dart2');
     const pts = wavyPath([hb.x, hb.y], [t.x, t.y], W * .04, T * 1.3), Lp = plen(pts), end = at(pts, Lp);
+    for(let i = 0; i <= 2; i++){ const p = at(pts, Lp * i / 2); lit('A', p[0], p[1], W * .45, [.75, .85, .55], -.9) }
+    lit('A', end[0], end[1], W * .25, [.6, .3, 1], .6);
     along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .15 * (1 + .1 * Math.sin(T * 6)), 1, .95);
     img(c, I('cripta', d.dart, 0), end[0], end[1], W * .45, end[2], 1, null, .95, .5);
     d.so = d.so || spr(0, 200, 9); d.so.t = on ? 1 : 0; stepS(d.so, dt);
@@ -515,6 +666,7 @@ TH.cripta = {
     add('A', function(c, dt){ this.a += dt; const k = this.a / .4; if(k > 1.25) return false; const kk = Math.min(1, k), x = lerp(p0[0], ex, eo(kk)), y = lerp(p0[1], -W * .3, ei(kk)), al = k > 1 ? 1 - (k - 1) / .25 : 1;
       const pts = wavyPath([hb.x, hb.y], [x, y], W * .04 * (1 - kk), T), Lp = plen(pts), end = at(pts, Lp), from = Lp * ei(Math.max(0, k - .15) / .85);
       along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .14, 1, .95 * al, false, from); img(c, im, end[0], end[1], W * .45, end[2], al, null, .95, .5, 1.2, .85, end[2]);
+      lit('A', hb.x, hb.y * .7, W * .8, [.75, .85, .55], -1 * al);
       for(let i = 0; i < 4; i++){ const a = this.a * 14 + i * TAU / 4, rr = W * .07; img(c, I('cripta', 'souls', i), end[0] - Math.cos(end[2]) * W * .12 + Math.cos(a) * rr, end[1] - Math.sin(end[2]) * W * .12 + Math.sin(a) * rr, W * .09, end[2], al * .9) } return true });
     return .45;
   },
@@ -524,28 +676,34 @@ TH.cripta = {
     const D = .42;
     add('V2', function(c, dt){ this.a += dt; const k = this.a / D; if(k > 1.05) return false; const kk = Math.min(1, k), x = lerp(x0, o.x, kk), y = lerp(-W * .3, o.y, ei(kk));
       const pts = wavyPath([x0, -W * .5], [x, y], W * .05 * (1 - kk * .6), T * 1.5), Lp = plen(pts), end = at(pts, Lp);
+      lit('V', end[0], Math.max(fb.y, end[1]), W * .6, [.75, .85, .55], -1.1);
       along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .18, 1, .9); img(c, im, end[0], end[1], W * .55, end[2], 1, null, .95, .5, 1.15, .9, end[2]);
       for(let i = 0; i < 4; i++){ const a = this.a * 14 + i * TAU / 4, rr = W * .08; img(c, I('cripta', 'souls', i), end[0] - Math.cos(end[2]) * W * .14 + Math.cos(a) * rr, end[1] - Math.sin(end[2]) * W * .14 + Math.sin(a) * rr, W * .1, end[2], .9) } return true });
     after(D, () => {
       impact(PI / 2, .95);
       const v = I('cripta', R() < .5 ? 'vein' : 'vein2', 0), vr = R() * TAU, seed = R() * 9;
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; const al = x < 2.5 ? 1 : 1 - (x - 2.5) / .9, g = eo(x / 1.1) * (x < 2.5 ? 1 : 1 - ei((x - 2.5) / .9) * .5);
+        const beat = Math.pow(Math.max(0, Math.sin(x * 7)), 6), s = st('V');
         reveal(c, v, o.x, o.y, W * 1.6, vr, al, g, seed);
-        const beat = Math.pow(Math.max(0, Math.sin(x * 7)), 6); if(beat > .01) reveal(c, v, o.x, o.y, W * 1.6, vr, al * beat * .7, g, seed, 'lighter'); return true });
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; const k = env(x, .6, 1.9, .9) * (.85 + .15 * Math.sin(x * 7)); const g = c.createRadialGradient(o.x, o.y, W * .15, o.x, o.y, H * .75); g.addColorStop(0, 'rgba(10,0,20,0)'); g.addColorStop(1, `rgba(10,0,20,${.7 * k})`); c.fillStyle = g; c.fillRect(0, 0, W, H); return true });
-      add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .95) return false; img(c, I('cripta', 'skull', 0), o.x, o.y - W * .04, W * .42 * eb(x / .3), Math.sin(x * 20) * .05 * (1 - x), x < .5 ? 1 : 1 - (x - .5) / .45); return true });
+        if(beat > .01) reveal(c, v, o.x, o.y, W * 1.6, vr, al * beat * .7, g, seed, 'lighter');
+        // il buio: una luce «negativa» che si allarga e spegne il campo, con un cuore viola che pulsa al centro
+        lit('V', o.x, o.y, W * (.4 + 1.1 * g), [.8, .9, .6], -1.05 * al); lit('V', o.x, o.y, W * .35, [.7, .3, 1.2], (.5 + 1.2 * beat) * al);
+        s.chr = Math.max(s.chr, beat * 5 * al); if(beat > .5) wave('V', o.x, o.y, W * (.15 + .5 * (1 - beat)), 6 * beat * al, W * .06);
+        s.dark = Math.max(s.dark, .3 * env(x, .6, 1.9, .9));
+        if(this.lb !== undefined && beat > .9 && this.lb <= .9){ SP.vPunch.v -= .5; SP.vLife.v += .8 } this.lb = beat;
+        return true });
+      add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .95) return false; img(c, I('cripta', 'skull', 0), o.x, o.y - W * .04, W * .42 * eb(x / .3), Math.sin(x * 20) * .05 * (1 - x), x < .5 ? 1 : 1 - (x - .5) / .45); lit('V', o.x, o.y, W * .5, [.7, .3, 1.2], 1.4 * (1 - x)); return true });
       for(let i = 0; i < 18; i++){ const a = R() * TAU, s = 40 + R() * 120; pt(FX.pV, {k:'smoke', x:o.x, y:o.y, vx:Math.cos(a) * s, vy:Math.sin(a) * s, drag:1.4, r:W * (.06 + R() * .05), grow:2, life:1.3 + R() * .7, col:pick(['30,12,48', '70,30,110', '15,6,25']), al:.85}) }
       for(let i = 0; i < 7; i++){ const a = R() * TAU, s = 40 + R() * 60; FX.sV.push(sp({im:I('cripta', 'puffs'), x:o.x, y:o.y, vx:Math.cos(a) * s, vy:Math.sin(a) * s, drag:.8, w:W * (.16 + R() * .08), life:1.5, grow:.9, alpha:.85, rot:R() * TAU, spin:(R() - .5)})) }
-      // anime che escono a spirale
       for(let i = 0; i < 7; i++){ const a0 = i / 7 * TAU, dir = sgn();
         add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.9) return false; if(x < 0) return true; const ang = a0 + dir * x * 3.2, r = W * (.05 + .34 * eo(x / 1.9)), px = o.x + Math.cos(ang) * r, py = o.y + Math.sin(ang) * r * .85;
-          img(c, I('cripta', 'souls', i), px, py, W * (.08 + .05 * x), ang + dir * PI / 2, env(x, .2, 1, .7) * .9); return true }, .1 + R() * .3) }
+          img(c, I('cripta', 'souls', i), px, py, W * (.08 + .05 * x), ang + dir * PI / 2, env(x, .2, 1, .7) * .9); lit('V', px, py, W * .2, [.6, .4, 1], .5 * env(x, .2, 1, .7)); return true }, .1 + R() * .3) }
       wither = {a:0}; damage();
     });
   }
 };
 
-// ---------- FORGIA: il fulmine e la bruciatura
+// ---------- FORGIA
 function bolt(c, a, b, W, seed, al = 1, forks = 2){
   let s = seed; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
   const path = (a, b, amp) => { const n = Math.max(5, Math.hypot(b[0] - a[0], b[1] - a[1]) / (W * .05) | 0), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [a];
@@ -554,43 +712,50 @@ function bolt(c, a, b, W, seed, al = 1, forks = 2){
   for(let f = 0; f < forks; f++){ const p = main[1 + (rnd() * (main.length - 2) | 0)], ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + (rnd() - .5) * 1.8, l = W * (.1 + rnd() * .15); all.push([path(p, [p[0] + Math.cos(ang) * l, p[1] + Math.sin(ang) * l], W * .04), .5]) }
   c.save(); c.globalCompositeOperation = 'lighter'; c.lineJoin = 'round'; c.lineCap = 'round';
   all.forEach(([pts, k]) => [[W * .07, `rgba(255,255,255,${.12 * al})`], [W * .035, `rgba(255,255,255,${.3 * al})`], [W * .016, `rgba(60,150,255,${.95 * al})`], [W * .006, `rgba(220,240,255,${al})`]].forEach(([lw, col]) => { c.strokeStyle = col; c.lineWidth = lw * k; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() }));
-  c.restore();
+  c.restore(); return main;
 }
 function forgeImpact(o, W, pow = 1){
   const fb = fieldBox(pV), im = I('forgia', pick(['burn', 'burn2', 'burn3']), 0), rot = R() * TAU, seed = R() * 9;
-  flash('#FFF4E0', .7, .4); impact(PI / 2 + (R() - .5) * .6, pow);
-  // la bruciatura si apre dal centro, si accende e si raffredda
-  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.3) return false; const w = W * .8, al = x < 2.6 ? 1 : 1 - (x - 2.6) / .7, g = eo(x / .16);
+  flash('#FFF4E0', .6, .35); impact(PI / 2 + (R() - .5) * .6, pow, o.x, o.y);
+  // la bruciatura si apre, si accende e si raffredda: la sua luce scalda il campo (da bianco-giallo a rosso), l'aria sopra trema per il calore
+  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.3) return false; const w = W * .8, al = x < 2.6 ? 1 : 1 - (x - 2.6) / .7, g = eo(x / .16), heat = Math.exp(-x * 1.1);
     reveal(c, im, o.x, o.y, w, rot, al, g, seed); reveal(c, im, o.x, o.y, w, rot, al * Math.exp(-x * 1.5) * 1.3, g, seed, 'lighter');
-    glow(c, o.x, o.y, W * .45, '255,150,40', al * .7 * Math.exp(-x * 1.1)); return true });
+    lit('V', o.x, o.y, W * (.6 + .3 * heat), lerp3([1.3, 1.1, .75], [1.1, .3, .08], clamp(x / 1.6)), 2.6 * heat * al);
+    const s = st('V'); s.heat[0] = o.x; s.heat[1] = o.y - W * .05; s.heat[2] = 4 * heat * al;
+    return true });
   for(let i = 0; i < 55; i++){ const a = R() * TAU, v = 200 + R() * 600; pt(FX.pV2, {k:'spark', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:120 + R() * 380, gz:1500, rest:.35, drag:1.6, life:.5 + R() * .8, r:1 + R() * 1.6, col:R() < .7 ? '255,190,80' : '255,245,210'}) }
-  for(let i = 0; i < 9; i++){ const a = R() * TAU, v = 130 + R() * 260; FX.sV.push(sp({im:I('forgia', 'shard'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:200 + R() * 350, gz:1300, rest:.35, drag:.8, w:W * (.05 + R() * .05), life:1.8 + R() * .5, spin:(R() - .5) * 14, sh:1, fout:.35})) }
+  for(let i = 0; i < 9; i++){ const a = R() * TAU, v = 130 + R() * 260; FX.sV.push(sp({im:I('forgia', 'shard'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:200 + R() * 350, gz:1300, rest:.35, drag:.8, w:W * (.05 + R() * .05), life:1.8 + R() * .5, spin:(R() - .5) * 14, sh:1, fout:.35, lit:[W * .18, [1.1, .5, .15], .9]})) }
   for(let i = 0; i < 9; i++) FX.sV.push(sp({im:I('forgia', 'ember'), x:o.x + (R() - .5) * W * .4, y:o.y + (R() - .5) * W * .3, vx:(R() - .5) * 30, vy:-30 - R() * 50, w:W * (.03 + R() * .03), life:1.4 + R(), flick:1, blend:'lighter', delay:R() * .5, sway:25}));
   for(let i = 0; i < 8; i++) pt(FX.pV, {k:'smoke', x:o.x + (R() - .5) * W * .3, y:o.y + (R() - .5) * W * .2, vx:(R() - .5) * 20, vy:-20 - R() * 30, r:W * (.05 + R() * .05), grow:2.2, life:1.6 + R(), col:'35,28,24', al:.7, delay:.1 + R() * .4});
-  for(let i = 0; i < 16; i++) FX.sV.push(sp({im:I('forgia', 'arc'), x:fb.x + fb.w * (.1 + R() * .8), y:fb.y + fb.h * (.1 + R() * .8), w:W * (.12 + R() * .12), rot:R() * TAU, life:.12 + R() * .14, fin:.01, fout:.5, blend:'lighter', delay:.1 + i * .09}));
+  // scosse: ogni arco elettrico fa lampeggiare di blu il campo intorno a sé
+  for(let i = 0; i < 16; i++){ const x = fb.x + fb.w * (.1 + R() * .8), y = fb.y + fb.h * (.1 + R() * .8), life = .12 + R() * .14;
+    FX.sV.push(sp({im:I('forgia', 'arc'), x, y, w:W * (.12 + R() * .12), rot:R() * TAU, life, fin:.01, fout:.5, blend:'lighter', delay:.1 + i * .09, lit:[W * .35, [.5, .75, 1.3], 1.8]})) }
   damage();
 }
 TH.forgia = {
   name:'Forgia', sub:'Rosso · fuoco e acciaio', col:'#FF9A3C',
-  desc:'Il fulmine (a codice, con le diramazioni) e quello che lascia. Da Federico scarica al centro, lo schermo sobbalza verso il basso, la piastra si spacca dal centro e si arroventa, poi si raffredda; scintille che volano ad arco e rimbalzano, schegge con la loro ombra che saltano e ricadono, braci e fumo che salgono, archi elettrici sparsi. «Sorpresa: il goblin» mostra il goblin bombarolo.',
+  desc:'Il fulmine, come la vecchia Forgia: la sua luce blu fa lampeggiare il campo di Bea mentre trascini. Da Federico scarica al centro, il campo lampeggia, si spacca e si arroventa; la luce della bruciatura scalda il campo da bianco a rosso mentre si raffredda e l\'aria sopra trema per il calore; ogni scossa e ogni scheggia rovente illuminano il campo dove passano.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
-    if(!d.seed || T - d.st > .06){ d.seed = 1 + R() * 9999 | 0; d.st = T }
-    bolt(c, [hb.x, hb.y], [t.x, t.y], W, d.seed, 1, 2);
+    if(!d.seed || T - d.st > .06){ d.seed = 1 + R() * 9999 | 0; d.st = T; d.fl = .6 + R() * .8 }
+    const m = bolt(c, [hb.x, hb.y], [t.x, t.y], W, d.seed, 1, 2), mid = m[m.length >> 1];
+    lit('A', t.x, t.y, W * .5, [.55, .8, 1.3], 1.6 * d.fl); lit('A', mid[0], mid[1], W * .55, [.55, .8, 1.3], 1.1 * d.fl); lit('A', hb.x, hb.y, W * .4, [1.1, .6, .25], .6);
     glow(c, t.x, t.y, W * .12, '120,190,255', .6); glow(c, hb.x, hb.y, W * .15, '255,150,60', .4 + .2 * Math.sin(T * 20));
     if(R() < dt * 30){ const a = R() * TAU; pt(FX.pA, {k:'spark', x:t.x, y:t.y, vx:Math.cos(a) * 200, vy:Math.sin(a) * 200, vz:80 + R() * 120, gz:1200, drag:2, life:.4, r:1.2, col:'200,230,255'}) }
     if(on && R() < dt * 14) FX.sA.push(sp({im:I('forgia', 'arc'), x:tg[0] + (R() - .5) * tr.w * .8, y:tg[1] + (R() - .5) * tr.h * .6, w:W * .14, rot:R() * TAU, life:.14, fin:.01, blend:'lighter'}));
   },
   launch(d){
     const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ex = tr.x + tr.w / 2, ey = tr.y + tr.h / 2;
-    SP.aHub.v -= 3;
-    add('A', function(c, dt){ this.a += dt; if(this.a > .35) return false; const s = 1 + (this.a * 20 | 0); bolt(c, [hb.x, hb.y], [ex, ey], W, s * 77, 1 - this.a / .35); bolt(c, [ex, ey], [ex, -10], W, s * 31, 1 - this.a / .35); return true });
+    SP.aHub.v -= 3; SP.aPunch.v -= .7;
+    add('A', function(c, dt){ this.a += dt; if(this.a > .35) return false; const s = 1 + (this.a * 20 | 0), al = 1 - this.a / .35; bolt(c, [hb.x, hb.y], [ex, ey], W, s * 77, al); bolt(c, [ex, ey], [ex, -10], W, s * 31, al);
+      lit('A', hb.x, (hb.y + ey) / 2, W * .9, [.6, .85, 1.3], 2.5 * al * (s % 2 ? 1 : .4)); return true });
     return .4;
   },
   hit(tx){
     const W = W_(), o = fieldO(pV), x0 = clamp(tx, W * .2, W * .8);
     if(RM){ flash('#FFF4E0', .8, .6); damage(); return }
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32, 3); return true });
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; const m = bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32, 3);
+      lit('V', o.x, o.y, W * .9, [.6, .85, 1.35], 3 * (1 - x / .32)); const mid = m[m.length >> 1]; lit('V', mid[0], mid[1], W * .6, [.6, .85, 1.35], 2); return true });
     after(.12, () => forgeImpact(o, W));
   },
   goblin(){
@@ -605,42 +770,44 @@ TH.forgia = {
       c.save(); c.translate(px, gy - hop + W * .17); c.scale(face / Math.sqrt(sq.x), sq.x); img(c, I('forgia', pose, 0), 0, 0, W * .42, 0, 1, null, .5, 1); c.restore(); return true });
     after(.55, () => {
       const b = sp({im:I('forgia', 'bomb', 0), x:gx, y:gy + W * .12, w:W * .17, vx:(o.x - gx) / .55, vy:(o.y - gy - W * .12) / .55, z:W * .3, vz:560, gz:2200, rest:.42, drag:0, sh:1, spin:dir * 9, life:1.25, fout:.01,
-        land:() => impact(PI / 2, .25)});
+        land:() => impact(PI / 2, .25, b.x, b.y)});
       FX.sV2.push(b);
-      add('V2', function(c, dt){ this.a += dt; if(this.a > 1.25) return false; glow(c, b.x + W * .05, b.y - b.z - W * .07, W * .06, '255,200,80', .6 + .4 * Math.sin(this.a * 60));
+      add('V2', function(c, dt){ this.a += dt; if(this.a > 1.25) return false; const fl = .6 + .4 * Math.sin(this.a * 60); glow(c, b.x + W * .05, b.y - b.z - W * .07, W * .06, '255,200,80', fl); lit('V', b.x, b.y, W * .3, [1.2, .7, .3], fl);
         if(R() < .6) pt(FX.pV2, {k:'spark', x:b.x + W * .05, y:b.y - b.z - W * .07, vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}); return true });
       after(1.25, () => forgeImpact({x:b.x, y:b.y}, W, 1.2));
     });
   }
 };
 
-// ---------- SELVA: il lancio della liana
-function coilPath(k, tx, sq){
-  const fb = fieldBox(pV), o = fieldO(pV), cx = o.x, cy = o.y - fb.h * .05, sh = 1 - .14 * sq, rx = fb.w * (.43 - k * .07) * sh, ry = fb.h * (.36 - k * .05) * sh, dir = k % 2 ? -1 : 1, pts = [];
-  pts.push([tx + (k - 1) * 14, -60]); pts.push([tx + (k - 1) * 10, fb.y - 10]);
-  const a0 = -PI / 2 + (k - 1) * .35, x0 = cx + Math.cos(a0) * rx, y0 = cy + Math.sin(a0) * ry;
-  for(let i = 1; i <= 8; i++){ const u = i / 8; pts.push([pts[1][0] + (x0 - pts[1][0]) * u, pts[1][1] + (y0 - pts[1][1]) * u]) }
-  for(let i = 1; i <= 90; i++){ const u = i / 90, a = a0 + dir * u * TAU * 1.3, r = 1 - u * .38; pts.push([cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r]) }
-  return prep(pts);
-}
+// ---------- SELVA: il boa di liane
 function vinePath(a, b, t, tile){
   const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
   for(let i = 0; i <= 40; i++){ const u = i / 40, w = Math.sin(u * PI * 2.2 - t * 7) * Math.min(18, l * .08) * Math.sin(PI * u), bow = l * .18 * Math.sin(PI * u); pts.push([a[0] + dx * u + nx * (w + bow), a[1] + dy * u + ny * (w + bow)]) }
   if(tile){ const c = b, r = tile.h * .55, a0 = Math.atan2(pts[39][1] - c[1], pts[39][0] - c[0]); for(let i = 1; i <= 30; i++){ const ang = a0 + i / 30 * TAU * 1.15, rr = r * (1 - i / 30 * .25); pts.push([c[0] + Math.cos(ang) * rr * 1.6, c[1] + Math.sin(ang) * rr]) } }
   return prep(pts);
 }
+// spirale intorno a tutto il campo: davanti si vede, dietro il campo sparisce; «sq» la stringe
+function boaPath(tx, sq, turns, slither){
+  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), cx = fb.x + fb.w / 2, y0 = fb.y + fb.h * .07, y1 = fb.y + fb.h * .93, tilt = W * .1, pts = [], dep = [];
+  const A = (fb.w / 2 + W * .05) * (1 - .21 * sq);
+  for(let i = 0; i <= 8; i++){ const u = i / 8; pts.push([lerp(tx, cx, u), lerp(-W * .5, y0 + tilt, u)]); dep.push(1) }
+  const N = 170; for(let i = 1; i <= N; i++){ const u = i / N, f = u * turns * TAU, wob = Math.sin(f * 2 + slither) * W * .006; pts.push([cx + A * Math.sin(f), y0 + (y1 - y0) * u + tilt * Math.cos(f) + wob]); dep.push(Math.cos(f)) }
+  const last = pts[pts.length - 1]; for(let i = 1; i <= 10; i++){ pts.push([last[0], last[1] + (H + W * .8 - last[1]) * i / 10]); dep.push(1) }
+  prep(pts); pts.dep = dep; return pts;
+}
 TH.selva = {
   name:'Selva', sub:'Verde · piante e bestie', col:'#86CC4E',
-  desc:'Il lancio della liana, con le immagini nuove. La liana intrecciata esce dall\'elemento centrale, ondeggia e si piega dietro al dito, perde foglie; sopra il quadratino gli si avvolge intorno. Al rilascio parte come una frusta. Da Federico tre liane entrano dall\'alto, si avvolgono a spirale e stringono (il campo si stringe e respira); il terreno si apre nella voragine, zolle e briciole saltano e rimbalzano, le radici escono e si piegano, foglie e polvere; poi tutto rientra.',
+  desc:'Il boa. La liana esce dall\'elemento centrale, ondeggia dietro al dito e avvolge il quadratino. Da Federico la liana entra dall\'alto e si avvolge intorno a TUTTO il campo, giro dopo giro, passando davanti e sparendo dietro; si allenta un attimo, poi stritola: il campo stesso si stringe a clessidra, scricchiola, schizzano terra, foglie e schegge; poi molla la presa (il campo rimbalza) e la liana scivola via verso il basso.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
     const pts = vinePath([hb.x, hb.y], [t.x, t.y], T, on ? tr : null), Lp = plen(pts), grow = eo((T - d.t0) / .25), H = W * .15;
+    for(let i = 1; i <= 3; i++){ const p = at(pts, Lp * i / 3); lit('A', p[0] + 5, p[1] + 9, W * .25, [.7, .8, .6], -.6) }
     chain(c, [I('selva', 'liana', 0), I('selva', 'vine', 0)], pts, Lp * grow, Lp, H, 1, 1, true, 0);
     if(R() < dt * 5){ const p = at(pts, R() * Lp); FX.sA.push(sp({im:I('selva', 'leaf'), x:p[0], y:p[1], vx:(R() - .5) * 60, vy:10, g:60, w:W * .05, life:1.3, flut:.6, sway:30, spin:(R() - .5) * 3})) }
   },
   launch(d){
-    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), tx = tr.x + tr.w / 2, t = d.tip || {x:d.p[0], y:d.p[1]}, pts0 = vinePath([hb.x, hb.y], [t.x, t.y], T, tr).slice(0, 41).concat([[tx, -80], [tx, -400]]), pts = prep(pts0), Lp = plen(pts), L40 = pts.L[40];
-    SP.aHub.v -= 3;
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), tx = tr.x + tr.w / 2, t = d.tip || {x:d.p[0], y:d.p[1]}, pts = prep(vinePath([hb.x, hb.y], [t.x, t.y], T, tr).slice(0, 41).concat([[tx, -80], [tx, -400]])), Lp = plen(pts), L40 = pts.L[40];
+    SP.aHub.v -= 3; SP.aPunch.v -= .5;
     add('A', function(c, dt){ this.a += dt; const k = Math.min(1, this.a / .35); if(this.a > .45) return false;
       const tip = L40 + (Lp - L40) * Math.pow(k, 1.6) * .9 + Lp * .3 * Math.max(0, k - .6), from = Math.pow(k, 2) * L40;
       chain(c, [I('selva', 'liana', 0), I('selva', 'vine', 0)], pts, tip, Math.max(tip - from, 10), W * .15, 1, 1, false, from); return true });
@@ -648,37 +815,35 @@ TH.selva = {
     return .55;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .3, W * .7);
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .3, W * .7), turns = 4.4;
     if(RM){ flash('#2A5A1A', .5, .9); damage(); return }
-    const coils = [0, 1, 2].map(k => ({k, a:-k * .16, ims:k % 2 ? [I('selva', 'vine', 0), I('selva', 'liana', 0)] : [I('selva', 'liana', 0), I('selva', 'vine', 0)], H:W * (.135 - k * .02), flip:k % 2 ? -1 : 1, travel:.9, hold:1.8, back:.6}));
-    let sqz = 0;
-    // le liane stanno sotto il numero della vita, così resta leggibile
-    add('V', function(c, dt){ this.a += dt; const x = this.a; sqz = x > .9 && x < 2.6 ? Math.min(1, (x - .9) * 4) * Math.min(1, (2.6 - x) * 4) * (.75 + .25 * Math.sin(x * 9)) : 0;
-      SP.vPunch.t = 1 - .045 * sqz;
-      let alive = false;
-      coils.forEach(cl => { const a = x + cl.a; if(a < 0){ alive = true; return } const pts = coilPath(cl.k, cx, sqz), Lt = plen(pts), Lb = Lt * .8; let h;
-        if(a < cl.travel) h = Lt * (1 - Math.pow(1 - a / cl.travel, 2.2)); else if(a < cl.travel + cl.hold) h = Lt; else { const k = (a - cl.travel - cl.hold) / cl.back; if(k >= 1) return; h = Lt * (1 - k * k) }
-        alive = true; chain(c, cl.ims, pts, h, Lb, cl.H, cl.flip, 1, true) });
-      if(!alive){ SP.vPunch.t = 1; return false } return true });
-    after(.9, () => {
-      impact(PI / 2, .8);
-      const seed = R() * 9, hole = I('selva', 'hole', 0);
-      // radici che escono dalla voragine e si piegano come dita
-      const roots = Array.from({length:7}, (_, k) => ({im:I('selva', 'root', k), ang:k / 7 * TAU + (R() - .5) * .5, L:W * (.35 + R() * .3), H:W * (.1 + R() * .04), s:sgn(), bend:.6 + R() * .6, delay:R() * .25, flip:sgn()}));
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.1) return false;
-        const hk = x < 2.5 ? eb(x / .35) : 1 - ei((x - 2.5) / .6);
-        reveal(c, hole, o.x, o.y, W * .62 * Math.max(.01, hk), 0, 1, Math.min(1, x / .25), seed);
-        roots.forEach(r => { const y = x - r.delay; if(y <= 0) return; const g = y < .5 ? eo(y / .5) : y < 2 ? 1 : 1 - ei((y - 2) / .5); if(g <= 0) return;
-          const curl = y < .5 ? 0 : Math.min(1, (y - .5) / .5) * (.8 + .2 * Math.sin(y * 7)), pts = [];
-          for(let i = 0; i <= 16; i++){ const u = i / 16, th = r.ang + r.s * curl * r.bend * u * u * 2.4; const p = i ? pts[i - 1] : [o.x, o.y]; pts.push(i ? [p[0] + Math.cos(th) * r.L / 16, p[1] + Math.sin(th) * r.L / 16 * .85] : p) }
-          prep(pts); along(c, r.im, pts, 0, r.L * g, r.H, r.flip, 1, true, W * .05); along(c, r.im, pts, 0, r.L * g, r.H, r.flip, 1, false, W * .05) });
-        return true });
-      for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 120 + R() * 200; FX.sV.push(sp({im:I('selva', 'clod'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:220 + R() * 300, gz:1300, rest:.3, drag:.8, w:W * (.08 + R() * .06), life:2.2 + R() * .5, spin:(R() - .5) * 6, sh:1, fout:.3})) }
-      for(let i = 0; i < 40; i++){ const a = R() * TAU, v = 100 + R() * 300; pt(FX.pV, {k:'crumb', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 350, gz:1400, rest:.3, life:1.2 + R() * .8, r:W * (.006 + R() * .01), col:pick(['74,50,28', '58,40,22', '96,70,40', '60,90,34'])}) }
-      for(let i = 0; i < 10; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * W * .1, y:o.y + Math.sin(a) * W * .08, vx:Math.cos(a) * 60, vy:Math.sin(a) * 40 - 10, drag:1.5, r:W * .07, grow:2, life:1.3, col:'110,85,55', al:.55}) }
-      for(let i = 0; i < 14; i++) FX.sV2.push(sp({im:I('selva', 'leaf'), x:fb.x + R() * fb.w, y:fb.y + R() * fb.h * .4, vx:(R() - .5) * 60, vy:20 + R() * 30, g:20, w:W * (.05 + R() * .04), life:2.2 + R(), flut:.7, sway:45, delay:R() * .5}));
-      damage();
-    });
+    const sq = spr(0, 70, 6.5), ims = [I('selva', 'liana', 0), I('selva', 'vine', 0)], Hv = W * .25, T1 = 1.35, TC = 1.62, TR = 2.75, TE = 3.9;
+    let crunched = false;
+    add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > TE) { return false }
+      if(x > T1 && x < TC) sq.t = -.12; else if(x >= TC && x < TR) sq.t = 1 + .04 * Math.sin(x * 23); else sq.t = 0;
+      if(x >= TC && !crunched){ crunched = true; sq.v += 7; crunch() }
+      stepS(sq, dt);
+      const pts = boaPath(cx, Math.max(-.2, sq.x), turns, x * 6), Lt = plen(pts), Lhel = pts.L[8 + 170];
+      // la testa corre lungo la spirale, poi (lasciata la presa) prosegue e la coda la segue fuori dal campo
+      const head = x < T1 ? Lhel * (1 - Math.pow(1 - x / T1, 1.6)) : x < TR ? Lhel : Lhel + (Lt - Lhel + Lhel) * ei((x - TR) / (TE - TR));
+      const body = Lhel - pts.L[8] + W * .3;
+      chain(c, ims, pts, head, body, Hv, 1, 1, true, -1e9, 30);
+      const s = st('V'); s.pin[0] = fb.y + fb.h * .52; s.pin[1] = Math.max(0, sq.x) * .3; s.pin[2] = fb.h * .55; s.pin[3] = (fb.h * .86) / turns;
+      s.dark = Math.max(s.dark, .3 * clamp(sq.x));
+      // ombre delle spire sul campo
+      for(let i = 0; i < 4; i++){ const p = at(pts, pts.L[8] + (head - pts.L[8]) * (i + .5) / 4); if(pts.dep[p[3]] > 0) lit('V', p[0], p[1] + W * .04, W * .35, [.7, .8, .6], -.5) }
+      return true });
+    function crunch(){
+      impact(PI / 2, 1.3); SP.vLifeR.v += sgn() * 60;
+      if(navigator.vibrate) try{ navigator.vibrate([60, 30, 30, 30, 90]) }catch(e){}
+      const wy = fb.y + fb.h * .52;
+      for(let s = -1; s <= 1; s += 2){ const ex = s < 0 ? fb.x + W * .04 : fb.x + fb.w - W * .04;
+        for(let i = 0; i < 26; i++) pt(FX.pV2, {k:'crumb', x:ex, y:wy + (R() - .5) * fb.h * .7, vx:-s * (40 + R() * 160), vy:(R() - .5) * 120, vz:150 + R() * 300, gz:1300, rest:.3, life:1.2 + R() * .6, r:W * (.006 + R() * .01), col:pick(['74,50,28', '58,40,22', '96,70,40', '60,90,34'])});
+        for(let i = 0; i < 4; i++) FX.sV2.push(sp({im:I('selva', 'clod'), x:ex, y:wy + (R() - .5) * fb.h * .6, vx:-s * (60 + R() * 140), vy:(R() - .5) * 80, vz:200 + R() * 260, gz:1300, rest:.3, w:W * (.07 + R() * .05), life:1.8, spin:(R() - .5) * 8, sh:1, fout:.3})) }
+      for(let i = 0; i < 22; i++) FX.sV2.push(sp({im:I('selva', 'leaf'), x:fb.x + R() * fb.w, y:fb.y + R() * fb.h, vx:(R() - .5) * 220, vy:(R() - .5) * 220, drag:2, g:30, w:W * (.05 + R() * .04), life:2 + R(), flut:.7, sway:40, spin:(R() - .5) * 8}));
+      for(let i = 0; i < 12; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * W * .3, y:wy + Math.sin(a) * W * .4, vx:Math.cos(a) * 40, vy:Math.sin(a) * 30 - 10, drag:1.5, r:W * .08, grow:2, life:1.4, col:'110,85,55', al:.5}) }
+      damage(5);
+    }
   }
 };
 
@@ -707,23 +872,24 @@ function demo(){
 document.getElementById('goLaunch').addEventListener('click', demo);
 document.getElementById('goHit').addEventListener('click', () => { const tr = tileRect(pV); TH[TK].hit(tr.x + tr.w / 2) });
 document.getElementById('goGob').addEventListener('click', () => TH.forgia.goblin());
+document.getElementById('goBig').addEventListener('click', () => TH.santuario.big());
 document.getElementById('slow').addEventListener('change', e => slow = e.target.checked);
 
-// ---------- scelta del tema
 const NOTES = {
-  santuario:'Immagini: scia di luce dorata (raggio), sfera dorata (carica), aureola, nuvole dorate (tagliate in due), esplosione di luce e piume, foglio di piume, piume e scintille. A codice: granelli di luce, raggi che girano, scintille, molle.',
-  mox:'Immagini: sfera a orologeria, sfera che esplode (fondo nero tolto da me), le due crepe del vetro, foglio delle schegge, i due fogli di pezzi meccanici, impatto ciano e oro. A codice: caduta con rimbalzo, scintille, fumo, onde d\'urto, buchi nel vetro.',
-  abisso:'Immagini: le quattro onde (una a caso), fascia d\'acqua (si piega lungo la scia), esplosione di schiuma, anello d\'onda, fogli di schizzi, schiuma e gocce. A codice: gocce che volano e ricadono, cerchi d\'onda, riflessi, velo d\'acqua, gocce sul vetro con la scia.',
-  cripta:'Immagini: i due dardi, scia di fumo (si piega), foglio delle anime, foglio dei vortici, le due venature (si aprono dal centro), teschio. A codice: fumo, battito, spirale delle anime, avvizzimento.',
-  forgia:'Immagini: le tre bruciature (si aprono dal centro), schegge di roccia lavica, braci, archi elettrici; goblin e bomba. A codice: fulmine con le diramazioni, scintille che rimbalzano, fumo, raffreddamento.',
-  selva:'Immagini: liane intrecciate e viticcio (si piegano lungo la curva), le tre radici spinose, voragine, foglio delle zolle, foglio delle foglie. A codice: stretta del campo, briciole di terra, polvere.'
+  santuario:'Immagini: scia di luce dorata, sfera dorata, aureola, nuvole dorate (tagliate in due), esplosione di luce, piume, spada celeste (colpo grosso). Il campo: luce d\'oro vera, onde d\'urto, buio prima della spada, fenditure di luce.',
+  mox:'Immagini: sfera a orologeria, sfera che esplode, le due crepe, schegge, pezzi meccanici, impatto ciano e oro. Il campo: luce ciano a ogni tic, lampo bianco che vira all\'arancio, il campo che si rompe in pezzi spostati e si ricompone.',
+  abisso:'Immagini: quattro onde, fascia d\'acqua, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il campo: luce azzurra, il campo che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel campo.',
+  cripta:'Immagini: due dardi, scia di fumo, anime, vortici, due venature, teschio. Il campo: il buio vero che si allarga, il cuore viola che pulsa, sussulto e colori sdoppiati a ogni battito, avvizzimento.',
+  forgia:'Immagini: tre bruciature, schegge di roccia lavica, braci, archi elettrici; goblin e bomba. Il campo: lampi blu del fulmine, la bruciatura che scalda il campo da bianco a rosso, l\'aria che trema per il calore, ogni scossa e ogni scheggia che illumina.',
+  selva:'Immagini: liane intrecciate e viticcio, zolle, foglie. Il campo: la spirale che passa davanti e dietro, il campo che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
 };
 function setTheme(k){
   TK = k; document.body.className = 't-' + k;
   document.querySelectorAll('.th').forEach(b => { b.classList.toggle('sel', b.dataset.k === k); b.setAttribute('aria-pressed', b.dataset.k === k) });
   document.getElementById('desc').textContent = TH[k].desc;
-  document.getElementById('note').textContent = NOTES[k];
+  document.getElementById('note').textContent = NOTES[k] + (FLD.V ? '' : ' (Questo browser non ha WebGL: il campo resta fermo.)');
   document.getElementById('goGob').hidden = k !== 'forgia';
+  document.getElementById('goBig').hidden = k !== 'santuario';
   document.querySelectorAll('.hub .plate').forEach(im => im.src = 'data:image/webp;base64,' + A[HUBS[k][0].k]);
   try{ localStorage.setItem('prova-colpi-tema', k) }catch(e){}
 }
@@ -732,29 +898,39 @@ Object.keys(TH).forEach(k => { const b = document.createElement('button'); b.cla
   b.innerHTML = `<b><i></i>${TH[k].name}</b><small>${TH[k].sub}</small>`; b.addEventListener('click', () => { setTheme(k); setTimeout(demo, 250) }); box.appendChild(b) });
 document.querySelectorAll('.hub .emb').forEach(im => im.src = 'data:image/webp;base64,' + A[HUBS.emb.k]);
 let saved = null; try{ saved = localStorage.getItem('prova-colpi-tema') }catch(e){}
-setTheme(TH[saved] ? saved : 'abisso');
+setTheme(TH[saved] ? saved : 'forgia');
 
-// ---------- disegno
+// la luce del campo arriva anche sul numero della vita e sull'elemento centrale
+function lightDom(F, el, hub, x, y){
+  const l = lightAt(F, x, y), m = Math.max(l[0], l[1], l[2]), dk = Math.min(0, l[0] + l[1] + l[2]) / 3;
+  if(m > .03){ const r = clamp(l[0] / m) * 255 | 0, g = clamp(l[1] / m) * 255 | 0, b = clamp(l[2] / m) * 255 | 0, a = clamp(m * .6);
+    el.style.textShadow = `0 1cqw 0 rgba(0,0,0,.3),0 0 5cqw rgba(0,0,0,.55),0 0 ${4 + 8 * a}cqw rgba(${r},${g},${b},${a})`; el.style.color = `rgb(${255 - (255 - r) * a * .25 | 0},${255 - (255 - g) * a * .25 | 0},${255 - (255 - b) * a * .25 | 0})` }
+  else { el.style.textShadow = ''; el.style.color = '' }
+  const br = clamp(1 + m * .35 + dk * .4, .45, 1.8); hub.querySelector('.plate').style.filter = Math.abs(br - 1) > .02 ? `brightness(${br}) drop-shadow(0 1.5cqw 2cqw rgba(0,0,0,.5))` : '';
+}
 function frame(now){
-  if(window.FREEZE){ last = now; requestAnimationFrame(frame); return }   // fermo immagine per le foto di prova
+  if(window.FREEZE){ last = now; requestAnimationFrame(frame); return }
   let dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now; if(slow) dt /= 3; T += dt;
   for(let i = Q.length - 1; i >= 0; i--) if(Q[i].t <= T){ const f = Q[i].f; Q.splice(i, 1); f() }
   for(const k in SP) stepS(SP[k], dt);
-  const W = pV.clientWidth, H = pV.clientHeight, cA = fit(cvA), cV = fit(cvV), cV2 = fit(cvV2);
-  cA.clearRect(0, 0, pA.clientWidth, pA.clientHeight); cV.clearRect(0, 0, W, H); cV2.clearRect(0, 0, W, H);
+  if(FLD.A) resetF(FLD.A); if(FLD.V) resetF(FLD.V);
+  const W = pV.clientWidth, H = pV.clientHeight, cA = fit(cvA), cV = FLD.V ? gndCtx(FLD.V) : fit(cvV), cM = fit(cvVm), cV2 = fit(cvV2);
+  if(FLD.A) gndCtx(FLD.A);
   if(DR) TH[TK].aim(cA, DR, dt);
   FX.A = FX.A.filter(f => f.draw(cA, dt)); drawSprites(FX.sA, cA, dt); drawPts(FX.pA, cA, dt);
   const fb = fieldBox(pV);
-  cV.save(); cV.beginPath(); cV.roundRect ? cV.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip();
-  FX.V = FX.V.filter(f => f.draw(cV, dt)); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt); cV.restore();
+  if(!FLD.V){ cV.save(); cV.beginPath(); cV.roundRect ? cV.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip() }
+  FX.V = FX.V.filter(f => f.draw(cV, dt)); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt);
+  if(!FLD.V) cV.restore();
+  FX.M = FX.M.filter(f => f.draw(cM, dt)); drawSprites(FX.sM, cM, dt);
   FX.V2 = FX.V2.filter(f => f.draw(cV2, dt)); drawSprites(FX.sV2, cV2, dt); drawPts(FX.pV2, cV2, dt);
-  // molle applicate: schermo spinto nella direzione del colpo, campo che si schiaccia, vita che sobbalza, elemento centrale che rimbalza
   let rx = 0, ry = 0; if(rumble){ rumble.a += dt; const k = rumble.a / rumble.dur; if(k >= 1) rumble = null; else { const m = rumble.amt * (1 - k) * W * .02; rx = (R() - .5) * m; ry = (R() - .5) * m } }
   pV.style.transform = `translate(${SP.vJx.x + rx}px,${SP.vJy.x + ry}px)`;
-  fV.style.transform = `scale(${SP.vPunch.x})`;
   lifeV.style.transform = `scale(${SP.vLife.x}) rotate(${SP.vLifeR.x}deg)`;
   hubV.style.transform = `scale(${SP.vHub.x})`; hubA.style.transform = `scale(${SP.aHub.x})`;
-  if(wither){ wither.a += dt; const k = env(wither.a, .7, 1.6, 1); fV.style.filter = k > 0 ? `saturate(${1 - .8 * k}) brightness(${1 - .4 * k}) hue-rotate(${-15 * k}deg)` : ''; if(wither.a > 3.4){ wither = null; fV.style.filter = '' } }
+  if(wither){ wither.a += dt; const k = env(wither.a, .7, 1.6, 1); if(FLD.V) st('V').with = k; else fV.style.filter = k > 0 ? `saturate(${1 - .8 * k}) brightness(${1 - .4 * k})` : ''; if(wither.a > 3.4){ wither = null; fV.style.filter = '' } }
+  if(FLD.V){ renderF(FLD.V, SP.vPunch.x, T); lightDom(FLD.V, lifeV, hubV, W / 2, H * .73) } else fV.style.transform = `scale(${SP.vPunch.x})`;
+  if(FLD.A){ renderF(FLD.A, SP.aPunch.x, T); lightDom(FLD.A, lifeA, hubA, W / 2, H * .73) }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
