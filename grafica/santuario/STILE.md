@@ -111,9 +111,9 @@ Transparent background: drifting feathers and soft light rays in the two top cor
 ```
 
 ### D. I grandi momenti
-15. **Colomba di luce** (inizio partita), 1024×1024
+15. **Spirito guardiano** (inizio partita: appare al centro, apre le braccia e si dissolve in luce), 1024×1024
 ```
-A glowing white dove with spread wings made of soft light, seen from the front, golden glow at the edges of the feathers. 1024×1024.
+A benevolent guardian spirit made of translucent white-gold light, seen from the front, floating: a slender ethereal figure in flowing robes that dissolve into soft wisps of light at the bottom, its face hidden in a soft glow, arms slightly open, two large wings of pale light behind it, tiny motes of light around, a faint pale sky-blue tint in the shadows. Ghostly and luminous, not scary. 1024×1024.
 ```
 
 ## Dove finiscono

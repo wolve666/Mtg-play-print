@@ -109,7 +109,7 @@ Game asset for a mobile fantasy companion app, theme "Santuario" (holy light, an
 6. **Elemento centrale largo**: `UI element, front view, flat: a wide horizontal plaque of white marble framed in polished gold, rectangular with rounded corners, proportion about 8:3, two small feathered wings on the two short ends. The center is a smooth soft-grey recessed area, completely empty. Transparent background. 2048×768.` · **Quadrato**: stessa, `square, 1024×1024`.
 7. **Tasto**: `A horizontal button plate of white marble with a gold frame and a pale gold inlay in the middle, small feathers at the two ends, front view, flat; middle plain for text. 1024×256.`
 8. **Sfondo**: lontano `NOT transparent: a vast sanctuary of white marble above the clouds at dawn, tall columns, golden light from the top-left, soft and bright but darker toward the bottom. Portrait 1080×2400.` · medio `Transparent: marble columns only along the left and right edges, center empty. Portrait.` · vicino `Transparent: drifting feathers and soft light rays in the two top corners, clouds in the two bottom corners, center empty. Portrait.`
-9. **Inizio partita**: `A glowing white dove with spread wings made of light. 1024×1024.`
+9. **Inizio partita, spirito guardiano**: `A benevolent guardian spirit made of translucent white-gold light, seen from the front, floating, flowing robes dissolving into wisps of light, face hidden in a soft glow, arms slightly open, two large wings of pale light. 1024×1024.`
 
 ---
 
