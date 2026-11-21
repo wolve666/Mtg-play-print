@@ -887,6 +887,78 @@ TH.abisso = {
     });
     // il getto si spegne: ultimo spruzzo
     after(END + .2, () => { impact(PI / 2, .25); for(let i = 0; i < 24; i++){ const a = R() * TAU, v = 80 + R() * 200; pt(FX.pV2, {k:'drop', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 250, gz:1150, rest:.2, life:.9, r:W * (.007 + R() * .012), col:'185,232,255'}) } });
+  },
+  bigName:'Colpo grosso: i tentacoli',
+  // colpo grosso: nel tappeto si aprono due gorghi, ne escono due tentacoli (blu e rosso) che si alzano, si caricano all'indietro e frustano il tappeto a X
+  big(){
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), Lt = W * 1.08;
+    if(RM){ flash('#6CC8FF', .9, 1.2); damage(8); return }
+    const mk = (im, bx, by, s, d, col) => { return {im, bx, by, s, ph:R() * 9, Ht:Lt * .72 * (ok(im) ? ih(im) / iw(im) : .3),
+      e0:.25 + d, e1:.95 + d, tc:.85 + d, ts:1.2 + d, r0:2.35 + d, r1:2.85 + d, aS:Math.atan2(o.y - by, o.x - bx) + s * .05, flip:s, col} };
+    const TS = [mk(I('abisso', 'tent', 0), fb.x + fb.w * .22, H * .9, 1, 0, [.35, .75, 1.15]), mk(I('abisso', 'tent2', 0), fb.x + fb.w * .78, H * .9, -1, .3, [1.1, .5, .4])], END = 3.6;
+    // posa del tentacolo: l'angolo di ogni punto dipende da dove sta sull'immagine (v: 0 base, 1 punta) e dal tempo; la frusta parte dalla base e arriva in punta per ultima
+    const ks = (q, v, x) => eb((x - q.ts - v * .11) / .13);
+    function ang(q, v, x){ const s = q.s, kc = eo((x - q.tc) / .3), k = ks(q, v, x), tl = x - q.ts - .24;
+      const rise = -PI / 2 + s * (.15 + 1.4 * v * v) + .35 * v * Math.sin(v * 5 - x * 5 + q.ph);
+      const cock = -PI / 2 - s * (.2 + .35 * v + 1.5 * v * v * v) + .06 * v * Math.sin(x * 40 + q.ph);
+      const slam = q.aS + s * (-.1 + .2 * v + 1.2 * Math.pow(v, 7)) + (tl > 0 ? .25 * v * Math.sin(tl * 22 - v * 6) * Math.exp(-tl * 4) : 0);
+      return lerp(lerp(rise, cock, kc), slam, k) }
+    function body(q, x){ const vis = x < q.r0 ? eo((x - q.e0) / (q.e1 - q.e0)) : 1 - ei((x - q.r0) / (q.r1 - q.r0)), v0 = 1 - vis; if(vis <= .01) return null;
+      const N = 30, l = Lt * vis / N, pts = [[q.bx, q.by]]; let px = q.bx, py = q.by;
+      for(let j = 0; j < N; j++){ const a = ang(q, v0 + vis * (j + .5) / N, x); px += Math.cos(a) * l; py += Math.sin(a) * l; pts.push([px, py]) }
+      const h = (1 - ks(q, .5, x)) * (1 + .3 * eo((x - q.tc) / .3)) + (x > q.r0 ? .3 * vis : 0);
+      return {pts:prep(pts), v0, vis, h} }
+    const drawT = (c, q, b, al) => { const Hh = q.Ht * (1 + .22 * b.h);
+      c.save(); c.translate(b.h * W * .07, b.h * W * .14); along(c, q.im, b.pts, -b.v0 * Lt, b.vis * Lt, Hh, q.flip, al * (1 - .5 * Math.min(1, b.h)), true, 0); c.restore();
+      along(c, q.im, b.pts, -b.v0 * Lt, b.vis * Lt, Hh, q.flip, al, false, 0) };
+    // 1. il tappeto si scurisce e trema, si aprono i due gorghi
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const s = st('V'), on = eo(x / .7) * (1 - clamp((x - 2.9) / .7));
+      s.dark = Math.max(s.dark, .45 * on); s.rip[0] = o.x; s.rip[1] = o.y; s.rip[2] = 3 * on; s.rip[3] = T;
+      if(x < 1.2 && R() < dt * 25 * on){ SP.vJx.v += (R() - .5) * 30; SP.vJy.v += (R() - .5) * 30 }
+      TS.forEach(q => { const k = eo((x - q.e0 + .25) / .5) * (1 - clamp((x - q.r1) / .5));
+        whirl(c, q.bx, q.by, W * .2 * k, T * 1.4, k, k); lit('V', q.bx, q.by, W * .45, q.col, .9 * k);
+        if(R() < dt * 5 * k) pt(FX.pV, {k:'ripple', x:q.bx, y:q.by, r:W * .05, grow:W * .25, life:.8, col:'225,248,255', lw:1.4, sq:.78}) });
+      return true });
+    // 2. i tentacoli: escono dal gorgo, si alzano ondeggiando, si caricano, frustano; poi rientrano
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
+      TS.forEach(q => { const b = body(q, x); if(!b) return;
+        // scia della frusta: due pose appena passate, trasparenti
+        if(x > q.ts && x < q.ts + .3) [.05, .025].forEach((d, i) => { const g = body(q, x - d); if(g) along(c, q.im, g.pts, -g.v0 * Lt, g.vis * Lt, q.Ht * (1 + .22 * g.h), q.flip, .16 * (i + 1), false, 0) });
+        drawT(c, q, b, 1);
+        // l'acqua che ribolle alla base nasconde il punto da cui esce
+        const spl = L('abisso', 'splash'), k = b.vis;
+        if(spl.length) for(let j = 0; j < 3; j++) img(c, spl[((T * 9 | 0) + j * 2) % spl.length], q.bx + Math.cos(j * 2.1 + T) * W * .03, q.by + Math.sin(j * 2.1 + T) * W * .02, W * (.32 - .05 * j) * Math.min(1, k * 3), T * (2 + j) + j, .85);
+        if(R() < dt * 30 * k){ const a = -PI / 2 + (R() - .5) * 2.4, v = 80 + R() * 160; pt(FX.pV2, {k:'drop', x:q.bx + (R() - .5) * W * .1, y:q.by, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .6, vz:100 + R() * 200, gz:1000, rest:.2, life:.8, r:W * (.006 + R() * .01), col:'190,235,255'}) }
+        // gocce che colano dal tentacolo alzato
+        if(b.h > .3 && R() < dt * 25){ const p = at(b.pts, R() * plen(b.pts)); pt(FX.pV2, {k:'drop', x:p[0], y:p[1], vx:(R() - .5) * 30, vy:20, vz:0, gz:700, rest:.1, life:.7, r:W * (.005 + R() * .008), col:'190,235,255'}) }
+        lit('V', q.bx, q.by - W * .2, W * .6, q.col, .6 * k) });
+      return true });
+    // 3. lo schianto: quando la punta arriva
+    TS.forEach((q, n) => after(q.ts + .19, () => {
+      const b = body(q, q.ts + .19), pts = b.pts, Lp = plen(pts), push = q.aS + q.s * PI / 2, last = n === TS.length - 1;
+      impact(push, last ? 2 : 1.4); SP.vPunch.v -= last ? 1.8 : 1.1; flash('#E8F8FF', last ? .4 : .28, .18, true); flash('rgba(90,190,255,1)', .4, 1);
+      if(navigator.vibrate) try{ navigator.vibrate(last ? [80, 30, 120] : [60]) }catch(e){}
+      // onde d'urto lungo tutto il corpo e uno schiocco in punta
+      for(let i = 0; i <= 5; i++){ const p = at(pts, Lp * i / 5); add('V', function(c, dt){ this.a += dt; const k = this.a / .8; if(k > 1) return false; if(k < 0) return true; wave('V', p[0], p[1], W * (.04 + .5 * eo(k)), 14 * (1 - k), W * .06); return true }, i * .025) }
+      const tip = at(pts, Lp); add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .6) return false; img(c, I('abisso', 'burst', 0), tip[0], tip[1], W * .7 * eb(x / .18), x * 3, x < .2 ? 1 : 1 - (x - .2) / .4); glow(c, tip[0], tip[1], W * .25, '225,245,255', .9 * (1 - x / .6)); return true });
+      // la frustata lascia sul tappeto una striscia bagnata con i cerchi delle ventose
+      const mark = pts.map(p => [p[0], p[1]]), cups = [];
+      for(let i = 2; i < 14; i++){ const u = Lp * (.12 + .78 * i / 14), p = at(pts, u), nx = -Math.sin(p[2]), ny = Math.cos(p[2]), w = q.Ht * (1 - u / Lp * .75); cups.push([p[0] + nx * w * .22 * q.flip, p[1] + ny * w * .22 * q.flip, w * .17]) }
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; const al = x < 1.8 ? 1 : 1 - (x - 1.8) / 1.6;
+        c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+        [[q.Ht * .85, `rgba(0,18,40,${.35 * al})`], [q.Ht * .5, `rgba(0,25,55,${.25 * al})`]].forEach(([lw, col]) => { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); mark.forEach((p, j) => j ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() });
+        c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(160,220,255,${.35 * al})`; c.lineWidth = 2; c.beginPath(); mark.forEach((p, j) => j ? c.lineTo(p[0], p[1] - q.Ht * .2) : c.moveTo(p[0], p[1] - q.Ht * .2)); c.stroke();
+        c.globalCompositeOperation = 'source-over'; cups.forEach(p => { c.strokeStyle = `rgba(200,235,255,${.5 * al})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(p[0], p[1], p[2], p[2] * .8, 0, 0, TAU); c.stroke(); c.fillStyle = `rgba(0,20,45,${.3 * al})`; c.fill() });
+        c.restore(); return true });
+      // acqua che schizza via da tutto il corpo
+      for(let i = 0; i < 46; i++){ const p = at(pts, R() * Lp), a = p[2] + sgn() * PI / 2 + (R() - .5) * .8, v = 120 + R() * 320; pt(FX.pV2, {k:'drop', x:p[0], y:p[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 350, gz:1150, rest:.2, life:1 + R() * .5, r:W * (.006 + R() * .014), col:'185,232,255',
+        land:d => pt(FX.pV, {k:'ripple', x:d.x, y:d.y, r:2, grow:W * (.03 + R() * .04), life:.5, col:'225,248,255', lw:1.1, sq:.85})}) }
+      for(let i = 0; i < 9; i++){ const p = at(pts, Lp * (.15 + .85 * i / 8)), a = p[2] + sgn() * PI / 2, v = 120 + R() * 140; FX.sV2.push(sp({im:I('abisso', 'spray'), x:p[0], y:p[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2.6, rot:a, w:W * (.22 + R() * .12), life:.55, grow:.5, fin:.03, fout:.6})) }
+      for(let i = 0; i < 5; i++){ const p = at(pts, Lp * (.2 + .7 * R())); FX.sV.push(sp({im:I('abisso', 'splash'), x:p[0], y:p[1], w:W * (.18 + R() * .1), life:.9, pop:.2, fout:.5, rot:R() * TAU})) }
+      if(last){ for(let i = 0; i < 12; i++) pt(FX.pV2, {k:'glass', x:W * (.06 + R() * .88), y:H * (.12 + R() * .62), r:W * (.012 + R() * .022), life:2.6 + R() * 1.2, fout:.25, delay:.05 + R() * .3});
+        for(let i = 0; i < 6; i++){ const a = R() * TAU; FX.sV.push(sp({im:I('abisso', 'foam'), x:o.x + Math.cos(a) * W * .12, y:o.y + Math.sin(a) * W * .1, vx:Math.cos(a) * 60, vy:Math.sin(a) * 60, drag:1.2, w:W * (.2 + R() * .12), life:2.6, pop:.3, fout:.5, alpha:.85, rot:R() * TAU, spin:1, grow:.4})) }
+        damage(8) }
+    }));
   }
 };
 
