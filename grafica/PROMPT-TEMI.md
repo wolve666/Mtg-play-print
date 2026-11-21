@@ -55,11 +55,12 @@ Game asset for a mobile fantasy companion app, theme "Forgia" (a dwarven forge, 
 
 ---
 
-## Marea (Blu) · acqua, onde, magia e sapienza  *(nome proposto)*
+## Abisso (Blu) · acqua, onde, magia e sapienza
+Dettaglio completo in `grafica/abisso/STILE.md`.
 Colpo deciso: colpo d'acqua e onde; sul campo colpito schizzi, cerchi d'onda, gocce che scivolano.
 **Blocco base**
 ```
-Game asset for a mobile fantasy companion app, theme "Marea" (deep ocean, blue water and arcane magic). Painterly-realistic fantasy style with rich detail; not cartoon, not a photo. Materials: clear deep-blue water, white foam, pearl, polished blue crystal, silver filigree, faint glowing arcane runes (no letters). Palette: deep navy, ocean blue, turquoise, foam white, silver. Soft light from the top-left with soft caustic reflections. Fully transparent background (real PNG alpha, no checkerboard), the whole subject visible with a small empty margin, not cropped. No text, no logos, no symbols, no cast shadow. Same style and lighting as the previous images.
+Game asset for a mobile fantasy companion app, theme "Abisso" (deep ocean, blue water and arcane magic). Painterly-realistic fantasy style with rich detail; not cartoon, not a photo. Materials: clear deep-blue water, white foam, pearl, polished blue crystal, silver filigree, faint glowing arcane runes (no letters). Palette: deep navy, ocean blue, turquoise, foam white, silver. Soft light from the top-left with soft caustic reflections. Fully transparent background (real PNG alpha, no checkerboard), the whole subject visible with a small empty margin, not cropped. No text, no logos, no symbols, no cast shadow. Same style and lighting as the previous images.
 ```
 1. **Onda che si infrange** (il colpo), 2048×1024: `A cresting ocean wave seen from slightly above, moving from left to right, curling foam at the right end, translucent blue water.`
 2. **Foglio di schizzi**, 1536×1024: `A sheet of 6 separate water splashes of different shapes, seen from directly above, translucent with white foam edges, on a 3×2 grid, not touching.`
@@ -74,7 +75,8 @@ Game asset for a mobile fantasy companion app, theme "Marea" (deep ocean, blue w
 
 ---
 
-## Cripta (Nero) · demoni, oscurità, anime  *(nome proposto)*
+## Cripta (Nero) · demoni, oscurità, anime
+Dettaglio completo in `grafica/cripta/STILE.md` (il colpo lì è più ricco: due dardi, scia, due venature, impatto, ciuffi di fumo).
 Colpo deciso: dardo fumoso nero e viola fatto di anime prosciugate; il campo avvizzisce (colori spenti, venature scure), poi torna normale. Fumo e scuro li faccio io; le immagini danno anime, vene e ossa.
 **Blocco base**
 ```
