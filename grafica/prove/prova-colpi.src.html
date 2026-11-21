@@ -442,19 +442,20 @@ const PUFF = [0, 1].map(v => { const s = document.createElement('canvas'); s.wid
   for(let i = 0; i < 9; i++){ const x = 80 + (Math.random() - .5) * 70, y = 84 + (Math.random() - .5) * 34 - (v ? 6 : 0), r = 22 + Math.random() * 26, g = c.createRadialGradient(x - r * .25, y - r * .3, r * .1, x, y, r);
     g.addColorStop(0, 'rgba(255,255,252,.95)'); g.addColorStop(.6, 'rgba(250,246,238,.7)'); g.addColorStop(1, 'rgba(240,232,220,0)'); c.fillStyle = g; c.fillRect(0, 0, 160, 160) }
   c.globalCompositeOperation = 'source-atop'; const g = c.createLinearGradient(0, 50, 0, 130); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,196,96,.55)'); c.fillStyle = g; c.fillRect(0, 0, 160, 160); return s });
-// le nuvole entrano dal bordo in alto del display, scendono, si aprono; dal centro esce il raggio; poi si diradano
-function cloudsArrive(cx, yC, dur, gapMax){
-  const W = W_(), H = pV.clientHeight, cl = I('santuario', 'clouds', 0), y0 = -H * .14;
-  const puffs = Array.from({length:16}, (_, i) => ({u:(i + .5) / 16 + (R() - .5) * .04, d:R() * .18, s:.18 + R() * .16, v:PUFF[i % 2], dy:(R() - .5) * W * .06, side:i < 8 ? -1 : 1, sp:.6 + R() * .8}));
+// la nuvola d'arrivo: una sola, intera, nella fascia più alta del display; entra dall'alto per 4/5 (la parte di sopra resta fuori dallo schermo),
+// copre anche i quadratini, non scende nel campo; il raggio esce dal suo fondo; poi si dissolve sul posto. Restituisce dove nasce il raggio.
+function cloudsArrive(cx, dur){
+  const W = W_(), H = pV.clientHeight, cl = I('santuario', 'clouds', 0), w = W * 1.35, h = ok(cl) ? w * ih(cl) / iw(cl) : W * .45, yEnd = h * .3, yStart = -h * .55;
+  const puffs = Array.from({length:12}, (_, i) => ({u:(i + .5) / 12 + (R() - .5) * .05, d:R() * .15, s:.13 + R() * .1, v:PUFF[i % 2], dy:(R() - .2) * h * .35, side:i < 6 ? -1 : 1, sp:.4 + R() * .6, ph:R() * TAU}));
   add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > dur) return false;
-    const thin = clamp((x - 1.1) / (dur - 1.1)), k = env(x, .25, dur - 1.25, 1), y = lerp(y0, yC, eo(x / .5)), gap = W * gapMax * eo((x - .45) / .5) + W * .2 * thin;
-    glow(c, cx, y + W * .03, W * (.2 + .3 * eo((x - .4) / .5)), '255,230,160', k * (1 - thin * .7)); lit('V', cx, Math.max(y, 0) + W * .1, W * .9, [1, .85, .5], k * 1.2 * (1 - thin * .5));
-    // sbuffi: scendono ognuno col suo passo, poi scivolano di lato, crescono e svaniscono
-    puffs.forEach(p => { const xx = x - p.d; if(xx < 0) return; const py = lerp(y0 - W * .1, yC + p.dy, eo(xx / .55)), dr = p.side * W * (.03 + .35 * thin * p.sp), sz = W * p.s * (1 + .6 * thin), a = env(xx, .2, dur, 0) * (1 - thin) * .95;
-      c.save(); c.globalAlpha = a; c.drawImage(p.v, cx + (p.u - .5) * W * 1.3 + dr - sz, py - sz * .55, sz * 2, sz * 2); c.restore() });
-    const w = W * 1.2, h = ok(cl) ? w * ih(cl) / iw(cl) : 0;
-    [-1, 1].forEach(s => { c.save(); c.beginPath(); if(s < 0) c.rect(-W, -H, cx + W, H * 2); else c.rect(cx, -H, W * 2, H * 2); c.clip(); img(c, cl, cx + s * gap, y + Math.sin(x * 1.5 + s) * 2, w * (1 + .15 * thin), 0, k * (1 - thin * .85)); c.restore() });
+    const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .2) * (1 - fade), y = lerp(yStart, yEnd, eo(x / .55)) - fade * h * .08, sc = 1 + fade * .12;
+    glow(c, cx, y + h * .35, W * (.25 + .25 * eo((x - .4) / .5)), '255,230,160', al * .9); lit('V', cx, Math.max(0, y + h * .5), W * .9, [1, .85, .5], al * 1.2);
+    // sbuffi a codice dentro la stessa fascia: respirano, e mentre la nuvola si dissolve scivolano piano di lato e svaniscono
+    puffs.forEach(p => { const xx = x - p.d; if(xx < 0) return; const sz = W * p.s * (1 + .5 * fade) * (1 + .05 * Math.sin(T * 1.3 + p.ph)), dr = p.side * W * .12 * fade * p.sp;
+      c.save(); c.globalAlpha = al * .85 * clamp(xx / .3); c.drawImage(p.v, cx + (p.u - .5) * w * .95 + dr - sz, y + p.dy - sz * .7, sz * 2, sz * 2); c.restore() });
+    img(c, cl, cx + Math.sin(x * .9) * W * .01, y, w * sc, 0, al);
     return true });
+  return yEnd + h * .32;
 }
 TH.santuario = {
   name:'Santuario', sub:'Bianco · luce e angeli', col:'#F2D27A',
@@ -492,9 +493,9 @@ TH.santuario = {
     return .5;
   },
   hit(tx){
-    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), yC = fb.y + W * .02, cx = clamp(tx, W * .3, W * .7);
+    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .3, W * .7);
     if(RM){ flash('#FFF8E8', .9, 1.2); damage(); return }
-    cloudsArrive(cx, yC, 3.3, .14);
+    const yC = cloudsArrive(cx, 3.4) - W * .04;
     // il raggio esce dal centro delle nuvole quando sono arrivate
     const bw = spr(0, 280, 8); bw.t = 1;
     add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.5) return false; if(x < 0) return true; stepS(bw, dt);
@@ -504,6 +505,7 @@ TH.santuario = {
       starFlare(c, cx, yC + W * .05, W * .12, T, al * .9);
       for(let i = 0; i < 3; i++) lit('V', lerp(cx, o.x, i / 2), lerp(yC, y1, i / 2), W * .55, [1, .88, .55], 1.3 * al * Math.min(1, bw.x));
       return true }, .45);
+    FX.V2.unshift(FX.V2.pop());   // il raggio sta dietro la nuvola: sembra uscire da lei
     after(.57, () => {
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.2) return false; const k = env(x, .05, .5, 1.6);
         lit('V', o.x, o.y, W * (.6 + .5 * eo(x)), [1, .85, .5], 2.4 * k);
@@ -527,7 +529,7 @@ TH.santuario = {
     const D0 = .85, D = .2, HOLD = 3.1, END = 3.9;
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .3) return false; st('V').dark = Math.max(st('V').dark, .6 * env(x, .5, .5, .5)); lit('V', o.x, o.y, W * (.25 + .3 * eo(x / .95)), [1, .85, .5], x < .95 ? 1.4 * eo(x / .95) : 0); return true });
     for(let i = 0; i < 60; i++){ const x = fb.x + R() * fb.w, y = fb.y + R() * fb.h, d = .5 + R() * .4; pt(FX.pV, {k:'mote', x, y, vx:(o.x - x) / d, vy:(o.y - y) / d, life:d, r:W * (.01 + R() * .014), col:'255,236,180', tw:1, fout:.1, delay:R() * .35}) }
-    cloudsArrive(o.x, yC, END, .2);
+    cloudsArrive(o.x, END + .2);
     // la spada: cade, entra nel terreno (la parte sotto la superficie non si vede), affonda con un piccolo rimbalzo, vibra, resta piantata
     const S = {q:spr(0, 140, 3), sink:spr(0, 420, 15)}, len = W * 1.15, depth = len * .3;
     const hole = (c, a, front) => { c.save(); c.globalAlpha = a; const rx = W * .1, ry = W * .035;
