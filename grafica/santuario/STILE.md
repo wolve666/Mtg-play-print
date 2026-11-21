@@ -119,3 +119,19 @@ A benevolent guardian spirit made of translucent white-gold light, seen from the
 ## Dove finiscono
 - Originali PNG in `grafica/santuario/originali/`, versioni leggere WebP in `grafica/santuario/`.
 - Pagina di prova del colpo: `grafica/prove/prova-santuario.html`, pubblicata a parte da provare sul telefono. Nell'app si monta solo dopo il sì di Federico.
+
+## Nuvole che si muovono (22 novembre, dopo la prova dei colpi)
+Federico vuole le nuvole d'arrivo vive: entrano dal bordo in alto del display, scendono, si aprono, il raggio esce dal loro centro, poi si diradano. Per ora sono fatte con l'immagine «Nuvole dorate con raggi di luce» più sbuffi disegnati a codice. Per farle più belle servono **pezzi separati** da animare uno per uno (stessa chat, blocco base prima):
+
+N1. **Foglio di 6 sbuffi di nuvola**, 1536×1024
+```
+A sheet of 6 separate soft cumulus cloud puffs of different sizes and shapes, fluffy white with warm golden light on their undersides as if lit from below by a beam of holy light, soft translucent edges, seen from slightly below, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+N2. **Banco di nuvole visto da sotto**, 2048×1024
+```
+A thick layer of soft white and golden clouds seen from below, filling a wide horizontal band, an irregular soft bottom edge with hanging wisps, a bright round opening in the middle where warm light pours down, the top edge fading softly to transparent. Everything else transparent. 2048×1024.
+```
+N3. **Foglio di 6 fili di nebbia luminosa** (si stirano mentre le nuvole si diradano), 1536×1024
+```
+A sheet of 6 separate thin wisps of glowing white-gold mist, long and stretched horizontally, very soft and translucent, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
