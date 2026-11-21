@@ -39,7 +39,7 @@ UI element, front view, flat, no perspective: a wide horizontal plaque of ancien
 ---
 
 ## Forgia (Rosso) · fuoco, acciaio, fulmine
-Il fulmine (cuore blu, aloni bianchi) e le scintille restano fatti da me: piacciono così. Le immagini servono per la materia: acciaio, braci, lava.
+Il fulmine (cuore blu, aloni bianchi) e le scintille restano fatti da me: piacciono così. Le immagini servono per la materia: acciaio, braci, lava. Dettaglio completo e ordine aggiornato (si parte dalle bruciature del colpo) in `grafica/forgia/STILE.md`.
 **Blocco base**
 ```
 Game asset for a mobile fantasy companion app, theme "Forgia" (a dwarven forge, red fire magic). Painterly-realistic fantasy style with rich detail; not cartoon, not a photo. Materials: dark hammered steel, black iron, rivets, glowing orange embers, molten lava cracks, brass accents. Palette: near-black steel, ember orange, molten yellow, deep red. Soft light from the top-left plus warm glow from the embers. Fully transparent background (real PNG alpha, no checkerboard), the whole subject visible with a small empty margin, not cropped. No text, no logos, no symbols, no cast shadow. Same style and lighting as the previous images.
