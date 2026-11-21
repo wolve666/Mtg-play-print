@@ -1,6 +1,6 @@
 import json,base64,os,re
 from PIL import Image
-S="/tmp/prova-colpi"; AS=S+"/as"
+S='/tmp/prova-colpi'; AS=S+'/as'
 M=json.load(open(AS+'/manifest.json')); H=json.load(open(AS+'/hubs.json'))
 src=open('grafica/prove/prova-colpi.src.html').read()
 used={}
@@ -14,7 +14,9 @@ for t in used.values():
         for x in l:
             p=f"{AS}/{x['k']}.webp"
             if os.path.getsize(p)>90000:
-                im=Image.open(p); q=f"{S}/{x['k']}_s.webp"; im.save(q,'WEBP',quality=68,method=6); p=q
+                q=f"{S}/{x['k']}_s.webp"
+                if not os.path.exists(q): Image.open(p).save(q,'WEBP',quality=68,method=6)
+                p=q
             A[x['k']]=base64.b64encode(open(p,'rb').read()).decode()
 for k,v in list(H.items()):
     l=v if isinstance(v,list) else [v]
