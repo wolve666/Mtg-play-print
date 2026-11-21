@@ -388,6 +388,8 @@ if(FLD.V) cvV.style.display = 'none';
 // V = a terra (dentro il campo), M = sopra l'elemento centrale ma sotto la vita, V2 = sopra tutto
 const FX = {A:[], V:[], M:[], V2:[], sA:[], sV:[], sM:[], sV2:[], pA:[], pV:[], pV2:[]};
 const add = (k, draw, delay = 0) => FX[k].push({a:-delay, draw});
+// disegna un livello di effetti: quelli creati mentre si disegna (es. l'esplosione nata dalla bomba) non vanno persi
+function runFX(k, c, dt){ const cur = FX[k]; FX[k] = []; const keep = cur.filter(f => f.draw(c, dt)); FX[k] = keep.concat(FX[k]) }
 let wither = null, life = 40;
 function damage(n = 3){
   life -= n; if(life < 10) life = 40; lifeV.textContent = life; aTile.textContent = life; dV.textContent = '−' + n; dV.classList.remove('on'); void dV.offsetWidth; dV.classList.add('on');
@@ -677,7 +679,7 @@ TH.mox = {
         if(B.vz < -120){ const pw = Math.min(.55, -B.vz / 2200); impact(PI / 2, pw, B.x, B.y); B.vz = -B.vz * B.rest; B.vx *= .75; B.vy *= .75; B.spin = B.spin * .4 + B.vx / r * .6;
           for(let i = 0; i < 6; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:B.x + Math.cos(a) * r * .5, y:B.y + r * .3, vx:Math.cos(a) * 60, vy:Math.sin(a) * 20, drag:2, r:W * .045, grow:1.5, life:.6, col:'150,150,150', al:.45}) }
           for(let i = 0; i < 6; i++){ const a = R() * TAU; pt(FX.pV2, {k:'spark', x:B.x, y:B.y + r * .3, vx:Math.cos(a) * 160, vy:Math.sin(a) * 90, vz:60 + R() * 100, gz:1200, drag:3, life:.3, r:1, col:'255,220,150'}) }
-          if(B.land == null){ B.land = x; B.boom = R() < .22 ? x + .02 : x + .15 + R() * 1.1 } }
+          if(B.land == null){ B.land = x; const q = R(); B.boom = x + (q < .2 ? .3 + R() * .15 : q < .6 ? .5 + R() * .7 : 1.2 + R() * 1.2) } }
         else { B.vz = 0; const fr = Math.exp(-1.6 * dt); B.vx *= fr; B.vy *= fr; B.spin = B.vx / r * .9 + B.vy / r * .3 }   // rotola
       }
       B.rot += B.spin * dt;
@@ -686,8 +688,12 @@ TH.mox = {
       const pr = B.boom != null ? clamp((x - B.land) / Math.max(.05, B.boom - B.land)) : 0, bk = Math.pow(.5 + .5 * Math.sin(x * (6 + 40 * pr * pr)), 3) * (.3 + .7 * pr);
       const sh = 1 - Math.min(1, B.z / H), bs = W * .24 * (1 + B.z / H * .7);
       c.save(); c.globalAlpha = .45 * sh; c.fillStyle = '#000'; c.beginPath(); c.ellipse(B.x + B.z * .1, B.y + r * .55, r * (.5 + .5 * sh), r * .22 * (.5 + .5 * sh), 0, 0, TAU); c.fill(); c.restore();
-      const opening = B.boom != null && B.boom - x < .1;
-      img(c, I('mox', opening ? 'bomb2' : 'bomb', 0), B.x, B.y - B.z, bs * (opening ? 1.15 : 1), B.rot);
+      // pulsazione prima dello scoppio: la bomba si gonfia e si stringe due volte, il nucleo batte forte e manda un anello
+      const left = B.boom != null ? B.boom - x : 9, pul = left < .38 && left > .08 ? Math.pow(Math.sin((.38 - left) / .3 * PI * 2), 2) : 0;
+      if(pul > .9 && !B.pk){ B.pk = 1; pt(FX.pV, {k:'ripple', x:B.x, y:B.y, r:W * .1, grow:W * .35, life:.35, col:'170,250,255', lw:2.2}); SP.vPunch.v -= .25; if(navigator.vibrate) try{ navigator.vibrate(15) }catch(e){} } if(pul < .3) B.pk = 0;
+      const opening = left < .08;
+      img(c, I('mox', opening ? 'bomb2' : 'bomb', 0), B.x, B.y - B.z, bs * (opening ? 1.2 : 1 + .14 * pul), B.rot);
+      if(pul > 0){ glow(c, B.x, B.y - B.z, W * (.25 + .15 * pul), '200,255,255', pul); lit('V', B.x, B.y, W * .9, [.6, 1, 1.1], 2.5 * pul) }
       glow(c, B.x, B.y - B.z, W * .2, '170,250,255', bk); lit('V', B.x, B.y, W * .7, [.5, 1, 1.1], .3 + 2 * bk);
       if(B.boom != null && x >= B.boom){ moxBlast({x:B.x, y:B.y - B.z * .6}, W, H); return false }
       return true });
@@ -1027,13 +1033,13 @@ function frame(now){
   const W = pV.clientWidth, H = pV.clientHeight, cA = fit(cvA), cV = FLD.V ? gndCtx(FLD.V) : fit(cvV), cM = fit(cvVm), cV2 = fit(cvV2);
   if(FLD.A) gndCtx(FLD.A);
   if(DR) TH[TK].aim(cA, DR, dt);
-  FX.A = FX.A.filter(f => f.draw(cA, dt)); drawSprites(FX.sA, cA, dt); drawPts(FX.pA, cA, dt);
+  runFX('A', cA, dt); drawSprites(FX.sA, cA, dt); drawPts(FX.pA, cA, dt);
   const fb = fieldBox(pV);
   if(!FLD.V){ cV.save(); cV.beginPath(); cV.roundRect ? cV.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip() }
-  FX.V = FX.V.filter(f => f.draw(cV, dt)); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt);
+  runFX('V', cV, dt); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt);
   if(!FLD.V) cV.restore();
-  FX.M = FX.M.filter(f => f.draw(cM, dt)); drawSprites(FX.sM, cM, dt);
-  FX.V2 = FX.V2.filter(f => f.draw(cV2, dt)); drawSprites(FX.sV2, cV2, dt); drawPts(FX.pV2, cV2, dt);
+  runFX('M', cM, dt); drawSprites(FX.sM, cM, dt);
+  runFX('V2', cV2, dt); drawSprites(FX.sV2, cV2, dt); drawPts(FX.pV2, cV2, dt);
   let rx = 0, ry = 0; if(rumble){ rumble.a += dt; const k = rumble.a / rumble.dur; if(k >= 1) rumble = null; else { const m = rumble.amt * (1 - k) * W * .02; rx = (R() - .5) * m; ry = (R() - .5) * m } }
   pV.style.transform = `translate(${SP.vJx.x + rx}px,${SP.vJy.x + ry}px)`;
   lifeV.style.transform = `scale(${SP.vLife.x}) rotate(${SP.vLifeR.x}deg)`;
