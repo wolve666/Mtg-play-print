@@ -20,6 +20,8 @@ Il tema del Bianco. Le immagini le disegna ChatGPT, io le animo e le monto nell'
 
 Lampo, bagliori e tremolio li faccio io a codice; le immagini danno la materia della luce (il fascio con i suoi filamenti), le nuvole, l'impatto, l'aureola e le piume.
 
+**Seconda idea, da provare (Federico, 21 novembre)**: **raggio continuo** tra i due telefoni. Quando la mira si aggancia, sul telefono dell'avversario compare già un filo di luce che entra dal bordo in alto, sopra il quadratino di chi attacca; al rilascio il raggio pieno si accende sui due telefoni insieme (dall'elemento centrale al bordo su uno, dal bordo al centro del campo sull'altro), resta acceso un secondo o due con lo stesso tremolio, poi aureola, lampo e piume. Due messaggi piccoli per colpo (aggancio e rilascio). Stessi file. Nella pagina di prova ci sono tutte e due le versioni, con un interruttore; le nuvole, se vince il raggio continuo, passano al colpo grosso.
+
 ## Come lavorare
 1. Sempre **nella stessa chat** di ChatGPT, così tiene lo stile.
 2. **Incolla prima il blocco base**, poi la richiesta del pezzo.
