@@ -21,9 +21,13 @@ Il fulmine che passa da un telefono all'altro resta com'è (approvato). Cambia q
 3. **Schegge e braci**: dalla crepa saltano **schegge di metallo rovente** che girano e cadono, con le scintille mie; il campo trema.
 4. **Scosse**: le scosse blu si spargono sul campo per un secondo e mezzo, come oggi, e si spengono da sole. Il numero della vita resta sempre leggibile.
 
-**Colpo grosso** (5 punti persi di fila): un **martello** cala dall'alto sul campo, al colpo la **crepa di lava** grande si apre sotto, onda d'urto, schegge e braci ovunque, poi la lava si raffredda e scompare.
+**Goblin bombarolo** (sorpresa, deciso il 21 novembre): circa un colpo su otto, al posto del fulmine, dal bordo del campo colpito spunta un **goblin** che corre saltellando, **lancia una bomba** tonda con la miccia accesa e scappa via. La bomba rimbalza un paio di volte sfrigolando, poi esplode: lampo, bruciatura, schegge e braci come nel colpo normale. Il fulmine resta il colpo di sempre; il goblin serve a far sorridere al tavolo.
 
-Bagliori, raffreddamento (cambio di colore), tremolio, scintille e fulmini li faccio io a codice; le immagini danno la materia.
+**Colpo grosso** (5 punti persi di fila): il **fuoco del drago** (deciso il 21 novembre). Il campo si scurisce e passa l'**ombra delle ali** di un drago; dall'alto arriva un **getto di fiamme** che spazza il campo in diagonale; dove passa si apre la **crepa di lava**, che si raffredda piano e scompare. Il drago non si vede mai intero: ombra e fuoco fanno più paura e costano meno al telefono. In alternanza, se piace, il **martello** che cala sul campo e apre la stessa crepa.
+
+Niente zampate in Forgia (sono della Selva). La bomba del goblin è rozza, tonda, con la miccia: la bomba dell'Officina (Incolore) dovrà essere diversa, meccanica, a ingranaggi.
+
+Bagliori, raffreddamento (cambio di colore), tremolio, scintille, miccia, fiamme che avanzano e fulmini li faccio io a codice; le immagini danno la materia. Goblin e drago sono generici: nessun personaggio preso dalle carte di Magic.
 
 ## Come lavorare
 1. Sempre **nella stessa chat** di ChatGPT per tutta la Forgia, così tiene lo stile.
@@ -55,48 +59,72 @@ A sheet of 6 separate small shards of red-hot metal of different shapes, glowing
 A sheet of 6 separate small glowing embers and burning coal pieces of different sizes, arranged on a 3×2 grid, evenly spaced and not touching.
 ```
 
-### B. Il colpo grosso
-5. **Crepa di lava** (sul campo colpito), 1536×1024
+### A2. Il goblin bombarolo (sorpresa)
+Le due pose del goblin devono essere **lo stesso goblin**, stessa misura e stessa vista: chiedile una dopo l'altra nella stessa chat. Vista dall'alto, leggermente di lato, come gli oggetti del campo.
+
+5. **Goblin pronto al lancio**, 1024×1024
+```
+A small mischievous fantasy goblin seen from above and slightly from the side, running, grinning with sharp teeth, green-grey skin, big pointed ears, ragged leather and scrap-metal armor, holding a round black bomb with a lit fuse over his head with both hands. Not cartoon: painterly-realistic, but funny and expressive. 1024×1024.
+```
+6. **Stesso goblin che lancia**, 1024×1024
+```
+The same goblin as in the previous image, same size, same view and same lighting, now in the throwing pose: one arm stretched forward after the throw, hands empty, laughing, one foot off the ground. 1024×1024.
+```
+7. **Bomba**, 512×512
+```
+A round black iron bomb seen from slightly above, rough riveted metal with dents and soot, a short fuse on top with a glowing spark at its tip. 512×512.
+```
+
+### B. Il colpo grosso: il fuoco del drago
+8. **Ombra del drago in volo**, 2048×1024
+```
+The dark shadow silhouette of a large dragon in flight seen from directly below, wings fully spread, long tail, soft blurred edges like a shadow cast on the ground, pure translucent black-brown, no details inside, everything else transparent. 2048×1024.
+```
+9. **Getto di fuoco del drago**, 2048×512 (lo allungo io dalla partenza al bersaglio, quindi deve essere uniforme)
+```
+A straight horizontal jet of roaring dragon fire seen from the side, running from left to right: a white-yellow hot core, orange and deep red flames curling around it, smoke wisps and embers at the edges, uniform along its whole length, the left end narrow and dense, the right end wide and fading softly to transparent. 2048×512.
+```
+10. **Crepa di lava** (sul campo colpito), 1536×1024
 ```
 Seen from directly above: a large jagged crack burst open in dark stone, glowing molten lava inside, small embers along the edges; the stone fades out to transparent at the edges, everything else transparent. 1536×1024.
 ```
-6. **Martello** (cala sul campo), 1024×1024
+11. **Martello** (in alternanza al drago, cala sul campo), 1024×1024
 ```
 A heavy dwarven war hammer seen from above, slightly from the side, dark steel head with glowing grooves (no letters, no runes), wrapped leather handle, a few embers falling from it. 1024×1024.
 ```
 
 ### C. L'interfaccia (dopo, quando Federico dice di passarci)
-7. **Cornice delle caselle**, 1024×1024
+12. **Cornice delle caselle**, 1024×1024
 ```
 A rectangular frame border of dark hammered steel with rivets, front view, flat; the four corners are cut at 45° and carry glowing ember cracks and small brass plates; the straight sides are simple and uniform so they can be stretched; frame thickness about 70 px; the center is completely empty and transparent. 1024×1024.
 ```
-8. **Elemento centrale largo (H&O)**, 2048×768 · **quadrato**: stessa richiesta con `square, 1024×1024`
+13. **Elemento centrale largo (H&O)**, 2048×768 · **quadrato**: stessa richiesta con `square, 1024×1024`
 ```
 UI element, front view, flat: a wide horizontal plate of black forged iron, rectangular with cut corners, proportion about 8:3, heavy rivets along the border, thin glowing ember lines in the seams. The center is a smooth dark recessed area, completely empty: the center must be dark, empty and unlit. Transparent background around it. 2048×768.
 ```
-9. **Tasto principale**, 1024×256
+14. **Tasto principale**, 1024×256
 ```
 A horizontal button plate of dark hammered steel with an ember-orange glowing inlay in the middle, rivets at the two ends, front view, flat; the middle is plain and uniform, empty for text, so it can be stretched. 1024×256.
 ```
 
 ### D. Pagina iniziale e inizio partita
-10. **Sfondo**, tre immagini 1080×2400 (verticali)
-- 10a, lontano (senza trasparenza):
+15. **Sfondo**, tre immagini 1080×2400 (verticali)
+- 15a, lontano (senza trasparenza):
 ```
 Background, NOT transparent: the inside of a vast dwarven forge at night, stone pillars, distant furnaces glowing orange, smoke and floating embers, very dark at the bottom, no people. Portrait 1080×2400.
 ```
-- 10b, medio:
+- 15b, medio:
 ```
 Transparent background: silhouettes of chains, anvils and stone pillars only along the left and right edges, the center completely empty. Portrait 1080×2400.
 ```
-- 10c, vicino:
+- 15c, vicino:
 ```
 Transparent background: hanging chains and hot sparks in the two top corners, a glowing anvil edge in one bottom corner, the center completely empty. Portrait 1080×2400.
 ```
-11. **Inizio partita**, 1024×1024
+16. **Inizio partita**, 1024×1024
 ```
 A glowing red-hot anvil seen from slightly above, sparks bursting from it. 1024×1024.
 ```
 
 ## Stato
-- 21 novembre 2026: scheda pronta. Si parte dal colpo (A); pagina di prova `grafica/prove/prova-forgia.html` appena arrivano le prime immagini. Le altre parti (B, C, D) solo dopo le indicazioni di Federico.
+- 21 novembre 2026: scheda pronta. Si parte dal colpo (A); pagina di prova `grafica/prove/prova-forgia.html` appena arrivano le prime immagini. Aggiunti lo stesso giorno il goblin bombarolo (A2) e il fuoco del drago (B): nella pagina di prova entrano dopo il fulmine, con un interruttore. Interfaccia e pagina iniziale (C, D) solo dopo le indicazioni di Federico.
