@@ -67,3 +67,4 @@ Da fare / aperto:
 - **Nuovo metodo**: le parti materiche le disegna ChatGPT come PNG trasparenti, io le animo. Richieste per **tutti i temi** in `grafica/PROMPT-TEMI.md`; Selva in dettaglio in `grafica/selva/STILE.md`; immagini arrivate in `grafica/selva/` (tre radici spinose, originali e WebP).
 - Prove grafiche come pagine pubblicate (artifact) fuori dal repository: «Anteprima Selva» e «Prova radici Selva» (lancio della liana). I sorgenti sono in `grafica/prove/` (pagine complete, immagini incluse).
 - **In pausa** (chiesto da Federico): compilazione e lavoro nell'app. Si riprende quando arrivano le immagini.
+- **Santuario** (Bianco), 21 novembre sera: nome confermato; scheda di stile e richieste in `grafica/santuario/STILE.md`. Si parte dal colpo (spada o lancia di luce che parte dritta, aureola, lampo bianco, piume); pagina di prova `grafica/prove/prova-santuario.html` appena arrivano le immagini.

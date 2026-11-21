@@ -94,7 +94,8 @@ Game asset for a mobile fantasy companion app, theme "Cripta" (dark necromantic 
 
 ---
 
-## Santuario (Bianco) · angeli, luce, spiriti benevoli  *(nome proposto)*
+## Santuario (Bianco) · angeli, luce, spiriti benevoli
+Dettaglio completo in `grafica/santuario/STILE.md` (il colpo lì è più ricco: spada e lancia di luce, scia, impatto, aureola, piume e piumini).
 Colpo deciso: raggio diretto di luce; il campo viene accecato da un lampo bianco che si dissolve. Luce e lampo li faccio io; le immagini danno piume, ali, aureole.
 **Blocco base**
 ```
