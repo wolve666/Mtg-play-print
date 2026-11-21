@@ -588,71 +588,109 @@ TH.santuario = {
 
 // ---------- MOX
 function arcF(a, b, lift){ const cx = (a[0] + b[0]) / 2, cy = Math.min(a[1], b[1]) - lift; return u => { const v = 1 - u; return [v * v * a[0] + 2 * v * u * cx + u * u * b[0], v * v * a[1] + 2 * v * u * cy + u * u * b[1]] } }
+// il cannoncino di ottone che spunta dal centro del bottone: base d'acciaio, canna con le fasce, nucleo di cristallo ciano
+function cannon(c, x, y, s, ang, recoil, gk){
+  if(s <= .02) return; const W = pA.clientWidth, R0 = W * .075 * s, L = W * .2 * s, bw = W * .078 * s;
+  c.save(); c.translate(x, y);
+  c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(R0 * .15, R0 * .25, R0 * 1.3, R0 * 1.05, 0, 0, TAU); c.fill();
+  let g = c.createRadialGradient(-R0 * .35, -R0 * .35, R0 * .1, 0, 0, R0 * 1.2); g.addColorStop(0, '#A9B2B9'); g.addColorStop(1, '#262B2F'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, R0 * 1.15, 0, TAU); c.fill();
+  c.fillStyle = '#C9A45A'; for(let i = 0; i < 10; i++){ const a = i / 10 * TAU; c.beginPath(); c.arc(Math.cos(a) * R0 * .98, Math.sin(a) * R0 * .98, R0 * .07, 0, TAU); c.fill() }
+  c.save(); c.rotate(ang); c.translate(-recoil * L * .3, 0);
+  const g2 = c.createLinearGradient(0, -bw / 2, 0, bw / 2); g2.addColorStop(0, '#5C3F17'); g2.addColorStop(.28, '#F0D08A'); g2.addColorStop(.55, '#B8873A'); g2.addColorStop(1, '#3E2A0F');
+  c.fillStyle = g2; c.beginPath(); c.roundRect ? c.roundRect(-L * .1, -bw / 2, L * 1.05, bw, bw * .22) : c.rect(-L * .1, -bw / 2, L * 1.05, bw); c.fill();
+  const g3 = c.createLinearGradient(0, -bw * .6, 0, bw * .6); g3.addColorStop(0, '#2A3035'); g3.addColorStop(.35, '#9AA4AC'); g3.addColorStop(1, '#1B1F22');
+  c.fillStyle = g3; [.3, .62].forEach(u => c.fillRect(L * u, -bw * .58, bw * .2, bw * 1.16));
+  c.fillStyle = g2; c.fillRect(L * .9, -bw * .66, bw * .34, bw * 1.32);
+  c.fillStyle = '#0B0D0F'; c.beginPath(); c.ellipse(L * .9 + bw * .34, 0, bw * .1, bw * .42, 0, 0, TAU); c.fill();
+  c.restore();
+  g = c.createRadialGradient(-R0 * .2, -R0 * .25, R0 * .05, 0, 0, R0 * .7); g.addColorStop(0, '#F3D896'); g.addColorStop(1, '#6E4C1C'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, R0 * .66, 0, TAU); c.fill();
+  c.restore();
+  glow(c, x, y, R0 * 1.1, '160,250,255', gk);
+  c.save(); c.translate(x, y); c.rotate(PI / 4); c.fillStyle = `rgba(200,252,255,${.6 + .4 * gk})`; c.fillRect(-R0 * .18, -R0 * .18, R0 * .36, R0 * .36); c.restore();
+}
+function moxBlast(e, W, H){
+  flash('#EFFFFF', .9, .45, true); impact(R() * TAU, 1.4, e.x, e.y);
+  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.2) return false; lit('V', e.x, e.y, W * 1.2, lerp3([.9, 1.1, 1.2], [1.2, .55, .2], clamp(x / .5)), 3.2 * Math.exp(-x * 2.4)); return true });
+  [0, .07].forEach((dl, i) => add('V2', function(c, dt){ this.a += dt; const k = this.a / .42; if(k > 1) return false; if(k < 0) return true; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(170,250,255,${1 - k})`; c.lineWidth = W * (.05 - i * .03) * (1 - k) + 1; c.beginPath(); c.arc(e.x, e.y, W * (.1 + (1 - i * .3) * eo(k)), 0, TAU); c.stroke(); c.restore(); return true }, dl));
+  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.1) return false; img(c, I('mox', 'blast', 0), e.x, e.y + W * .03, W * 1.0 * eb(x / .3), 0, x < .4 ? 1 : 1 - (x - .4) / .7); return true });
+  for(let i = 0; i < 46; i++){ const a = R() * TAU, v = 250 + R() * 650; pt(FX.pV2, {k:'spark', x:e.x, y:e.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 300, gz:1400, rest:.3, drag:2.2, life:.5 + R() * .6, r:1.2 + R() * 1.4, col:R() < .6 ? '170,250,255' : '255,210,120'}) }
+  for(let i = 0; i < 10; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:e.x, y:e.y, vx:Math.cos(a) * (80 + R() * 120), vy:Math.sin(a) * (60 + R() * 90), drag:1.8, r:W * (.07 + R() * .05), grow:2.2, life:1.4 + R() * .6, col:'70,74,80', al:.75}) }
+  for(let i = 0; i < 12; i++){ const a = R() * TAU, v = 160 + R() * 320; FX.sV2.push(sp({im:I('mox', 'parts'), x:e.x, y:e.y + W * .05, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:250 + R() * 400, gz:1300, rest:.4, drag:.6, w:W * (.05 + R() * .05), life:1.6, spin:(R() - .5) * 18, sh:1, fout:.25})) }
+  const cr = I('mox', R() < .5 ? 'crack' : 'crack2', 0), S = Math.max(W, H) * 1.3, rot = R() * TAU, seed = R() * 9, holes = [], sseed = R() * 50;
+  add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.3) return false;
+    const g = x < 1.75 ? eo(x / .14) : 1 - ei((x - 1.75) / .4), al = x < 2.15 ? 1 : 1 - (x - 2.15) / .15;
+    const s = st('V'); s.sh[0] = e.x; s.sh[1] = e.y; s.sh[2] = g * (x < .14 ? 1.4 : 1); s.sh[3] = sseed;
+    holes.forEach(h => { c.save(); c.globalAlpha = .55 * al * (x < 1.75 ? 1 : g); c.fillStyle = '#05080B'; c.beginPath(); c.moveTo(h[0][0], h[0][1]); h.forEach(p => c.lineTo(p[0], p[1])); c.fill(); c.restore() });
+    reveal(c, cr, e.x, e.y, S, rot, al, g, seed);
+    if(x > 1.75){ c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(210,255,255,${.8 * g})`; c.lineWidth = 2.5; c.beginPath(); c.arc(e.x, e.y, Math.hypot(W, H) * .65 * g, 0, TAU); c.stroke(); c.restore(); lit('V', e.x, e.y, Math.hypot(W, H) * .65 * g + W * .2, [.6, 1, 1.1], .8 * g) }
+    return true });
+  after(.5, () => { for(let i = 0; i < 13; i++){ const a = R() * TAU, r = W * (.08 + R() * .45), x = e.x + Math.cos(a) * r, y = e.y + Math.sin(a) * r * 1.3, s = W * (.08 + R() * .09);
+    holes.push(Array.from({length:5}, (_, j) => { const b = j / 5 * TAU + R() * .6; return [x + Math.cos(b) * s * .45 * (.6 + R() * .5), y + Math.sin(b) * s * .45 * (.6 + R() * .5)] }));
+    FX.sV2.push(sp({im:I('mox', 'shard'), x, y, vx:(R() - .5) * 60, vy:-30 - R() * 40, g:1100, w:s, life:1.2, spin:(R() - .5) * 7, rot:R() * TAU, delay:R() * .3, fin:.01, fout:.2, grow:.25}));
+    pt(FX.pV2, {k:'mote', x, y, r:s * .5, life:.25, col:'220,255,255', delay:R() * .3}) } });
+  damage();
+}
 TH.mox = {
   name:'Mox', sub:'Incolore · artefatti e macchine', col:'#9FE7F0',
-  desc:'Bomba a orologeria. Da Federico la bomba cade con la sua ombra e rimbalza; a ogni tic il nucleo accende di ciano il campo intorno. Poi esplode: il campo si illumina di bianco e poi d\'arancio, l\'onda d\'urto lo piega e il campo stesso si rompe in pezzi spostati (non solo le crepe disegnate), le schegge cadono, poi tutto si ricompone verso il centro.',
+  desc:'Bomba a orologeria. Trascinando, dal centro del bottone spunta un cannoncino di ottone che ruota verso il dito; traiettoria a puntini e mirino. Al rilascio fa fuoco (rinculo, vampata, fumo) e la bomba vola ad arco rimpicciolendo in prospettiva. Da Federico cade come capita, rimbalza e rotola come metallo pesante, il nucleo lampeggia sempre più veloce ed esplode quando vuole lei: anche a mezz\'aria o mentre rotola. Poi il campo si rompe e si ricompone.',
   aim(c, d, dt){
-    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, d.p[0], d.p[1] - W * .05, dt), f = arcF([hb.x, hb.y], [t.x, t.y], W * .25);
-    c.save(); for(let i = 0; i < 26; i++){ const u = ((i + T * 3) % 26) / 26, p = f(u); c.globalAlpha = .35 + .65 * Math.sin(PI * u); c.fillStyle = i % 2 ? '#C9A45A' : '#9FF3FF'; c.beginPath(); c.arc(p[0], p[1], W * .009 * (.6 + .6 * Math.sin(PI * u)), 0, TAU); c.fill() } c.restore();
+    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p;
+    d.cs = d.cs || spr(0, 240, 9); d.cs.t = 1; stepS(d.cs, dt);
+    if(d.ca == null){ d.ca = -PI / 2; SP.aHub.v -= 2 }
+    let df = Math.atan2(e[1] - hb.y, e[0] - hb.x) - d.ca; df = Math.atan2(Math.sin(df), Math.cos(df)); d.ca += df * Math.min(1, dt * 14);
+    const mz = [hb.x + Math.cos(d.ca) * W * .2, hb.y + Math.sin(d.ca) * W * .2], f = arcF(mz, e, W * .28);
+    c.save(); for(let i = 0; i < 24; i++){ const u = ((i + T * 3) % 24) / 24, p = f(u), r = W * .011 * (1.2 - .7 * u) * (.6 + .6 * Math.sin(PI * u)); c.globalAlpha = (.35 + .65 * Math.sin(PI * u)) * Math.min(1, d.cs.x); c.fillStyle = i % 2 ? '#C9A45A' : '#9FF3FF'; c.beginPath(); c.arc(p[0], p[1], r, 0, TAU); c.fill() } c.restore();
     d.rr = d.rr || spr(tr.h * 1.6, 260, 10); if(on && !d.locked){ d.locked = 1; d.rr.x = tr.h * 1.6; SP.aHub.v += 1.5; if(navigator.vibrate) try{ navigator.vibrate(12) }catch(_){} } if(!on) d.locked = 0; d.rr.t = on ? tr.h * .72 : tr.h * 1.6; stepS(d.rr, dt);
     if(on){ const r = d.rr.x; c.save(); c.translate(e[0], e[1]); c.rotate(T * 2); c.strokeStyle = 'rgba(159,243,255,.95)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r, 0, TAU); c.stroke();
       for(let i = 0; i < 12; i++){ c.rotate(TAU / 12); c.beginPath(); c.moveTo(r, 0); c.lineTo(r + (i % 3 ? 4 : 10), 0); c.stroke() } c.restore() }
-    const v = Math.hypot(t.vx, t.vy), s = 1 + Math.min(.4, v / 2200);
-    img(c, I('mox', 'bomb', 0), t.x, t.y, W * .2, Math.sin(T * 5) * .15 + t.vx / 3000, 1, null, .5, .5, s, 1 / s, Math.atan2(t.vy, t.vx));
-    const bl = .5 + .5 * Math.sin(T * 9); glow(c, t.x, t.y + W * .01, W * .06, '160,250,255', .4 + .3 * bl); lit('A', t.x, t.y + W * .1, W * .35, [.5, 1, 1.1], .5 + .6 * bl);
+    const bl = .5 + .5 * Math.sin(T * 9);
+    cannon(c, hb.x, hb.y, Math.max(0, d.cs.x), d.ca, 0, .3 + .3 * bl); lit('A', hb.x, hb.y, W * .4, [.5, 1, 1.1], .5 + .5 * bl);
   },
   launch(d){
-    const W = pA.clientWidth, tr = tileRect(pA), p0 = d.tip ? [d.tip.x, d.tip.y] : d.p.slice(), ex = tr.x + tr.w / 2, hist = [];
-    SP.aHub.v -= 2;
-    add('A', function(c, dt){ this.a += dt; const k = this.a / .45; if(k > 1) return false; const y = lerp(p0[1], -W * .2, ei(k)), x = lerp(p0[0], ex, eo(k)), r = k * 10;
-      hist.push([x, y, r]); if(hist.length > 5) hist.shift();
-      hist.forEach((h, i) => img(c, I('mox', 'bomb', 0), h[0], h[1], W * .2, h[2], .12 * (i + 1)));
-      img(c, I('mox', 'bomb', 0), x, y, W * .2 * (1 + .25 * Math.sin(PI * k)), r, 1, null, .5, .5, 1.25, .8, -PI / 2); lit('A', x, y, W * .4, [.5, 1, 1.1], .8 * (1 - k)); return true });
-    for(let i = 0; i < 3; i++) FX.sA.push(sp({im:I('mox', 'parts'), x:p0[0], y:p0[1], vx:(R() - .5) * 90, vy:-60 - R() * 60, g:500, w:W * .05, life:.9, spin:(R() - .5) * 12, delay:i * .05}));
-    return .55;
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ang = d.ca ?? -PI / 2, mz = [hb.x + Math.cos(ang) * W * .2, hb.y + Math.sin(ang) * W * .2], tg = [tr.x + tr.w / 2, tr.y + tr.h / 2], f = arcF(mz, tg, W * .28);
+    const rc = spr(0, 260, 9), cs = spr(Math.max(.2, d.cs ? d.cs.x : 1), 220, 10), spin = sgn() * (6 + R() * 6); rc.v = 9;
+    SP.aHub.v -= 3; SP.aPunch.v -= .7; if(navigator.vibrate) try{ navigator.vibrate([30, 20, 15]) }catch(e){}
+    for(let i = 0; i < 10; i++) pt(FX.pA, {k:'smoke', x:mz[0], y:mz[1], vx:Math.cos(ang) * (40 + R() * 90) + (R() - .5) * 50, vy:Math.sin(ang) * (40 + R() * 90) + (R() - .5) * 50, drag:2, r:W * (.035 + R() * .03), grow:2.2, life:.9 + R() * .5, col:'150,150,155', al:.7});
+    for(let i = 0; i < 16; i++){ const a = ang + (R() - .5) * 1.1, v = 200 + R() * 300; pt(FX.pA, {k:'spark', x:mz[0], y:mz[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:4, life:.3, r:1.3, col:R() < .5 ? '255,210,120' : '170,250,255'}) }
+    add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.1) return false; stepS(rc, dt); if(x > .55) cs.t = 0; stepS(cs, dt);
+      // la bomba: vola ad arco e rimpicciolisce (si allontana), con l'ombra a terra; passato il quadratino esce dal bordo
+      const k = x / .5;
+      if(k < 1.35){ let p, sz; if(k <= 1){ p = f(k); sz = W * lerp(.13, .055, eo(k)) } else { const q = (k - 1) / .35; p = [tg[0], lerp(tg[1], -W * .1, q)]; sz = W * lerp(.055, .035, q) }
+        const gx = lerp(mz[0], tg[0], Math.min(1, k)), gy = lerp(mz[1], tg[1], Math.min(1, k)) + W * .02;
+        if(k <= 1){ c.save(); c.globalAlpha = .3 * (1 - k * .6); c.fillStyle = '#000'; c.beginPath(); c.ellipse(gx, gy, sz * .45, sz * .18, 0, 0, TAU); c.fill(); c.restore() }
+        img(c, I('mox', 'bomb', 0), p[0], p[1], sz, x * spin); glow(c, p[0], p[1], sz * .6, '160,250,255', .5); lit('A', p[0], p[1], W * .3, [.5, 1, 1.1], .6) }
+      if(x < .12){ glow(c, mz[0], mz[1], W * .14 * (1 - x / .12), '255,230,170', 1); lit('A', mz[0], mz[1], W * .7, [1.2, .9, .6], 2.2 * (1 - x / .12)) }
+      cannon(c, hb.x, hb.y, Math.max(0, cs.x), ang, Math.max(0, rc.x), .4); return true });
+    return .62;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, o = fieldO(pV);
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV);
     if(RM){ flash('#E8FFFF', .9, .9, true); damage(); return }
-    const B = {x:clamp(tx, W * .2, W * .8), z:H * .75, vz:0, sq:spr(1, 380, 9), rot:0};
-    const blinks = [1.05, 1.35, 1.56];
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.86) return false;
-      B.x = lerp(B.x, o.x, 1 - Math.exp(-dt * 7)); B.vz -= 2600 * dt; B.z += B.vz * dt;
-      if(B.z < 0){ B.z = 0; if(B.vz < -150){ B.sq.v -= B.vz * .006; impact(PI / 2, Math.min(.5, -B.vz / 2400), o.x, o.y + W * .1); B.vz = -B.vz * .34; for(let i = 0; i < 6; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * W * .08, y:o.y + W * .07, vx:Math.cos(a) * 60, vy:Math.sin(a) * 20, drag:2, r:W * .05, grow:1.5, life:.7, col:'150,150,150', al:.5}) } } else B.vz = 0 }
-      stepS(B.sq, dt); B.rot = B.z > 0 ? B.rot + dt * 5 : B.rot * Math.exp(-dt * 8);
-      blinks.forEach(b => { if(x >= b && !B['b' + b]){ B['b' + b] = 1; B.sq.v -= 2; impact(0, .1); pt(FX.pV, {k:'ripple', x:o.x, y:o.y + W * .08, r:W * .1, grow:W * .3, life:.4, col:'170,250,255', lw:2}) } });
-      const sh = 1 - Math.min(1, B.z / H);
-      c.save(); c.globalAlpha = .45 * sh; c.fillStyle = '#000'; c.beginPath(); c.ellipse(o.x + B.z * .08, o.y + W * .1, W * .13 * (.4 + .6 * sh), W * .04 * (.4 + .6 * sh), 0, 0, TAU); c.fill(); c.restore();
-      const open = x > 1.7, s = B.sq.x, bs = W * .26 * (1 + B.z / H * .5) * (open ? eb((x - 1.7) / .16) * 1.2 : 1);
-      img(c, open ? I('mox', 'bomb2', 0) : I('mox', 'bomb', 0), B.x, o.y - B.z, bs, B.rot + (x > 1.4 ? Math.sin(x * 50) * .04 : 0), 1, null, .5, .8, 1 / s, s, 0);
-      lit('V', B.x, o.y + W * .06, W * .35, [.45, .95, 1.05], .35 + .25 * Math.sin(x * 6));
-      blinks.forEach(b => { const q = x - b; if(q > 0 && q < .16){ glow(c, B.x, o.y - B.z - bs * .3, W * .22, '170,250,255', 1 - q / .16); lit('V', B.x, o.y, W * .8, [.5, 1, 1.1], 2.2 * (1 - q / .16)) } });
-      if(open){ glow(c, B.x, o.y - bs * .3, W * .35, '220,255,255', (x - 1.7) / .16); lit('V', B.x, o.y, W, [.7, 1, 1.1], 3 * (x - 1.7) / .16) }
+    // fisica della bomba: posizione a terra (x, y), altezza z; cade dall'alto come capita, rimbalza, rotola, sbatte sui bordi
+    const r = W * .12, yL = fb.y + fb.h * (.3 + R() * .4);
+    const B = {x:clamp(tx + (R() - .5) * W * .3, fb.x + r, fb.x + fb.w - r), y:yL, z:yL + W * .25, vx:(R() - .5) * W * 1.4, vy:(R() - .5) * W * .9, vz:-150 - R() * 200, rot:R() * TAU, spin:(R() - .5) * 16, rest:.3 + R() * .25, land:null, boom:null};
+    add('V2', function(c, dt){ this.a += dt; const x = this.a;
+      B.vz -= 2600 * dt; B.x += B.vx * dt; B.y += B.vy * dt; B.z += B.vz * dt;
+      if(B.x < fb.x + r * .6){ B.x = fb.x + r * .6; B.vx = Math.abs(B.vx) * .55; B.spin *= -.6; impact(0, .15, B.x, B.y) } if(B.x > fb.x + fb.w - r * .6){ B.x = fb.x + fb.w - r * .6; B.vx = -Math.abs(B.vx) * .55; B.spin *= -.6; impact(PI, .15, B.x, B.y) }
+      if(B.y < fb.y + r * .6){ B.y = fb.y + r * .6; B.vy = Math.abs(B.vy) * .55 } if(B.y > fb.y + fb.h - r * .8){ B.y = fb.y + fb.h - r * .8; B.vy = -Math.abs(B.vy) * .55; impact(-PI / 2, .15, B.x, B.y) }
+      if(B.z <= 0){ B.z = 0;
+        if(B.vz < -120){ const pw = Math.min(.55, -B.vz / 2200); impact(PI / 2, pw, B.x, B.y); B.vz = -B.vz * B.rest; B.vx *= .75; B.vy *= .75; B.spin = B.spin * .4 + B.vx / r * .6;
+          for(let i = 0; i < 6; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:B.x + Math.cos(a) * r * .5, y:B.y + r * .3, vx:Math.cos(a) * 60, vy:Math.sin(a) * 20, drag:2, r:W * .045, grow:1.5, life:.6, col:'150,150,150', al:.45}) }
+          for(let i = 0; i < 6; i++){ const a = R() * TAU; pt(FX.pV2, {k:'spark', x:B.x, y:B.y + r * .3, vx:Math.cos(a) * 160, vy:Math.sin(a) * 90, vz:60 + R() * 100, gz:1200, drag:3, life:.3, r:1, col:'255,220,150'}) }
+          if(B.land == null){ B.land = x; B.boom = R() < .22 ? x + .02 : x + .15 + R() * 1.1 } }
+        else { B.vz = 0; const fr = Math.exp(-1.6 * dt); B.vx *= fr; B.vy *= fr; B.spin = B.vx / r * .9 + B.vy / r * .3 }   // rotola
+      }
+      B.rot += B.spin * dt;
+      if(B.boom == null && x > 2.6) B.boom = x;
+      // il nucleo lampeggia sempre più veloce fino all'esplosione
+      const pr = B.boom != null ? clamp((x - B.land) / Math.max(.05, B.boom - B.land)) : 0, bk = Math.pow(.5 + .5 * Math.sin(x * (6 + 40 * pr * pr)), 3) * (.3 + .7 * pr);
+      const sh = 1 - Math.min(1, B.z / H), bs = W * .24 * (1 + B.z / H * .7);
+      c.save(); c.globalAlpha = .45 * sh; c.fillStyle = '#000'; c.beginPath(); c.ellipse(B.x + B.z * .1, B.y + r * .55, r * (.5 + .5 * sh), r * .22 * (.5 + .5 * sh), 0, 0, TAU); c.fill(); c.restore();
+      const opening = B.boom != null && B.boom - x < .1;
+      img(c, I('mox', opening ? 'bomb2' : 'bomb', 0), B.x, B.y - B.z, bs * (opening ? 1.15 : 1), B.rot);
+      glow(c, B.x, B.y - B.z, W * .2, '170,250,255', bk); lit('V', B.x, B.y, W * .7, [.5, 1, 1.1], .3 + 2 * bk);
+      if(B.boom != null && x >= B.boom){ moxBlast({x:B.x, y:B.y - B.z * .6}, W, H); return false }
       return true });
-    after(1.86, () => {
-      const e = {x:o.x, y:o.y - W * .08};
-      flash('#EFFFFF', .9, .45, true); impact(R() * TAU, 1.4, e.x, e.y);
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.2) return false; lit('V', e.x, e.y, W * 1.2, lerp3([.9, 1.1, 1.2], [1.2, .55, .2], clamp(x / .5)), 3.2 * Math.exp(-x * 2.4)); return true });
-      [0, .07].forEach((dl, i) => add('V2', function(c, dt){ this.a += dt; const k = this.a / .42; if(k > 1) return false; if(k < 0) return true; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(170,250,255,${1 - k})`; c.lineWidth = W * (.05 - i * .03) * (1 - k) + 1; c.beginPath(); c.arc(e.x, e.y, W * (.1 + (1 - i * .3) * eo(k)), 0, TAU); c.stroke(); c.restore(); return true }, dl));
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.1) return false; img(c, I('mox', 'blast', 0), e.x, e.y + W * .05, W * 1.0 * eb(x / .3), 0, x < .4 ? 1 : 1 - (x - .4) / .7); return true });
-      for(let i = 0; i < 46; i++){ const a = R() * TAU, v = 250 + R() * 650; pt(FX.pV2, {k:'spark', x:e.x, y:e.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 300, gz:1400, rest:.3, drag:2.2, life:.5 + R() * .6, r:1.2 + R() * 1.4, col:R() < .6 ? '170,250,255' : '255,210,120'}) }
-      for(let i = 0; i < 10; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:e.x, y:e.y, vx:Math.cos(a) * (80 + R() * 120), vy:Math.sin(a) * (60 + R() * 90), drag:1.8, r:W * (.07 + R() * .05), grow:2.2, life:1.4 + R() * .6, col:'70,74,80', al:.75}) }
-      for(let i = 0; i < 12; i++){ const a = R() * TAU, v = 160 + R() * 320; FX.sV2.push(sp({im:I('mox', 'parts'), x:e.x, y:e.y + W * .08, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:250 + R() * 400, gz:1300, rest:.4, drag:.6, w:W * (.05 + R() * .05), life:1.6, spin:(R() - .5) * 18, sh:1, fout:.25})) }
-      // il campo si rompe davvero: pezzi spostati (scheda grafica) + le crepe disegnate sopra il vetro
-      const cr = I('mox', R() < .5 ? 'crack' : 'crack2', 0), S = Math.max(W, H) * 1.3, rot = R() * TAU, seed = R() * 9, holes = [], sseed = R() * 50;
-      add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.3) return false;
-        const g = x < 1.75 ? eo(x / .14) : 1 - ei((x - 1.75) / .4), al = x < 2.15 ? 1 : 1 - (x - 2.15) / .15;
-        const s = st('V'); s.sh[0] = e.x; s.sh[1] = e.y; s.sh[2] = g * (x < .14 ? 1.4 : 1); s.sh[3] = sseed;
-        holes.forEach(h => { c.save(); c.globalAlpha = .55 * al * (x < 1.75 ? 1 : g); c.fillStyle = '#05080B'; c.beginPath(); c.moveTo(h[0][0], h[0][1]); h.forEach(p => c.lineTo(p[0], p[1])); c.fill(); c.restore() });
-        reveal(c, cr, e.x, e.y, S, rot, al, g, seed);
-        if(x > 1.75){ c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(210,255,255,${.8 * g})`; c.lineWidth = 2.5; c.beginPath(); c.arc(e.x, e.y, Math.hypot(W, H) * .65 * g, 0, TAU); c.stroke(); c.restore(); lit('V', e.x, e.y, Math.hypot(W, H) * .65 * g + W * .2, [.6, 1, 1.1], .8 * g) }
-        return true });
-      after(.5, () => { for(let i = 0; i < 13; i++){ const a = R() * TAU, r = W * (.08 + R() * .45), x = e.x + Math.cos(a) * r, y = e.y + Math.sin(a) * r * 1.3, s = W * (.08 + R() * .09);
-        holes.push(Array.from({length:5}, (_, j) => { const b = j / 5 * TAU + R() * .6; return [x + Math.cos(b) * s * .45 * (.6 + R() * .5), y + Math.sin(b) * s * .45 * (.6 + R() * .5)] }));
-        FX.sV2.push(sp({im:I('mox', 'shard'), x, y, vx:(R() - .5) * 60, vy:-30 - R() * 40, g:1100, w:s, life:1.2, spin:(R() - .5) * 7, rot:R() * TAU, delay:R() * .3, fin:.01, fout:.2, grow:.25}));
-        pt(FX.pV2, {k:'mote', x, y, r:s * .5, life:.25, col:'220,255,255', delay:R() * .3}) } });
-      damage();
-    });
   }
 };
 
