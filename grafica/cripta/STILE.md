@@ -105,3 +105,20 @@ Transparent background: hanging chains and cobwebs in the two top corners, candl
 ```
 A floating black skull wreathed in violet flames. 1024×1024.
 ```
+
+## La mano che prosciuga (22 novembre, idea di Federico)
+Al posto della voragine (scartata, niente vortici). Colpo normale: mentre trascini, una scia leggera di fumo nero e viola segue il dito, come il filo dell'Abisso. Al rilascio la scia parte verso l'avversario e sul mio tappeto la nebbia si apre: esce la mano scheletrica. Il tappeto dell'avversario avvizzisce (buio, venature, colori spenti). Le sue anime piccole, le luci e il fumo si staccano da tutto il tappeto e risalgono in un raggio verso di me. Il raggio scende dall'alto fino alla mano, le anime la raggiungono e la accendono di un alone viola; la mano si chiude e torna nella nebbia.
+Colpo grosso: il teschio esce dal tappeto avversario, da invisibile sempre più visibile e grande, risucchia le anime e lo prosciuga.
+Per ora bastano le immagini che ci sono (mano scheletrica, scia di fumo, anime, venature, teschio). Nell'app il ritorno del raggio non ha bisogno di un secondo messaggio: chi attacca sa quando arriva il colpo e fa partire il ritorno da solo.
+
+Correzioni di Federico (22 novembre, sera):
+- la mano nasce dal **bottone** (elemento centrale), sale, aspetta le anime, si chiude e ci torna dentro;
+- selezione senza liana: filo sottilissimo di particelle, bollicine nere piccole, medie e grandi, nuvole di fumo che si diramano a caso;
+- sul tappeto colpito non cade nulla: avvizzisce, ne esce un gruppetto di fumo, luci e anime risucchiato verso chi attacca, poi il raggio di fumo e anime va dal tappeto colpito alla mano e il tappeto torna normale; nessuna onda;
+- colpo grosso: pentacolo rovesciato con glifi (segni inventati, niente lettere) che si disegna sul tappeto colpito, nuvole nere e nebbia fitta, il teschio appare nella nebbia e colpisce, poi tutto a ritroso.
+
+Richiesta facoltativa, se la mano dovesse sembrare troppo «di lato»:
+M1. **Mano che sale dal basso**, 1024×1024
+```
+A skeletal demonic hand rising straight up from below, seen from the front, fingers open and reaching upward, old bone with black claws, violet smoke and mist curling around the wrist and fading to transparent at the bottom. 1024×1024.
+```

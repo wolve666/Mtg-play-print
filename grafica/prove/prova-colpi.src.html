@@ -777,18 +777,23 @@ function jetLoop(im){ if(im._loop) return im._loop; const W0 = iw(im), H0 = ih(i
   x.drawImage(t, 0, 0); return im._loop = c }
 // getto d'acqua a spirale: l'immagine dipinta ripetuta lungo il getto e fatta scorrere in avanti (la spirale sembra girare e correre); in punta schiuma che esplode
 // flare > 0: la base si allarga a imbuto (un vortice al contrario che esce verso l'avversario)
+// corpo del getto (Abisso e Cripta): l'immagine ripetuta lungo il getto e fatta scorrere in avanti; flare > 0: la base si allarga a imbuto
+// il disegno ha sempre la stessa lunghezza (texW): quando il getto si stringe cambia solo la larghezza, non scivola
+function jetBody(c, im, l, w, t, al, flare = 0, fl = 0, texW = w, sp = 10, blend){
+  const lp = ok(im) && jetLoop(im); if(!lp) return;
+  const H = w * 1.6, tl = texW * 1.6 * lp.width / lp.height, off = (t * texW * sp) % tl, pw = lp.width, ph = lp.height;
+  c.save(); c.globalAlpha = al; if(blend) c.globalCompositeOperation = blend;
+  if(!flare){ c.beginPath(); c.rect(0, -H, l, H * 2); c.clip(); for(let x = off - tl; x < l; x += tl) c.drawImage(lp, x, -H / 2, tl + .5, H) }
+  else { const prof = x => 1 + flare * Math.exp(-x / fl) * (1 + .06 * Math.sin(t * 18 - x * .1)), st = Math.max(4, w * .15);
+    for(let x = 0; x < l; x += st){ const h = H * prof(x), u = (((x - off) % tl) + tl) % tl / tl, sw = st / tl * pw;
+      let sx = u * pw; if(sx + sw > pw) sx = pw - sw; { const q = clamp(x / (fl * 1.1)); c.globalAlpha = al * q * q * (3 - 2 * q) } c.drawImage(lp, sx, 0, sw, ph, x, -h / 2, st + .8, h) } }
+  c.restore();
+}
+// getto d'acqua a spirale: la schiuma sembra girare e correre; in punta schiuma che esplode
 function waterJet(c, x0, y0, x1, y1, w, t, al, flare = 0, fl = 0, texW = w){
-  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return; const im = I('abisso', 'jet', 0);
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return;
   c.save(); c.translate(x0, y0); c.rotate(Math.atan2(dy, dx));
-  const lp = ok(im) && jetLoop(im);
-  // il disegno della spirale ha sempre la stessa lunghezza (texW): quando il getto si stringe cambia solo la larghezza, non scivola
-  if(lp){ const H = w * 1.6, tl = texW * 1.6 * lp.width / lp.height, off = (t * texW * 10) % tl, pw = lp.width, ph = lp.height;
-    c.save(); c.globalAlpha = al;
-    if(!flare){ c.beginPath(); c.rect(0, -H, l, H * 2); c.clip(); for(let x = off - tl; x < l; x += tl) c.drawImage(lp, x, -H / 2, tl + .5, H) }
-    else { const prof = x => 1 + flare * Math.exp(-x / fl) * (1 + .06 * Math.sin(t * 18 - x * .1)), st = Math.max(4, w * .15);
-      for(let x = 0; x < l; x += st){ const h = H * prof(x), u = (((x - off) % tl) + tl) % tl / tl, sw = st / tl * pw;
-        let sx = u * pw; if(sx + sw > pw) sx = pw - sw; { const q = clamp(x / (fl * 1.1)); c.globalAlpha = al * q * q * (3 - 2 * q) } c.drawImage(lp, sx, 0, sw, ph, x, -h / 2, st + .8, h) } }
-    c.restore() }
+  jetBody(c, I('abisso', 'jet', 0), l, w, t, al, flare, fl, texW);
   if(l > w){ glow(c, l, 0, w * 1.1, '220,245,255', .8 * al); img(c, I('abisso', 'spray', (t * 18 | 0) % 8), l - w * .4, 0, w * 2.6, 0, .9 * al, null, .15, .5) }
   c.restore();
 }
@@ -962,62 +967,207 @@ TH.abisso = {
   }
 };
 
-// ---------- CRIPTA
+// ---------- CRIPTA: la mano che prosciuga
+// Mentre si mira: un filo sottilissimo di particelle, bollicine nere e nuvole che si diramano. Al rilascio la mano scheletrica nasce dal bottone.
+// Sul tappeto colpito non cade nulla: avvizzisce, ne esce un gruppetto di fumo, luci e anime che viene risucchiato verso chi attacca,
+// poi un raggio di fumo e anime parte dal tappeto colpito e arriva alla mano; il tappeto torna normale. Nessuna onda sul tappeto.
+const CDARK = ['30,12,48', '70,30,110', '15,6,25'], CFOG = ['70,52,96', '48,34,70', '96,74,128'], CMOTE = ['200,150,255', '170,110,250', '235,215,255'];
+// raggio di anime: la scia di fumo ripetuta e fatta scorrere dalla partenza all'arrivo, piccole anime che lo cavalcano
+function soulJet(c, x0, y0, x1, y1, w, t, al){
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return; const tr = I('cripta', 'trail', 0), so = L('cripta', 'souls');
+  c.save(); c.translate(x0, y0); c.rotate(Math.atan2(dy, dx));
+  jetBody(c, tr, l, w, t, al * .6, 0, 0, w * 1.6, 5);
+  jetBody(c, tr, l, w * .6, t * 1.7, al * .4, 0, 0, w * 1.2, 7);
+  jetBody(c, tr, l, w * .35, t * 2.2, al * .3, 0, 0, w, 9, 'lighter');
+  if(so.length) for(let i = 0; i < 9; i++){ const u = (i / 9 + t * 1.1) % 1, side = (i % 2 ? 1 : -1) * w * .25 * Math.sin(t * 5 + i * 2);
+    img(c, so[i % so.length], u * l, side, w * (.45 + .15 * (i % 3)), 0, al * .85 * Math.sin(PI * u)) }
+  c.restore();
+}
+function soulMotes(list, x0, y0, x1, y1, w, dt, k){
+  if(R() < dt * 45 * k){ const u = R() * .3, a = Math.atan2(y1 - y0, x1 - x0), v = 380 + R() * 220, l = Math.hypot(x1 - x0, y1 - y0);
+    pt(list, {k:'mote', x:lerp(x0, x1, u) + (R() - .5) * w * .6, y:lerp(y0, y1, u) + (R() - .5) * w * .6, vx:Math.cos(a) * v, vy:Math.sin(a) * v, r:1.2 + R() * 2, life:Math.min(1.2, l * (1 - u) / v), col:pick(CMOTE), al:.9, fout:.2}) }
+}
+// bollicina nera: interno quasi nero, orlo viola sottile, un riflesso in alto a sinistra
+function blackBubble(c, x, y, r, al){
+  if(al <= 0 || r < .5) return; c.save(); c.globalAlpha = Math.min(1, al);
+  const g = c.createRadialGradient(x - r * .3, y - r * .3, r * .1, x, y, r); g.addColorStop(0, 'rgba(26,12,40,.75)'); g.addColorStop(.75, 'rgba(6,2,12,.92)'); g.addColorStop(1, 'rgba(120,70,200,.9)');
+  c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
+  c.strokeStyle = 'rgba(190,140,255,.55)'; c.lineWidth = Math.max(.6, r * .08); c.stroke();
+  c.fillStyle = 'rgba(235,220,255,.7)'; c.beginPath(); c.ellipse(x - r * .38, y - r * .4, r * .22, r * .12, -.7, 0, TAU); c.fill();
+  c.restore();
+}
+function drawBubbles(c, list, dt){
+  for(let i = list.length - 1; i >= 0; i--){ const b = list[i]; b.a += dt; if(b.a > b.life){ list.splice(i, 1); continue }
+    b.vx *= Math.exp(-1.5 * dt); b.vy *= Math.exp(-1.5 * dt); b.x += b.vx * dt + Math.sin(b.a * 5 + b.ph) * 8 * dt; b.y += b.vy * dt;
+    const k = b.a / b.life, pop = k > .85 ? 1 + (k - .85) * 3 : eo(b.a / .15); blackBubble(c, b.x, b.y, b.r * pop, (k > .85 ? 1 - (k - .85) / .15 : 1) * .95) }
+}
+// nuvola che si dirama: una fila di sbuffi che parte da un punto e piega a caso
+function branch(ph, list, x, y, ang, W){
+  let px = x, py = y, a = ang, n = 0, bend = (R() - .5) * 4;
+  add(ph, function(c, dt){ this.a += dt; if(this.a > .5) return false;
+    if(R() < dt * 26){ a += bend * dt * 2; px += Math.cos(a) * W * .03; py += Math.sin(a) * W * .03; n++;
+      pt(list, {k:'smoke', x:px, y:py, vx:Math.cos(a) * 12, vy:Math.sin(a) * 12 - 6, drag:1, r:W * (.02 + .012 * Math.max(0, 4 - n)) , grow:1.8, life:.9 + R() * .5, col:pick(R() < .6 ? CDARK : CFOG), al:.45}) } return true });
+}
+// la mano scheletrica: nasce dal bottone, sale, aspetta le anime, si chiude e torna nel bottone
+let HAND = null;
+function handPos(){ const W = pA.clientWidth, hb = hubBox(pA), x = hb.x, y = hb.y - hb.h * .5 - W * .2; return {x, y, bx:hb.x, by:hb.y, W, px:x + W * .02 - W * .62 * .009, py:y - W * .62 * .108} }
+function summonHand(){
+  if(HAND && HAND.live) return HAND; const P = handPos(), W = P.W, h = HAND = {live:true, a:0, halo:0, hold:3.2, clench:0};
+  SP.aHub.v -= 2.5;
+  for(let i = 0; i < 14; i++){ const a = -PI / 2 + (R() - .5) * 2.4, v = 40 + R() * 90; pt(FX.pA, {k:'smoke', x:P.bx + (R() - .5) * W * .2, y:P.by, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.6, r:W * (.03 + R() * .03), grow:2, life:1 + R() * .6, col:pick(R() < .6 ? CDARK : CFOG), al:.5}) }
+  add('A', function(c, dt){ h.a += dt; const x = h.a, P = handPos();
+    const born = eo(clamp(x / .6)), back = clamp((x - h.hold) / .5); if(back >= 1){ h.live = false; SP.aHub.v += 1.2; return false }
+    const k = born * (1 - ei(back)), al = Math.min(1, k * 1.5), cx = lerp(P.bx, P.x, k), cy = lerp(P.by, P.y, k), sz = W * .62 * (.2 + .8 * k) * (1 - .06 * h.clench), sw = Math.sin(T * 1.6) * .04;
+    glow(c, P.bx, P.by, W * .3, '140,60,230', .35 * al);
+    if(h.halo > .01){ glow(c, cx, cy - W * .05, W * (.3 + .18 * h.halo), '150,70,240', .55 * h.halo * al); lit('A', cx, cy, W * .45, [.6, .25, 1.1], 1.1 * h.halo * al) }
+    lit('A', P.bx, P.by, W * .5, [.8, .9, .6], -.7 * al);
+    // il raggio entra nel palmo: disegnato prima della mano, così passa dietro le dita
+    const bm = h.beam; if(bm && bm.on){ soulJet(c, P.px, bm.sy, P.px, bm.hy, bm.w, T, bm.al); bm.on = false }
+    img(c, I('cripta', 'claw', 0), cx + W * .02, cy, sz, -PI / 4 + sw - .12 * h.clench, al);
+    // fiotti di nubi sul palmo, che coprono la fine del raggio
+    if(bm && bm.k > .05){ glow(c, P.px, P.py, W * .14, '160,80,250', .5 * bm.k);
+      if(R() < dt * 40 * bm.k){ const a = R() * TAU, v = 20 + R() * 60; pt(FX.pA, {k:'smoke', x:P.px + Math.cos(a) * W * .03, y:P.py + Math.sin(a) * W * .02, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .6 - 10, drag:2, r:W * (.025 + R() * .03), grow:1.6, life:.6 + R() * .4, col:pick(R() < .55 ? CDARK : CFOG), al:.7}) }
+      if(R() < dt * 30 * bm.k){ const a = R() * TAU, v = 40 + R() * 80; pt(FX.pA, {k:'mote', x:P.px, y:P.py, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2.5, r:1 + R() * 1.5, life:.5, col:pick(CMOTE), al:.9}) } }
+    // fumo che esce dal bottone, ai piedi della mano
+    if(R() < dt * 20 * al){ pt(FX.pA, {k:'smoke', x:P.bx + (R() - .5) * W * .3, y:P.by - W * .04, vx:(R() - .5) * 20, vy:-10 - R() * 15, drag:1, r:W * (.02 + R() * .025), grow:1.5, life:.8 + R() * .5, col:pick(R() < .5 ? CDARK : CFOG), al:.4}) }
+    return true });
+  return h;
+}
+// pentacolo rovesciato con anello, stella disegnata tratto per tratto e glifi; p = quanto è disegnato (0..1), boost = lampo
+function pentacle(c, cx, cy, PR, W, p, GL, boost = 0, burn = false){
+  if(p <= 0) return; const o = {x:cx, y:cy};
+      c.save(); c.translate(o.x, o.y); c.scale(1, .82); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round'; c.lineJoin = 'round';
+      c.shadowColor = 'rgba(170,90,255,.9)'; c.shadowBlur = W * .045; c.strokeStyle = `rgba(${190 + 60 * boost | 0},${130 + 100 * boost | 0},255,${Math.min(1, .85 * Math.min(1, p * 1.5) + boost)})`; if(boost > 0) c.shadowBlur = W * (.045 + .08 * boost);
+      if(burn){ c.globalCompositeOperation = 'source-over'; c.strokeStyle = 'rgba(26,9,14,.9)'; c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = W * .012 }
+      const ring = clamp(p / .35), star = clamp((p - .3) / .45), gly = clamp((p - .6) / .4);
+      c.lineWidth = W * .016; c.beginPath(); c.arc(0, 0, PR, -PI / 2, -PI / 2 + TAU * ring); c.stroke();
+      c.lineWidth = W * .009; c.beginPath(); c.arc(0, 0, PR * .86, PI / 2, PI / 2 - TAU * ring, true); c.stroke();
+      // stella a cinque punte con la punta in basso, disegnata tratto per tratto
+      const P5 = [0, 1, 2, 3, 4].map(i => { const a = PI / 2 + i * TAU / 5; return [Math.cos(a) * PR * .86, Math.sin(a) * PR * .86] }), ord = [0, 2, 4, 1, 3, 0];
+      c.lineWidth = W * .013; c.beginPath(); c.moveTo(P5[0][0], P5[0][1]);
+      for(let i = 0; i < 5; i++){ const u = clamp(star * 5 - i); if(u <= 0) break; const A = P5[ord[i]], B = P5[ord[i + 1]]; c.lineTo(lerp(A[0], B[0], u), lerp(A[1], B[1], u)) } c.stroke();
+      // glifi sull'anello esterno
+      if(gly > 0){ c.lineWidth = W * .007; GL.forEach((g, i) => { const a = -PI / 2 + (i + .5) * TAU / 12, gx = Math.cos(a) * PR * .93, gy = Math.sin(a) * PR * .93, gs = W * .022, al2 = clamp(gly * 12 - i);
+        if(al2 <= 0) return; c.save(); c.globalAlpha = al2; c.translate(gx, gy); c.rotate(a + PI / 2); c.beginPath();
+        g.forEach(([x0, y0, x1, y1, arc]) => { if(arc){ c.moveTo(x0 * gs + gs * .4, y0 * gs); c.arc(x0 * gs, y0 * gs, gs * .4, 0, PI * (1 + Math.abs(x1))) } else { c.moveTo(x0 * gs, y0 * gs); c.lineTo(x1 * gs, y1 * gs) } }); c.stroke(); c.restore() }) }
+  c.restore();
+}
 TH.cripta = {
   name:'Cripta', sub:'Nero · demoni e oscurità', col:'#B784F2',
-  desc:'Il dardo di anime. Dove passa il fumo il tappeto di Bea si spegne. Da Federico il dardo si pianta e il buio si allarga dal centro: la luce del tappeto si spegne davvero, le venature pulsano come un cuore e a ogni battito il tappeto sussulta e i colori si sdoppiano, le anime escono a spirale, il tappeto avvizzisce e poi torna.',
+  desc:'La mano che prosciuga. Trascini e verso il dito corre un filo sottilissimo di particelle, con bollicine nere di varie misure e nuvole di fumo che si diramano. Al rilascio la mano scheletrica nasce dal bottone di Bea. Da Federico non cade nulla: il tappeto avvizzisce e ne esce un gruppetto di fumo, luci e anime, risucchiato verso Bea; poi un raggio di fumo e anime parte dal tappeto di Federico e arriva alla mano, che si accende di viola e si chiude. Il tappeto di Federico torna normale. Colpo grosso: sul tappeto di Federico si disegna un pentacolo rovesciato con i glifi, nuvole nere fanno una nebbia fitta, il teschio appare nella nebbia e colpisce, poi tutto svanisce a ritroso.',
+  bigName:'Colpo grosso: il teschio',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .8] : d.p, t = follow(d, tg[0], tg[1], dt);
-    d.dart = d.dart ?? (R() < .5 ? 'dart' : 'dart2');
-    const pts = wavyPath([hb.x, hb.y], [t.x, t.y], W * .04, T * 1.3), Lp = plen(pts), end = at(pts, Lp);
-    for(let i = 0; i <= 2; i++){ const p = at(pts, Lp * i / 2); lit('A', p[0], p[1], W * .45, [.75, .85, .55], -.9) }
-    lit('A', end[0], end[1], W * .25, [.6, .3, 1], .6);
-    along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .15 * (1 + .1 * Math.sin(T * 6)), 1, .95);
-    img(c, I('cripta', d.dart, 0), end[0], end[1], W * .45, end[2], 1, null, .95, .5);
-    d.so = d.so || spr(0, 200, 9); d.so.t = on ? 1 : 0; stepS(d.so, dt);
-    if(d.so.x > .02) for(let i = 0; i < 4; i++){ const a = T * 3 + i * TAU / 4, rx = tr.w * .5 * d.so.x, ry = tr.h * .6 * d.so.x; img(c, I('cripta', 'souls', i), tg[0] + Math.cos(a) * rx, tg[1] - tr.h * .3 + Math.sin(a) * ry, W * .1, a + PI / 2, Math.min(1, d.so.x) * .85) }
-    if(R() < dt * 22){ const s = R() * Lp, p = at(pts, s); pt(FX.pA, {k:'smoke', x:p[0], y:p[1], vx:(R() - .5) * 20, vy:-15 - R() * 25, r:W * (.035 + R() * .03), grow:1.6, life:.9, col:pick(['40,18,60', '90,50,130', '20,10,30']), al:.8}) }
+    const pts = wavyPath([hb.x, hb.y], [t.x, t.y], W * .03, T * .9), Lp = plen(pts);
+    // il filo: tante particelle piccolissime che scorrono verso il dito
+    c.save(); c.globalCompositeOperation = 'lighter';
+    for(let i = 0; i < 46; i++){ const u = (i / 46 + T * .35) % 1, p = at(pts, Lp * u), j = Math.sin(i * 12.9 + T * 3) * W * .006;
+      c.globalAlpha = .75 * Math.sin(PI * u) + .1; c.fillStyle = `rgb(${CMOTE[i % 3]})`; c.beginPath(); c.arc(p[0] + j, p[1] - j, .7 + (i % 4) * .25, 0, TAU); c.fill() }
+    c.restore();
+    d.bub = d.bub || []; drawBubbles(c, d.bub, dt);
+    if(R() < dt * 9){ const p = at(pts, Lp * (.1 + R() * .9)), big = R(), r = W * (big < .55 ? .006 + R() * .006 : big < .88 ? .013 + R() * .008 : .024 + R() * .01);
+      d.bub.push({x:p[0], y:p[1], vx:(R() - .5) * 30, vy:-8 - R() * 20, r, a:0, life:.9 + R() * .9, ph:R() * TAU}) }
+    if(R() < dt * 2.2){ const s = Lp * (.15 + R() * .8), p = at(pts, s), q = at(pts, Math.min(Lp, s + 4)), a0 = Math.atan2(q[1] - p[1], q[0] - p[0]) + sgn() * (.9 + R() * .8); branch('A', FX.pA, p[0], p[1], a0, W) }
+    if(R() < dt * 16){ const p = at(pts, R() * Lp); pt(FX.pA, {k:'smoke', x:p[0], y:p[1], vx:(R() - .5) * 14, vy:-6 - R() * 12, r:W * (.012 + R() * .018), grow:2, life:.8 + R() * .5, col:pick(CDARK), al:.35}) }
+    lit('A', t.x, t.y, W * .2, [.6, .3, 1], .35);
   },
   launch(d){
-    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ex = tr.x + tr.w / 2, p0 = d.tip ? [d.tip.x, d.tip.y] : d.p.slice(), im = I('cripta', d.dart || 'dart', 0);
-    SP.aHub.v -= 2.5;
-    add('A', function(c, dt){ this.a += dt; const k = this.a / .4; if(k > 1.25) return false; const kk = Math.min(1, k), x = lerp(p0[0], ex, eo(kk)), y = lerp(p0[1], -W * .3, ei(kk)), al = k > 1 ? 1 - (k - 1) / .25 : 1;
-      const pts = wavyPath([hb.x, hb.y], [x, y], W * .04 * (1 - kk), T), Lp = plen(pts), end = at(pts, Lp), from = Lp * ei(Math.max(0, k - .15) / .85);
-      along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .14, 1, .95 * al, false, from); img(c, im, end[0], end[1], W * .45, end[2], al, null, .95, .5, 1.2, .85, end[2]);
-      lit('A', hb.x, hb.y * .7, W * .8, [.75, .85, .55], -1 * al);
-      for(let i = 0; i < 4; i++){ const a = this.a * 14 + i * TAU / 4, rr = W * .07; img(c, I('cripta', 'souls', i), end[0] - Math.cos(end[2]) * W * .12 + Math.cos(a) * rr, end[1] - Math.sin(end[2]) * W * .12 + Math.sin(a) * rr, W * .09, end[2], al * .9) } return true });
-    return .45;
+    // le bollicine rimaste scoppiano piano; la mano nasce dal bottone
+    const bub = d.bub || []; if(bub.length) add('A', function(c, dt){ bub.forEach(b => { if(b.life - b.a > .4) b.life = b.a + .3 + R() * .3 }); drawBubbles(c, bub, dt); return bub.length > 0 });
+    summonHand();
+    return .35;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), im = I('cripta', R() < .5 ? 'dart' : 'dart2', 0);
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV);
     if(RM){ flash('#1A0A26', .6, 1); damage(); return }
-    const D = .42;
-    add('V2', function(c, dt){ this.a += dt; const k = this.a / D; if(k > 1.05) return false; const kk = Math.min(1, k), x = lerp(x0, o.x, kk), y = lerp(-W * .3, o.y, ei(kk));
-      const pts = wavyPath([x0, -W * .5], [x, y], W * .05 * (1 - kk * .6), T * 1.5), Lp = plen(pts), end = at(pts, Lp);
-      lit('V', end[0], Math.max(fb.y, end[1]), W * .6, [.75, .85, .55], -1.1);
-      along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .18, 1, .9); img(c, im, end[0], end[1], W * .55, end[2], 1, null, .95, .5, 1.15, .9, end[2]);
-      for(let i = 0; i < 4; i++){ const a = this.a * 14 + i * TAU / 4, rr = W * .08; img(c, I('cripta', 'souls', i), end[0] - Math.cos(end[2]) * W * .14 + Math.cos(a) * rr, end[1] - Math.sin(end[2]) * W * .14 + Math.sin(a) * rr, W * .1, end[2], .9) } return true });
-    after(D, () => {
-      impact(PI / 2, .95);
-      const v = I('cripta', R() < .5 ? 'vein' : 'vein2', 0), vr = R() * TAU, seed = R() * 9;
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; const al = x < 2.5 ? 1 : 1 - (x - 2.5) / .9, g = eo(x / 1.1) * (x < 2.5 ? 1 : 1 - ei((x - 2.5) / .9) * .5);
-        const beat = Math.pow(Math.max(0, Math.sin(x * 7)), 6), s = st('V');
-        reveal(c, v, o.x, o.y, W * 1.6, vr, al, g, seed);
-        if(beat > .01) reveal(c, v, o.x, o.y, W * 1.6, vr, al * beat * .7, g, seed, 'lighter');
-        // il buio: una luce «negativa» che si allarga e spegne il campo, con un cuore viola che pulsa al centro
-        lit('V', o.x, o.y, W * (.4 + 1.1 * g), [.8, .9, .6], -1.05 * al); lit('V', o.x, o.y, W * .35, [.7, .3, 1.2], (.5 + 1.2 * beat) * al);
-        s.chr = Math.max(s.chr, beat * 5 * al); if(beat > .5) wave('V', o.x, o.y, W * (.15 + .5 * (1 - beat)), 6 * beat * al, W * .06);
-        s.dark = Math.max(s.dark, .3 * env(x, .6, 1.9, .9));
-        if(this.lb !== undefined && beat > .9 && this.lb <= .9){ SP.vPunch.v -= .5; SP.vLife.v += .8 } this.lb = beat;
-        return true });
-      add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .95) return false; img(c, I('cripta', 'skull', 0), o.x, o.y - W * .04, W * .42 * eb(x / .3), Math.sin(x * 20) * .05 * (1 - x), x < .5 ? 1 : 1 - (x - .5) / .45); lit('V', o.x, o.y, W * .5, [.7, .3, 1.2], 1.4 * (1 - x)); return true });
-      for(let i = 0; i < 18; i++){ const a = R() * TAU, s = 40 + R() * 120; pt(FX.pV, {k:'smoke', x:o.x, y:o.y, vx:Math.cos(a) * s, vy:Math.sin(a) * s, drag:1.4, r:W * (.06 + R() * .05), grow:2, life:1.3 + R() * .7, col:pick(['30,12,48', '70,30,110', '15,6,25']), al:.85}) }
-      for(let i = 0; i < 7; i++){ const a = R() * TAU, s = 40 + R() * 60; FX.sV.push(sp({im:I('cripta', 'puffs'), x:o.x, y:o.y, vx:Math.cos(a) * s, vy:Math.sin(a) * s, drag:.8, w:W * (.16 + R() * .08), life:1.5, grow:.9, alpha:.85, rot:R() * TAU, spin:(R() - .5)})) }
-      for(let i = 0; i < 7; i++){ const a0 = i / 7 * TAU, dir = sgn();
-        add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.9) return false; if(x < 0) return true; const ang = a0 + dir * x * 3.2, r = W * (.05 + .34 * eo(x / 1.9)), px = o.x + Math.cos(ang) * r, py = o.y + Math.sin(ang) * r * .85;
-          img(c, I('cripta', 'souls', i), px, py, W * (.08 + .05 * x), ang + dir * PI / 2, env(x, .2, 1, .7) * .9); lit('V', px, py, W * .2, [.6, .4, 1], .5 * env(x, .2, 1, .7)); return true }, .1 + R() * .3) }
-      wither = {a:0}; damage();
-    });
+    const G0 = .35, G1 = 1.1, B0 = 1.05, B1 = 2.3, top = -W * .3, hv = hubBox(pV), bx = hv.x, by = hv.y;
+    // il tappeto avvizzisce: buio che si allarga, venature, colori spenti; poi torna normale e svanisce
+    const v = I('cripta', R() < .5 ? 'vein' : 'vein2', 0), vr = R() * TAU, seed = R() * 9, END = 3.4;
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const al = x < 2.4 ? 1 : 1 - (x - 2.4) / 1, g = eo(x / 1.2);
+      reveal(c, v, o.x, o.y, W * 1.6, vr, al * .7, g, seed);
+      lit('V', o.x, o.y, W * (.4 + 1.1 * g), [.8, .9, .6], -1 * al); st('V').dark = Math.max(st('V').dark, .25 * env(x, .8, 1.5, 1)); return true });
+    wither = {a:0}; damage();
+    // dal tappeto avvizzito nasce un gruppetto di fumo, luci e anime che sale e viene risucchiato verso chi attacca
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > G1) return false; if(x < G0) return true;
+      if(R() < dt * 30){ const a = R() * TAU, r = W * (.05 + R() * .2); pt(FX.pV, {k:'smoke', x:bx + Math.cos(a) * r, y:by + Math.sin(a) * r * .6, vx:-Math.cos(a) * 40, vy:-30 - R() * 40, drag:.8, r:W * (.03 + R() * .03), grow:1.4, life:.9, col:pick(R() < .6 ? CDARK : CFOG), al:.5}) }
+      if(R() < dt * 50){ const a = R() * TAU, r = W * R() * .3; pt(FX.pV2, {k:'mote', x:bx + Math.cos(a) * r, y:by + Math.sin(a) * r * .6, vx:-Math.cos(a) * r * .6, vy:-80 - R() * 120, g:-500, r:1 + R() * 1.6, life:1.2, col:pick(CMOTE), al:.85}) }
+      if(R() < dt * 6){ const a = R() * TAU, r = W * (.05 + R() * .2), px = bx + Math.cos(a) * r, py = by + Math.sin(a) * r * .6; FX.sV2.push(sp({im:I('cripta', 'souls'), x:px, y:py, vx:(bx - px) * .8, vy:-60, g:-600, rot:-PI / 2, w:W * (.045 + R() * .025), life:1.1, fin:.25, fout:.3, alpha:.85})) }
+      return true });
+    // il raggio parte dal tappeto colpito verso l'alto
+    add('V2', function(c, dt){ this.a += dt; const x = this.a - B0; if(x > B1 - B0 + .3) return false; if(x < 0) return true;
+      const head = eo(x / .25), wk = x < B1 - B0 ? 1 : 1 - ei((x - (B1 - B0)) / .3), w = W * .15 * wk, hy = lerp(by, top, head), tail = x < B1 - B0 ? by : lerp(by, top, ei((x - (B1 - B0)) / .3));
+      soulJet(c, bx, tail, bx, hy, w, T, Math.min(1, wk * 2)); soulMotes(FX.pV2, bx, tail, bx, hy, w, dt, wk);
+      glow(c, bx, by, W * .16, '150,70,240', .5 * wk); lit('V', bx, by, W * .5, [.6, .25, 1.1], .7 * wk);
+      // base del raggio: nubi intense e particelle sul bottone, che coprono l'inizio del raggio
+      if(x < B1 - B0){ if(R() < dt * 45){ const a = R() * TAU, v = 20 + R() * 70; pt(FX.pV2, {k:'smoke', x:bx + Math.cos(a) * W * .06, y:by + Math.sin(a) * W * .025, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .5 - 15, drag:1.8, r:W * (.035 + R() * .035), grow:1.6, life:.7 + R() * .4, col:pick(R() < .6 ? CDARK : CFOG), al:.75}) }
+        if(R() < dt * 40){ const a = R() * TAU, v = 50 + R() * 100; pt(FX.pV2, {k:'mote', x:bx + Math.cos(a) * W * .05, y:by, vx:Math.cos(a) * v, vy:-40 - R() * 120, drag:1.5, r:1 + R() * 1.6, life:.6, col:pick(CMOTE), al:.9}) } }
+      return true });
+    // da chi attacca: prima arriva il gruppetto di anime, poi il raggio scende dall'alto fino alla mano
+    const h = summonHand(); h.hold = Math.max(h.hold, h.a + B1 + 1.4);
+    const Wa = pA.clientWidth;
+    after(G0 + .5, () => { for(let i = 0; i < 5; i++){ const P = handPos(), sx = P.x + (R() - .5) * Wa * .4, du = .5 + R() * .3;
+      FX.sA.push(sp({im:I('cripta', 'souls'), x:sx, y:-Wa * .05, vx:(P.x - sx) / du, vy:(P.y - Wa * .05 + Wa * .05) / du, rot:PI / 2, w:Wa * (.045 + R() * .025), life:du, grow:-.5, fin:.2, fout:.3, alpha:.85, delay:R() * .4}));
+      for(let j = 0; j < 6; j++) pt(FX.pA, {k:'mote', x:sx + (R() - .5) * Wa * .1, y:-Wa * .02, vx:(P.x - sx) / du, vy:(P.y - Wa * .05) / du, r:1 + R() * 1.4, life:du, col:pick(CMOTE), al:.85, delay:R() * .4}) } h.halo = Math.max(h.halo, .3) });
+    add('A', function(c, dt){ this.a += dt; const x = this.a - B0 - .2; if(x > B1 - B0 + .3){ h.beam = null; return false } if(x < 0) return true; const P = handPos();
+      const head = eo(x / .3), wk = x < B1 - B0 ? 1 : 1 - ei((x - (B1 - B0)) / .3), w = Wa * .15 * wk, ty = P.py, sy = x < B1 - B0 ? -Wa * .3 : lerp(-Wa * .3, ty, ei((x - (B1 - B0)) / .3)), hy = lerp(-Wa * .3, ty, head);
+      h.beam = {on:true, sy, hy, w, al:Math.min(1, wk * 2), k:head > .9 ? wk : 0}; soulMotes(FX.pA, P.px, sy, P.px, hy, w, dt, wk);
+      if(head > .95){ h.halo = Math.min(1, h.halo + dt * 1.2);
+        if(R() < dt * 10 * wk){ const sx = P.px + (R() - .5) * w, sy2 = ty - Wa * .12, du = .25 + R() * .1; FX.sA.push(sp({im:I('cripta', 'souls'), x:sx, y:sy2, vx:(P.px - sx) / du, vy:(ty - sy2) / du, w:Wa * (.035 + R() * .02), life:du, rot:PI / 2, grow:-.7, fin:.2, fout:.3, alpha:.9})) } }
+      return true });
+    after(B1 + .4, () => { h.clench = 1; SP.aHub.v -= 1.2; if(navigator.vibrate) try{ navigator.vibrate(30) }catch(e){} const P = handPos(); for(let i = 0; i < 16; i++){ const a = R() * TAU, v = 60 + R() * 100; pt(FX.pA, {k:'mote', x:P.px, y:P.py, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2, r:1.2 + R() * 1.8, life:.6, col:'210,170,255', al:.9}) } });
+    after(B1 + 1.1, () => { h.halo = Math.max(0, h.halo - .5) });
+  },
+  big(){
+    // il teschio: pentacolo rovesciato con i glifi sul tappeto, nuvole nere e nebbia fitta, il teschio appare nella nebbia e colpisce; poi tutto a ritroso
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), hv = hubBox(pV), o = {x:hv.x, y:hv.y}, sk = I('cripta', 'skull', 0);
+    if(RM){ flash('#1A0A26', .8, 1.2); damage(8); return }
+    const PR = W * .38, seed = R() * 1000, rnd = (i => { let s = seed + i * 97.3; return () => (s = (s * 9301 + 49297) % 233280) / 233280 });
+    // glifi: segni astratti inventati (niente lettere vere), uno per posto sull'anello
+    const GL = Array.from({length:12}, (_, i) => { const r = rnd(i), n = 2 + (r() * 3 | 0); return Array.from({length:n}, () => [r() * 2 - 1, r() * 2 - 1, r() * 2 - 1, r() * 2 - 1, r() < .3]) });
+    // tempi: a = andata, poi tutto a ritroso
+    const PEN = [0, 1.3, 5.2, 6.2], CLOUD = [.9, 2.2, 4.3, 5.4], SKULL = [2.2, 3.1, 3.7, 4.5], HIT = 3.1, END = 6.3;
+    const ph = (x, q) => x < q[0] ? 0 : x < q[1] ? (x - q[0]) / (q[1] - q[0]) : x < q[2] ? 1 : x < q[3] ? 1 - (x - q[2]) / (q[3] - q[2]) : 0;
+    // il pentacolo sul tappeto (si deforma e si scurisce con lui)
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const p = ph(x, PEN), s = st('V');
+      s.with = Math.max(s.with, ph(x, CLOUD)); s.dark = Math.max(s.dark, .35 * ph(x, CLOUD));
+      lit('V', o.x, o.y, W * 1.2, [.8, .9, .6], -1.1 * ph(x, CLOUD)); lit('V', o.x, o.y, PR * 1.3, [.6, .25, 1.1], .8 * p * (.85 + .15 * Math.sin(x * 6)));
+      pentacle(c, o.x, o.y, PR, W, p, GL);
+      return true });
+    // nuvole nere che arrivano dai bordi e fanno nebbia fitta; dentro il teschio; la nebbia resta davanti all'elemento centrale ma sotto il numero
+    const BF = Array.from({length:16}, (_, i) => { const face = i < 3; return {a:face ? PI / 2 + (R() - .5) * 2 : R() * TAU, r:face ? .05 + R() * .15 : .38 + R() * .2, s:face ? .22 + R() * .1 : .3 + R() * .2, al:face ? .4 : .85, col:pick(['12,5,20', '22,10,34', '8,3,14']), sp:(R() - .5) * .25, ph:R() * TAU} });
+    const BL = Array.from({length:22}, (_, i) => { const a = R() * TAU, r = .25 + R() * .55; return {a, r, s:W * (.25 + R() * .25), col:i % 4 ? pick(['12,5,20', '22,10,34', '8,3,14']) : pick(CDARK), sp:(R() - .5) * .3, ph:R() * TAU} });
+    add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const f = ph(x, CLOUD), f2 = f * f * (3 - 2 * f);
+      if(f > 0){ c.save(); c.beginPath(); c.roundRect ? c.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : c.rect(fb.x, fb.y, fb.w, fb.h); c.clip(); BL.forEach(b => { const rr = b.r * (1.9 - .9 * f2), a = b.a + b.sp * x, bx = o.x + Math.cos(a) * W * rr, by = o.y + Math.sin(a) * W * rr * 1.1 + Math.sin(x + b.ph) * W * .02, s = b.s * (1 + .4 * f2);
+        c.globalAlpha = Math.min(1, f2 * 1.6); c.drawImage(smk(b.col), bx - s, by - s, s * 2, s * 2) });
+        const g = c.createRadialGradient(o.x, o.y - W * .1, 0, o.x, o.y - W * .1, W * .9); g.addColorStop(0, `rgba(6,2,10,${.6 * f2})`); g.addColorStop(1, `rgba(6,2,10,${.25 * f2})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore() }
+      const sv = ph(x, SKULL); if(sv > 0){ const grow = x < HIT ? eo((x - SKULL[0]) / (HIT - SKULL[0])) : 1 + .08 * eo((x - HIT) / .3), y = o.y - W * .06, sz = W * (.38 + .2 * grow), rot = Math.sin(x * 1.7) * .03, skh = sz * 360 / 270;
+        img(c, sk, o.x, y, sz, rot, sv * .95); lit('V', o.x, y, W * .6, [.6, .25, 1.1], 1.2 * sv);
+        // gli occhi si accendono di viola quando colpisce
+        const ey = env(x - HIT, .08, .5, .7); if(ey > 0) [[.37, .538], [.636, .538]].forEach(([u, v]) => { const dx = (u - .5) * sz, dy = (v - .5) * skh, ex = o.x + dx * Math.cos(rot) - dy * Math.sin(rot), eyy = y + dx * Math.sin(rot) + dy * Math.cos(rot); glow(c, ex, eyy, sz * .22, '170,80,255', ey); glow(c, ex, eyy, sz * .07, '255,230,255', ey * .9) });
+        // nebbia davanti: tanta sulle fiamme ai lati, poca sul volto
+        c.save(); BF.forEach(b => { const a = b.a + b.sp * x, bx = o.x + Math.cos(a) * sz * b.r, bby = y + Math.sin(a) * skh * b.r * .6 + Math.sin(x * .8 + b.ph) * W * .01, s2 = sz * b.s;
+          c.globalAlpha = Math.min(1, ph(x, CLOUD) * b.al); c.drawImage(smk(b.col), bx - s2, bby - s2, s2 * 2, s2 * 2) }); c.restore();
+        // fumo nella nebbia, davanti al teschio
+        if(R() < dt * 10 * sv){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * sz * .4, y:y + sz * .3, vx:Math.cos(a) * 20, vy:-8, r:W * (.05 + R() * .04), grow:1.6, life:1.2, col:pick(CDARK), al:.4}) } }
+      return true });
+    // il pentacolo compare anche sul mio bottone, insieme a quello di Federico (rito); al colpo il mio brilla,
+    // poi resta l'impronta bruciata con due fumetti di nebbia che salgono e svanisce
+    const tips = sgn() > 0 ? [2, 4] : [1, 3];
+    add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > HIT + 2.8) return false; const Wa = pA.clientWidth, ha = hubBox(pA), PRa = Wa * .38;
+      const p = ph(Math.min(x, PEN[1]), PEN), fl = x < HIT ? 0 : Math.exp(-(x - HIT) * 5), out = x < HIT + .35 ? 1 : 1 - clamp((x - HIT - .35) / .8), bm = x < HIT ? 0 : Math.min(1, (x - HIT) / .2) * (1 - clamp((x - HIT - .9) / 1.8));
+      const pw = ha.w * .96, phh = ha.w * .3; c.save(); c.beginPath(); c.rect(0, 0, Wa, pA.clientHeight); c.rect(ha.x - pw / 2, ha.y - phh / 2, pw, phh); c.clip('evenodd');
+      if(bm > 0){ c.globalAlpha = bm; pentacle(c, ha.x, ha.y, PRa, Wa, 1, GL, 0, true) }
+      if(out > 0){ c.globalAlpha = out; pentacle(c, ha.x, ha.y, PRa, Wa, p, GL, fl) }
+      c.restore();
+      if(fl > .02) glow(c, ha.x, ha.y, Wa * .55, '170,80,255', .8 * fl);
+      lit('A', ha.x, ha.y, Wa * .7, [.6, .25, 1.1], (.5 * p + 1.6 * fl) * out);
+      // due fumetti di nebbia dalle punte della stella, come una bruciatura
+      if(x > HIT && x < HIT + 1.8) tips.forEach((t, j) => { const ang = PI / 2 + t * TAU / 5, tx = ha.x + Math.cos(ang) * PRa * .86, ty = ha.y + Math.sin(ang) * PRa * .86 * .82, k = 1 - (x - HIT) / 1.8;
+        if(R() < dt * 55 * k){ pt(FX.pA, {k:'smoke', x:tx + (R() - .5) * Wa * .012, y:ty, vx:(j ? 1 : -1) * (5 + R() * 8) + Math.sin(x * 4 + j * 2) * 14, vy:-35 - R() * 25, drag:.3, r:Wa * (.01 + R() * .01), grow:3.2, life:1.4 + R() * .6, col:pick(['70,62,72', '48,40,52', '96,86,100']), al:.35 * k}) }
+        if(R() < dt * 10 * k) pt(FX.pA, {k:'mote', x:tx, y:ty, vx:(R() - .5) * 30, vy:-30 - R() * 40, r:1 + R(), life:.6, col:'255,170,120', al:.8}) });
+      return true });
+    after(HIT, () => { SP.aHub.v -= 1.5 });
+    after(HIT, () => { SP.vPunch.v -= .8; SP.vLife.v += 1.6; flash('rgba(40,10,70,1)', .45, .9); st('V').chr = 4; damage(8) });
   }
 };
 
@@ -1196,8 +1346,8 @@ document.getElementById('slow').addEventListener('change', e => slow = e.target.
 const NOTES = {
   santuario:'Immagini: scia di luce dorata, sfera dorata, aureola, nuvole dorate (tagliate in due), esplosione di luce, piume, spada celeste (colpo grosso). Il tappeto: luce d\'oro vera, onde d\'urto, buio prima della spada, fenditure di luce.',
   mox:'Immagini: sfera a orologeria, sfera che esplode, le due crepe, schegge, pezzi meccanici, impatto ciano e oro. Il tappeto: luce ciano a ogni tic, lampo bianco che vira all\'arancio, il tappeto che si rompe in pezzi spostati e si ricompone.',
-  abisso:'Immagini: quattro onde, fascia d\'acqua, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il tappeto: luce azzurra, il tappeto che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel tappeto.',
-  cripta:'Immagini: due dardi, scia di fumo, anime, vortici, due venature, teschio. Il tappeto: il buio vero che si allarga, il cuore viola che pulsa, sussulto e colori sdoppiati a ogni battito, avvizzimento.',
+  abisso:'Immagini: gorgo, getto a spirale, spruzzi, bolle, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il tappeto: luce azzurra, il tappeto che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel tappeto.',
+  cripta:'Immagini: mano scheletrica, scia di fumo (il raggio), anime, due venature, teschio. A codice: il filo di particelle, le bollicine nere, le nuvole che si diramano, il pentacolo con i glifi, la nebbia. Il tappeto: avvizzisce e torna, nessuna onda; nel colpo grosso si spegne sotto la nebbia.',
   forgia:'Immagini: tre bruciature, schegge di roccia lavica, braci, archi elettrici; goblin e bomba. Il tappeto: lampi blu del fulmine, la bruciatura che scalda il tappeto da bianco a rosso, l\'aria che trema per il calore, ogni scossa e ogni scheggia che illumina.',
   selva:'Immagini: liane intrecciate e viticcio, zolle, foglie. Il tappeto: la spirale che passa davanti e dietro, il tappeto che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
 };
