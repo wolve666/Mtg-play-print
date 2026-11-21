@@ -113,11 +113,12 @@ Game asset for a mobile fantasy companion app, theme "Santuario" (holy light, an
 
 ---
 
-## Officina (Incolore) · artefatti e macchine  *(nome proposto)*
+## Mox (Incolore) · artefatti e macchine
+Nome deciso da Federico il 21 novembre (prima «Officina»). Dettaglio completo, blocco base aggiornato e richieste del colpo (bomba a orologeria senza miccia, bomba che si apre, due crepe, schegge, pezzi meccanici) in `grafica/mox/STILE.md`: **usare quelle**, le righe qui sotto sono il primo abbozzo.
 Colpo deciso: una bomba; arriva sul campo, esplode e lo schermo si frantuma (crepe e schegge che cadono), poi torna intero. Fumo e lampo li faccio io; le immagini danno bomba, crepe, schegge, ingranaggi.
 **Blocco base**
 ```
-Game asset for a mobile fantasy companion app, theme "Officina" (colorless artifacts, ancient clockwork machines). Painterly-realistic fantasy style with rich mechanical detail; not cartoon, not a photo. Materials: brushed steel, old brass, copper pipes, glass lenses, gears, rivets, faint white-blue glowing cores. Palette: steel grey, brass, copper, graphite, pale cyan glow. Soft light from the top-left. Fully transparent background (real PNG alpha, no checkerboard), the whole subject visible with a small empty margin, not cropped. No text, no logos, no symbols, no cast shadow. Same style and lighting as the previous images.
+Game asset for a mobile fantasy companion app, theme "Mox" (colorless artifacts, ancient clockwork machines). Painterly-realistic fantasy style with rich mechanical detail; not cartoon, not a photo. Materials: brushed steel, old brass, copper pipes, glass lenses, gears, rivets, faint white-blue glowing cores. Palette: steel grey, brass, copper, graphite, pale cyan glow. Soft light from the top-left. Fully transparent background (real PNG alpha, no checkerboard), the whole subject visible with a small empty margin, not cropped. No text, no logos, no symbols, no cast shadow. Same style and lighting as the previous images.
 ```
 1. **Bomba** (il colpo), 1024×1024: `A round clockwork bomb seen from slightly above: brass and steel shell, rivets, small gears, a glowing pale-cyan core visible through a glass window, a short fuse sparking.`
 2. **Crepe del vetro** (lo schermo si frantuma), 1080×2400: `Seen from directly above: a shattered glass crack pattern radiating from the center, thin bright crack lines with small chipped areas, everything else fully transparent.`

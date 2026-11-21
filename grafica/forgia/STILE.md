@@ -25,7 +25,7 @@ Il fulmine che passa da un telefono all'altro resta com'è (approvato). Cambia q
 
 **Colpo grosso** (5 punti persi di fila): il **fuoco del drago** (deciso il 21 novembre). Il campo si scurisce e passa l'**ombra delle ali** di un drago; dall'alto arriva un **getto di fiamme** che spazza il campo in diagonale; dove passa si apre la **crepa di lava**, che si raffredda piano e scompare. Il drago non si vede mai intero: ombra e fuoco fanno più paura e costano meno al telefono. In alternanza, se piace, il **martello** che cala sul campo e apre la stessa crepa.
 
-Niente zampate in Forgia (sono della Selva). La bomba del goblin è rozza, tonda, con la miccia: la bomba dell'Officina (Incolore) dovrà essere diversa, meccanica, a ingranaggi.
+Niente zampate in Forgia (sono della Selva). La bomba del goblin è rozza, tonda, con la miccia: la bomba di Mox (Incolore) dovrà essere diversa, meccanica, a ingranaggi.
 
 Bagliori, raffreddamento (cambio di colore), tremolio, scintille, miccia, fiamme che avanzano e fulmini li faccio io a codice; le immagini danno la materia. Goblin e drago sono generici: nessun personaggio preso dalle carte di Magic.
 
