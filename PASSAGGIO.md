@@ -1,7 +1,7 @@
 # Passaggio a una nuova chat
 
 Documento per riprendere il lavoro in una sessione nuova senza rileggere la chat precedente.
-Aggiornato al 21 novembre 2026. Leggere anche `V2.md` (decisioni e storia della V2) e `README.md` (registro delle modifiche e compilazione).
+Aggiornato al 21 novembre 2026 (sera). Leggere anche `V2.md` (decisioni e storia della V2) e `README.md` (registro delle modifiche e compilazione).
 
 ## Chi e come
 - Progetto di **Federico** (E-Duck Garage): **Magic Play&Print**, segnapunti per Magic: The Gathering con stampa delle pedine su stampantina termica Bluetooth da 58 mm. App Android (Capacitor 8).
@@ -60,3 +60,10 @@ Da fare / aperto:
 - Gioco su un telefono, trovato nella prova sugli schermi ma non toccato (decide Federico): con 6 giocatori il pannello personale ha tasti piccoli sugli schermi fino a 393; interruttori del menu e pallini dei dadi sotto i 32 px.
 - Prova al tavolo con più di 2 telefoni (fatta solo con principale + un ospite).
 - Federico deve rendere privato il repository del codice.
+
+## Aggiornamento 21 novembre 2026 (sera): temi con immagini vere
+- **Forgia**: il danno è un fulmine (cuore blu, aloni bianchi) che esplode sul telefono di chi è colpito (messaggio `zap`); prove `prove/fulmine.js`, `prove/fulmine-host.js`. Approvato da Federico.
+- **Selva** (Verde): nel ramo c'è un'anteprima (commit «Selva, il tema del Verde») che Federico ha giudicato non convincente (carattere Fraunces bocciato, radici disegnate a codice poco materiche). Decisioni nuove in `V2.md` («Selva, seconda strada»): Barlow Condensed, pagina iniziale con lucciole e foglie, elemento centrale rettangolare («Lastra del druido»), colpo = lancio della liana (trascinamento, frusta, liane che avvolgono il campo colpito, radici dal centro).
+- **Nuovo metodo**: le parti materiche le disegna ChatGPT come PNG trasparenti, io le animo. Richieste per **tutti i temi** in `grafica/PROMPT-TEMI.md`; Selva in dettaglio in `grafica/selva/STILE.md`; immagini arrivate in `grafica/selva/` (tre radici spinose, originali e WebP).
+- Prove grafiche come pagine pubblicate (artifact) fuori dal repository: «Anteprima Selva» e «Prova radici Selva» (lancio della liana). I sorgenti sono in `grafica/prove/` (pagine complete, immagini incluse).
+- **In pausa** (chiesto da Federico): compilazione e lavoro nell'app. Si riprende quando arrivano le immagini.
