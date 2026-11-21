@@ -80,7 +80,7 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
   <div class="intro">
     <span class="lbl">Magic Play&amp;Print · V2 prerelease</span>
     <h1>I colpi dei temi, con le immagini vere</h1>
-    <p>Scegli il tema, poi trascina dall'elemento centrale di Bea fino al quadratino di Federico in alto e lascia. Oppure tocca «Guarda il colpo». Terza versione: il campo è una superficie viva disegnata dalla scheda grafica. I colpi lo illuminano (o lo spengono), le onde d'urto lo piegano, l'acqua lo increspa, il calore lo fa tremolare, Mox lo rompe in pezzi, la Selva lo stritola. Le macchie a terra fanno parte del campo e si deformano con lui.</p>
+    <p>Scegli il tema, poi trascina dall'elemento centrale di Bea fino al quadratino di Federico in alto e lascia. Oppure tocca «Guarda il colpo». Terza versione: il tappeto è una superficie viva disegnata dalla scheda grafica. I colpi lo illuminano (o lo spengono), le onde d'urto lo piegano, l'acqua lo increspa, il calore lo fa tremolare, Mox lo rompe in pezzi, la Selva lo stritola. Le macchie a terra fanno parte del tappeto e si deformano con lui.</p>
   </div>
   <section aria-labelledby="tsel">
     <span class="lbl" id="tsel">Tema</span>
@@ -93,7 +93,7 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
     <div class="row">
       <button class="btn" id="goLaunch">Guarda il colpo</button>
       <button class="btn alt" id="goHit">Solo l'arrivo</button>
-      <button class="btn alt" id="goBig" hidden>Colpo grosso: la spada</button>
+      <button class="btn alt" id="goBig" hidden>Colpo grosso</button>
       <button class="btn alt" id="goGob" hidden>Sorpresa: il goblin</button>
       <label class="chk"><input type="checkbox" id="slow"> Al rallentatore</label>
     </div>
@@ -524,6 +524,7 @@ TH.santuario = {
       impact(PI / 2, .75); damage();
     });
   },
+  bigName:'Colpo grosso: la spada',
   // colpo grosso: la spada celeste cala, si conficca nel terreno e ci resta piantata
   big(){
     const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), swd = I('santuario', 'sword', 0), yC = fb.y + W * .02;
@@ -634,7 +635,7 @@ function moxBlast(e, W, H){
 }
 TH.mox = {
   name:'Mox', sub:'Incolore · artefatti e macchine', col:'#9FE7F0',
-  desc:'Bomba a orologeria. Trascinando, dal centro del bottone spunta un cannoncino di ottone che ruota verso il dito; traiettoria a puntini e mirino. Al rilascio fa fuoco (rinculo, vampata, fumo) e la bomba vola ad arco rimpicciolendo in prospettiva. Da Federico cade come capita, rimbalza e rotola come metallo pesante, il nucleo lampeggia sempre più veloce ed esplode quando vuole lei: anche a mezz\'aria o mentre rotola. Poi il campo si rompe e si ricompone.',
+  desc:'Bomba a orologeria. Trascinando, dal centro del bottone spunta un cannoncino di ottone che ruota verso il dito; traiettoria a puntini e mirino. Al rilascio fa fuoco (rinculo, vampata, fumo) e la bomba vola ad arco rimpicciolendo in prospettiva. Da Federico cade come capita, rimbalza e rotola come metallo pesante, il nucleo lampeggia sempre più veloce ed esplode quando vuole lei: anche a mezz\'aria o mentre rotola. Poi il tappeto si rompe e si ricompone.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p;
     d.cs = d.cs || spr(0, 240, 9); d.cs.t = 1; stepS(d.cs, dt);
@@ -697,6 +698,53 @@ TH.mox = {
       glow(c, B.x, B.y - B.z, W * .2, '170,250,255', bk); lit('V', B.x, B.y, W * .7, [.5, 1, 1.1], .3 + 2 * bk);
       if(B.boom != null && x >= B.boom){ moxBlast({x:B.x, y:B.y - B.z * .6}, W, H); return false }
       return true });
+  },
+  bigName:'Colpo grosso: il pugno',
+  // colpo grosso: il pugno del colosso cala dall'alto (si avvicina al tappeto, quindi rimpicciolisce), sfonda il tappeto e si spacca in pezzi
+  big(){
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), fist = I('mox', 'fist', 0), D = .7, FW = W * .62;
+    if(RM){ flash('#EFFFFF', .95, 1); damage(8); return }
+    // 1. arriva: l'ombra si allarga e si fa scura, il tappeto trema sempre di più, il pugno scende accelerando
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > D) return false; const k = ei(x / D);
+      const g = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, FW * (1.4 - .8 * k)); g.addColorStop(0, `rgba(0,0,0,${.15 + .55 * k})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(o.x, o.y + W * .05, FW * (1.4 - .8 * k), FW * (1 - .6 * k), 0, 0, TAU); c.fill();
+      st('V').dark = Math.max(st('V').dark, .35 * k); if(R() < dt * 30 * k){ SP.vJx.v += (R() - .5) * 60 * k; SP.vJy.v += (R() - .5) * 60 * k }
+      lit('V', o.x, o.y, W * .5, [.5, 1, 1.1], .4 * k * (.6 + .4 * Math.sin(x * 30))); return true });
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > D) return false; const k = ei(x / D), sc = lerp(3.2, 1, k);
+      img(c, fist, o.x, o.y - W * .1 * (1 - k), FW * sc, .25 * (1 - k), Math.min(1, x / .15)); glow(c, o.x, o.y, W * .25 * sc, '160,250,255', .35 * k); return true });
+    after(D, () => {
+      // 2. impatto: il tappeto sfonda (rottura in pezzi più forte del colpo normale), onde d'urto, cratere, polvere
+      impact(PI / 2, 2.4); SP.vPunch.v -= 2.2; flash('#FFFFFF', .9, .25, true); flash('#E8FFFF', .5, 1.2);
+      if(navigator.vibrate) try{ navigator.vibrate([90, 30, 60, 30, 120]) }catch(e){}
+      const cr = I('mox', R() < .5 ? 'crack' : 'crack2', 0), rot = R() * TAU, seed = R() * 9, sseed = R() * 50;
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false; const g = x < 2.2 ? eo(x / .12) : 1 - ei((x - 2.2) / 1), s = st('V');
+        s.sh[0] = o.x; s.sh[1] = o.y; s.sh[2] = g * (x < .2 ? 2.2 : 1.5); s.sh[3] = sseed;
+        const cg = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, W * .45); cg.addColorStop(0, `rgba(8,10,12,${.75 * g})`); cg.addColorStop(.6, `rgba(8,10,12,${.35 * g})`); cg.addColorStop(1, 'rgba(8,10,12,0)'); c.fillStyle = cg; c.beginPath(); c.ellipse(o.x, o.y, W * .45, W * .32, 0, 0, TAU); c.fill();
+        reveal(c, cr, o.x, o.y, W * 1.5, rot, g, g, seed);
+        lit('V', o.x, o.y, W * 1.2, lerp3([.9, 1.1, 1.2], [1.1, .6, .25], clamp(x / .6)), 3.4 * Math.exp(-x * 1.8)); return true });
+      [0, .1, .24].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const k = this.a / 1.2; if(k > 1) return false; if(k < 0) return true; wave('V', o.x, o.y, W * (.1 + 1.4 * eo(k)), 26 * (1 - k) / (i + 1), W * .1); return true }, dl));
+      for(let i = 0; i < 20; i++){ const a = i / 20 * TAU + R() * .2; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * W * .2, y:o.y + Math.sin(a) * W * .14, vx:Math.cos(a) * (120 + R() * 120), vy:Math.sin(a) * (80 + R() * 80), drag:1.7, r:W * (.07 + R() * .05), grow:2.4, life:1.6 + R() * .6, col:'95,98,104', al:.75}) }
+      for(let i = 0; i < 70; i++){ const a = R() * TAU, v = 250 + R() * 750; pt(FX.pV2, {k:'spark', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 400, gz:1400, rest:.3, drag:2, life:.6 + R() * .7, r:1.2 + R() * 1.6, col:R() < .5 ? '170,250,255' : '255,210,120'}) }
+      // 3. il pugno si spacca: frammenti ritagliati dalla sua stessa immagine volano via, con ombra, e ricadono; con loro ingranaggi, molle e viti
+      if(ok(fist)){ const fh = FW * ih(fist) / iw(fist), N = 11, frs = [];
+        for(let i = 0; i < N; i++){ const a0 = i / N * TAU + R() * .2, a1 = (i + 1) / N * TAU + R() * .2, r0 = FW * (.08 + R() * .08), r1 = FW * .9;
+          const poly = [[Math.cos(a0) * r0, Math.sin(a0) * r0], [Math.cos(a0) * r1, Math.sin(a0) * r1], [Math.cos((a0 + a1) / 2) * r1 * 1.1, Math.sin((a0 + a1) / 2) * r1 * 1.1], [Math.cos(a1) * r1, Math.sin(a1) * r1], [Math.cos(a1) * r0, Math.sin(a1) * r0]];
+          const cx = poly.reduce((s, p) => s + p[0], 0) / 5 * .55, cy = poly.reduce((s, p) => s + p[1], 0) / 5 * .55, am = Math.atan2(cy, cx), v = 220 + R() * 380;
+          frs.push({poly:poly.map(p => [p[0] - cx, p[1] - cy]), ox:-cx, oy:-cy, x:o.x + cx, y:o.y + cy, z:0, vx:Math.cos(am) * v, vy:Math.sin(am) * v * .8, vz:250 + R() * 450, rot:0, spin:(R() - .5) * 10, a:0}) }
+        frs.push({poly:Array.from({length:8}, (_, j) => [Math.cos(j / 8 * TAU) * FW * .14, Math.sin(j / 8 * TAU) * FW * .14]), ox:0, oy:0, x:o.x, y:o.y, z:0, vx:(R() - .5) * 60, vy:(R() - .5) * 60, vz:500, rot:0, spin:(R() - .5) * 6, a:0});
+        add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 2) return false; const al = x < 1.5 ? 1 : 1 - (x - 1.5) / .5;
+          frs.forEach(f => { f.vz -= 1500 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += f.vz * dt; f.rot += f.spin * dt;
+            if(f.z < 0){ f.z = 0; if(f.vz < -80){ f.vz = -f.vz * .3; f.vx *= .55; f.vy *= .55; f.spin *= .5 } else { f.vz = 0; f.vx *= Math.exp(-6 * dt); f.vy *= Math.exp(-6 * dt); f.spin *= Math.exp(-6 * dt) } }
+            const s = 1 + f.z / 300;
+            c.save(); c.globalAlpha = .3 * al; c.fillStyle = '#000'; c.translate(f.x + f.z * .15, f.y + W * .03); c.rotate(f.rot); c.scale(s * .9, s * .9); c.beginPath(); f.poly.forEach((p, j) => j ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.fill(); c.restore();
+            c.save(); c.globalAlpha = al; c.translate(f.x, f.y - f.z); c.rotate(f.rot); c.scale(s, s); c.beginPath(); f.poly.forEach((p, j) => j ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.clip();
+            c.drawImage(fist, f.ox - FW / 2, f.oy - fh / 2, FW, fh);
+            // bordo spezzato che brilla di ciano: dentro il pugno c'è il cristallo
+            c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(160,250,255,${.8 * Math.max(0, 1 - x / .8)})`; c.lineWidth = 3; c.stroke(); c.restore() });
+          return true });
+        for(let i = 0; i < 26; i++){ const a = R() * TAU, v = 180 + R() * 420; FX.sV2.push(sp({im:I('mox', 'parts'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:300 + R() * 450, gz:1300, rest:.4, drag:.5, w:W * (.05 + R() * .06), life:1.9 + R() * .4, spin:(R() - .5) * 20, sh:1, fout:.25})) }
+      }
+      damage(8);
+    });
   }
 };
 
@@ -705,7 +753,7 @@ function wavyPath(a, b, amp, t, n = 32){ const dx = b[0] - a[0], dy = b[1] - a[1
   for(let i = 0; i <= n; i++){ const u = i / n, o = (Math.sin(u * PI * 2.2 - t * 6) * amp + Math.sin(u * PI) * amp * .9) * Math.sin(PI * u); pts.push([a[0] + dx * u + nx * o, a[1] + dy * u + ny * o]) } return prep(pts) }
 TH.abisso = {
   name:'Abisso', sub:'Blu · acqua e onde', col:'#5CC8F2',
-  desc:'L\'onda. Il getto d\'acqua ondeggia e spruzza gocce vere, e la sua luce azzurra scorre sul campo di Bea. Da Federico arriva l\'ombra, poi l\'onda si abbatte: il campo stesso si increspa a cerchi che si allargano (tutto quello che c\'è sopra ondeggia con lui), con riflessi di luce sulle creste; corona di gocce, schiuma che si spande, velo d\'acqua che scola e gocce che scivolano sul vetro.',
+  desc:'L\'onda. Il getto d\'acqua ondeggia e spruzza gocce vere, e la sua luce azzurra scorre sul tappeto di Bea. Da Federico arriva l\'ombra, poi l\'onda si abbatte: il tappeto stesso si increspa a cerchi che si allargano (tutto quello che c\'è sopra ondeggia con lui), con riflessi di luce sulle creste; corona di gocce, schiuma che si spande, velo d\'acqua che scola e gocce che scivolano sul vetro.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .85] : d.p, t = follow(d, tg[0], tg[1], dt);
     d.wave = d.wave ?? (R() * 4 | 0);
@@ -763,7 +811,7 @@ TH.abisso = {
 // ---------- CRIPTA
 TH.cripta = {
   name:'Cripta', sub:'Nero · demoni e oscurità', col:'#B784F2',
-  desc:'Il dardo di anime. Dove passa il fumo il campo di Bea si spegne. Da Federico il dardo si pianta e il buio si allarga dal centro: la luce del campo si spegne davvero, le venature pulsano come un cuore e a ogni battito il campo sussulta e i colori si sdoppiano, le anime escono a spirale, il campo avvizzisce e poi torna.',
+  desc:'Il dardo di anime. Dove passa il fumo il tappeto di Bea si spegne. Da Federico il dardo si pianta e il buio si allarga dal centro: la luce del tappeto si spegne davvero, le venature pulsano come un cuore e a ogni battito il tappeto sussulta e i colori si sdoppiano, le anime escono a spirale, il tappeto avvizzisce e poi torna.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .8] : d.p, t = follow(d, tg[0], tg[1], dt);
     d.dart = d.dart ?? (R() < .5 ? 'dart' : 'dart2');
@@ -850,7 +898,7 @@ function forgeImpact(o, W, pow = 1){
 }
 TH.forgia = {
   name:'Forgia', sub:'Rosso · fuoco e acciaio', col:'#FF9A3C',
-  desc:'Il fulmine, come la vecchia Forgia: la sua luce blu fa lampeggiare il campo di Bea mentre trascini. Da Federico scarica al centro, il campo lampeggia, si spacca e si arroventa; la luce della bruciatura scalda il campo da bianco a rosso mentre si raffredda e l\'aria sopra trema per il calore; ogni scossa e ogni scheggia rovente illuminano il campo dove passano.',
+  desc:'Il fulmine, come la vecchia Forgia: la sua luce blu fa lampeggiare il tappeto di Bea mentre trascini. Da Federico scarica al centro, il tappeto lampeggia, si spacca e si arroventa; la luce della bruciatura scalda il tappeto da bianco a rosso mentre si raffredda e l\'aria sopra trema per il calore; ogni scossa e ogni scheggia rovente illuminano il tappeto dove passano.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
     if(!d.seed || T - d.st > .06){ d.seed = 1 + R() * 9999 | 0; d.st = T; d.fl = .6 + R() * .8 }
@@ -913,7 +961,7 @@ function boaPath(tx, sq, turns, slither){
 }
 TH.selva = {
   name:'Selva', sub:'Verde · piante e bestie', col:'#86CC4E',
-  desc:'Il boa. La liana esce dall\'elemento centrale, ondeggia dietro al dito e avvolge il quadratino. Da Federico la liana entra dall\'alto e si avvolge intorno a TUTTO il campo, giro dopo giro, passando davanti e sparendo dietro; si allenta un attimo, poi stritola: il campo stesso si stringe a clessidra, scricchiola, schizzano terra, foglie e schegge; poi molla la presa (il campo rimbalza) e la liana scivola via verso il basso.',
+  desc:'Il boa. La liana esce dall\'elemento centrale, ondeggia dietro al dito e avvolge il quadratino. Da Federico la liana entra dall\'alto e si avvolge intorno a TUTTO il tappeto, giro dopo giro, passando davanti e sparendo dietro; si allenta un attimo, poi stritola: il tappeto stesso si stringe a clessidra, scricchiola, schizzano terra, foglie e schegge; poi molla la presa (il tappeto rimbalza) e la liana scivola via verso il basso.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
     const pts = vinePath([hb.x, hb.y], [t.x, t.y], T, on ? tr : null), Lp = plen(pts), grow = eo((T - d.t0) / .25), H = W * .15;
@@ -988,24 +1036,24 @@ function demo(){
 document.getElementById('goLaunch').addEventListener('click', demo);
 document.getElementById('goHit').addEventListener('click', () => { const tr = tileRect(pV); TH[TK].hit(tr.x + tr.w / 2) });
 document.getElementById('goGob').addEventListener('click', () => TH.forgia.goblin());
-document.getElementById('goBig').addEventListener('click', () => TH.santuario.big());
+document.getElementById('goBig').addEventListener('click', () => TH[TK].big && TH[TK].big());
 document.getElementById('slow').addEventListener('change', e => slow = e.target.checked);
 
 const NOTES = {
-  santuario:'Immagini: scia di luce dorata, sfera dorata, aureola, nuvole dorate (tagliate in due), esplosione di luce, piume, spada celeste (colpo grosso). Il campo: luce d\'oro vera, onde d\'urto, buio prima della spada, fenditure di luce.',
-  mox:'Immagini: sfera a orologeria, sfera che esplode, le due crepe, schegge, pezzi meccanici, impatto ciano e oro. Il campo: luce ciano a ogni tic, lampo bianco che vira all\'arancio, il campo che si rompe in pezzi spostati e si ricompone.',
-  abisso:'Immagini: quattro onde, fascia d\'acqua, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il campo: luce azzurra, il campo che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel campo.',
-  cripta:'Immagini: due dardi, scia di fumo, anime, vortici, due venature, teschio. Il campo: il buio vero che si allarga, il cuore viola che pulsa, sussulto e colori sdoppiati a ogni battito, avvizzimento.',
-  forgia:'Immagini: tre bruciature, schegge di roccia lavica, braci, archi elettrici; goblin e bomba. Il campo: lampi blu del fulmine, la bruciatura che scalda il campo da bianco a rosso, l\'aria che trema per il calore, ogni scossa e ogni scheggia che illumina.',
-  selva:'Immagini: liane intrecciate e viticcio, zolle, foglie. Il campo: la spirale che passa davanti e dietro, il campo che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
+  santuario:'Immagini: scia di luce dorata, sfera dorata, aureola, nuvole dorate (tagliate in due), esplosione di luce, piume, spada celeste (colpo grosso). Il tappeto: luce d\'oro vera, onde d\'urto, buio prima della spada, fenditure di luce.',
+  mox:'Immagini: sfera a orologeria, sfera che esplode, le due crepe, schegge, pezzi meccanici, impatto ciano e oro. Il tappeto: luce ciano a ogni tic, lampo bianco che vira all\'arancio, il tappeto che si rompe in pezzi spostati e si ricompone.',
+  abisso:'Immagini: quattro onde, fascia d\'acqua, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il tappeto: luce azzurra, il tappeto che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel tappeto.',
+  cripta:'Immagini: due dardi, scia di fumo, anime, vortici, due venature, teschio. Il tappeto: il buio vero che si allarga, il cuore viola che pulsa, sussulto e colori sdoppiati a ogni battito, avvizzimento.',
+  forgia:'Immagini: tre bruciature, schegge di roccia lavica, braci, archi elettrici; goblin e bomba. Il tappeto: lampi blu del fulmine, la bruciatura che scalda il tappeto da bianco a rosso, l\'aria che trema per il calore, ogni scossa e ogni scheggia che illumina.',
+  selva:'Immagini: liane intrecciate e viticcio, zolle, foglie. Il tappeto: la spirale che passa davanti e dietro, il tappeto che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
 };
 function setTheme(k){
   TK = k; document.body.className = 't-' + k;
   document.querySelectorAll('.th').forEach(b => { b.classList.toggle('sel', b.dataset.k === k); b.setAttribute('aria-pressed', b.dataset.k === k) });
   document.getElementById('desc').textContent = TH[k].desc;
-  document.getElementById('note').textContent = NOTES[k] + (FLD.V ? '' : ' (Questo browser non ha WebGL: il campo resta fermo.)');
+  document.getElementById('note').textContent = NOTES[k] + (FLD.V ? '' : ' (Questo browser non ha WebGL: il tappeto resta fermo.)');
   document.getElementById('goGob').hidden = k !== 'forgia';
-  document.getElementById('goBig').hidden = k !== 'santuario';
+  const gb = document.getElementById('goBig'); gb.hidden = !TH[k].big; if(TH[k].big) gb.textContent = TH[k].bigName;
   document.querySelectorAll('.hub .plate').forEach(im => im.src = 'data:image/webp;base64,' + A[HUBS[k][0].k]);
   try{ localStorage.setItem('prova-colpi-tema', k) }catch(e){}
 }
