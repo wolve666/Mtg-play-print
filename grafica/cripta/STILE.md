@@ -106,19 +106,13 @@ Transparent background: hanging chains and cobwebs in the two top corners, candl
 A floating black skull wreathed in violet flames. 1024×1024.
 ```
 
-## La voragine e il fiume di anime (22 novembre, nuovo colpo)
-Il colpo ora segue lo schema dell'Abisso: sul bottone si apre una voragine di fumo nero che avvita e spegne il tappeto e risucchia le anime; al rilascio sputa un fiume di fumo e anime urlanti con il dardo in testa; da chi è colpito il fiume si pianta nel tappeto, si apre una voragine che lo avvita, il buio si allarga, venature e teschio come prima. Oggi la voragine è fatta con i sei vortici di fumo e il fiume con la scia di fumo; queste immagini darebbero più materia (stessa chat della Cripta, blocco base prima).
+## La mano che prosciuga (22 novembre, idea di Federico)
+Al posto della voragine (scartata, niente vortici). Colpo normale: mentre trascini, una scia leggera di fumo nero e viola segue il dito, come il filo dell'Abisso. Al rilascio la scia parte verso l'avversario e sul mio tappeto la nebbia si apre: esce la mano scheletrica. Il tappeto dell'avversario avvizzisce (buio, venature, colori spenti). Le sue anime piccole, le luci e il fumo si staccano da tutto il tappeto e risalgono in un raggio verso di me. Il raggio scende dall'alto fino alla mano, le anime la raggiungono e la accendono di un alone viola; la mano si chiude e torna nella nebbia.
+Colpo grosso: il teschio esce dal tappeto avversario, da invisibile sempre più visibile e grande, risucchia le anime e lo prosciuga.
+Per ora bastano le immagini che ci sono (mano scheletrica, scia di fumo, anime, venature, teschio). Nell'app il ritorno del raggio non ha bisogno di un secondo messaggio: chi attacca sa quando arriva il colpo e fa partire il ritorno da solo.
 
-V1. **Voragine vista dall'alto** (la faccio girare io), 1024×1024
+Richiesta facoltativa, se la mano dovesse sembrare troppo «di lato»:
+M1. **Mano che sale dal basso**, 1024×1024
 ```
-Seen from directly above: a swirling vortex of black and violet smoke, spiral arms of ghostly violet mist curling toward a pitch-black empty hole in the center, faint wailing faces half-dissolved in the arms, edges fading softly to transparent, circular, everything else transparent. 1024×1024.
+A skeletal demonic hand rising straight up from below, seen from the front, fingers open and reaching upward, old bone with black claws, violet smoke and mist curling around the wrist and fading to transparent at the bottom. 1024×1024.
 ```
-V2. **Fiume di anime** (lo stendo io dalla partenza al bersaglio, quindi uniforme), 2048×512
-```
-A straight horizontal stream of black and violet smoke seen from the side, running from left to right, ghostly translucent faces and reaching hands twisting inside it in a spiral like a corkscrew, a faint violet glowing core, uniform along its whole length with no head, the two short ends fading softly to transparent. 2048×512.
-```
-V3. **Foglio di 8 sbuffi in volo**, 1536×1024
-```
-A sheet of 8 separate streaks of black-violet smoke of different lengths, each a stretched wisp flying to the right with a faint violet glow, on a 4×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
-```
-- 22 novembre: montato il colpo nuovo nella prova con le immagini che ci sono già (vortici, scia, anime, dardi, venature, teschio). V1-V3 facoltative: servono se la voragine o il fiume sembrano poco materici.

@@ -895,135 +895,143 @@ TH.abisso = {
   }
 };
 
-// ---------- CRIPTA: la voragine e il fiume di anime (stesso schema dell'Abisso)
-const CDARK = ['30,12,48', '70,30,110', '15,6,25'];
-// voragine vista dall'alto (un po' schiacciata): buco nero al centro, sei vortici di fumo dipinti che girano in anello come i bracci
-// di una spirale, un secondo anello più stretto e veloce (il centro risucchia), orlo viola che pulsa
-function voragine(c, x, y, R0, t, k, al = 1){
-  if(R0 < 2 || al <= 0) return; const pf = L('cripta', 'puffs'), rot = t * (1.1 + 2.4 * k);
-  c.save(); c.translate(x, y); c.scale(1, .78);
-  c.save(); c.globalCompositeOperation = 'lighter'; const gr = c.createRadialGradient(0, 0, R0 * .35, 0, 0, R0 * 1.25), pu = .75 + .25 * Math.sin(t * 5);
-  gr.addColorStop(0, 'rgba(120,50,200,0)'); gr.addColorStop(.6, `rgba(120,50,200,${.35 * al * pu})`); gr.addColorStop(1, 'rgba(120,50,200,0)'); c.fillStyle = gr; c.beginPath(); c.arc(0, 0, R0 * 1.25, 0, TAU); c.fill(); c.restore();
-  const g = c.createRadialGradient(0, 0, 0, 0, 0, R0 * 1.05); g.addColorStop(0, `rgba(0,0,0,${.97 * al})`); g.addColorStop(.4, `rgba(6,2,12,${.85 * al})`); g.addColorStop(1, 'rgba(10,4,18,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, R0 * 1.05, 0, TAU); c.fill();
-  if(pf.length) [[.66, .62, 6, 1], [.32, .42, 4, 1.9]].forEach(([r, s, n, v], j) => { for(let i = 0; i < n; i++){ const a = rot * v + i * TAU / n + j;
-    img(c, pf[(i + j * 3) % pf.length], Math.cos(a) * R0 * r, Math.sin(a) * R0 * r, R0 * s * 2, a + PI * .6, al * (j ? .7 : .9)) } });
-  c.restore();
-}
-// fiume di anime: la scia di fumo ripetuta e fatta scorrere, un secondo passaggio che brilla di viola, le anime che lo cavalcano verso la punta, il dardo in testa
-function soulJet(c, x0, y0, x1, y1, w, t, al, flare = 0, fl = 0, texW = w, dart = 'dart2'){
+// ---------- CRIPTA: la mano che prosciuga le anime
+// Una scia leggera di fumo va verso l'avversario; dal mio tappeto la nebbia si apre ed esce la mano scheletrica; il tappeto colpito avvizzisce
+// e un raggio parte da lì verso di me, portando le sue anime fino alla mano, che si accende di un alone viola. Niente vortici: fumo, nebbia, prosciugamento.
+const CDARK = ['30,12,48', '70,30,110', '15,6,25'], CFOG = ['70,52,96', '48,34,70', '96,74,128'];
+// raggio di anime: la scia di fumo ripetuta e fatta scorrere dalla partenza all'arrivo, un passaggio che brilla di viola, piccole anime che lo cavalcano
+function soulJet(c, x0, y0, x1, y1, w, t, al){
   const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return; const tr = I('cripta', 'trail', 0), so = L('cripta', 'souls');
   c.save(); c.translate(x0, y0); c.rotate(Math.atan2(dy, dx));
-  jetBody(c, tr, l, w, t, al, flare, fl, texW, 6);
-  jetBody(c, tr, l, w * .7, t * 1.6, al * .35, flare, fl, texW * .7, 6, 'lighter');
-  if(so.length) for(let i = 0; i < 7; i++){ const u = (i / 7 + t * .9) % 1, px = u * l; if(px > l - w) continue; const side = (i % 2 ? 1 : -1) * w * .22 * Math.sin(t * 4 + i * 2);
-    img(c, so[i % so.length], px, side, w * (.9 + .25 * (i % 3)), 0, al * .85 * Math.sin(PI * u)) }
-  if(l > w){ glow(c, l, 0, w * 1.2, '170,90,255', .7 * al); img(c, I('cripta', dart, 0), l + w * .3, 0, w * 3.6, 0, al, null, .95, .5) }
+  jetBody(c, tr, l, w, t, al * .6, 0, 0, w * 1.6, 5);
+  jetBody(c, tr, l, w * .6, t * 1.7, al * .4, 0, 0, w * 1.2, 7);
+  jetBody(c, tr, l, w * .35, t * 2.2, al * .3, 0, 0, w, 9, 'lighter');
+  if(so.length) for(let i = 0; i < 9; i++){ const u = (i / 9 + t * 1.1) % 1, side = (i % 2 ? 1 : -1) * w * .25 * Math.sin(t * 5 + i * 2);
+    img(c, so[i % so.length], u * l, side, w * (.45 + .15 * (i % 3)), 0, al * .85 * Math.sin(PI * u)) }
   c.restore();
 }
-// fumo e anime che il fiume perde per strada
-function soulFX(list, x0, y0, x1, y1, w, dt, k, W, slist){
-  const l = Math.hypot(x1 - x0, y1 - y0); if(l < 4) return; const a = Math.atan2(y1 - y0, x1 - x0), nx = -Math.sin(a), ny = Math.cos(a);
-  if(R() < dt * 40 * k){ const u = R(), s = sgn(), v = 30 + R() * 80; pt(list, {k:'smoke', x:x0 + (x1 - x0) * u + nx * s * w * .3, y:y0 + (y1 - y0) * u + ny * s * w * .3, vx:nx * s * v + Math.cos(a) * 60, vy:ny * s * v + Math.sin(a) * 60, drag:1.2, r:w * (.25 + R() * .3), grow:1.8, life:.8 + R() * .5, col:pick(CDARK), al:.4}) }
-  if(slist && R() < dt * 8 * k){ const u = .2 + R() * .7, s = sgn(), ang = a + s * (.6 + R() * .6), v = 50 + R() * 70; slist.push(sp({im:I('cripta', 'puffs'), x:x0 + (x1 - x0) * u + nx * s * w * .3, y:y0 + (y1 - y0) * u + ny * s * w * .3, vx:Math.cos(ang) * v, vy:Math.sin(ang) * v, drag:1.5, rot:R() * TAU, spin:(R() - .5) * 3, w:w * (1 + R() * .6), life:.9, grow:.6, fin:.05, fout:.5, alpha:.75})) }
-  if(slist && R() < dt * 5 * k){ const u = .2 + R() * .7, s = sgn(), ang = a + s * (1 + R() * .5), v = 60 + R() * 60; slist.push(sp({im:I('cripta', 'souls'), x:x0 + (x1 - x0) * u, y:y0 + (y1 - y0) * u, vx:Math.cos(ang) * v, vy:Math.sin(ang) * v, drag:1, rot:ang, w:w * (.9 + R() * .4), life:.9, grow:.4, fin:.08, fout:.6, alpha:.8, sway:10})) }
+// piccole luci viola che scorrono lungo il raggio
+function soulMotes(list, x0, y0, x1, y1, w, dt, k){
+  if(R() < dt * 45 * k){ const u = R() * .3, a = Math.atan2(y1 - y0, x1 - x0), v = 380 + R() * 220, l = Math.hypot(x1 - x0, y1 - y0);
+    pt(list, {k:'mote', x:lerp(x0, x1, u) + (R() - .5) * w * .6, y:lerp(y0, y1, u) + (R() - .5) * w * .6, vx:Math.cos(a) * v, vy:Math.sin(a) * v, r:1.2 + R() * 2, life:Math.min(1.2, l * (1 - u) / v), col:pick(['200,150,255', '170,110,250', '235,215,255']), al:.9, fout:.2}) }
 }
-// un'anima risucchiata: parte dal bordo e gira a spirale verso il centro, rimpicciolendo
-function suck(ph, cx, cy, r0, W, dur = .9){
-  const a0 = R() * TAU, dir = 1, im = I('cripta', 'souls');
-  add(ph, function(c, dt){ this.a += dt; const x = this.a / dur; if(x > 1) return false; const k = ei(x), ang = a0 + dir * k * 4, r = r0 * (1 - k), px = cx + Math.cos(ang) * r, py = cy + Math.sin(ang) * r * .78;
-    img(c, im, px, py, W * .1 * (1 - .75 * k), ang + PI + dir * .9, Math.min(1, x * 5) * (1 - k * k) * .9); return true });
+// nebbia che si apre: sbuffi scuri che si allargano da un punto e restano bassi
+function fogOpen(list, x, y, W, n = 16, sp = 1){
+  for(let i = 0; i < n; i++){ const a = R() * TAU, v = (40 + R() * 90) * sp; pt(list, {k:'smoke', x:x + Math.cos(a) * W * .03, y:y + Math.sin(a) * W * .02, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .45, drag:1.6, r:W * (.035 + R() * .04), grow:2, life:1.2 + R() * .7, col:pick(R() < .6 ? CDARK : CFOG), al:.45}) }
+}
+// la mano scheletrica che esce dalla nebbia del mio tappeto: una sola alla volta
+let HAND = null;
+function handPos(){ const W = pA.clientWidth, H = pA.clientHeight; return {x:W * .5, y:H * .3, W, H} }
+function summonHand(){
+  if(HAND && HAND.live) return HAND; const P = handPos(), W = P.W, h = HAND = {live:true, x:P.x, y:P.y, a:0, halo:0, hold:3.2, clench:0};
+  fogOpen(FX.pA, h.x, h.y + W * .24, W, 14);
+  add('A', function(c, dt){ h.a += dt; const x = h.a;
+    const rise = eo(clamp((x - .15) / .55)), sink = clamp((x - h.hold) / .55); if(sink >= 1){ h.live = false; fogOpen(FX.pA, h.x, h.y + W * .24, W, 8, .6); return false }
+    const by = h.y + W * .24, hy = h.y + W * .4 * (1 - rise) + W * .45 * ei(sink), al = Math.min(1, rise * 1.6) * (1 - sink), sw = Math.sin(T * 1.6) * .04;
+    // buco nella nebbia: il tappeto si spegne sotto la mano
+    const g = c.createRadialGradient(h.x, by, 0, h.x, by, W * .32); g.addColorStop(0, `rgba(4,1,8,${.75 * al})`); g.addColorStop(1, 'rgba(4,1,8,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(h.x, by, W * .3, W * .07, 0, 0, TAU); c.fill();
+    lit('A', h.x, by, W * .5, [.8, .9, .6], -.9 * al);
+    // alone viola: cresce con le anime che arrivano
+    if(h.halo > .01){ glow(c, h.x, hy - W * .04, W * (.32 + .18 * h.halo), '150,70,240', .55 * h.halo * al); lit('A', h.x, hy, W * .45, [.6, .25, 1.1], 1.2 * h.halo * al) }
+    // la mano: le dita verso l'alto, si stringe quando ha preso le anime
+    const cl = h.clench, sq = 1 - .12 * cl;
+    c.save(); c.beginPath(); c.rect(0, 0, W, by + W * .02); c.clip();
+    img(c, I('cripta', 'claw', 0), h.x + W * .02, hy - W * .02 * cl, W * .66 * (.85 + .15 * rise), -PI / 4 + sw - .1 * cl, al, null, .5, .5, sq, 1 / sq, PI / 4);
+    if(h.halo > .01) img(c, I('cripta', 'claw', 0), h.x + W * .02, hy - W * .02 * cl, W * .66 * (.85 + .15 * rise), -PI / 4 + sw - .1 * cl, al * .35 * h.halo, 'lighter', .5, .5, sq, 1 / sq, PI / 4);
+    c.restore();
+    // nebbia continua alla base, davanti alla mano
+    if(R() < dt * 22 * al){ const a = R() * TAU; pt(FX.pA, {k:'smoke', x:h.x + Math.cos(a) * W * .2, y:by + Math.sin(a) * W * .03, vx:(R() - .5) * 30, vy:-4 - R() * 8, drag:1, r:W * (.025 + R() * .03), grow:1.5, life:.9 + R() * .5, col:pick(R() < .5 ? CDARK : CFOG), al:.35}) }
+    return true });
+  return h;
 }
 TH.cripta = {
   name:'Cripta', sub:'Nero · demoni e oscurità', col:'#B784F2',
-  desc:'La voragine e il fiume di anime. Tocchi il bottone e sull\'elemento centrale si apre una voragine di fumo nero che gira sempre più forte: il tappeto di Bea si avvita e si spegne intorno a lei, le anime vengono risucchiate dentro. Al rilascio la voragine sputa un fiume di fumo e anime urlanti, con il dardo in testa. Da Federico il fiume entra dall\'alto e si pianta nel tappeto: si apre una voragine che lo avvita, il buio si allarga, le venature pulsano come un cuore, il teschio sale dal buco e le anime escono a spirale; poi il tappeto avvizzisce e torna.',
+  desc:'La mano che prosciuga. Trascini e una scia leggera di fumo nero e viola segue il dito. Al rilascio la scia parte verso Federico, e sul tappeto di Bea la nebbia si apre: esce una mano scheletrica. Da Federico il fumo cade sul tappeto, che avvizzisce; le sue anime, piccole luci e fumo si staccano da tutto il tappeto e risalgono in un raggio verso Bea. Il raggio scende dall\'alto fino alla mano, le anime la raggiungono e la accendono di un alone viola; la mano si chiude e torna nella nebbia. Colpo grosso: il teschio che esce dal tappeto di Federico, da invisibile sempre più grande, e lo prosciuga.',
+  bigName:'Colpo grosso: il teschio',
   aim(c, d, dt){
-    // selezione leggera: un filo di piccole anime e fumo che scorre verso il dito, il tappeto si spegne lungo il filo
+    // scia leggera di fumo nero e viola verso il dito, come il filo dell'Abisso
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .8] : d.p, t = follow(d, tg[0], tg[1], dt);
-    d.charge = clamp((T - d.t0) / 1.2);
-    const pts = wavyPath([hb.x, hb.y], [t.x, t.y], W * .03, T * .9), Lp = plen(pts), so = L('cripta', 'souls');
-    for(let i = 0; i < 9; i++){ const u = (i / 9 + T * .4) % 1, p = at(pts, Lp * u), a = at(pts, Math.min(Lp, Lp * u + 4)), ang = Math.atan2(a[1] - p[1], a[0] - p[0]);
-      img(c, so[i % so.length], p[0], p[1], W * (.045 + .02 * (i % 3)) * (.6 + .4 * Math.sin(PI * u)), ang, .6 * Math.sin(PI * u) + .1) }
-    if(R() < dt * 26){ const p = at(pts, R() * Lp); pt(FX.pA, {k:'smoke', x:p[0], y:p[1], vx:(R() - .5) * 14, vy:-10 - R() * 18, r:W * (.025 + R() * .03), grow:1.8, life:1 + R() * .5, col:pick(CDARK), al:.55}) }
-    lit('A', hb.x, hb.y, W * .45, [.75, .85, .55], -.8 - .5 * d.charge); lit('A', t.x, t.y, W * .22, [.6, .3, 1], .5);
-    st('A').chr = .6 * d.charge * Math.pow(Math.max(0, Math.sin(T * 7)), 6);
-    d.so = d.so || spr(0, 200, 9); d.so.t = on ? 1 : 0; stepS(d.so, dt);
-    if(d.so.x > .02) for(let i = 0; i < 4; i++){ const a = T * 3 + i * TAU / 4, rx = tr.w * .5 * d.so.x, ry = tr.h * .6 * d.so.x; img(c, so[i % so.length], tg[0] + Math.cos(a) * rx, tg[1] - tr.h * .3 + Math.sin(a) * ry, W * .08, a + PI / 2, Math.min(1, d.so.x) * .8) }
+    const pts = wavyPath([hb.x, hb.y], [t.x, t.y], W * .03, T * .9), Lp = plen(pts);
+    along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .07 * (1 + .1 * Math.sin(T * 5)), 1, .55);
+    along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .04, 1, .25, false, -1e9, 'lighter');
+    if(R() < dt * 30){ const p = at(pts, R() * Lp); pt(FX.pA, {k:'smoke', x:p[0], y:p[1], vx:(R() - .5) * 14, vy:-8 - R() * 16, r:W * (.018 + R() * .022), grow:1.8, life:.9 + R() * .5, col:pick(CDARK), al:.45}) }
+    if(R() < dt * 14){ const p = at(pts, R() * Lp); pt(FX.pA, {k:'mote', x:p[0], y:p[1], vx:(R() - .5) * 20, vy:-10 - R() * 20, r:1 + R() * 1.5, life:.7, col:'200,150,255', al:.8}) }
+    lit('A', t.x, t.y, W * .2, [.6, .3, 1], .4);
   },
   launch(d){
-    // la voragine si apre piano e risucchia le anime; dal suo centro esce il fiume, dritto fino all'avversario; poi si stringe fino a sparire e la voragine si richiude
-    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ex = tr.x + tr.w / 2, ey = tr.y + tr.h / 2, ch = d.charge || 0, k0 = (-W * .3 - hb.y) / (ey - hb.y), x1 = hb.x + (ex - hb.x) * k0, y1 = -W * .3;
-    const jw = W * (.09 + .04 * ch), OPEN = .45, OUT = .35, NARROW = 1.05, GONE = 1.35, END = 1.9, dart = d.dart || (R() < .5 ? 'dart' : 'dart2');
-    add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
-      const op = eo(x / OPEN), dis = clamp((x - 1.2) / (END - 1.2)), rad = W * .27 * op * (1 - .45 * dis), wa = 1 - dis;
-      const s = st('A'); s.sw[0] = hb.x; s.sw[1] = hb.y; s.sw[2] = -2.6 * op * (1 - dis); s.sw[3] = W * .34;
-      s.chr = Math.max(s.chr, 2 * op * wa * Math.pow(Math.max(0, Math.sin(x * 9)), 6));
-      // il buio che la voragine si mangia e l'orlo viola
-      voragine(c, hb.x, hb.y, rad, T, op, wa); lit('A', hb.x, hb.y, W * (.5 + .5 * op), [.8, .9, .6], -1.4 * wa); lit('A', hb.x, hb.y, rad * 1.6, [.6, .25, 1.1], .7 * op * wa);
-      if(x < OUT + .3 && R() < dt * 16) suck('A', hb.x, hb.y, W * (.35 + R() * .15), W, .6 + R() * .3);
-      if(x > OUT && x < GONE){ const head = eo((x - OUT) / .2), hx = lerp(hb.x, x1, head), hy = lerp(hb.y, y1, head), wk = x < NARROW ? 1 : 1 - ei((x - NARROW) / (GONE - NARROW)), ja = Math.atan2(y1 - hb.y, x1 - hb.x);
-        if(!this.kick){ this.kick = 1; SP.aHub.v -= 3.5; SP.aPunch.v -= .9; if(navigator.vibrate) try{ navigator.vibrate([25, 20, 40]) }catch(e){} }
-        const fo = eo((x - OUT) / .25) * wk;
-        soulJet(c, hb.x, hb.y, hx, hy, jw * wk, T, Math.min(1, wk * 2.5), 1.6 * fo, W * .13, jw, dart);
-        soulFX(FX.pA, hb.x, hb.y, hx, hy, jw * wk, dt, 1.3 * wk, W, FX.sA);
-        // mentre si chiude lascia fumo e anime che volano via verso l'avversario
-        if(x > NARROW && R() < dt * 25){ const u = .1 + R() * .9, v = 120 + R() * 160; FX.sA.push(sp({im:I('cripta', R() < .5 ? 'souls' : 'puffs'), x:lerp(hb.x, hx, u), y:lerp(hb.y, hy, u), vx:Math.cos(ja) * v, vy:Math.sin(ja) * v, drag:1.5, rot:ja, w:jw * (.9 + R() * .6), life:.6, grow:.5, fin:.04, fout:.6, alpha:.8})) }
-        // base piena: fumo nero di vario spessore che esce dalla voragine e un ciuffo di vortici sopra l'attacco del fiume
-        const bx = hb.x + Math.cos(ja) * W * .04, by = hb.y + Math.sin(ja) * W * .04;
-        if(R() < dt * 26 * wk){ const sa = ja + PI + (R() - .5) * 2.8, v = 40 + R() * 90, big = R() > .7;
-          pt(FX.pA, {k:'smoke', x:bx + (R() - .5) * jw * 1.2, y:by + (R() - .5) * jw * 1.2, vx:Math.cos(sa) * v, vy:Math.sin(sa) * v - 10, drag:1.3, r:jw * (big ? .45 + R() * .3 : .14 + R() * .18), grow:big ? 1.2 : 1.8, life:big ? .6 + R() * .3 : .7 + R() * .5, col:pick(CDARK), al:big ? .5 : .3}) }
-        const pf = L('cripta', 'puffs');
-        if(pf.length) for(let k = 0; k < 3; k++){ const ox = Math.cos(ja) * jw * (.15 + .25 * k), oy = Math.sin(ja) * jw * (.15 + .25 * k);
-          img(c, pf[(k * 2 + 1) % pf.length], hb.x + ox, hb.y + oy, jw * (2.1 - .4 * k) * fo * (.92 + .12 * Math.sin(T * 13 + k * 2)), -T * (2 + k) + k * 2.1, .75 * wk) }
-        glow(c, hb.x + Math.cos(ja) * W * .03, hb.y + Math.sin(ja) * W * .03, jw * .8, '150,70,240', .4 * wk);
-        lit('A', (hb.x + hx) / 2, Math.max((hb.y + hy) / 2, hb.y * .4), W * .7, [.8, .9, .6], -.9 * wk) }
-      if(dis > 0 && R() < dt * 20) pt(FX.pA, {k:'smoke', x:hb.x + (R() - .5) * rad, y:hb.y + (R() - .5) * rad * .7, vx:(R() - .5) * 20, vy:-15 - R() * 20, r:W * .045, grow:2, life:1, col:pick(CDARK), al:.4});
-      // la voragine si richiude: un ultimo colpo verso l'interno
-      if(x > END - .25 && !this.cl){ this.cl = 1; SP.aHub.v += 1.5; for(let i = 0; i < 10; i++){ const a = R() * TAU, r = W * .2; pt(FX.pA, {k:'smoke', x:hb.x + Math.cos(a) * r, y:hb.y + Math.sin(a) * r * .78, vx:-Math.cos(a) * 160, vy:-Math.sin(a) * 125, drag:3, r:W * .04, grow:-.3, life:.35, col:pick(CDARK), al:.7}) } }
+    // la scia parte verso l'alto e la nebbia del mio tappeto si apre: esce la mano
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), p0 = d.tip ? [d.tip.x, d.tip.y] : d.p.slice(), ex = tr.x + tr.w / 2;
+    SP.aHub.v -= 2;
+    add('A', function(c, dt){ this.a += dt; const k = this.a / .4; if(k > 1.3) return false; const kk = Math.min(1, k), x = lerp(p0[0], ex, eo(kk)), y = lerp(p0[1], -W * .3, ei(kk)), al = k > 1 ? 1 - (k - 1) / .3 : 1;
+      const pts = wavyPath([hb.x, hb.y], [x, y], W * .03 * (1 - kk), T), Lp = plen(pts), from = Lp * ei(Math.max(0, k - .1) / .9);
+      along(c, I('cripta', 'trail', 0), pts, 0, Lp, W * .08, 1, .6 * al, false, from);
+      if(R() < dt * 40){ const p = at(pts, from + R() * (Lp - from)); pt(FX.pA, {k:'smoke', x:p[0], y:p[1], vx:(R() - .5) * 20, vy:-10 - R() * 15, r:W * .025, grow:1.8, life:.8, col:pick(CDARK), al:.4}) }
       return true });
-    return OUT + .2;
+    after(.15, summonHand);
+    return .4;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), y0 = -W * .3, jw = W * .16, dart = R() < .5 ? 'dart' : 'dart2';
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75);
     if(RM){ flash('#1A0A26', .6, 1); damage(); return }
-    const D = .16, END = .85;
-    // il fiume entra dall'alto, si pianta nel tappeto per un attimo, poi la coda ci cade dentro
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .25) return false;
-      const head = eo(x / D), wk = 1 - ei(clamp((x - END) / .25)), hx = lerp(x0, o.x, head), hy = lerp(y0, o.y, head);
-      soulJet(c, x0, y0, hx, hy, jw * wk, T, Math.min(1, wk * 2.5), 0, 0, jw, x < D ? dart : null);
-      soulFX(FX.pV2, x0, y0, hx, hy, jw * wk, dt, 1.5 * wk, W, FX.sV2);
-      lit('V', hx, hy, W * .6, [.8, .9, .6], -1.2 * wk);
-      return true });
+    const D = .3, B0 = .45, B1 = 2.1;
+    // il fumo leggero cade dall'alto sul tappeto
+    add('V2', function(c, dt){ this.a += dt; const k = this.a / D; if(k > 1.3) return false; const kk = Math.min(1, k), al = k > 1 ? 1 - (k - 1) / .3 : 1;
+      const pts = wavyPath([x0, -W * .4], [lerp(x0, o.x, kk), lerp(-W * .3, o.y, ei(kk))], W * .03, T), Lp = plen(pts);
+      along(c, I('cripta', 'trail', 0), pts, Lp * ei(Math.max(0, k - .2) / .8), Lp, W * .09, 1, .6 * al); return true });
     after(D, () => {
-      impact(PI / 2, 1.1);
-      // la voragine sul tappeto: lo avvita forte (al contrario dell'Abisso) e poi si srotola piano
-      const tw = spr(0, 18, 3.2); tw.v = -14;
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.6) return false; stepS(tw, dt); const s = st('V'), fade = 1 - clamp((x - 2.2) / 1.4);
-        s.sw[0] = o.x; s.sw[1] = o.y; s.sw[2] = tw.x * fade * (x < END ? 1.3 : 1); s.sw[3] = W * .42;
-        voragine(c, o.x, o.y, W * (.2 + .16 * eo(x / .6)) * (1 - .4 * clamp((x - 2.2) / 1.4)), T * 1.3, 1, .95 * fade); return true });
+      impact(PI / 2, .5); fogOpen(FX.pV, o.x, o.y, W, 20, 1.3);
+      // il tappeto avvizzisce: buio che si allarga, venature leggere, colori spenti
       const v = I('cripta', R() < .5 ? 'vein' : 'vein2', 0), vr = R() * TAU, seed = R() * 9;
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; const al = x < 2.5 ? 1 : 1 - (x - 2.5) / .9, g = eo(x / 1.1) * (x < 2.5 ? 1 : 1 - ei((x - 2.5) / .9) * .5);
-        const beat = Math.pow(Math.max(0, Math.sin(x * 7)), 6), s = st('V');
-        reveal(c, v, o.x, o.y, W * 1.6, vr, al, g, seed);
-        if(beat > .01) reveal(c, v, o.x, o.y, W * 1.6, vr, al * beat * .7, g, seed, 'lighter');
-        // il buio: una luce «negativa» che si allarga e spegne il campo, con un cuore viola che pulsa al centro
-        lit('V', o.x, o.y, W * (.4 + 1.1 * g), [.8, .9, .6], -1.05 * al); lit('V', o.x, o.y, W * .35, [.7, .3, 1.2], (.5 + 1.2 * beat) * al);
-        s.chr = Math.max(s.chr, beat * 5 * al); if(beat > .5) wave('V', o.x, o.y, W * (.15 + .5 * (1 - beat)), 6 * beat * al, W * .06);
-        s.dark = Math.max(s.dark, .3 * env(x, .6, 1.9, .9));
-        if(this.lb !== undefined && beat > .9 && this.lb <= .9){ SP.vPunch.v -= .5; SP.vLife.v += .8 } this.lb = beat;
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; const al = x < 2.5 ? 1 : 1 - (x - 2.5) / .9, g = eo(x / 1.6);
+        reveal(c, v, o.x, o.y, W * 1.6, vr, al * .7, g, seed);
+        lit('V', o.x, o.y, W * (.4 + 1.1 * g), [.8, .9, .6], -1 * al); st('V').dark = Math.max(st('V').dark, .25 * env(x, .8, 1.6, .9)); return true });
+      wither = {a:0};
+      // le anime e le piccole luci si staccano da tutto il tappeto e corrono verso la base del raggio
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > B1 - .2) return false; if(x < .1) return true;
+        if(R() < dt * 9){ const px = fb.x + fb.w * (.1 + R() * .8), py = fb.y + fb.h * (.1 + R() * .85), du = .6 + R() * .4;
+          FX.sV.push(sp({im:I('cripta', 'souls'), x:px, y:py, vx:(o.x - px) / du, vy:(o.y - py) / du, w:W * (.04 + R() * .03), life:du, rot:Math.atan2(o.y - py, o.x - px), grow:-.5, fin:.25, fout:.3, alpha:.85})) }
+        if(R() < dt * 50){ const px = fb.x + fb.w * R(), py = fb.y + fb.h * R(), du = .5 + R() * .5; pt(FX.pV, {k:'mote', x:px, y:py, vx:(o.x - px) / du, vy:(o.y - py) / du, r:1 + R() * 1.6, life:du, col:pick(['200,150,255', '235,215,255']), al:.85, fout:.3}) }
+        if(R() < dt * 14){ const px = fb.x + fb.w * R(), py = fb.y + fb.h * R(); pt(FX.pV, {k:'smoke', x:px, y:py, vx:(o.x - px) * .8, vy:(o.y - py) * .8, drag:.6, r:W * (.03 + R() * .03), grow:1.2, life:1, col:pick(CFOG), al:.35}) }
         return true });
-      // il teschio sale dal buco
-      add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.1) return false; img(c, I('cripta', 'skull', 0), o.x, o.y - W * .04 - W * .06 * x, W * .42 * eb(x / .3), Math.sin(x * 20) * .05 * (1 - x), x < .5 ? 1 : 1 - (x - .5) / .6); lit('V', o.x, o.y, W * .5, [.7, .3, 1.2], 1.4 * (1 - x)); return true }, .12);
-      for(let i = 0; i < 18; i++){ const a = R() * TAU, s = 40 + R() * 120; pt(FX.pV, {k:'smoke', x:o.x, y:o.y, vx:Math.cos(a) * s, vy:Math.sin(a) * s, drag:1.4, r:W * (.06 + R() * .05), grow:2, life:1.3 + R() * .7, col:pick(CDARK), al:.85}) }
-      // il fumo gira intorno alla voragine mentre si allontana
-      for(let i = 0; i < 8; i++){ const a = R() * TAU, s = 50 + R() * 80; FX.sV.push(sp({im:I('cripta', 'puffs'), x:o.x + Math.cos(a) * W * .1, y:o.y + Math.sin(a) * W * .1, vx:Math.cos(a) * s + Math.sin(a) * 90, vy:Math.sin(a) * s - Math.cos(a) * 90, drag:1.1, w:W * (.16 + R() * .1), life:2.4 + R(), grow:.7, fout:.5, alpha:.85, rot:R() * TAU, spin:-1.5 - R(), delay:.05 + R() * .2})) }
-      for(let i = 0; i < 7; i++){ const a0 = i / 7 * TAU, dir = sgn();
-        add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.9) return false; if(x < 0) return true; const ang = a0 + dir * x * 3.2, r = W * (.05 + .34 * eo(x / 1.9)), px = o.x + Math.cos(ang) * r, py = o.y + Math.sin(ang) * r * .85;
-          img(c, I('cripta', 'souls', i), px, py, W * (.08 + .05 * x), ang + dir * PI / 2, env(x, .2, 1, .7) * .9); return true }, .25 + R() * .3) }
-      flash('rgba(20,6,32,1)', .35, .9);
-      wither = {a:0}; damage();
+      damage();
     });
-    // il fiume si spegne: un ultimo sbuffo di fumo
-    after(END + .2, () => { impact(PI / 2, .25); for(let i = 0; i < 14; i++){ const a = R() * TAU, s = 60 + R() * 120; pt(FX.pV, {k:'smoke', x:o.x, y:o.y, vx:Math.cos(a) * s, vy:Math.sin(a) * s * .8, drag:1.5, r:W * (.04 + R() * .04), grow:2, life:.9, col:pick(CDARK), al:.7}) } });
+    // il raggio parte dal tappeto colpito verso l'alto (verso chi ha attaccato)
+    const bx = o.x, top = -W * .3;
+    add('V2', function(c, dt){ this.a += dt; const x = this.a - B0; if(x > B1 - B0 + .3) return false; if(x < 0) return true;
+      const head = eo(x / .25), wk = x < B1 - B0 ? 1 : 1 - ei((x - (B1 - B0)) / .3), w = W * .15 * wk, hy = lerp(o.y, top, head);
+      soulJet(c, bx, o.y, bx, hy, w, T, Math.min(1, wk * 2)); soulMotes(FX.pV2, bx, o.y, bx, hy, w, dt, wk);
+      glow(c, bx, o.y, W * .12, '150,70,240', .45 * wk); lit('V', bx, o.y - W * .2, W * .5, [.6, .25, 1.1], .7 * wk); return true });
+    // da chi attacca: il raggio scende dall'alto fino alla mano e le anime la raggiungono
+    const h = summonHand(); h.hold = Math.max(h.hold, h.a + B1 + .9 + .6);
+    add('A', function(c, dt){ this.a += dt; const x = this.a - B0 - .2; if(x > B1 - B0 + .3) return false; if(x < 0) return true; const Wa = pA.clientWidth, P = handPos();
+      const head = eo(x / .3), wk = x < B1 - B0 ? 1 : 1 - ei((x - (B1 - B0)) / .3), w = Wa * .15 * wk, ty = P.y - Wa * .3, py = P.y - Wa * .08, sy = -Wa * .3, hy = lerp(sy, ty, head);
+      soulJet(c, P.x, sy, P.x, hy, w, T, Math.min(1, wk * 2)); soulMotes(FX.pA, P.x, sy, P.x, hy, w, dt, wk); glow(c, P.x, hy, w * 1.6, '160,80,250', .5 * wk * head);
+      if(head > .95){ h.halo = Math.min(1, h.halo + dt * 1.2);
+        if(R() < dt * 14 * wk){ const a = R() * TAU, r = Wa * (.12 + R() * .1), du = .35 + R() * .2; const sx = P.x + Math.cos(a) * r * .5, sy2 = ty + Math.abs(Math.sin(a)) * r * .3; FX.sA.push(sp({im:I('cripta', 'souls'), x:sx, y:sy2, vx:(P.x - sx) / du, vy:(py - sy2) / du, w:Wa * (.04 + R() * .025), life:du, rot:PI / 2, grow:-.6, fin:.2, fout:.3, alpha:.9})); pt(FX.pA, {k:'mote', x:sx, y:sy2, vx:(P.x - sx) / du, vy:(py - sy2) / du, r:1.4, life:du, col:'220,180,255', al:.9}) } }
+      return true });
+    after(B1 + .5, () => { h.clench = 1; SP.aHub.v -= 1.2; if(navigator.vibrate) try{ navigator.vibrate(30) }catch(e){} for(let i = 0; i < 16; i++){ const a = R() * TAU, v = 60 + R() * 100, P = handPos(); pt(FX.pA, {k:'mote', x:P.x, y:P.y - P.W * .1, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2, r:1.2 + R() * 1.8, life:.6, col:'210,170,255', al:.9}) } });
+    after(B1 + 1.2, () => { h.halo = Math.max(0, h.halo - .5) });
+  },
+  big(){
+    // il teschio esce dal tappeto di Federico: da invisibile sempre più visibile e grande, risucchia le anime e prosciuga il tappeto
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), sk = I('cripta', 'skull', 0), GROW = 2.6, END = 3.6;
+    if(RM){ flash('#1A0A26', .8, 1.2); damage(8); return }
+    fogOpen(FX.pV, o.x, o.y, W, 26, 1.2);
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END + 1.6) return false; const s = st('V'), k = ei(x / GROW), out = clamp((x - END) / 1.6);
+      s.with = Math.max(s.with, Math.min(1, x / GROW * 1.2) * (1 - out)); s.dark = Math.max(s.dark, .35 * k * (1 - out));
+      lit('V', o.x, o.y, W * (.5 + .9 * k), [.8, .9, .6], -1.2 * k * (1 - out)); if(x < END) s.chr = Math.max(s.chr, 1.5 * k * Math.pow(Math.max(0, Math.sin(x * 6)), 8)); return true });
+    add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .7) return false; const k = ei(x / GROW), out = clamp((x - END) / .7), sz = W * (.35 + .75 * k) * (1 + .5 * out), y = o.y - W * .1 - W * .12 * k - W * .1 * out;
+      const al = Math.min(1, k * 1.3) * (1 - out), br = .9 + .1 * Math.sin(x * 4);
+      img(c, sk, o.x, y, sz * br, Math.sin(x * 1.7) * .04, al * .9);
+      img(c, sk, o.x, y, sz * br, Math.sin(x * 1.7) * .04, al * .3 * k, 'lighter');
+      lit('V', o.x, y, W * .6, [.6, .25, 1.1], 1.3 * k * (1 - out));
+      // le anime del tappeto risucchiate nella bocca
+      if(x < END && R() < dt * (6 + 14 * k)){ const px = fb.x + fb.w * R(), py = fb.y + fb.h * (.2 + .8 * R()), mx = o.x, my = y + sz * .25, du = .6 + R() * .4;
+        FX.sM.push(sp({im:I('cripta', 'souls'), x:px, y:py, vx:(mx - px) / du, vy:(my - py) / du, w:W * (.045 + R() * .03), life:du, rot:Math.atan2(my - py, mx - px), grow:-.6, fin:.25, fout:.3, alpha:.85})) }
+      if(x < END && R() < dt * 50 * k){ const px = fb.x + fb.w * R(), py = fb.y + fb.h * R(), du = .5 + R() * .4; pt(FX.pV2, {k:'mote', x:px, y:py, vx:(o.x - px) / du, vy:(y + sz * .25 - py) / du, r:1 + R() * 1.6, life:du, col:'210,170,255', al:.85, fout:.3}) }
+      if(R() < dt * 16 * (1 - out)){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * sz * .4, y:y + sz * .35, vx:Math.cos(a) * 30, vy:-10 - R() * 20, r:W * (.05 + R() * .05), grow:1.8, life:1.2, col:pick(CDARK), al:.6}) }
+      return true });
+    after(END, () => { impact(PI / 2, .9); flash('rgba(40,10,70,1)', .4, .9); fogOpen(FX.pV, o.x, o.y, W, 24, 1.6); damage(8) });
   }
 };
 
@@ -1203,7 +1211,7 @@ const NOTES = {
   santuario:'Immagini: scia di luce dorata, sfera dorata, aureola, nuvole dorate (tagliate in due), esplosione di luce, piume, spada celeste (colpo grosso). Il tappeto: luce d\'oro vera, onde d\'urto, buio prima della spada, fenditure di luce.',
   mox:'Immagini: sfera a orologeria, sfera che esplode, le due crepe, schegge, pezzi meccanici, impatto ciano e oro. Il tappeto: luce ciano a ogni tic, lampo bianco che vira all\'arancio, il tappeto che si rompe in pezzi spostati e si ricompone.',
   abisso:'Immagini: gorgo, getto a spirale, spruzzi, bolle, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il tappeto: luce azzurra, il tappeto che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel tappeto.',
-  cripta:'Immagini: scia di fumo (il fiume), due dardi, anime, vortici di fumo (la voragine), due venature, teschio. Il tappeto: si avvita intorno alla voragine e si spegne, il buio vero che si allarga, il cuore viola che pulsa, sussulto e colori sdoppiati a ogni battito, avvizzimento.',
+  cripta:'Immagini: scia di fumo (la scia e il raggio), mano scheletrica, anime, due venature, teschio (colpo grosso). Il tappeto: la nebbia che si apre sotto la mano, il tappeto colpito che avvizzisce e si spegne, le anime che si staccano e salgono, l\'alone viola della mano, il teschio che prosciuga.',
   forgia:'Immagini: tre bruciature, schegge di roccia lavica, braci, archi elettrici; goblin e bomba. Il tappeto: lampi blu del fulmine, la bruciatura che scalda il tappeto da bianco a rosso, l\'aria che trema per il calore, ogni scossa e ogni scheggia che illumina.',
   selva:'Immagini: liane intrecciate e viticcio, zolle, foglie. Il tappeto: la spirale che passa davanti e dietro, il tappeto che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
 };
