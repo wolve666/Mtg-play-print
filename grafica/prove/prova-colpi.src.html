@@ -760,40 +760,39 @@ TH.mox = {
 // ---------- ABISSO: il gorgo e il getto a spirale
 function wavyPath(a, b, amp, t, n = 32){ const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
   for(let i = 0; i <= n; i++){ const u = i / n, o = (Math.sin(u * PI * 2.2 - t * 6) * amp + Math.sin(u * PI) * amp * .9) * Math.sin(PI * u); pts.push([a[0] + dx * u + nx * o, a[1] + dy * u + ny * o]) } return prep(pts) }
-// gorgo visto dall'alto (un po' schiacciato): fondo scuro, braccia di schiuma a spirale che girano, anello chiaro
+// gorgo visto dall'alto (un po' schiacciato): l'immagine dipinta che gira, con una seconda copia più piccola che gira più veloce (il centro risucchia)
 function whirl(c, x, y, R0, t, k, al = 1){
-  if(R0 < 2 || al <= 0) return; const sy = .78;
-  c.save(); c.translate(x, y); c.scale(1, sy);
-  let g = c.createRadialGradient(0, 0, 0, 0, 0, R0); g.addColorStop(0, `rgba(2,20,45,${.85 * al})`); g.addColorStop(.45, `rgba(10,70,130,${.55 * al})`); g.addColorStop(1, 'rgba(30,120,190,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, R0, 0, TAU); c.fill();
-  c.lineCap = 'round'; const arms = 5, spin = t * (3 + 4 * k);
-  for(let i = 0; i < arms; i++){ for(let layer = 0; layer < 2; layer++){
-    c.strokeStyle = layer ? `rgba(235,250,255,${.85 * al})` : `rgba(120,200,240,${.5 * al})`; c.lineWidth = layer ? Math.max(1, R0 * .05) : Math.max(2, R0 * .13); c.beginPath();
-    for(let j = 0; j <= 26; j++){ const u = j / 26, r = R0 * (.08 + .92 * u), a = -spin + i / arms * TAU + Math.log(.08 + u * 3) * (2.2 + k * 1.2) + layer * .06; j ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r) }
-    c.globalAlpha = 1; c.stroke() } }
-  c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(170,230,255,${.5 * al})`; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, R0 * .9, 0, TAU); c.stroke();
+  if(R0 < 2 || al <= 0) return; const im = I('abisso', 'gorgo', 0);
+  c.save(); c.translate(x, y); c.scale(1, .78);
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, R0 * 1.15); g.addColorStop(0, `rgba(0,10,30,${.6 * al})`); g.addColorStop(1, 'rgba(0,10,30,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, R0 * 1.15, 0, TAU); c.fill();
+  if(ok(im)){ c.globalAlpha = al; c.rotate(t * (1.4 + 2.6 * k)); c.drawImage(im, -R0, -R0, R0 * 2, R0 * 2);
+    c.globalAlpha = al * .5; c.rotate(t * (1.6 + 2.4 * k)); c.drawImage(im, -R0 * .6, -R0 * .6, R0 * 1.2, R0 * 1.2) }
   c.restore();
 }
-// getto d'acqua a spirale: corpo d'acqua trasparente, anima chiara, due bande di schiuma che girano a cavatappi, bolle che corrono
+// pezzo del getto che si ripete senza giunture: la fine sfuma nell'inizio
+function jetLoop(im){ if(im._loop) return im._loop; const W0 = iw(im), H0 = ih(im), sx0 = W0 * .1, sw = W0 * .8, ov = sw * .25, ow = Math.round(sw - ov);
+  const c = document.createElement('canvas'); c.width = ow; c.height = H0; const x = c.getContext('2d'); x.drawImage(im, sx0, 0, ow, H0, 0, 0, ow, H0);
+  const t = document.createElement('canvas'); t.width = Math.round(ov); t.height = H0; const y = t.getContext('2d'); y.drawImage(im, sx0 + ow, 0, ov, H0, 0, 0, ov, H0);
+  y.globalCompositeOperation = 'destination-in'; const g = y.createLinearGradient(0, 0, ov, 0); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)'); y.fillStyle = g; y.fillRect(0, 0, ov, H0);
+  x.drawImage(t, 0, 0); return im._loop = c }
+// getto d'acqua a spirale: l'immagine dipinta ripetuta lungo il getto e fatta scorrere in avanti (la spirale sembra girare e correre); in punta schiuma che esplode
 function waterJet(c, x0, y0, x1, y1, w, t, al){
-  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return;
-  const N = Math.max(14, l / 5 | 0), prof = u => (.8 + .14 * Math.sin(u * l * .06 - t * 20)) * Math.min(1, u * l / (w * .8) + .35);
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return; const im = I('abisso', 'jet', 0);
   c.save(); c.translate(x0, y0); c.rotate(Math.atan2(dy, dx));
-  const body = (k, fill) => { c.fillStyle = fill; c.beginPath(); for(let i = 0; i <= N; i++){ const u = i / N, hw = w * k * .5 * prof(u) * (1 + .06 * Math.sin(u * 50 - t * 35)); i ? c.lineTo(u * l, -hw) : c.moveTo(0, -hw) } for(let i = N; i >= 0; i--){ const u = i / N, hw = w * k * .5 * prof(u) * (1 + .06 * Math.sin(u * 47 - t * 31 + 2)); c.lineTo(u * l, hw) } c.fill() };
-  body(1.35, `rgba(20,90,160,${.35 * al})`); body(1, `rgba(40,140,215,${.65 * al})`);
-  const g = c.createLinearGradient(0, -w / 2, 0, w / 2); g.addColorStop(0, `rgba(120,210,255,${.0})`); g.addColorStop(.3, `rgba(190,240,255,${.75 * al})`); g.addColorStop(.5, `rgba(255,255,255,${.85 * al})`); g.addColorStop(.75, `rgba(120,210,255,${.4 * al})`); g.addColorStop(1, 'rgba(120,210,255,0)');
-  c.fillStyle = g; c.fillRect(0, -w * .3, l, w * .6);
-  c.lineCap = 'round';
-  for(let s = 0; s < 2; s++){ const pts = []; for(let i = 0; i <= N; i++){ const u = i / N, ph = u * l * .07 - t * 28 + s * PI; pts.push([u * l, Math.sin(ph) * w * .55 * prof(u), Math.cos(ph)]) }
-    for(let i = 0; i < N; i++){ const a = pts[i], b = pts[i + 1]; c.strokeStyle = a[2] > 0 ? `rgba(235,250,255,${(.45 + .4 * a[2]) * al})` : `rgba(150,210,240,${.25 * al})`; c.lineWidth = Math.max(1, w * (a[2] > 0 ? .07 + .06 * a[2] : .07)); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke() } }
-  c.fillStyle = `rgba(230,250,255,${.8 * al})`;
-  for(let k = 0; k < 7; k++){ const u = (t * 2.2 + k / 7) % 1, yy = Math.sin(k * 2.7 + t * 9) * w * .3; c.beginPath(); c.arc(u * l, yy, w * .06, 0, TAU); c.fill() }
+  const lp = ok(im) && jetLoop(im);
+  if(lp){ const H = w * 1.6, tl = H * lp.width / lp.height, off = (t * w * 10) % tl;
+    c.save(); c.beginPath(); c.rect(0, -H, l, H * 2); c.clip(); c.globalAlpha = al;
+    for(let x = off - tl; x < l; x += tl) c.drawImage(lp, x, -H / 2, tl + .5, H);
+    c.restore() }
+  if(l > w){ glow(c, l, 0, w * 1.1, '220,245,255', .8 * al); img(c, I('abisso', 'spray', (t * 18 | 0) % 8), l - w * .4, 0, w * 2.6, 0, .9 * al, null, .15, .5) }
   c.restore();
 }
-// spruzzi che il getto lancia di lato (gocce vere, ricadono e fanno il cerchietto) e nebbiolina
-function jetFX(list, x0, y0, x1, y1, w, dt, k, W){
+// spruzzi che il getto lancia di lato (gocce vere e ciuffi dipinti) e qualche bolla
+function jetFX(list, x0, y0, x1, y1, w, dt, k, W, slist){
   const l = Math.hypot(x1 - x0, y1 - y0); if(l < 4) return; const a = Math.atan2(y1 - y0, x1 - x0), nx = -Math.sin(a), ny = Math.cos(a);
-  if(R() < dt * 70 * k){ const u = R(), s = sgn(), v = 80 + R() * 200; pt(list, {k:'drop', x:x0 + (x1 - x0) * u + nx * s * w * .4, y:y0 + (y1 - y0) * u + ny * s * w * .4, vx:nx * s * v + Math.cos(a) * 120, vy:ny * s * v + Math.sin(a) * 120, vz:60 + R() * 140, gz:900, rest:.2, life:.8, r:W * (.006 + R() * .01), col:'190,235,255'}) }
-  if(R() < dt * 16 * k){ const u = R(); pt(list, {k:'smoke', x:x0 + (x1 - x0) * u, y:y0 + (y1 - y0) * u, vx:(R() - .5) * 30, vy:(R() - .5) * 30, r:w * .5, grow:1.6, life:.6, col:'215,240,255', al:.35}) }
+  if(R() < dt * 60 * k){ const u = R(), s = sgn(), v = 80 + R() * 200; pt(list, {k:'drop', x:x0 + (x1 - x0) * u + nx * s * w * .4, y:y0 + (y1 - y0) * u + ny * s * w * .4, vx:nx * s * v + Math.cos(a) * 120, vy:ny * s * v + Math.sin(a) * 120, vz:60 + R() * 140, gz:900, rest:.2, life:.8, r:W * (.006 + R() * .01), col:'190,235,255'}) }
+  if(slist && R() < dt * 14 * k){ const u = .2 + R() * .8, s = sgn(), ang = a + s * (.5 + R() * .5), v = 90 + R() * 120; slist.push(sp({im:I('abisso', 'spray'), x:x0 + (x1 - x0) * u + nx * s * w * .3, y:y0 + (y1 - y0) * u + ny * s * w * .3, vx:Math.cos(ang) * v, vy:Math.sin(ang) * v, drag:2.5, rot:ang, w:w * (1.4 + R()), life:.5, grow:.4, fin:.04, fout:.6, alpha:.9})) }
+  if(slist && R() < dt * 10 * k){ const u = R(); slist.push(sp({im:I('abisso', 'bubble'), x:x0 + (x1 - x0) * u + (R() - .5) * w, y:y0 + (y1 - y0) * u + (R() - .5) * w, vx:(R() - .5) * 40, vy:-20 - R() * 30, w:W * (.015 + R() * .025), life:.8, pop:.15, fout:.3, sway:20})) }
 }
 TH.abisso = {
   name:'Abisso', sub:'Blu · acqua e onde', col:'#5CC8F2',
@@ -808,6 +807,7 @@ TH.abisso = {
     whirl(c, cx, cy, Rv, T, ch); lit('A', cx, cy, W * .6, [.35, .75, 1.1], .6 + .8 * ch);
     // gocce che girano intorno al gorgo e ne vengono risucchiate
     if(R() < dt * (30 + 50 * ch)){ const a = R() * TAU, r = Rv * (1 + R() * .4); pt(FX.pA, {k:'drop', x:cx + Math.cos(a) * r, y:cy + Math.sin(a) * r * .78, vx:-Math.sin(a) * r * 4 - Math.cos(a) * r * 1.5, vy:(Math.cos(a) * r * 4 - Math.sin(a) * r * 1.5) * .78, drag:3, life:.45, r:W * (.006 + R() * .008), col:'190,235,255'}) }
+    if(R() < dt * (6 + 14 * ch)){ const a = R() * TAU, r = Rv * (.9 + R() * .3); FX.sA.push(sp({im:I('abisso', 'bubble'), x:cx + Math.cos(a) * r, y:cy + Math.sin(a) * r * .78, vx:-Math.sin(a) * r * 3 - Math.cos(a) * r * 1.4, vy:(Math.cos(a) * r * 3 - Math.sin(a) * r * 1.4) * .78, drag:2.5, w:W * (.015 + R() * .025), life:.5, fout:.4, grow:-.5})) }
     // filo d'acqua che indica la direzione
     waterJet(c, cx, cy, t.x, t.y, W * (.02 + .02 * ch), T, .45);
     if(on && R() < dt * 10) FX.sA.push(sp({im:I('abisso', 'foam'), x:tg[0] + (R() - .5) * tr.w * .7, y:tg[1] - tr.h * .3, w:W * .12, life:.6, pop:.15, rot:R() * TAU, spin:(R() - .5)}));
@@ -821,7 +821,7 @@ TH.abisso = {
       const head = eo(x / .2), tail = ei(clamp((x - .42) / .3)), hx = lerp(hb.x, x1, head), hy = lerp(hb.y, y1, head), tx0 = lerp(hb.x, x1, tail), ty0 = lerp(hb.y, y1, tail);
       const s = st('A'); s.sw[0] = hb.x; s.sw[1] = hb.y; s.sw[2] = 2.5 * Math.max(0, wr.x); s.sw[3] = W * .3;
       whirl(c, hb.x, hb.y, W * .25 * Math.max(0, wr.x), T, 1, Math.max(0, wr.x));
-      waterJet(c, tx0, ty0, hx, hy, jw * (1 - tail * .5), T, 1); jetFX(FX.pA, tx0, ty0, hx, hy, jw, dt, 1.6 * (1 - tail), W);
+      waterJet(c, tx0, ty0, hx, hy, jw * (1 - tail * .5), T, 1); jetFX(FX.pA, tx0, ty0, hx, hy, jw, dt, 1.6 * (1 - tail), W, FX.sA);
       lit('A', (tx0 + hx) / 2, Math.max((ty0 + hy) / 2, hb.y * .4), W * .7, [.35, .75, 1.1], 1.4 * (1 - tail)); return true });
     for(let i = 0; i < 20; i++){ const a = R() * TAU, v = 100 + R() * 200; pt(FX.pA, {k:'drop', x:hb.x, y:hb.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:100 + R() * 200, gz:1000, rest:.2, life:.9, r:W * (.007 + R() * .01), col:'190,235,255', land:p => pt(FX.pA, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * .05, life:.4, col:'210,245,255', lw:1})}) }
     return .5;
@@ -833,7 +833,7 @@ TH.abisso = {
     // il getto entra dall'alto, trivella il tappeto per un attimo, poi la coda ci cade dentro
     add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .25) return false;
       const head = eo(x / D), tail = ei(clamp((x - END) / .25)), hx = lerp(x0, o.x, head), hy = lerp(y0, o.y, head), sx = lerp(x0, o.x, tail), sy = lerp(y0, o.y, tail);
-      waterJet(c, sx, sy, hx, hy, jw * (1 - tail * .6), T, 1); jetFX(FX.pV2, sx, sy, hx, hy, jw, dt, 1.5 * (1 - tail), W);
+      waterJet(c, sx, sy, hx, hy, jw * (1 - tail * .6), T, 1); jetFX(FX.pV2, sx, sy, hx, hy, jw, dt, 1.5 * (1 - tail), W, FX.sV2);
       lit('V', hx, hy, W * .6, [.4, .8, 1.15], 1.2 * (1 - tail));
       // mentre trivella: spruzzo continuo dal punto d'impatto
       if(x > D && x < END + .1 && R() < dt * 90){ const a = R() * TAU, v = 120 + R() * 260; pt(FX.pV2, {k:'drop', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 300, gz:1100, rest:.2, life:1, r:W * (.007 + R() * .014), col:'185,232,255', land:p => pt(FX.pV, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * (.04 + R() * .04), life:.5, col:'225,248,255', lw:1.2, sq:.85})}) }
@@ -851,6 +851,8 @@ TH.abisso = {
       [0, .14, .3].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.4) return false; if(x < 0) return true; const k = eo(x / 1.4); img(c, I('abisso', 'ring', 0), o.x, o.y, W * (.3 + (1.6 - i * .3) * k), i + x * 2, (1 - k) * .9); return true }, dl));
       for(let i = 0; i < 56; i++){ const a = R() * TAU, v = 90 + R() * 320; pt(FX.pV2, {k:'drop', x:o.x + Math.cos(a) * W * .08, y:o.y + Math.sin(a) * W * .06, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:180 + R() * 400, gz:1150, rest:.2, life:1.1 + R() * .5, r:W * (.007 + R() * .016), col:'185,232,255',
         land:p => { pt(FX.pV, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * (.04 + R() * .05), life:.6, col:'225,248,255', lw:1.3, sq:.85}); const q = {x:p.x, y:p.y}; add('V', function(c, dt){ this.a += dt; if(this.a > .5) return false; wave('V', q.x, q.y, W * (.01 + .12 * this.a), 3 * (1 - this.a / .5), W * .02); return true }) }}) }
+      for(let i = 0; i < 14; i++) FX.sV2.push(sp({im:I('abisso', 'bubble'), x:o.x + (R() - .5) * W * .5, y:o.y + (R() - .5) * W * .35, vx:(R() - .5) * 30, vy:-25 - R() * 35, w:W * (.02 + R() * .035), life:1.4 + R(), pop:.2, fout:.25, sway:25, delay:.2 + R() * 1.6}));
+      for(let i = 0; i < 10; i++){ const a = i / 10 * TAU + R() * .3, v = 160 + R() * 160; FX.sV2.push(sp({im:I('abisso', 'spray'), x:o.x + Math.cos(a) * W * .06, y:o.y + Math.sin(a) * W * .05, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, drag:3, rot:a, w:W * (.3 + R() * .15), life:.6, grow:.5, fin:.03, fout:.6})) }
       for(let i = 0; i < 7; i++){ const a = i / 7 * TAU + R() * .5, r = W * (.16 + R() * .22); FX.sV.push(sp({im:I('abisso', 'splash'), x:o.x + Math.cos(a) * r, y:o.y + Math.sin(a) * r, vx:Math.cos(a) * 70, vy:Math.sin(a) * 70, drag:2.4, w:W * (.16 + R() * .1), life:1, pop:.22, fout:.5, rot:a + PI / 2, delay:R() * .12})) }
       // la schiuma gira intorno al gorgo mentre si allontana
       for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 50 + R() * 90; FX.sV.push(sp({im:I('abisso', 'foam'), x:o.x + Math.cos(a) * W * .1, y:o.y + Math.sin(a) * W * .1, vx:Math.cos(a) * v - Math.sin(a) * 90, vy:Math.sin(a) * v + Math.cos(a) * 90, drag:1.1, w:W * (.2 + R() * .12), life:3.2 + R(), pop:.3, fout:.55, alpha:.9, rot:R() * TAU, spin:1.5 + R(), grow:.5, delay:.05 + R() * .2})) }
