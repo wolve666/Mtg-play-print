@@ -59,6 +59,18 @@ A sheet of 6 separate small shards of red-hot metal of different shapes, glowing
 A sheet of 6 separate small glowing embers and burning coal pieces of different sizes, arranged on a 3×2 grid, evenly spaced and not touching.
 ```
 
+### A1. Elettricità (facoltative, deciso il 21 novembre)
+Il fulmine principale resta a codice (si ridisegna a ogni fotogramma e segue il dito). Queste due immagini lo arricchiscono: nella pagina di prova vanno accanto alla versione a codice, con un interruttore, e Federico sceglie sul telefono. Sono le uniche della Forgia in **blu e bianco**: la richiesta lo dice, così ChatGPT non le colora d'arancione.
+
+4a. **Foglio di 6 archi elettrici** (scosse sul campo colpito), 1536×1024 (li taglio io)
+```
+A sheet of 6 separate small electric arcs, each one a short jagged crackling lightning spark of a different shape (straight, forked, curled, star-shaped), electric blue core with bright white glow around it, arranged on a 3×2 grid, evenly spaced and not touching. These images use electric blue and white instead of the orange palette. Everything else transparent. 1536×1024.
+```
+4b. **Bruciatura elettrica** (impatto, terza variante), 1024×1024
+```
+Seen from directly above: a scorched impact mark on dark steel plate where lightning struck, a blackened crater with glowing orange cracks, and thin crackling electric blue-white arcs still dancing around the crater and along the cracks. The steel plate fades out to transparent at the edges, everything else transparent. 1024×1024.
+```
+
 ### A2. Il goblin bombarolo (sorpresa)
 Le due pose del goblin devono essere **lo stesso goblin**, stessa misura e stessa vista: chiedile una dopo l'altra nella stessa chat. Vista dall'alto, leggermente di lato, come gli oggetti del campo.
 
