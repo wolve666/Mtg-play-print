@@ -1177,14 +1177,17 @@ TH.cripta = {
 };
 
 // ---------- FORGIA
-function bolt(c, a, b, W, seed, al = 1, forks = 2){
+function bolt(c, a, b, W, seed, al = 1, forks = 2, sc = 1, jag = 1){
   let s = seed; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
-  const path = (a, b, amp) => { const n = Math.max(5, Math.hypot(b[0] - a[0], b[1] - a[1]) / (W * .05) | 0), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [a];
-    for(let i = 1; i < n; i++){ const u = i / n, j = (rnd() - .5) * amp * Math.sin(PI * u) * 2; pts.push([a[0] + dx * u + nx * j, a[1] + dy * u + ny * j]) } pts.push(b); return pts };
-  const main = path(a, b, W * .09), all = [[main, 1]];
-  for(let f = 0; f < forks; f++){ const p = main[1 + (rnd() * (main.length - 2) | 0)], ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + (rnd() - .5) * 1.8, l = W * (.1 + rnd() * .15); all.push([path(p, [p[0] + Math.cos(ang) * l, p[1] + Math.sin(ang) * l], W * .04), .5]) }
+  const path = (a, b, amp) => { const n = Math.max(5, Math.hypot(b[0] - a[0], b[1] - a[1]) / (W * .05 / jag) | 0), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [a];
+    let dr = 0; for(let i = 1; i < n; i++){ const u = clamp((i + (jag > 1 ? (rnd() - .5) * .7 : 0)) / n), sn = Math.sin(PI * u);
+      let j; if(jag > 1){ dr = dr * .7 + (rnd() - .5) * amp * 1.3; j = (dr + (rnd() < .2 ? (rnd() - .5) * amp * 1.6 : (rnd() - .5) * amp * .5)) * sn } else j = (rnd() - .5) * amp * sn * 2;
+      pts.push([a[0] + dx * u + nx * j, a[1] + dy * u + ny * j]) } pts.push(b); return pts };
+  const main = path(a, b, W * .09 * jag), all = [[main, 1]];
+  for(let f = 0; f < forks; f++){ const p = main[1 + (rnd() * (main.length - 2) | 0)], ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + (rnd() - .5) * 1.8, l = W * (.1 + rnd() * .15) * sc; const fp = path(p, [p[0] + Math.cos(ang) * l, p[1] + Math.sin(ang) * l], W * .04 * jag); all.push([fp, .5]);
+    if(jag > 1){ const q = fp[fp.length >> 1], a2 = ang + (rnd() - .5) * 1.6, l2 = l * .5; all.push([path(q, [q[0] + Math.cos(a2) * l2, q[1] + Math.sin(a2) * l2], W * .025 * jag), .3]) } }
   c.save(); c.globalCompositeOperation = 'lighter'; c.lineJoin = 'round'; c.lineCap = 'round';
-  all.forEach(([pts, k]) => [[W * .07, `rgba(255,255,255,${.12 * al})`], [W * .035, `rgba(255,255,255,${.3 * al})`], [W * .016, `rgba(60,150,255,${.95 * al})`], [W * .006, `rgba(220,240,255,${al})`]].forEach(([lw, col]) => { c.strokeStyle = col; c.lineWidth = lw * k; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() }));
+  all.forEach(([pts, k]) => [[W * .07, `rgba(255,255,255,${.12 * al})`], [W * .035, `rgba(255,255,255,${.3 * al})`], [W * .016, `rgba(60,150,255,${.95 * al})`], [W * .006, `rgba(220,240,255,${al})`]].forEach(([lw, col]) => { c.strokeStyle = col; c.lineWidth = lw * k * sc; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() }));
   c.restore(); return main;
 }
 function forgeImpact(o, W, pow = 1){
@@ -1227,28 +1230,42 @@ TH.forgia = {
   hit(tx){
     const W = W_(), o = fieldO(pV), x0 = clamp(tx, W * .2, W * .8);
     if(RM){ flash('#FFF4E0', .8, .6); damage(); return }
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; const m = bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32, 3);
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; const m = bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32, 6, 1.7, 1.9);
       lit('V', o.x, o.y, W * .9, [.6, .85, 1.35], 3 * (1 - x / .32)); const mid = m[m.length >> 1]; lit('V', mid[0], mid[1], W * .6, [.6, .85, 1.35], 2); return true });
     after(.12, () => forgeImpact(o, W));
   },
+  // il goblin sbuca da un angolo in basso del tappeto colpito (dal fianco o da sotto), grande, fino a poco sotto la vita; non si sposta:
+  // si muovono solo le braccia, che caricano e lanciano la bomba; poi torna da dove è venuto
   goblin(){
-    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), dir = sgn(), sx = dir > 0 ? -W * .2 : W * 1.2, gx = dir > 0 ? W * .24 : W * .76, gy = fb.y + fb.h * .82;
-    if(RM){ forgeImpact(o, W); return }
-    const sq = spr(1, 300, 10);
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.7) return false; stepS(sq, dt);
-      let px, pose = 'gob1', face = dir;
-      if(x < .55){ px = lerp(sx, gx, eo(x / .55)) } else if(x < .8){ px = gx; pose = 'gob2'; if(!this.t){ this.t = 1; sq.v -= 3 } } else { px = lerp(gx, sx, ei((x - .8) / .8)); pose = 'gob2'; face = -dir }
-      const ph = x * 16, hop = Math.abs(Math.sin(ph)) * W * .03, land = 1 - Math.abs(Math.sin(ph)); if(land > .97 && x < .55) sq.v -= .6;
-      c.save(); c.globalAlpha = .3; c.fillStyle = '#000'; c.beginPath(); c.ellipse(px, gy + W * .17, W * .12 * (1 - hop / W * 3), W * .03, 0, 0, TAU); c.fill(); c.restore();
-      c.save(); c.translate(px, gy - hop + W * .17); c.scale(face / Math.sqrt(sq.x), sq.x); img(c, I('forgia', pose, 0), 0, 0, W * .42, 0, 1, null, .5, 1); c.restore(); return true });
-    after(.55, () => {
-      const b = sp({im:I('forgia', 'bomb', 0), x:gx, y:gy + W * .12, w:W * .17, vx:(o.x - gx) / .55, vy:(o.y - gy - W * .12) / .55, z:W * .3, vz:560, gz:2200, rest:.42, drag:0, sh:1, spin:dir * 9, life:1.25, fout:.01,
-        land:() => impact(PI / 2, .25, b.x, b.y)});
-      FX.sV2.push(b);
-      add('V2', function(c, dt){ this.a += dt; if(this.a > 1.25) return false; const fl = .6 + .4 * Math.sin(this.a * 60); glow(c, b.x + W * .05, b.y - b.z - W * .07, W * .06, '255,200,80', fl); lit('V', b.x, b.y, W * .3, [1.2, .7, .3], fl);
-        if(R() < .6) pt(FX.pV2, {k:'spark', x:b.x + W * .05, y:b.y - b.z - W * .07, vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}); return true });
-      after(1.25, () => forgeImpact({x:b.x, y:b.y}, W, 1.2));
-    });
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), im = I('forgia', 'gob1', 0), im2 = I('forgia', 'gob2', 0);
+    if(RM || !ok(im)){ forgeImpact(o, W); return }
+    const left = R() < .5, fromSide = R() < .5, gw = W * .62, gh = gw * ih(im) / iw(im), face = left ? 1 : -1;
+    const gx = left ? fb.x + gw * .32 : fb.x + fb.w - gw * .32, gy = H + gh * .25, hx0 = gx + (left ? -1 : 1) * W * .7, hy0 = H + gh * 1.05;
+    const IN = .45, WIND = .45, THROW = .14, STAY = .35, OUT = .45, t1 = IN, t2 = t1 + WIND, t3 = t2 + THROW, t4 = t3 + STAY, t5 = t4 + OUT;
+    // le braccia si piegano senza tagli: la parte alta dell'immagine viene spostata a strisce sottili, di più in cima (mani e bomba), niente in basso
+    const V = .5, BOMB = [.53, .2];
+    const armAmt = x => x < t1 ? 0 : x < t2 ? -.14 * eo((x - t1) / WIND) + .01 * Math.sin(x * 30) : x < t3 ? lerp(-.14, .2, eo((x - t2) / THROW)) : .2 * (1 - eo((x - t3) / .25));
+    const bend = (v, amt) => v >= V ? 0 : amt * Math.pow((V - v) / V, 1.6);
+    const pos = x => { const k = x < t1 ? eo(x / IN) : x < t4 ? 1 : 1 - ei((x - t4) / OUT); return fromSide ? [lerp(hx0, gx, k), gy] : [gx, lerp(hy0, gy, k)] };
+    const toScr = (x, u, v) => { const p = pos(x), dx = bend(v, armAmt(x)) * gw, dy = -Math.abs(bend(v, armAmt(x))) * gh * .25; return [p[0] + ((u - .5) * gw + dx) * face, p[1] + (v - 1) * gh + dy] };
+    const drawBent = (c, amt) => { const n = 50, sh = ih(im) * V / n, dh = gh * V / n;
+      for(let i = 0; i < n; i++){ const v = (i + .5) / n * V, dx = bend(v, amt) * gw, dy = -Math.abs(bend(v, amt)) * gh * .25; c.drawImage(im, 0, i * sh, iw(im), sh + .6, -gw / 2 + dx, -gh + i * dh + dy, gw, dh + .8) }
+      c.drawImage(im, 0, ih(im) * V, iw(im), ih(im) * (1 - V), -gw / 2, -gh + gh * V, gw, gh * (1 - V)) };
+    let thrown = false;
+    add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > t5) return false; const p = pos(x), after_ = x > t3;
+      c.save(); c.translate(p[0], p[1]); c.scale(face, 1);
+      if(!after_) drawBent(c, armAmt(x));
+      else { const k = clamp((x - t3) / .12); c.globalAlpha = 1 - k; drawBent(c, armAmt(x)); c.globalAlpha = k; const w2 = gw * 1.25, h2 = w2 * ih(im2) / iw(im2); c.drawImage(im2, -w2 * .48, -h2 * .93, w2, h2) }
+      c.restore();
+      // miccia accesa mentre la tiene in mano
+      if(!after_){ const b = toScr(x, BOMB[0] + .2, BOMB[1] - .14); glow(c, b[0], b[1], W * .05, '255,200,80', .6 + .4 * Math.sin(x * 60)); if(R() < .5) pt(FX.pV2, {k:'spark', x:b[0], y:b[1], vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}) }
+      if(!thrown && x >= t3 - .02){ thrown = true; const b0 = toScr(x, BOMB[0], BOMB[1]), du = .6, tx = o.x + (R() - .5) * W * .2, ty = o.y + (R() - .5) * W * .1;
+        const b = sp({im:I('forgia', 'bomb', 0), x:b0[0], y:b0[1], w:W * .19, vx:(tx - b0[0]) / du, vy:(ty - b0[1]) / du, z:W * .05, vz:620, gz:2000, rest:.42, drag:0, sh:1, spin:face * 9, life:1.3, fout:.01, land:() => impact(PI / 2, .25, b.x, b.y)});
+        FX.sV2.push(b); SP.vPunch.v -= .3;
+        add('V2', function(c, dt){ this.a += dt; if(this.a > 1.3) return false; const fl = .6 + .4 * Math.sin(this.a * 60); glow(c, b.x + W * .05, b.y - b.z - W * .07, W * .06, '255,200,80', fl); lit('V', b.x, b.y, W * .3, [1.2, .7, .3], fl);
+          if(R() < .6) pt(FX.pV2, {k:'spark', x:b.x + W * .05, y:b.y - b.z - W * .07, vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}); return true });
+        after(1.3, () => forgeImpact({x:b.x, y:b.y}, W, 1.2)) }
+      return true });
   }
 };
 
