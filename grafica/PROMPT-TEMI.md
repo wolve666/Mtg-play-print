@@ -74,7 +74,8 @@ Game asset for a mobile fantasy companion app, theme "Abisso" (deep ocean, blue 
 
 ---
 
-## Cripta (Nero) · demoni, oscurità, anime  *(nome proposto)*
+## Cripta (Nero) · demoni, oscurità, anime
+Dettaglio completo in `grafica/cripta/STILE.md` (il colpo lì è più ricco: due dardi, scia, due venature, impatto, ciuffi di fumo).
 Colpo deciso: dardo fumoso nero e viola fatto di anime prosciugate; il campo avvizzisce (colori spenti, venature scure), poi torna normale. Fumo e scuro li faccio io; le immagini danno anime, vene e ossa.
 **Blocco base**
 ```
