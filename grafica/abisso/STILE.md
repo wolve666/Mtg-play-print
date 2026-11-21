@@ -105,3 +105,27 @@ Transparent background: bubbles and seaweed in the two top corners and coral in 
 ```
 A glowing blue pearl inside an open sea shell, soft light. 1024×1024.
 ```
+
+## Il gorgo e il getto (22 novembre, nuovo colpo)
+Il colpo ora è un gorgo che si forma sul bottone e spara un getto d'acqua a spirale, che trivella il tappeto avversario e fa splash. Gorgo e getto oggi sono a codice; queste immagini danno la materia (stessa chat di Abisso, blocco base prima). Le onde vecchie non servono più.
+
+G1. **Gorgo visto dall'alto** (lo faccio girare io), 1024×1024
+```
+Seen from directly above: a swirling ocean whirlpool, a spiral of deep blue water with bright white foam arms curling toward a dark center, translucent turquoise water at the edges fading softly to transparent, circular, everything else transparent. 1024×1024.
+```
+G2. **Getto d'acqua** (lo stendo io dalla partenza al bersaglio, quindi uniforme), 2048×512
+```
+A straight horizontal jet of rushing water seen from the side, running from left to right: a translucent blue water column with a bright white core, white foam twisting around it in a spiral like a corkscrew, small bubbles inside, uniform along its whole length with no head, the two short ends fading softly to transparent. 2048×512.
+```
+G3. **Punta del getto**, 1024×512
+```
+The front tip of a powerful water jet seen from the side, pointing to the right: the water bursts forward into a spinning cone of white foam and spray, droplets flying ahead, the left end clean and fading to transparent so it can join a water column. Everything else transparent. 1024×512.
+```
+G4. **Foglio di 8 spruzzi**, 1536×1024
+```
+A sheet of 8 separate water spray streaks of different lengths, each a stretched burst of droplets and foam flying to the right, translucent blue and white, on a 4×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+G5. **Foglio di 9 bolle**, 1024×1024
+```
+A sheet of 9 separate clear air bubbles of different sizes, glossy and transparent with bright highlights and thin blue rims, on a 3×3 grid, evenly spaced and not touching. Everything else transparent. 1024×1024.
+```
