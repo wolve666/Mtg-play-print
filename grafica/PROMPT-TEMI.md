@@ -9,6 +9,7 @@ Le immagini le disegna ChatGPT (o un'altra IA), io le animo e le monto nell'app.
 - Oggetti del campo (colpi, pezzi che volano): vista dall'alto leggermente di lato, come le radici di Selva. Interfaccia (cornici, elemento centrale, tasti): **di fronte, piatta**.
 - Fogli con più pezzi (foglie, gocce, schegge…): pezzi separati su una griglia, che non si toccano; li ritaglio io.
 - **Cornici e tasti**: angoli ricchi, lati semplici e uniformi (si allungano a qualsiasi misura). **Elemento centrale**: rettangolare con angoli smussati, centro vuoto e scuro per il simbolo; versione larga 2048×768 (H&O) e quadrata 1024×1024 (un telefono).
+- **Luce blu della stampante**: in tutti i temi il centro dell'elemento centrale deve essere **scuro, vuoto e senza luce**. Lì metto io il simbolo dell'app e l'alone blu che pulsa quando la stampante è collegata (uguale per tutti i temi, come nel Classico). Se l'immagine ha luce o simboli al centro: «the center must be dark, empty and unlit».
 - Sfondo della pagina iniziale in **tre livelli** 1080×2400: lontano (non trasparente), medio e vicino (trasparenti, centro vuoto).
 - Numeri, tasti + e − e contatori restano puliti: le immagini vanno su cornici, sfondi ed effetti.
 
