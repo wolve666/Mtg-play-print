@@ -777,16 +777,17 @@ function jetLoop(im){ if(im._loop) return im._loop; const W0 = iw(im), H0 = ih(i
   x.drawImage(t, 0, 0); return im._loop = c }
 // getto d'acqua a spirale: l'immagine dipinta ripetuta lungo il getto e fatta scorrere in avanti (la spirale sembra girare e correre); in punta schiuma che esplode
 // flare > 0: la base si allarga a imbuto (un vortice al contrario che esce verso l'avversario)
-function waterJet(c, x0, y0, x1, y1, w, t, al, flare = 0, fl = 0){
+function waterJet(c, x0, y0, x1, y1, w, t, al, flare = 0, fl = 0, texW = w){
   const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return; const im = I('abisso', 'jet', 0);
   c.save(); c.translate(x0, y0); c.rotate(Math.atan2(dy, dx));
   const lp = ok(im) && jetLoop(im);
-  if(lp){ const H = w * 1.6, tl = H * lp.width / lp.height, off = (t * w * 10) % tl, pw = lp.width, ph = lp.height;
+  // il disegno della spirale ha sempre la stessa lunghezza (texW): quando il getto si stringe cambia solo la larghezza, non scivola
+  if(lp){ const H = w * 1.6, tl = texW * 1.6 * lp.width / lp.height, off = (t * texW * 10) % tl, pw = lp.width, ph = lp.height;
     c.save(); c.globalAlpha = al;
     if(!flare){ c.beginPath(); c.rect(0, -H, l, H * 2); c.clip(); for(let x = off - tl; x < l; x += tl) c.drawImage(lp, x, -H / 2, tl + .5, H) }
     else { const prof = x => 1 + flare * Math.exp(-x / fl) * (1 + .06 * Math.sin(t * 18 - x * .1)), st = Math.max(4, w * .15);
       for(let x = 0; x < l; x += st){ const h = H * prof(x), u = (((x - off) % tl) + tl) % tl / tl, sw = st / tl * pw;
-        let sx = u * pw; if(sx + sw > pw) sx = pw - sw; c.globalAlpha = al * Math.min(1, Math.pow(x / (fl * 1.6), 1.3)); c.drawImage(lp, sx, 0, sw, ph, x, -h / 2, st + .8, h) } }
+        let sx = u * pw; if(sx + sw > pw) sx = pw - sw; c.globalAlpha = al * Math.min(1, .35 + x / (fl * .5)); c.drawImage(lp, sx, 0, sw, ph, x, -h / 2, st + .8, h) } }
     c.restore() }
   if(l > w){ glow(c, l, 0, w * 1.1, '220,245,255', .8 * al); img(c, I('abisso', 'spray', (t * 18 | 0) % 8), l - w * .4, 0, w * 2.6, 0, .9 * al, null, .15, .5) }
   c.restore();
@@ -826,7 +827,9 @@ TH.abisso = {
       if(x > OUT && x < GONE){ const head = eo((x - OUT) / .2), hx = lerp(hb.x, x1, head), hy = lerp(hb.y, y1, head), wk = x < NARROW ? 1 : 1 - ei((x - NARROW) / (GONE - NARROW)), ja = Math.atan2(y1 - hb.y, x1 - hb.x);
         if(!this.kick){ this.kick = 1; SP.aHub.v -= 3.5; SP.aPunch.v -= .9; if(navigator.vibrate) try{ navigator.vibrate([25, 20, 40]) }catch(e){} }
         const fo = eo((x - OUT) / .25) * wk;
-        waterJet(c, hb.x, hb.y, hx, hy, jw * wk, T, Math.min(1, wk * 1.5), 1.7 * fo, W * .13); jetFX(FX.pA, hb.x, hb.y, hx, hy, jw * wk, dt, 1.3 * wk, W, FX.sA);
+        waterJet(c, hb.x, hb.y, hx, hy, jw * wk, T, Math.min(1, wk * 2.5), 1.7 * fo, W * .13, jw);
+        // mentre si chiude lascia spruzzi e gocce che volano via verso l'avversario
+        if(x > NARROW && R() < dt * 40){ const u = .1 + R() * .9, px = lerp(hb.x, hx, u), py = lerp(hb.y, hy, u), v = 120 + R() * 200; if(R() < .5) FX.sA.push(sp({im:I('abisso', 'spray'), x:px, y:py, vx:Math.cos(ja) * v, vy:Math.sin(ja) * v, drag:1.8, rot:ja, w:jw * (1 + R() * .8), life:.55, grow:.5, fin:.03, fout:.6, alpha:.8})); else pt(FX.pA, {k:'drop', x:px + (R() - .5) * jw, y:py, vx:Math.cos(ja) * v * .6 + (R() - .5) * 60, vy:Math.sin(ja) * v * .6, vz:60 + R() * 100, gz:900, rest:.2, life:.8, r:W * (.006 + R() * .01), col:'190,235,255'}) } jetFX(FX.pA, hb.x, hb.y, hx, hy, jw * wk, dt, 1.3 * wk, W, FX.sA);
         // base piena: nuvolette di vapore di vario spessore e tante bollicine che escono dalla base del getto
         const bx = hb.x + Math.cos(ja) * W * .04, by = hb.y + Math.sin(ja) * W * .04;
         if(R() < dt * 26 * wk){ const sa = ja + PI + (R() - .5) * 2.8, v = 40 + R() * 90, th = R(), big = th > .7;
@@ -847,7 +850,8 @@ TH.abisso = {
     // il getto entra dall'alto, trivella il tappeto per un attimo, poi la coda ci cade dentro
     add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .25) return false;
       const head = eo(x / D), wk = 1 - ei(clamp((x - END) / .25)), hx = lerp(x0, o.x, head), hy = lerp(y0, o.y, head);
-      waterJet(c, x0, y0, hx, hy, jw * wk, T, Math.min(1, wk * 1.5)); jetFX(FX.pV2, x0, y0, hx, hy, jw * wk, dt, 1.5 * wk, W, FX.sV2);
+      waterJet(c, x0, y0, hx, hy, jw * wk, T, Math.min(1, wk * 2.5), 0, 0, jw);
+      if(x > END && R() < dt * 40){ const u = R(), px = lerp(x0, hx, u), py = lerp(y0, hy, u); FX.sV2.push(sp({im:I('abisso', 'spray'), x:px, y:py, vx:(R() - .5) * 60, vy:-120 - R() * 160, drag:1.8, rot:-PI / 2, w:jw * (1 + R() * .8), life:.55, grow:.5, fin:.03, fout:.6, alpha:.8})) } jetFX(FX.pV2, x0, y0, hx, hy, jw * wk, dt, 1.5 * wk, W, FX.sV2);
       lit('V', hx, hy, W * .6, [.4, .8, 1.15], 1.2 * wk);
       // mentre trivella: spruzzo continuo dal punto d'impatto
       if(x > D && x < END + .1 && R() < dt * 90){ const a = R() * TAU, v = 120 + R() * 260; pt(FX.pV2, {k:'drop', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 300, gz:1100, rest:.2, life:1, r:W * (.007 + R() * .014), col:'185,232,255', land:p => pt(FX.pV, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * (.04 + R() * .04), life:.5, col:'225,248,255', lw:1.2, sq:.85})}) }
