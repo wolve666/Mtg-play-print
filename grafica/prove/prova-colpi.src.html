@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Prova dei colpi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Pagina di prova: due telefoni finti, Bea colpisce Federico. Il tema si sceglie in alto; ogni tema ha il suo colpo fatto con le immagini vere. */
+:root{
+  color-scheme:dark;
+  --bg:#0B0D12; --panel:#13161E; --panel2:#1A1E29; --line:#2A3040;
+  --text:#EEF0F6; --muted:#9AA1B4; --ac:#E7BE5C; --ac2:#8A6A20;
+  --ui:'Barlow', system-ui, sans-serif;
+  --tf:'Barlow Condensed', system-ui, sans-serif;
+}
+body.t-santuario{--ac:#F2D27A;--ac2:#A8812C;--bg:#0E0D0B;--panel:#191712;--panel2:#221F17;--line:#3A3424}
+body.t-mox{--ac:#7FE3F0;--ac2:#2C7F8A;--bg:#0B0E10;--panel:#14181B;--panel2:#1B2125;--line:#2C363C}
+body.t-abisso{--ac:#5CC8F2;--ac2:#1C6A9A;--bg:#081018;--panel:#0F1A24;--panel2:#14222F;--line:#22384A}
+body.t-cripta{--ac:#B784F2;--ac2:#5E2E9A;--bg:#0D0A12;--panel:#17121F;--panel2:#1F1829;--line:#342A44}
+body.t-forgia{--ac:#FF9A3C;--ac2:#A8401A;--bg:#100B09;--panel:#1B1411;--panel2:#241A15;--line:#3E2C22}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:16px/1.45 var(--ui);margin:0;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));transition:background .4s}
+main{max-width:980px;margin:0 auto;display:grid;gap:22px}
+h1,h2{font-family:var(--tf);margin:0;line-height:1.05;text-wrap:balance}
+h1{font-size:clamp(30px,6vw,46px);font-weight:800}
+h2{font-size:clamp(22px,4vw,30px);font-weight:800}
+p{margin:0;max-width:68ch;color:var(--muted)}
+.intro{display:grid;gap:8px}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ac)}
+section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line)}
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.th{display:grid;gap:2px;text-align:left;padding:10px 12px;border-radius:14px 4px 14px 4px;background:var(--panel2);color:var(--text);border:0;box-shadow:inset 0 0 0 1px var(--line);font:inherit;cursor:pointer}
+.th b{font-family:var(--tf);font-size:22px;line-height:1.1}
+.th small{color:var(--muted);font-size:13px}
+.th i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;background:var(--c)}
+.th.sel{box-shadow:inset 0 0 0 2px var(--ac);background:color-mix(in srgb,var(--panel2),var(--ac) 10%)}
+.th:focus-visible,.btn:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{padding:12px 18px;border-radius:14px 4px 14px 4px;border:0;font:700 15px var(--ui);background:linear-gradient(135deg,var(--ac),var(--ac2));color:#120E06;cursor:pointer}
+.btn.alt{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.chk{display:flex;gap:8px;align-items:center;padding:10px 14px;border-radius:14px 4px 14px 4px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line);font-size:15px;cursor:pointer}
+.btn[hidden]{display:none}
+#desc{min-height:3em}
+.phones{display:grid;grid-template-columns:repeat(2,minmax(0,290px));gap:14px;justify-content:center}
+.pcol{display:grid;gap:6px;justify-items:center;min-width:0}
+.pcol small{color:var(--muted);font-size:13px;text-align:center}
+.phone{width:100%;aspect-ratio:9/19;max-width:100%;border-radius:26px;padding:7px;background:#050608;box-shadow:0 0 0 1px var(--line),0 12px 30px rgba(0,0,0,.5)}
+.scr{position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;background:#090B0F;container-type:inline-size}
+.scr canvas.full{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.bar{position:absolute;left:0;right:0;top:0;height:15%;padding:7cqw 3cqw 2cqw;display:flex;gap:2cqw;z-index:1}
+.bar i{position:absolute;left:0;right:0;top:0;height:1.2cqw;background:#6CC24A;box-shadow:0 0 3cqw #6CC24A}
+.tile{flex:1;border-radius:5cqw 1.6cqw 5cqw 1.6cqw;background:var(--pc);color:#fff;display:grid;place-items:center;align-content:center;font-family:var(--tf);line-height:1}
+.tile small{font:700 3.4cqw var(--ui);opacity:.9}
+.tile b{font-size:11cqw;font-weight:800}
+.field{position:absolute;left:2.5cqw;right:2.5cqw;top:16%;bottom:1.5%;border-radius:8cqw 2.4cqw 8cqw 2.4cqw;overflow:hidden;
+  background:radial-gradient(120% 95% at 50% 40%,transparent 52%,rgba(0,0,0,.4)),linear-gradient(170deg,color-mix(in srgb,var(--pc),#fff 9%),var(--pc) 50%,color-mix(in srgb,var(--pc) 68%,#000))}
+.scr .fxu{z-index:2}
+.hub{position:absolute;left:50%;top:50%;translate:-50% -50%;width:62cqw;z-index:3;pointer-events:none;display:grid;place-items:center}
+.hub img{grid-area:1/1;display:block}
+.hub .plate{width:100%;height:auto;filter:drop-shadow(0 1.5cqw 2cqw rgba(0,0,0,.5))}
+.hub .emb{width:15cqw;height:15cqw;filter:drop-shadow(0 0 2cqw rgba(80,160,255,.55))}
+.life{position:absolute;left:50%;top:73%;translate:-50% -50%;z-index:4;font-family:var(--tf);font-weight:800;font-size:44cqw;line-height:1;color:#fff;text-shadow:0 1cqw 0 rgba(0,0,0,.3),0 0 5cqw rgba(0,0,0,.55);font-variant-numeric:tabular-nums}
+.delta{position:absolute;right:8cqw;top:22%;z-index:7;font:800 11cqw var(--tf);color:#fff;opacity:0;text-shadow:0 0 3cqw rgba(0,0,0,.7)}
+.delta.on{animation:dl 1.8s ease-out}
+@keyframes dl{10%{opacity:1}75%{opacity:1}100%{opacity:0}}
+.scr .fxo{z-index:6}
+#pA{touch-action:none;cursor:grab}
+.note{font-size:14px}
+@media (prefers-reduced-motion:reduce){.delta.on{animation:none;opacity:1}}
+@media (max-width:420px){.phones{gap:8px}.phone{padding:5px;border-radius:20px}.scr{border-radius:16px}}
+</style>
+</head>
+<body class="t-santuario">
+<main>
+  <div class="intro">
+    <span class="lbl">Magic Play&amp;Print · V2 prerelease</span>
+    <h1>I colpi dei temi, con le immagini vere</h1>
+    <p>Scegli il tema, poi trascina dall'elemento centrale di Bea fino al quadratino di Federico in alto e lascia. Oppure tocca «Guarda il colpo». Le immagini sono quelle arrivate oggi: ritagliate, separate e compresse; i movimenti, i lampi e i tremolii sono fatti a codice.</p>
+  </div>
+  <section aria-labelledby="tsel">
+    <span class="lbl" id="tsel">Tema</span>
+    <div class="themes" id="themes"></div>
+  </section>
+  <section aria-labelledby="t1">
+    <span class="lbl">Il colpo</span>
+    <h2 id="t1">Bea colpisce Federico</h2>
+    <p id="desc"></p>
+    <div class="row">
+      <button class="btn" id="goLaunch">Guarda il colpo</button>
+      <button class="btn alt" id="goHit">Solo l'arrivo</button>
+      <button class="btn alt" id="goGob" hidden>Sorpresa: il goblin</button>
+      <label class="chk"><input type="checkbox" id="slow"> Al rallentatore</label>
+    </div>
+    <div class="phones">
+      <div class="pcol"><div class="phone"><div class="scr" id="pA">
+        <div class="bar"><i></i><div class="tile" style="--pc:#2D6FA3"><small>Federico</small><b id="aTile">40</b></div></div>
+        <div class="field" style="--pc:#B23A2A"></div>
+        <div class="hub" id="hubA"><img class="plate" alt=""><img class="emb" alt=""></div>
+        <div class="life">40</div>
+        <canvas class="full fxo" id="cvA"></canvas>
+      </div></div><small>Bea, chi attacca</small></div>
+      <div class="pcol"><div class="phone"><div class="scr" id="pV">
+        <div class="bar"><i></i><div class="tile" style="--pc:#B23A2A"><small>Bea</small><b>40</b></div></div>
+        <div class="field" id="fV" style="--pc:#2D6FA3"></div>
+        <canvas class="full fxu" id="cvV"></canvas>
+        <div class="hub" id="hubV"><img class="plate" alt=""><img class="emb" alt=""></div>
+        <div class="life" id="lifeV">40</div>
+        <canvas class="full fxo" id="cvV2"></canvas>
+        <div class="delta" id="dV">−3</div>
+      </div></div><small>Federico, chi è colpito</small></div>
+    </div>
+    <p class="note" id="note"></p>
+  </section>
+</main>
+<script>
+const A = __ASSETS__;
+const MAN = __MAN__;
+const HUBS = __HUBS__;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DPR = Math.min(2, devicePixelRatio || 1);
+const R = Math.random, TAU = Math.PI * 2;
+const pick = a => a[R() * a.length | 0];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const eo = k => 1 - Math.pow(1 - clamp(k, 0, 1), 3);
+const ei = k => Math.pow(clamp(k, 0, 1), 2);
+const env = (x, a, h, b) => x < 0 ? 0 : x < a ? x / a : x < a + h ? 1 : Math.max(0, 1 - (x - a - h) / b);
+
+// ---------- immagini
+const IM = {};
+for(const k in A){ const im = new Image(); im.src = 'data:image/webp;base64,' + A[k]; IM[k] = im }
+const L = (t, k) => (MAN[t][k] || []).map(x => IM[x.k]);
+const I = (t, k, i) => { const l = L(t, k); return l[(i ?? (R() * l.length | 0)) % l.length] };
+const ok = im => im && im.complete && im.naturalWidth;
+
+// ---------- canvas a misura
+function fit(cv){ const w = cv.clientWidth, h = cv.clientHeight; if(cv._w !== w || cv._h !== h){ cv._w = w; cv._h = h; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR) } const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); return c }
+// immagine centrata in x,y, larga w, ruotata
+function img(c, im, x, y, w, rot = 0, a = 1, blend, ax = .5, ay = .5){
+  if(!ok(im) || a <= 0 || w <= 0) return; const h = w * im.naturalHeight / im.naturalWidth;
+  c.save(); c.globalAlpha = Math.min(1, a); if(blend) c.globalCompositeOperation = blend; c.translate(x, y); if(rot) c.rotate(rot); c.drawImage(im, -w * ax, -h * ay, w, h); c.restore();
+}
+// immagine stesa da p0 a p1, alta H
+function stretch(c, im, x0, y0, x1, y1, H, a = 1, blend){
+  if(!ok(im) || a <= 0) return; const l = Math.hypot(x1 - x0, y1 - y0); if(l < 1) return;
+  c.save(); c.globalAlpha = Math.min(1, a); if(blend) c.globalCompositeOperation = blend; c.translate(x0, y0); c.rotate(Math.atan2(y1 - y0, x1 - x0)); c.drawImage(im, 0, -H / 2, l, H); c.restore();
+}
+function glow(c, x, y, r, col, a){ if(a <= 0) return; const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col.replace('A', a)); g.addColorStop(1, col.replace('A', 0)); c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); c.restore() }
+
+// ---------- sprite che volano (pezzi, piume, gocce…)
+function sp(o){ return Object.assign({a:0, life:1, vx:0, vy:0, g:0, drag:0, rot:0, spin:0, w:20, alpha:1, fin:.06, fout:.35, grow:0, hop:0, flut:0, sway:0, ph:R() * TAU, delay:0}, o) }
+function drawSprites(list, c, dt){
+  for(let i = list.length - 1; i >= 0; i--){ const p = list[i];
+    if(p.delay > 0){ p.delay -= dt; continue }
+    p.a += dt; if(p.a > p.life){ list.splice(i, 1); continue }
+    const f = Math.exp(-p.drag * dt); p.vx *= f; p.vy = p.vy * f + p.g * dt; p.x += (p.vx + (p.sway ? Math.sin(p.a * 2.4 + p.ph) * p.sway : 0)) * dt; p.y += p.vy * dt; p.rot += p.spin * dt;
+    const k = p.a / p.life, al = p.alpha * Math.min(1, p.a / p.fin) * Math.min(1, (1 - k) / p.fout) * (p.flick ? .55 + .45 * Math.sin(p.a * 40 + p.ph) : 1);
+    let w = p.w * (1 + p.grow * k) * (p.hop ? 1 + p.hop * Math.sin(Math.PI * Math.min(1, k * 1.6)) : 1);
+    if(!ok(p.im)) continue;
+    const h = w * p.im.naturalHeight / p.im.naturalWidth;
+    c.save(); c.globalAlpha = clamp(al, 0, 1); if(p.blend) c.globalCompositeOperation = p.blend; c.translate(p.x, p.y); c.rotate(p.rot + (p.flut ? Math.sin(p.a * 3 + p.ph) * p.flut : 0));
+    if(p.flut) c.scale(.45 + .55 * Math.abs(Math.cos(p.a * 2.2 + p.ph)), 1);
+    c.drawImage(p.im, -w / 2, -h / 2, w, h); c.restore();
+  }
+}
+
+// ---------- tempo della simulazione (il rallentatore rallenta tutto)
+let T = 0, last = performance.now(), slow = false;
+const Q = [];
+function after(d, f){ Q.push({t:T + d, f}) }
+
+// ---------- i due telefoni
+const pA = document.getElementById('pA'), pV = document.getElementById('pV'), cvA = document.getElementById('cvA'), cvV = document.getElementById('cvV'), cvV2 = document.getElementById('cvV2');
+const fV = document.getElementById('fV'), lifeV = document.getElementById('lifeV'), dV = document.getElementById('dV'), aTile = document.getElementById('aTile');
+function hubBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x:W / 2, y:H * .5, w:W * .62, h:W * .21} }
+function fieldBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x:W * .025, y:H * .16, w:W * .95, h:H * .825} }
+// punto d'impatto: al centro del campo, tra l'elemento centrale e la vita
+function fieldO(scr){ const fb = fieldBox(scr); return {x:fb.x + fb.w / 2, y:scr.clientHeight * .6} }
+function rel(e, el){ const r = el.getBoundingClientRect(); return [(e.clientX - r.left) * el.clientWidth / r.width, (e.clientY - r.top) * el.clientHeight / r.height] }
+function tileRect(scr){ const t = scr.querySelector('.tile'), r = t.getBoundingClientRect(), s = scr.getBoundingClientRect(), k = scr.clientWidth / s.width; return {x:(r.left - s.left) * k, y:(r.top - s.top) * k, w:r.width * k, h:r.height * k} }
+function overTile(p){ const t = tileRect(pA); return p[0] > t.x - 6 && p[0] < t.x + t.w + 6 && p[1] > t.y - 6 && p[1] < t.y + t.h + 14 }
+
+// effetti in corso: ognuno ha draw(c, dt) che dice se è ancora vivo
+const FX = {A:[], V:[], V2:[], sA:[], sV:[], sV2:[]};
+const add = (k, a, draw) => FX[k].push({a, draw});
+let shake = null, wither = null, life = 40;
+function doShake(amt, dur){ shake = {a:0, amt, dur} }
+function damage(n = 3){
+  life -= n; if(life < 10) life = 40; lifeV.textContent = life; aTile.textContent = life; dV.textContent = '−' + n; dV.classList.remove('on'); void dV.offsetWidth; dV.classList.add('on');
+  if(navigator.vibrate) try{ navigator.vibrate([20, 40, 30]) }catch(e){}
+}
+// lampo su tutto il campo (sotto il numero della vita se low, sopra se top)
+function flash(col, peak, dur, top){ add(top ? 'V2' : 'V', 0, function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; c.save(); c.globalAlpha = peak * (k < .08 ? k / .08 : Math.pow(1 - (k - .08) / .92, 1.6)); c.fillStyle = col; c.fillRect(0, 0, pV.clientWidth, pV.clientHeight); c.restore(); return true }) }
+
+// ================= I TEMI =================
+const TH = {};
+
+// ---------- SANTUARIO: raggio di grazia
+TH.santuario = {
+  name:'Santuario', sub:'Bianco · luce e angeli', col:'#F2D27A',
+  desc:'Raggio di grazia. Mentre trascini il filo di luce si carica e si allarga, la sfera cresce sull\'elemento centrale; sopra il quadratino l\'aureola si aggancia. Al rilascio parte il fascio pieno. Sul telefono di Federico le nuvole si aprono, il raggio scende al centro, esplosione di luce, aureola che si allarga, lampo bianco e piume che cadono ondeggiando.',
+  aim(c, d, dt){
+    const W = pA.clientWidth, hb = hubBox(pA), ch = d.charge = clamp((T - d.t0 - .1) / 1.3, 0, 1), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p;
+    glow(c, hb.x, hb.y, W * (.14 + .2 * ch), 'rgba(255,230,160,A)', .5 + .3 * ch);
+    img(c, I('santuario', 'orb', 0), hb.x, hb.y, W * (.12 + .2 * ch), T * .6, .55 + .45 * ch, 'lighter');
+    const Hh = W * (.035 + .13 * ch) * (1 + .12 * Math.sin(T * 34) * ch);
+    stretch(c, I('santuario', 'beam', 0), hb.x, hb.y, e[0], e[1], Hh, (.55 + .45 * ch) * (.85 + .15 * Math.sin(T * 50)), 'lighter');
+    if(on){ img(c, I('santuario', 'halo', 0), e[0], e[1], tr.w * (1.05 + .05 * Math.sin(T * 6)), T * .4, .9, 'lighter'); glow(c, e[0], e[1], tr.w * .6, 'rgba(255,240,190,A)', .35) }
+    if(ch >= 1 && R() < dt * 26){ const u = R(); FX.sA.push(sp({im:I('santuario', 'down'), x:lerp(hb.x, e[0], u), y:lerp(hb.y, e[1], u), vx:(R() - .5) * 60, vy:(R() - .5) * 60, w:W * .04, life:.5, blend:'lighter', spin:(R() - .5) * 4})) }
+  },
+  launch(d, tx){
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ch = d.charge || 0, ex = tr.x + tr.w / 2, ty = tr.y + tr.h / 2;
+    const k = (-20 - hb.y) / (ty - hb.y), x1 = hb.x + (ex - hb.x) * k, H = W * (.08 + .16 * ch), im = I('santuario', 'beam', 0);
+    add('A', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > .8) return false; const w = x < .08 ? x / .08 : 1, al = x < .4 ? 1 : 1 - (x - .4) / .4;
+      glow(c, hb.x, hb.y, W * .3, 'rgba(255,240,200,A)', al * .7);
+      stretch(c, im, hb.x, hb.y, x1, -20, H * w, al, 'lighter'); stretch(c, im, hb.x, hb.y, x1, -20, H * w * .45, al, 'lighter');
+      img(c, I('santuario', 'halo', 0), ex, ty, tr.w * (1 + x * 1.2), 0, al, 'lighter'); return true });
+    for(let i = 0; i < 6; i++){ const u = .2 + R() * .6; FX.sA.push(sp({im:I('santuario', 'feath'), x:lerp(hb.x, x1, u), y:lerp(hb.y, -20, u), vx:(R() - .5) * 30, vy:20 + R() * 30, g:20, w:W * (.07 + R() * .05), life:1.8, flut:.5, sway:40, delay:R() * .2})) }
+    return .5;
+  },
+  hit(tx){
+    const W = pV.clientWidth, fb = fieldBox(pV), o = fieldO(pV), top = fb.y - W * .02, cx = clamp(tx, W * .3, W * .7);
+    if(RM){ flash('#FFF8E8', .9, 1.2); damage(); return }
+    add('V2', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 3) return false; const k = env(x, .3, 1.9, .8);
+      img(c, I('santuario', 'clouds', 0), cx, top + W * .06, W * (1.1 + .1 * eo(x / 3)), 0, k); glow(c, cx, top + W * .08, W * .3, 'rgba(255,236,170,A)', k * .6); return true });
+    const beam = I('santuario', 'beam', 0);
+    add('V', 0, function(c, dt){ this.a += dt; const x = this.a - .3; if(x > 1.3) return true && x < 1.3; if(x < 0) return true;
+      const w = x < .12 ? x / .12 : 1, al = x < .55 ? 1 : Math.max(0, 1 - (x - .55) / .7);
+      stretch(c, beam, cx, top + W * .05, o.x, o.y, W * .26 * w, al, 'lighter'); stretch(c, beam, cx, top + W * .05, o.x, o.y, W * .1 * w, al, 'lighter');
+      glow(c, o.x, o.y, W * .35, 'rgba(255,245,210,A)', al * .8); return true });
+    after(.42, () => {
+      add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.2) return false; img(c, I('santuario', 'burst', 0), o.x, o.y, W * (.3 + 1.0 * eo(x / .5)), x * .3, x < .35 ? 1 : 1 - (x - .35) / .85, 'lighter'); return true });
+      add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; const k = eo(x / 1.3); img(c, I('santuario', 'halo', 0), o.x, o.y, W * (.3 + 1.3 * k), 0, 1 - k, 'lighter'); return true });
+      add('V', -.25, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; if(x < 0) return true; const k = eo(x / 1.3); img(c, I('santuario', 'halo', 0), o.x, o.y, W * (.2 + 1.0 * k), 0, (1 - k) * .7, 'lighter'); return true });
+      flash('#FFF8EA', .92, 1.8);
+      for(let i = 0; i < 9; i++) FX.sV.push(sp({im:I('santuario', 'feath'), x:fb.x + R() * fb.w, y:fb.y + R() * fb.h * .45, vx:(R() - .5) * 20, vy:25 + R() * 25, g:8, w:W * (.08 + R() * .06), life:2.6 + R(), flut:.6, sway:50, delay:.2 + R() * .5, fout:.3}));
+      for(let i = 0; i < 12; i++){ const a = R() * TAU, v = 60 + R() * 160; FX.sV.push(sp({im:I('santuario', 'down'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.6, g:14, w:W * (.035 + R() * .03), life:1.6 + R(), spin:(R() - .5) * 3, blend:'lighter', sway:20})) }
+      doShake(.4, .4); damage();
+    });
+  }
+};
+
+// ---------- MOX: bomba a orologeria
+function arcPts(a, b, lift){ const cx = (a[0] + b[0]) / 2, cy = Math.min(a[1], b[1]) - lift; return u => { const v = 1 - u; return [v * v * a[0] + 2 * v * u * cx + u * u * b[0], v * v * a[1] + 2 * v * u * cy + u * u * b[1]] } }
+TH.mox = {
+  name:'Mox', sub:'Incolore · artefatti e macchine', col:'#9FE7F0',
+  desc:'Bomba a orologeria. Trascinando, la bomba compare sotto il dito e una traiettoria a puntini parte dall\'elemento centrale; sopra il quadratino si chiude il mirino meccanico. Sul telefono di Federico la bomba cade, rimbalza, il nucleo lampeggia tre volte, si apre ed esplode: lo schermo si frantuma, le schegge cadono, poi tutto si ricompone.',
+  aim(c, d, dt){
+    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, f = arcPts([hb.x, hb.y], e, W * .25);
+    c.save(); for(let i = 0; i < 26; i++){ const u = ((i + T * 3) % 26) / 26, p = f(u); c.globalAlpha = .35 + .65 * Math.sin(Math.PI * u); c.fillStyle = i % 2 ? '#C9A45A' : '#9FF3FF'; c.beginPath(); c.arc(p[0], p[1], W * .009, 0, TAU); c.fill() } c.restore();
+    if(on){ d.lock = d.lock ?? T; const k = eo((T - d.lock) / .35), r = tr.h * (1.25 - .55 * k);
+      c.save(); c.translate(e[0], e[1]); c.rotate(T * 1.5); c.strokeStyle = 'rgba(159,243,255,.9)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r, 0, TAU); c.stroke();
+      for(let i = 0; i < 12; i++){ c.rotate(TAU / 12); c.beginPath(); c.moveTo(r, 0); c.lineTo(r + (i % 3 ? 4 : 9), 0); c.stroke() } c.restore() } else d.lock = null;
+    img(c, I('mox', 'bomb', 0), d.p[0], d.p[1] - W * .04, W * .2, Math.sin(T * 5) * .12);
+    glow(c, d.p[0], d.p[1] - W * .03, W * .06, 'rgba(160,250,255,A)', .4 + .3 * Math.sin(T * 9));
+  },
+  launch(d){
+    const W = pA.clientWidth, tr = tileRect(pA), p0 = d.p.slice(), ex = tr.x + tr.w / 2;
+    add('A', 0, function(c, dt){ this.a += dt; const k = this.a / .45; if(k > 1) return false; const y = lerp(p0[1], -W * .2, ei(k)), x = lerp(p0[0], ex, eo(k));
+      img(c, I('mox', 'bomb', 0), x, y, W * .2 * (1 + .25 * Math.sin(Math.PI * k)), k * 9); return true });
+    for(let i = 0; i < 3; i++) FX.sA.push(sp({im:I('mox', 'parts'), x:p0[0], y:p0[1], vx:(R() - .5) * 90, vy:-60 - R() * 60, g:500, w:W * .05, life:.9, spin:(R() - .5) * 12, delay:i * .05}));
+    return .55;
+  },
+  hit(tx){
+    const W = pV.clientWidth, H = pV.clientHeight, o = fieldO(pV);
+    if(RM){ flash('#E8FFFF', .9, .9, true); damage(); return }
+    const B = {a:0, x0:clamp(tx, W * .2, W * .8)};
+    const blinks = [1.0, 1.3, 1.52];
+    add('V2', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.86) return false;
+      let bx, by, s = 1;
+      if(x < .5){ const k = ei(x / .5); bx = lerp(B.x0, o.x, k); by = lerp(-W * .2, o.y, k); s = 1.25 - .25 * k }
+      else if(x < .86){ const k = (x - .5) / .36; bx = o.x; by = o.y - W * .14 * Math.sin(Math.PI * k) }
+      else { bx = o.x; by = o.y }
+      const open = x > 1.7;
+      // ombra sotto la bomba
+      c.save(); c.globalAlpha = .35; c.fillStyle = '#000'; c.beginPath(); c.ellipse(o.x + W * .02, o.y + W * .1, W * .12, W * .035, 0, 0, TAU); c.fill(); c.restore();
+      img(c, open ? I('mox', 'bomb2', 0) : I('mox', 'bomb', 0), bx, by, W * .26 * s * (open ? 1.2 : 1), x < .86 ? x * 6 : .3 + Math.sin(x * 40) * .03 * (x > 1.4));
+      blinks.forEach(b => { const q = x - b; if(q > 0 && q < .12) glow(c, bx, by, W * .2, 'rgba(170,250,255,A)', 1 - q / .12) });
+      if(open) glow(c, bx, by, W * .3, 'rgba(220,255,255,A)', (x - 1.7) / .16);
+      return true });
+    after(.5, () => doShake(.25, .2));
+    after(.86, () => doShake(.12, .12));
+    after(1.86, () => {
+      flash('#EFFFFF', .95, .55, true);
+      add('V2', 0, function(c, dt){ this.a += dt; const k = this.a / .4; if(k > 1) return false; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(170,250,255,${1 - k})`; c.lineWidth = W * .04 * (1 - k) + 1; c.beginPath(); c.arc(o.x, o.y, W * (.1 + .9 * eo(k)), 0, TAU); c.stroke(); c.restore(); return true });
+      add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.1) return false; img(c, I('mox', 'blast', 0), o.x, o.y, W * (.3 + .7 * eo(x / .25)), 0, x < .4 ? 1 : 1 - (x - .4) / .7); return true });
+      for(let i = 0; i < 10; i++){ const a = R() * TAU, v = 220 + R() * 380; FX.sV2.push(sp({im:I('mox', 'parts'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v - 120, g:700, drag:.8, w:W * (.05 + R() * .05), life:1.1, spin:(R() - .5) * 18, hop:.6})) }
+      // lo schermo si frantuma: crepe sopra tutto, poi le schegge cadono, poi si ricompone
+      const cr = I('mox', R() < .5 ? 'crack' : 'crack2', 0), S = Math.max(W, H) * 1.25, rot = R() * TAU, holes = [];
+      add('V2', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 2.3) return false;
+        const g = eo(x / .1), al = x < 1.7 ? 1 : 1 - (x - 1.7) / .45;
+        holes.forEach(h => { c.save(); c.globalAlpha = .55 * al; c.fillStyle = '#05080B'; c.beginPath(); c.moveTo(h[0][0], h[0][1]); h.forEach(p => c.lineTo(p[0], p[1])); c.fill(); c.restore() });
+        img(c, cr, o.x, o.y, S * (.5 + .5 * g), rot, al);
+        if(x > 1.7 && x < 2) img(c, cr, o.x, o.y, S, rot, (1 - Math.abs(x - 1.85) / .15) * .9, 'lighter');
+        return true });
+      after(.5, () => { for(let i = 0; i < 12; i++){ const a = R() * TAU, r = W * (.08 + R() * .42), x = o.x + Math.cos(a) * r, y = o.y + Math.sin(a) * r * 1.3, s = W * (.08 + R() * .08);
+        holes.push(Array.from({length:5}, (_, j) => { const b = j / 5 * TAU + R() * .6; return [x + Math.cos(b) * s * .45 * (.6 + R() * .5), y + Math.sin(b) * s * .45 * (.6 + R() * .5)] }));
+        FX.sV2.push(sp({im:I('mox', 'shard'), x, y, vx:(R() - .5) * 40, vy:-20 - R() * 30, g:900, w:s, life:1.3, spin:(R() - .5) * 6, rot:R() * TAU, delay:R() * .25, fin:.01, fout:.2, grow:-.2})) } });
+      doShake(1, .55); damage();
+    });
+  }
+};
+
+// ---------- ABISSO: l'onda
+TH.abisso = {
+  name:'Abisso', sub:'Blu · acqua e onde', col:'#5CC8F2',
+  desc:'L\'onda. Trascinando, una fascia d\'acqua esce dall\'elemento centrale e l\'onda segue il dito; sopra il quadratino si alza la schiuma. Al rilascio l\'onda esce dal bordo. Sul telefono di Federico entra dall\'alto e si schianta al centro: corona di schiuma, cerchi d\'onda, schizzi, chiazze di schiuma e gocce che scivolano sul vetro.',
+  aim(c, d, dt){
+    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h * .9] : d.p, ang = Math.atan2(e[1] - hb.y, e[0] - hb.x);
+    d.wave = d.wave ?? (R() * 4 | 0);
+    stretch(c, I('abisso', 'trail', 0), hb.x, hb.y, e[0], e[1], W * (.12 + .02 * Math.sin(T * 7)), .85);
+    const im = I('abisso', 'wave' + d.wave, 0); img(c, im, e[0], e[1], W * .5, ang, 1, null, .78, .55);
+    if(R() < dt * (on ? 30 : 10)){ FX.sA.push(sp({im:I('abisso', on ? 'foam' : 'drop'), x:e[0] + (R() - .5) * W * .2, y:e[1] + (R() - .5) * W * .1, vx:(R() - .5) * 50, vy:-30 - R() * 40, g:160, w:W * (on ? .14 : .05), life:.6, spin:(R() - .5) * 3})) }
+  },
+  launch(d){
+    const W = pA.clientWidth, p0 = d.p.slice(), tr = tileRect(pA), ex = tr.x + tr.w / 2, hb = hubBox(pA), im = I('abisso', 'wave' + (d.wave ?? 0), 0);
+    add('A', 0, function(c, dt){ this.a += dt; const k = this.a / .4; if(k > 1.25) return false; const kk = Math.min(1, k), x = lerp(p0[0], ex, kk), y = lerp(p0[1], -W * .35, ei(kk)), al = k > 1 ? 1 - (k - 1) / .25 : 1;
+      stretch(c, I('abisso', 'trail', 0), hb.x, hb.y, x, y, W * .12, .85 * al); img(c, im, x, y, W * .5, Math.atan2(y - hb.y, x - hb.x), al, null, .78, .55); return true });
+    return .45;
+  },
+  hit(tx){
+    const W = pV.clientWidth, H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), wi = R() * 4 | 0, im = I('abisso', 'wave' + wi, 0);
+    if(RM){ flash('#6CC8FF', .6, .9); damage(); return }
+    add('V', 0, function(c, dt){ this.a += dt; const k = this.a / .45; if(k > 1.15) return false; const kk = Math.min(1, k), x = lerp(x0, o.x, kk), y = lerp(-W * .3, o.y, ei(kk)), al = k > 1 ? 1 - (k - 1) / .15 : 1;
+      stretch(c, I('abisso', 'trail', 0), x0, -W * .4, x, y, W * .16, .8 * al); img(c, im, x, y, W * .62, Math.atan2(y + W * .3, x - x0), al, null, .8, .55); return true });
+    after(.45, () => {
+      add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; img(c, I('abisso', 'burst', 0), o.x, o.y, W * (.35 + .9 * eo(x / .35)), x * .4, x < .4 ? 1 : 1 - (x - .4) / .9); return true });
+      [0, .2, .42].forEach((dl, i) => add('V', -dl, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; if(x < 0) return true; const k = eo(x / 1.3); img(c, I('abisso', 'ring', 0), o.x, o.y, W * (.25 + (1.5 - i * .25) * k), i, (1 - k) * .95); return true }));
+      for(let i = 0; i < 7; i++){ const a = R() * TAU, r = W * (.18 + R() * .3); FX.sV.push(sp({im:I('abisso', 'splash'), x:o.x + Math.cos(a) * r, y:o.y + Math.sin(a) * r, vx:Math.cos(a) * 40, vy:Math.sin(a) * 40, drag:2, w:W * (.14 + R() * .1), life:1.1, fin:.12, rot:R() * TAU, grow:.3, delay:R() * .2})) }
+      for(let i = 0; i < 5; i++){ const a = R() * TAU, r = W * (.1 + R() * .35); FX.sV.push(sp({im:I('abisso', 'foam'), x:o.x + Math.cos(a) * r, y:o.y + Math.sin(a) * r * 1.3, w:W * (.2 + R() * .12), life:2.6, fin:.3, fout:.4, alpha:.85, rot:R() * TAU, spin:(R() - .5) * .3, grow:.15, delay:.15 + R() * .3})) }
+      // gocce sul vetro: sopra a tutto, scivolano piano verso il basso
+      for(let i = 0; i < 10; i++) FX.sV2.push(sp({im:I('abisso', 'drop'), x:W * (.08 + R() * .84), y:H * (.18 + R() * .6), vy:8 + R() * 18, g:14 + R() * 20, w:W * (.045 + R() * .06), life:2.4 + R() * 1.2, fin:.05, fout:.3, alpha:.95, delay:.05 + R() * .35}));
+      flash('rgba(70,180,255,1)', .38, 1);
+      doShake(.6, .45); damage();
+    });
+  }
+};
+
+// ---------- CRIPTA: il dardo di anime
+TH.cripta = {
+  name:'Cripta', sub:'Nero · demoni e oscurità', col:'#B784F2',
+  desc:'Il dardo di anime. Dall\'elemento centrale esce un dardo di fumo che segue il dito, con la scia e qualche sbuffo. Al rilascio parte con le anime che gli girano attorno. Sul telefono di Federico si pianta al centro: sbuffo di fumo, il teschio appare un attimo, le venature nere si allargano e il campo avvizzisce (colori spenti, più scuro), poi torna normale.',
+  aim(c, d, dt){
+    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h * .8] : d.p, ang = Math.atan2(e[1] - hb.y, e[0] - hb.x);
+    d.dart = d.dart ?? (R() < .5 ? 'dart' : 'dart2');
+    stretch(c, I('cripta', 'trail', 0), hb.x, hb.y, e[0], e[1], W * .14 * (1 + .1 * Math.sin(T * 6)), .9);
+    img(c, I('cripta', d.dart, 0), e[0], e[1], W * .45, ang, 1, null, .95, .5);
+    if(on) for(let i = 0; i < 3; i++){ const a = T * 3 + i * TAU / 3; img(c, I('cripta', 'souls', i), e[0] + Math.cos(a) * tr.w * .45, e[1] - tr.h * .3 + Math.sin(a) * tr.h * .5, W * .1, a + Math.PI / 2, .85) }
+    if(R() < dt * 12){ const u = R(); FX.sA.push(sp({im:I('cripta', 'puffs'), x:lerp(hb.x, e[0], u), y:lerp(hb.y, e[1], u), vx:(R() - .5) * 20, vy:-10 - R() * 20, w:W * .09, life:.9, grow:.6, alpha:.7, spin:(R() - .5) * 1.5})) }
+  },
+  launch(d){
+    const W = pA.clientWidth, p0 = d.p.slice(), tr = tileRect(pA), ex = tr.x + tr.w / 2, hb = hubBox(pA), im = I('cripta', d.dart || 'dart', 0);
+    add('A', 0, function(c, dt){ this.a += dt; const k = this.a / .38; if(k > 1.2) return false; const kk = Math.min(1, k), x = lerp(p0[0], ex, kk), y = lerp(p0[1], -W * .3, ei(kk)), ang = Math.atan2(y - hb.y, x - hb.x), al = k > 1 ? 1 - (k - 1) / .2 : 1;
+      stretch(c, I('cripta', 'trail', 0), hb.x, hb.y, x, y, W * .14, .9 * al); img(c, im, x, y, W * .45, ang, al, null, .95, .5);
+      for(let i = 0; i < 4; i++){ const a = this.a * 14 + i * TAU / 4, rr = W * .07; img(c, I('cripta', 'souls', i), x - Math.cos(ang) * W * .12 + Math.cos(a) * rr, y - Math.sin(ang) * W * .12 + Math.sin(a) * rr, W * .09, ang, al * .9) } return true });
+    return .45;
+  },
+  hit(tx){
+    const W = pV.clientWidth, o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), im = I('cripta', R() < .5 ? 'dart' : 'dart2', 0);
+    if(RM){ flash('#1A0A26', .6, 1); damage(); return }
+    add('V', 0, function(c, dt){ this.a += dt; const k = this.a / .42; if(k > 1.05) return false; const kk = Math.min(1, k), x = lerp(x0, o.x, kk), y = lerp(-W * .3, o.y, ei(kk)), ang = Math.atan2(y + W * .3, x - x0);
+      stretch(c, I('cripta', 'trail', 0), x0, -W * .45, x, y, W * .17, .9); img(c, im, x, y, W * .55, ang, 1, null, .95, .5);
+      for(let i = 0; i < 4; i++){ const a = this.a * 14 + i * TAU / 4, rr = W * .08; img(c, I('cripta', 'souls', i), x - Math.cos(ang) * W * .14 + Math.cos(a) * rr, y - Math.sin(ang) * W * .14 + Math.sin(a) * rr, W * .1, ang, .9) } return true });
+    after(.42, () => {
+      const v = I('cripta', R() < .5 ? 'vein' : 'vein2', 0), vr = R() * TAU;
+      add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; img(c, v, o.x, o.y, W * 1.55 * (.15 + .85 * eo(x / .9)), vr, x < 2.5 ? 1 : 1 - (x - 2.5) / .9); return true });
+      add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 3.4) return false; const k = env(x, .6, 1.9, .9); const g = c.createRadialGradient(o.x, o.y, W * .2, o.x, o.y, W * 1.1); g.addColorStop(0, 'rgba(10,0,20,0)'); g.addColorStop(1, `rgba(10,0,20,${.6 * k})`); c.fillStyle = g; c.fillRect(0, 0, W, pV.clientHeight); return true });
+      add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > .9) return false; img(c, I('cripta', 'skull', 0), o.x, o.y - W * .02, W * (.36 + .1 * eo(x / .9)), 0, x < .25 ? x / .25 : 1 - (x - .25) / .65); return true });
+      for(let i = 0; i < 8; i++){ const a = i / 8 * TAU + R() * .5, v = 40 + R() * 60; FX.sV.push(sp({im:I('cripta', 'puffs'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:.8, w:W * (.16 + R() * .08), life:1.5, grow:.9, alpha:.85, rot:R() * TAU, spin:(R() - .5) * 1})) }
+      for(let i = 0; i < 6; i++){ const a = R() * TAU, v = 50 + R() * 50; FX.sV.push(sp({im:I('cripta', 'souls'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v - 20, w:W * .12, life:1.8, rot:a, fin:.2, alpha:.85, delay:.15 + R() * .4, sway:20})) }
+      wither = {a:0}; doShake(.4, .35); damage();
+    });
+  }
+};
+
+// ---------- FORGIA: il fulmine e la bruciatura
+function bolt(c, a, b, W, seed, al = 1){
+  const n = Math.max(6, Math.hypot(b[0] - a[0], b[1] - a[1]) / (W * .05) | 0), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [a];
+  let s = seed; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  for(let i = 1; i < n; i++){ const u = i / n, j = (rnd() - .5) * W * .09 * Math.sin(Math.PI * u) * 2; pts.push([a[0] + dx * u + nx * j, a[1] + dy * u + ny * j]) } pts.push(b);
+  c.save(); c.globalCompositeOperation = 'lighter'; c.lineJoin = 'round'; c.lineCap = 'round';
+  [[W * .07, `rgba(255,255,255,${.12 * al})`], [W * .035, `rgba(255,255,255,${.3 * al})`], [W * .016, `rgba(60,150,255,${.95 * al})`], [W * .006, `rgba(220,240,255,${al})`]].forEach(([lw, col]) => { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() });
+  c.restore();
+}
+function forgeImpact(o, W, withBolt, tx){
+  const fb = fieldBox(pV), im = I('forgia', pick(['burn', 'burn2', 'burn3']), 0), rot = R() * TAU;
+  flash('#FFF4E0', .7, .4);
+  // la bruciatura si accende di colpo e si raffredda: la copia luminosa sopra si spegne piano
+  add('V', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 3.3) return false; const w = W * .78 * (.8 + .2 * eo(x / .12)), al = x < 2.6 ? 1 : 1 - (x - 2.6) / .7;
+    img(c, im, o.x, o.y, w, rot, al); img(c, im, o.x, o.y, w, rot, al * Math.exp(-x * 1.6) * 1.2, 'lighter');
+    glow(c, o.x, o.y, W * .4, 'rgba(255,150,40,A)', al * .6 * Math.exp(-x * 1.2)); return true });
+  for(let i = 0; i < 9; i++){ const a = R() * TAU, v = 180 + R() * 320; FX.sV.push(sp({im:I('forgia', 'shard'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2.4, w:W * (.05 + R() * .05), life:1.2 + R() * .5, spin:(R() - .5) * 14, hop:1.2, fout:.4})) }
+  for(let i = 0; i < 9; i++) FX.sV.push(sp({im:I('forgia', 'ember'), x:o.x + (R() - .5) * W * .4, y:o.y + (R() - .5) * W * .3, vx:(R() - .5) * 30, vy:-30 - R() * 50, w:W * (.03 + R() * .03), life:1.4 + R(), flick:1, blend:'lighter', delay:R() * .5, sway:25}));
+  for(let i = 0; i < 16; i++) FX.sV.push(sp({im:I('forgia', 'arc'), x:fb.x + fb.w * (.1 + R() * .8), y:fb.y + fb.h * (.1 + R() * .8), w:W * (.12 + R() * .12), rot:R() * TAU, life:.12 + R() * .14, fin:.01, fout:.5, blend:'lighter', delay:.1 + i * .09}));
+  doShake(.7, .6); damage();
+}
+TH.forgia = {
+  name:'Forgia', sub:'Rosso · fuoco e acciaio', col:'#FF9A3C',
+  desc:'Il fulmine (a codice, come approvato) e quello che lascia. Sul telefono di Federico scarica al centro: la piastra si spacca e si arroventa (tre bruciature diverse, una a caso), poi si raffredda; schegge di roccia rovente saltano via, braci che salgono e archi elettrici sparsi sul campo per un secondo e mezzo. «Sorpresa: il goblin» mostra il goblin bombarolo.',
+  aim(c, d, dt){
+    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p;
+    if(!d.seed || T - d.st > .06){ d.seed = 1 + R() * 9999 | 0; d.st = T }
+    bolt(c, [hb.x, hb.y], e, W, d.seed);
+    glow(c, e[0], e[1], W * .12, 'rgba(120,190,255,A)', .6);
+    if(on && R() < dt * 14) FX.sA.push(sp({im:I('forgia', 'arc'), x:e[0] + (R() - .5) * tr.w * .8, y:e[1] + (R() - .5) * tr.h * .6, w:W * .14, rot:R() * TAU, life:.14, fin:.01, blend:'lighter'}));
+  },
+  launch(d){
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ex = tr.x + tr.w / 2, ey = tr.y + tr.h / 2;
+    add('A', 0, function(c, dt){ this.a += dt; if(this.a > .35) return false; const s = 1 + (this.a * 20 | 0); bolt(c, [hb.x, hb.y], [ex, ey], W, s * 77, 1 - this.a / .35); bolt(c, [ex, ey], [ex, -10], W, s * 31, 1 - this.a / .35); return true });
+    return .4;
+  },
+  hit(tx){
+    const W = pV.clientWidth, o = fieldO(pV), x0 = clamp(tx, W * .2, W * .8);
+    if(RM){ flash('#FFF4E0', .8, .6); damage(); return }
+    add('V2', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32); return true });
+    after(.12, () => forgeImpact(o, W, true));
+  },
+  goblin(){
+    const W = pV.clientWidth, fb = fieldBox(pV), o = fieldO(pV), dir = R() < .5 ? 1 : -1, sx = dir > 0 ? -W * .2 : W * 1.2, gx = dir > 0 ? W * .24 : W * .76, gy = fb.y + fb.h * .8;
+    if(RM){ forgeImpact(o, W); return }
+    const G = {thrown:false};
+    add('V2', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.7) return false;
+      let px, pose = 'gob1', face = dir;
+      if(x < .55){ px = lerp(sx, gx, eo(x / .55)) } else if(x < .8){ px = gx; pose = 'gob2' } else { px = lerp(gx, sx, ei((x - .8) / .8)); pose = 'gob2'; face = -dir }
+      const hop = Math.abs(Math.sin(x * 16)) * W * .025;
+      c.save(); c.globalAlpha = .3; c.fillStyle = '#000'; c.beginPath(); c.ellipse(px, gy + W * .17, W * .12, W * .03, 0, 0, TAU); c.fill(); c.restore();
+      c.save(); c.translate(px, gy - hop); c.scale(face, 1); img(c, I('forgia', pose, 0), 0, 0, W * .42); c.restore(); return true });
+    after(.55, () => {
+      const p0 = [gx, gy - W * .2];
+      add('V2', 0, function(c, dt){ this.a += dt; const x = this.a; if(x > 1.25) return false;
+        let bx, by, h;
+        if(x < .55){ const k = x / .55; bx = lerp(p0[0], o.x, k); by = lerp(p0[1], o.y, k); h = Math.sin(Math.PI * k) * W * .35 }
+        else if(x < .8){ const k = (x - .55) / .25; bx = o.x + dir * W * .04 * k; by = o.y; h = Math.sin(Math.PI * k) * W * .08 }
+        else if(x < .95){ const k = (x - .8) / .15; bx = o.x + dir * W * (.04 + .02 * k); by = o.y; h = Math.sin(Math.PI * k) * W * .03 }
+        else { bx = o.x + dir * W * .06; by = o.y; h = 0 }
+        c.save(); c.globalAlpha = .35; c.fillStyle = '#000'; c.beginPath(); c.ellipse(bx, by + W * .06, W * .07, W * .02, 0, 0, TAU); c.fill(); c.restore();
+        img(c, I('forgia', 'bomb', 0), bx, by - h, W * .17 * (1 + h / W), x * 8 * dir * (x < .95 ? 1 : 0));
+        glow(c, bx + W * .05, by - h - W * .07, W * .06, 'rgba(255,200,80,A)', .6 + .4 * Math.sin(x * 60));
+        if(R() < .5) FX.sV2.push(sp({im:I('forgia', 'ember'), x:bx + W * .05, y:by - h - W * .07, vx:(R() - .5) * 90, vy:-40 - R() * 60, g:200, w:W * .02, life:.4, blend:'lighter'}));
+        return true });
+      after(1.25, () => forgeImpact({x:o.x + dir * W * .06, y:o.y}, W));
+    });
+  }
+};
+
+// ================= trascinamento, lancio, arrivo =================
+let TK = 'santuario', DR = null;
+function startDrag(p){ DR = {p, t0:T} }
+pA.addEventListener('pointerdown', e => { const p = rel(e, pA), hb = hubBox(pA); if(Math.abs(p[0] - hb.x) < hb.w / 2 + 10 && Math.abs(p[1] - hb.y) < hb.h / 2 + 16){ e.preventDefault(); pA.setPointerCapture(e.pointerId); startDrag(p) } });
+pA.addEventListener('pointermove', e => { if(DR && !DR.auto) DR.p = rel(e, pA) });
+pA.addEventListener('pointerup', () => { if(DR && !DR.auto) release() });
+pA.addEventListener('pointercancel', () => { DR = null });
+function release(){
+  const d = DR; DR = null; if(!d) return;
+  if(!overTile(d.p)) return;
+  if(navigator.vibrate) try{ navigator.vibrate(25) }catch(e){}
+  const tr = tileRect(pV), th = TH[TK], wait = th.launch(d);
+  after(wait, () => th.hit(tr.x + tr.w / 2));
+}
+function demo(){
+  if(DR) return;
+  const hb = hubBox(pA), tr = tileRect(pA), p0 = [hb.x, hb.y], p1 = [pA.clientWidth * .85, hb.y - pA.clientHeight * .14], p2 = [tr.x + tr.w * .55, tr.y + tr.h * .5];
+  DR = {p:p0.slice(), t0:T, auto:true}; const t0 = T, dur = TK === 'santuario' ? 1.6 : 1.1;
+  (function step(){ if(!DR || !DR.auto) return; const u = Math.min(1, (T - t0) / dur), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, v = 1 - e;
+    DR.p = [v * v * p0[0] + 2 * v * e * p1[0] + e * e * p2[0], v * v * p0[1] + 2 * v * e * p1[1] + e * e * p2[1]];
+    if(u < 1) requestAnimationFrame(step); else after(.45, release) })();
+}
+document.getElementById('goLaunch').addEventListener('click', demo);
+document.getElementById('goHit').addEventListener('click', () => { const tr = tileRect(pV); TH[TK].hit(tr.x + tr.w / 2) });
+document.getElementById('goGob').addEventListener('click', () => TH.forgia.goblin());
+document.getElementById('slow').addEventListener('change', e => slow = e.target.checked);
+
+// ---------- scelta del tema
+const NOTES = {
+  santuario:'Immagini usate: scia di luce dorata (raggio), sfera dorata (carica), aureola, nuvole dorate, esplosione di luce e piume, foglio di piume, piume e scintille.',
+  mox:'Immagini usate: sfera a orologeria (bomba), sfera che esplode (il fondo nero l\'ho tolto io), le due crepe del vetro, foglio delle schegge, i due fogli di pezzi meccanici, impatto ciano e oro.',
+  abisso:'Immagini usate: le quattro onde (una a caso per colpo), fascia d\'acqua (scia), esplosione di schiuma, anello d\'onda, fogli di schizzi, schiuma e gocce (dalle gocce ho tolto il fondo grigio finto).',
+  cripta:'Immagini usate: i due dardi (uno a caso), scia di fumo, foglio delle anime, foglio dei vortici di fumo, le due venature (una a caso), teschio in fiamme viola.',
+  forgia:'Immagini usate: le tre bruciature (una a caso), foglio delle schegge di roccia lavica, foglio delle braci, foglio degli archi elettrici; per il goblin le due pose e la bomba con la miccia.'
+};
+function setTheme(k){
+  TK = k; document.body.className = 't-' + k;
+  document.querySelectorAll('.th').forEach(b => { b.classList.toggle('sel', b.dataset.k === k); b.setAttribute('aria-pressed', b.dataset.k === k) });
+  document.getElementById('desc').textContent = TH[k].desc;
+  document.getElementById('note').textContent = NOTES[k];
+  document.getElementById('goGob').hidden = k !== 'forgia';
+  document.querySelectorAll('.hub .plate').forEach(im => im.src = 'data:image/webp;base64,' + A[HUBS[k][0].k]);
+  try{ localStorage.setItem('prova-colpi-tema', k) }catch(e){}
+}
+const box = document.getElementById('themes');
+Object.keys(TH).forEach(k => { const b = document.createElement('button'); b.className = 'th'; b.dataset.k = k; b.style.setProperty('--c', TH[k].col);
+  b.innerHTML = `<b><i></i>${TH[k].name}</b><small>${TH[k].sub}</small>`; b.addEventListener('click', () => { setTheme(k); setTimeout(demo, 250) }); box.appendChild(b) });
+document.querySelectorAll('.hub .emb').forEach(im => im.src = 'data:image/webp;base64,' + A[HUBS.emb.k]);
+let saved = null; try{ saved = localStorage.getItem('prova-colpi-tema') }catch(e){}
+setTheme(TH[saved] ? saved : 'santuario');
+
+// ---------- disegno
+function frame(now){
+  let dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now; if(slow) dt /= 3; T += dt;
+  for(let i = Q.length - 1; i >= 0; i--) if(Q[i].t <= T){ const f = Q[i].f; Q.splice(i, 1); f() }
+  const cA = fit(cvA), cV = fit(cvV), cV2 = fit(cvV2);
+  cA.clearRect(0, 0, pA.clientWidth, pA.clientHeight); cV.clearRect(0, 0, pV.clientWidth, pV.clientHeight); cV2.clearRect(0, 0, pV.clientWidth, pV.clientHeight);
+  if(DR) TH[TK].aim(cA, DR, dt);
+  FX.A = FX.A.filter(f => f.draw(cA, dt)); drawSprites(FX.sA, cA, dt);
+  const fb = fieldBox(pV);
+  cV.save(); cV.beginPath(); cV.roundRect ? cV.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip();
+  FX.V = FX.V.filter(f => f.draw(cV, dt)); drawSprites(FX.sV, cV, dt); cV.restore();
+  FX.V2 = FX.V2.filter(f => f.draw(cV2, dt)); drawSprites(FX.sV2, cV2, dt);
+  // tremolio dello schermo colpito
+  let tf = '';
+  if(shake){ shake.a += dt; const k = shake.a / shake.dur; if(k >= 1) shake = null; else { const m = shake.amt * (1 - k) * pV.clientWidth * .03; tf = `translate(${(R() - .5) * m}px,${(R() - .5) * m}px)` } }
+  pV.style.transform = tf;
+  // il campo avvizzisce (Cripta)
+  if(wither){ wither.a += dt; const k = env(wither.a, .7, 1.6, 1); fV.style.filter = k > 0 ? `saturate(${1 - .8 * k}) brightness(${1 - .4 * k}) hue-rotate(${-15 * k}deg)` : ''; if(wither.a > 3.4){ wither = null; fV.style.filter = '' } }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+setTimeout(demo, 900);
+</script>
+</body>
+</html>

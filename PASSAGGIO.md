@@ -69,3 +69,12 @@ Da fare / aperto:
 - **In pausa** (chiesto da Federico): compilazione e lavoro nell'app. Si riprende quando arrivano le immagini.
 - **Santuario** (Bianco), 21 novembre sera: nome confermato; scheda di stile e richieste in `grafica/santuario/STILE.md`. Si parte dal colpo: **raggio di grazia** (niente spade, deciso da Federico), nuvole che si aprono sul campo colpito, aureola, lampo bianco, piume; pagina di prova `grafica/prove/prova-santuario.html` appena arrivano le immagini.
 - **Mox** (Incolore, prima «Officina»), 21 novembre sera: nome deciso; scheda di stile e richieste in `grafica/mox/STILE.md`. Si parte dal colpo: **bomba a orologeria** che cade, esplode e frantuma lo schermo, poi si ricompone; pagina di prova `grafica/prove/prova-mox.html` appena arrivano le immagini.
+
+## Aggiornamento 21 novembre 2026 (notte): immagini arrivate, prova dei colpi
+- Federico ha caricato le immagini di **tutti i temi** in `grafica/<tema>/` sul ramo `v2-prerelease`. Controllate tutte (trasparenza vera, misure): quasi tutte buone.
+- Sistemate da me: `abisso/Griglia di gocce…` (fondo grigio finto tolto), `mox/Sfera steampunk esplosiva…` (fondo nero tolto).
+- Da rifare o da non usare: `selva/Zampa Mostruosa con Artigli Curvi.png` (fondo nero pieno; c'è l'altra zampa, buona), `abisso/Tentacolo di polpo gigante bagnato.png` (alone scuro intorno; l'altro tentacolo è pulito).
+- Nuova pagina **`grafica/prove/prova-colpi.html`**: due telefoni finti, si sceglie il tema (Santuario, Mox, Abisso, Cripta, Forgia) e si prova il colpo con le immagini vere: mira trascinando, lancio, arrivo sul telefono colpito. Forgia con il goblin bombarolo («Sorpresa: il goblin»). Pubblicata anche come pagina (artifact) per Federico.
+- Come si rifà: `prova-colpi.src.html` è il sorgente senza immagini; `strumenti/prepara-immagini.py` ritaglia, separa i fogli e comprime in WebP; `strumenti/costruisci-prova-colpi.py` mette le immagini dentro la pagina (servono Pillow, numpy, scipy; si lanciano dalla cartella del repository).
+- Non ancora nella prova: colpi grossi (ali, pugno del colosso, tentacolo, mano scheletrica, fuoco del drago), interfacce, pagine iniziali. Selva ha già la sua prova (`prova-radici.html`).
+- Sul ramo `main` è finito per sbaglio un caricamento di 7 immagini di Abisso nella cartella principale (commit «Add files via upload» del 21 novembre): sono doppioni di `grafica/abisso/`. Non toccato: un push su `main` pubblica una release, si decide con Federico.
