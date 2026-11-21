@@ -1065,7 +1065,7 @@ TH.cripta = {
       const sv = ph(x, SKULL); if(sv > 0){ const grow = x < HIT ? eo((x - SKULL[0]) / (HIT - SKULL[0])) : 1 + .08 * eo((x - HIT) / .3), y = o.y - W * .06, sz = W * (.38 + .2 * grow), rot = Math.sin(x * 1.7) * .03, skh = sz * 360 / 270;
         img(c, sk, o.x, y, sz, rot, sv * .95); lit('V', o.x, y, W * .6, [.6, .25, 1.1], 1.2 * sv);
         // gli occhi si accendono di viola quando colpisce
-        const ey = env(x - HIT, .08, .5, .7); if(ey > 0) [[.41, .53], [.66, .52]].forEach(([u, v]) => { const ex = o.x + (u - .5) * sz, eyy = y + (v - .5) * skh; glow(c, ex, eyy, sz * .22, '170,80,255', ey); glow(c, ex, eyy, sz * .07, '255,230,255', ey * .9) });
+        const ey = env(x - HIT, .08, .5, .7); if(ey > 0) [[.37, .538], [.636, .538]].forEach(([u, v]) => { const dx = (u - .5) * sz, dy = (v - .5) * skh, ex = o.x + dx * Math.cos(rot) - dy * Math.sin(rot), eyy = y + dx * Math.sin(rot) + dy * Math.cos(rot); glow(c, ex, eyy, sz * .22, '170,80,255', ey); glow(c, ex, eyy, sz * .07, '255,230,255', ey * .9) });
         // nebbia davanti: tanta sulle fiamme ai lati, poca sul volto
         c.save(); BF.forEach(b => { const a = b.a + b.sp * x, bx = o.x + Math.cos(a) * sz * b.r, bby = y + Math.sin(a) * skh * b.r * .6 + Math.sin(x * .8 + b.ph) * W * .01, s2 = sz * b.s;
           c.globalAlpha = Math.min(1, ph(x, CLOUD) * b.al); c.drawImage(smk(b.col), bx - s2, bby - s2, s2 * 2, s2 * 2) }); c.restore();
