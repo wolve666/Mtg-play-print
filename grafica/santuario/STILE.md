@@ -8,17 +8,17 @@ Il tema del Bianco. Le immagini le disegna ChatGPT, io le animo e le monto nell'
 - **Colori**: avorio #F6F0E1, crema #EFE3C4, oro #D4A93E, oro chiaro #F3D98A, azzurro cielo #BFD8EE, ombra del marmo #B9B2A3. Per i fondi scuri (centro dell'elemento centrale, campo): ardesia #2B2F38.
 - **Resa**: realistica dipinta, fantasy, ricca di dettagli. Niente cartone animato, niente foto.
 - **Luce**: morbida, sempre da in alto a sinistra, con un leggero bagliore dorato.
-- **Vista**: gli oggetti del campo (spada, lancia, piume, aureole, impatto, ali) dall'alto o leggermente di lato. Le parti dell'interfaccia (cornice, tasti, elemento centrale) di fronte, piatte.
+- **Vista**: gli oggetti del campo (raggi, nuvole, piume, aureole, impatto, ali) dall'alto o leggermente di lato. Le parti dell'interfaccia (cornice, tasti, elemento centrale) di fronte, piatte.
 - **Regole fisse**: sfondo trasparente vero (niente quadrettato finto, **niente fondo bianco**), soggetto intero con un po' di margine, niente testo, loghi o simboli, niente ombra sotto, niente stile di artisti o carte di Magic.
 - **Carattere**: da decidere con Federico. Proposta: un maiuscolo inciso nel marmo per i titoli (per esempio Cinzel, licenza libera), Barlow Condensed per i numeri della vita, che devono restare leggibilissimi.
 
 ## Il colpo, come lo immagino
-Raggio diretto di luce (scelta di Federico in `V2.md`). Tre momenti:
-1. **Mira**: dall'elemento centrale di chi attacca si forma una spada di luce che punta verso il dito, dritta e ferma (niente curve come la liana o il fumo: è un raggio), con qualche piuma che si stacca.
-2. **Lancio**: al rilascio la spada parte dritta come un raggio, lascia una scia dorata, attraversa il quadratino dell'avversario ed esce dal bordo in alto.
-3. **Sul telefono colpito**: il raggio scende dall'alto e la spada si pianta al centro del campo; parte un anello di luce (aureola) che si allarga, poi il **lampo bianco** copre tutto il campo e si dissolve lentamente; piume che scendono ondeggiando. Il numero della vita resta sempre leggibile (gli metto dietro un'ombra durante il lampo).
+**Raggio di grazia**: un raggio di luce divina, dritto e pieno (scelta di Federico: niente spade né armi). Tre momenti:
+1. **Mira**: dall'elemento centrale di chi attacca esce un raggio sottile e tremolante che va dritto verso il dito, come un filo di luce; sopra il quadratino dell'avversario si aggancia e si accende di più.
+2. **Lancio**: al rilascio il raggio si allarga di colpo in un fascio pieno e dorato, attraversa il quadratino dell'avversario ed esce dal bordo in alto; qualche piuma si stacca e cade.
+3. **Sul telefono colpito**: in cima al campo le nuvole si aprono e il raggio scende dall'alto fino al centro; dove tocca si accende una pozza di luce e un anello (aureola) si allarga; poi il **lampo bianco** copre tutto il campo e si dissolve lentamente; piume e piumini scendono ondeggiando. Il numero della vita resta sempre leggibile (gli metto dietro un'ombra durante il lampo).
 
-Luce, lampo, raggi e bagliori li faccio io a codice; le immagini danno la materia: spada, lancia, piume, aureole, impatto, ali.
+Lampo, bagliori e tremolio li faccio io a codice; le immagini danno la materia della luce (il fascio con i suoi filamenti), le nuvole, l'impatto, l'aureola e le piume.
 
 ## Come lavorare
 1. Sempre **nella stessa chat** di ChatGPT, così tiene lo stile.
@@ -33,21 +33,21 @@ Game asset for a mobile fantasy companion app, theme "Santuario" (holy light, an
 
 ## Le richieste, in ordine
 ### A. Il colpo (prima di tutto)
-Due armi di luce diverse, così ogni colpo ne pesca una e non sembra mai lo stesso.
+Due raggi diversi, così ogni colpo ne pesca uno e non sembra mai lo stesso. Il raggio lo stendo io dalla partenza al bersaglio: deve essere uniforme in lunghezza.
 
-1. **Spada di luce** (il raggio), 2048×512
+1. **Raggio di grazia** (il colpo), 2048×512
 ```
-A long sword made of pure white-gold light lying horizontally, pointing to the right: a sharp glowing blade, the hilt at the left end of polished gold with small feathered wings as the crossguard, soft golden glow around the blade, a few tiny motes of light. 2048×512.
+A straight horizontal beam of radiant holy light seen from the side, running from left to right: a bright white core, warm golden glow around it, fine luminous streaks running along the beam and tiny motes of light floating in it, uniform along its whole length, the two short ends fading softly to transparent. 2048×512.
 ```
-2. **Lancia di luce**, 2048×512
+2. **Secondo raggio, intrecciato**, 2048×512
 ```
-A second weapon, different from the sword: a slender spear of white light lying horizontally, pointing to the right, a long leaf-shaped head of glowing white-gold light at the right end, a thin shaft of polished gold with fine filigree, two small white feathers tied near the left end. 2048×512.
+A second beam, different from the first: a straight horizontal ray made of several thin strands of white-gold light gently twisting around a bright core, like braided light, a few tiny white feathers drifting along it, uniform along its whole length, the two short ends fading softly to transparent. 2048×512.
 ```
-3. **Scia di luce** (dietro l'arma, la allungo io), 2048×512
+3. **Nuvole che si aprono** (in cima al campo colpito, da lì scende il raggio), 2048×768
 ```
-A long horizontal strip of soft golden light seen from the side, flowing from left to right, gentle streaks of warm light and a few tiny white feathers and motes drifting in it, uniform along its whole length with no head and no ends, the two short ends fading softly to transparent. 2048×512.
+A horizontal band of soft white and golden clouds seen from below, parting in the middle to open a bright gap where warm light pours through, the clouds thinning out toward the two short ends, everything else transparent. 2048×768.
 ```
-4. **Impatto visto dall'alto** (l'arma si pianta nel campo), 1024×1024
+4. **Impatto visto dall'alto** (il raggio tocca il campo), 1024×1024
 ```
 Seen from directly above: a burst of white-gold light exploding outward in all directions from a small bright point in the center, soft rays of light of different lengths, small white feathers blown outward among the rays, everything else transparent. 1024×1024.
 ```

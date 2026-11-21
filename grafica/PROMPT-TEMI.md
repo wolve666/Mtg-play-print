@@ -95,7 +95,7 @@ Game asset for a mobile fantasy companion app, theme "Cripta" (dark necromantic 
 ---
 
 ## Santuario (Bianco) · angeli, luce, spiriti benevoli
-Dettaglio completo in `grafica/santuario/STILE.md` (il colpo lì è più ricco: spada e lancia di luce, scia, impatto, aureola, piume e piumini).
+Dettaglio completo in `grafica/santuario/STILE.md` (il colpo lì è più ricco: due raggi di grazia, nuvole che si aprono, impatto, aureola, piume e piumini; niente spada).
 Colpo deciso: raggio diretto di luce; il campo viene accecato da un lampo bianco che si dissolve. Luce e lampo li faccio io; le immagini danno piume, ali, aureole.
 **Blocco base**
 ```
@@ -104,7 +104,7 @@ Game asset for a mobile fantasy companion app, theme "Santuario" (holy light, an
 1. **Foglio di piume**, 1536×1024: `A sheet of 6 separate single white feathers of different sizes, soft and slightly glowing, on a 3×2 grid, not touching.`
 2. **Ali** (colpo grosso: ali che si aprono sul campo e lo coprono di luce), 2048×1024: `A pair of large white angelic wings fully spread, seen from the front, glowing edges, symmetrical, no body.`
 3. **Aureola** (anello di luce sul campo colpito), 1024×1024: `A single thin golden halo ring of light seen from directly above, glowing softly, everything else transparent.`
-4. **Spada di luce** (il raggio), 2048×512: `A long blade made of pure white-gold light lying horizontally, hilt at the left end of polished gold, glowing.`
+4. **Raggio di grazia** (il colpo), 2048×512: `A straight horizontal beam of radiant holy light seen from the side, a bright white core, warm golden glow, fine luminous streaks and tiny motes of light, uniform along its whole length, the two short ends fading softly to transparent.`
 5. **Cornice**: `A rectangular frame border of white marble with polished gold filigree and small feathers on the four corners, front view, flat; straight sides simple and uniform; frame thickness about 70 px; center completely empty and transparent. 1024×1024.`
 6. **Elemento centrale largo**: `UI element, front view, flat: a wide horizontal plaque of white marble framed in polished gold, rectangular with rounded corners, proportion about 8:3, two small feathered wings on the two short ends. The center is a smooth soft-grey recessed area, completely empty. Transparent background. 2048×768.` · **Quadrato**: stessa, `square, 1024×1024`.
 7. **Tasto**: `A horizontal button plate of white marble with a gold frame and a pale gold inlay in the middle, small feathers at the two ends, front view, flat; middle plain for text. 1024×256.`
