@@ -6,7 +6,7 @@ src=open('grafica/prove/prova-colpi.src.html').read()
 used={}
 for t,keys in M.items():
     for k,l in keys.items():
-        if k.startswith(('wave','gob')) or re.search(r"I\('%s', '%s'"%(t,k),src) or (t=='forgia' and k in('burn','burn2','burn3')) or (t=='cripta' and k in ('dart','dart2','vein','vein2')) or (t=='mox' and k in('crack','crack2')):
+        if k.startswith(('gob',)) or re.search(r"I\('%s', '%s'"%(t,k),src) or (t=='forgia' and k in('burn','burn2','burn3')) or (t=='cripta' and k in ('dart','dart2','vein','vein2')) or (t=='mox' and k in('crack','crack2')):
             used.setdefault(t,{})[k]=l
 A={}
 for t in used.values():
