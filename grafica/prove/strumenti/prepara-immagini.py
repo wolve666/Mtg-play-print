@@ -15,6 +15,13 @@ def load(f, fix=None):
         al=np.where(bg,np.clip((mx-6)/50,0,1),1.0)
         al=nd.gaussian_filter(al,0.8)
         a[...,3]=al*255
+    if fix=='alone':
+        # alone scuro opaco intorno al soggetto: tengo solo i colori caldi/chiari, chiudo i buchi, tengo il pezzo più grande e sfumo il bordo
+        r,g,b,A=a[...,0],a[...,1],a[...,2],a[...,3]
+        m=(((r-b)>8)|((r+g+b)>420))&(A>60)
+        m=nd.binary_opening(m,iterations=2); m=nd.binary_closing(m,structure=np.ones((3,3)),iterations=10); m=nd.binary_fill_holes(m)
+        lab,n=nd.label(m); sz=nd.sum(m,lab,range(1,n+1)); m=nd.binary_erosion(lab==(np.argmax(sz)+1),iterations=3)
+        a[...,3]=nd.gaussian_filter(m.astype(np.float32),2.5)*255
     return Image.fromarray(a.astype(np.uint8),'RGBA')
 def crop(im,pad=4):
     al=np.asarray(im)[...,3]; ys,xs=np.where(al>8)
@@ -72,6 +79,7 @@ T('abisso','splash',sheet('abisso/Sei effetti di schizzi d’acqua realistici.pn
 T('abisso','foam',  sheet('abisso/Sei chiazze di schiuma marina bianca realistico-dettagliate.png','a_f',220))
 T('abisso','drop',  sheet('abisso/Griglia di gocce d’acqua realistiche.png','a_d',120,fix='gocce'))
 T('abisso','tent',  one('abisso/Tentacolo Gigante Lucido con Ventose.png','a_tent',900))
+T('abisso','tent2', one('abisso/Tentacolo di polpo gigante bagnato.png','a_tent2',900,fix='alone'))
 # Cripta
 T('cripta','dart',  one('cripta/Dardo di Fumo Viola Oscuro.png','c_dart',900))
 T('cripta','dart2', one('cripta/Proiettile spettrale di volti urlanti.png','c_dart2',900))
