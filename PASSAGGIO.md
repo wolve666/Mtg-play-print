@@ -86,3 +86,4 @@ Da fare / aperto:
 - 22 novembre: **tappeto** = l'area dei punti vita (Federico). Nei testi per Federico si dice tappeto; nel codice resta «field».
 - Mox, colpo grosso scelto: **il pugno del colosso** che cala sul tappeto (non sullo schermo: la frattura del vetro resta la firma del colpo normale), sfonda il tappeto e si spacca in frammenti ritagliati dalla sua immagine, con ingranaggi e viti. Il tasto «Colpo grosso» ora compare per ogni tema che ne ha uno (`bigName`/`big()`).
 - Corretto nel motore: gli effetti creati mentre un livello si disegna (es. l'esplosione nata dalla bomba) andavano persi; ora `runFX` li tiene.
+- Mox, pugno del colosso: accettato da Federico così com'è («si vedrà poco»), ma non lo entusiasma. Se c'è tempo più avanti: idee da proporre in `V2.md`/qui prima di rifarlo.
