@@ -1245,6 +1245,73 @@ TH.forgia = {
   }
 };
 
+// ---------- FORGIA, colpo grosso: il fuoco del drago
+// Il drago non si vede mai intero: la sua ombra passa lenta e ogni volta diversa (lato, curva, velocità, grandezza), prima sul mio tappeto e poi su quello colpito,
+// che si scurisce. Poi il fuoco scende dall'alto: tante lingue di fiamma che corrono verso il tappeto, schizzano ovunque dove toccano,
+// lasciano bruciature annerite e crepe di lava che si raffreddano piano.
+let FLT = null;
+function flameTex(){ if(FLT) return FLT; const s = document.createElement('canvas'); s.width = s.height = 64; const c = s.getContext('2d'), g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,250,220,1)'); g.addColorStop(.25, 'rgba(255,210,90,.9)'); g.addColorStop(.55, 'rgba(255,120,30,.55)'); g.addColorStop(1, 'rgba(200,40,10,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); return FLT = s }
+// un passaggio d'ombra a caso: entra da un lato, curva, esce dall'altro; ali che battono piano
+function shadowPass(ph, scr, t0, dur, dir){
+  const W = scr.clientWidth, H = scr.clientHeight, drag = I('forgia', 'dragon', 0), box = fieldBox(scr), sx = (R() - .5) * W * .9, ex = (R() - .5) * W * 1.1, cx = (R() - .5) * W * 1.4;
+  const P0 = [W / 2 + sx, dir > 0 ? H * 1.35 : -H * .4], P2 = [W / 2 + ex, dir > 0 ? -H * .4 : H * 1.35], P1 = [W / 2 + cx, H * (.3 + R() * .4)], size = W * (1.5 + R() * .8), flap = 2 + R() * 1.5;
+  const B = u => { const v = 1 - u; return [v * v * P0[0] + 2 * v * u * P1[0] + u * u * P2[0], v * v * P0[1] + 2 * v * u * P1[1] + u * u * P2[1]] };
+  add(ph, function(c, dt){ this.a += dt; if(this.a < 0) return true; const k = this.a / dur; if(k > 1) return false; const p = B(k), q = B(Math.min(1, k + .01)), rot = Math.atan2(q[1] - p[1], q[0] - p[0]) + PI / 2, al = Math.min(1, Math.sin(PI * k) * 1.6), fl = 1 + .07 * Math.sin(this.a * flap * TAU);
+    c.save(); c.beginPath(); c.roundRect ? c.roundRect(box.x, box.y, box.w, box.h, [box.w * .085, box.w * .025, box.w * .085, box.w * .025]) : c.rect(box.x, box.y, box.w, box.h); c.clip();
+    c.filter = 'brightness(0.15)'; img(c, drag, p[0], p[1], size, rot, al * .85, null, .5, .5, fl, 1, rot); c.filter = 'none'; c.restore();
+    lit(ph === 'A' ? 'A' : 'V', p[0], p[1], W * .9, [.8, .8, .8], -1.3 * al); return true }, t0);
+}
+TH.forgia.bigName = 'Colpo grosso: il drago';
+TH.forgia.big = function(){
+  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), fire = I('forgia', 'fire', 0), ftx = flameTex();
+  if(RM){ flash('#FFB060', .8, 1); damage(8); return }
+  // 1. le due ombre: lente e a caso
+  const dA = 1.8 + R() * 1.2, dV = 1.9 + R() * 1.3, vS = dA * .55;
+  shadowPass('A', pA, 0, dA, 1); after(.3, () => { SP.aHub.v -= 1.2; rumble = {a:0, dur:.8, amt:.2}; if(navigator.vibrate) try{ navigator.vibrate([30, 40, 60]) }catch(e){} });
+  shadowPass('V', pV, vS, dV, -1); after(vS + dV * .4, () => { rumble = {a:0, dur:.9, amt:.35}; SP.vHub.v -= 1.2 });
+  const F0 = vS + dV * .7, SW = 1.6 + R() * .8, F1 = F0 + .35 + SW, END = F1 + 4.5;
+  // il tappeto colpito si scurisce dall'arrivo dell'ombra fino alla fine del fuoco
+  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const dk = env(x - vS, .8, F1 - vS - .6, 1.4); lit('V', o.x, o.y, W * 1.3, [.8, .8, .9], -1.2 * dk); st('V').dark = Math.max(st('V').dark, .45 * dk); return true });
+  // il riflesso del fuoco lontano sul mio tappeto
+  add('A', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > F1 - F0 + .6) return false; if(x < 0) return true; const Wa = pA.clientWidth, k = env(x, .2, F1 - F0 - .3, .6) * (.7 + .3 * Math.sin(T * 23) * Math.sin(T * 7));
+    lit('A', Wa * .5, -Wa * .1, Wa * 1.1, [1.3, .6, .2], 1.1 * k); return true });
+  // 2. il fuoco: la sorgente è in alto fuori schermo; la testa scende fino al tappeto, poi il punto colpito spazza il tappeto lungo una curva a caso
+  const side = sgn(), S = [W * (.5 + side * (.2 + R() * .35)), -W * (.5 + R() * .3)], A0 = [W * (.5 - side * (.15 + R() * .2)), fb.y + fb.h * (.15 + R() * .15)], A1 = [W * (.5 + side * (.1 + R() * .25)), fb.y + fb.h * (.72 + R() * .15)], AC = [W * (.5 + (R() - .5) * .6), fb.y + fb.h * (.4 + R() * .2)];
+  const tgt = u => { const v = 1 - u; return [v * v * A0[0] + 2 * v * u * AC[0] + u * u * A1[0], v * v * A0[1] + 2 * v * u * AC[1] + u * u * A1[1]] };
+  let lastBurn = -1, dmg = false;
+  add('M', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > F1 - F0 + .5) return false; if(x < 0) return true;
+    const DOWN = .35, sw = clamp((x - DOWN) / SW), u = sw * sw * (3 - 2 * sw), T0 = tgt(u), on = x > F1 - F0 ? 1 - (x - (F1 - F0)) / .5 : 1, head = eo(x / DOWN), hx = lerp(S[0], T0[0], head), hy = lerp(S[1], T0[1], head);
+    const a = Math.atan2(T0[1] - S[1], T0[0] - S[0]), Ld = Math.hypot(hx - S[0], hy - S[1]);
+    // lingue di fiamma che corrono dalla sorgente alla testa del getto
+    for(let i = 0; i < 2; i++) if(R() < dt * 45 * on){ const sp2 = 900 + R() * 400, sa = a + (R() - .5) * .08, life = Ld / sp2;
+      { const fi = R() < .75; FX.sM.push(sp({im:fi ? fire : ftx, x:S[0], y:S[1], vx:Math.cos(sa) * sp2, vy:Math.sin(sa) * sp2, rot:sa, w:W * (fi ? .28 + R() * .2 : .08 + R() * .08), life, grow:.6, fin:.02, fout:.4, alpha:fi ? .8 : .45, blend:fi ? null : 'lighter'})) } }
+    // il nucleo: una scia di bagliori lungo il getto, che non pulsa ma scorre
+    c.save(); c.globalCompositeOperation = 'lighter'; for(let i = 0; i < 14; i++){ const t = ((i / 14) + T * 2.2) % 1, px = lerp(S[0], hx, t), py = lerp(S[1], hy, t), r = W * (.05 + .07 * t);
+      c.globalAlpha = .22 * on * Math.sin(PI * t) + .05 * on; c.drawImage(ftx, px - r, py - r, r * 2, r * 2) } c.restore();
+    if(head < .98) return true;
+    // dove tocca: fiamme che schizzano ovunque, scintille, braci, fumo
+    glow(c, T0[0], T0[1], W * .25, '255,150,50', .4 * on); lit('V', T0[0], T0[1], W * .7, [1.3, .6, .2], 1.3 * on); const s = st('V'); s.heat[0] = T0[0]; s.heat[1] = T0[1] - W * .05; s.heat[2] = 5 * on;
+    if(R() < dt * 45 * on){ const sa = R() * TAU, v = 150 + R() * 350; FX.sM.push(sp({im:fire, x:T0[0], y:T0[1], vx:Math.cos(sa) * v, vy:Math.sin(sa) * v * .75 - 40, drag:2.6, rot:sa + (R() - .5) * .6, spin:(R() - .5) * 3, w:W * (.06 + R() * .08), life:.3 + R() * .3, grow:.9, fin:.02, fout:.6, alpha:.85})) }
+    if(R() < dt * 25 * on){ const sa = -PI / 2 + (R() - .5) * 1.4, v = 120 + R() * 160; FX.sM.push(sp({im:ftx, x:T0[0] + (R() - .5) * W * .1, y:T0[1], vx:Math.cos(sa) * v * .4, vy:Math.sin(sa) * v, drag:1.4, w:W * (.05 + R() * .05), life:.5 + R() * .4, grow:-.4, fin:.03, fout:.7, alpha:.5, blend:'lighter'})) }
+    if(R() < dt * 90 * on){ const sa = R() * TAU, v = 150 + R() * 450; pt(FX.pV2, {k:'spark', x:T0[0], y:T0[1], vx:Math.cos(sa) * v, vy:Math.sin(sa) * v * .8, vz:80 + R() * 300, gz:1400, rest:.3, drag:1.6, life:.4 + R() * .7, r:1 + R() * 1.6, col:R() < .7 ? '255,190,90' : '255,240,200'}) }
+    if(R() < dt * 8 * on) FX.sV.push(sp({im:I('forgia', 'ember'), x:T0[0] + (R() - .5) * W * .25, y:T0[1] + (R() - .5) * W * .12, vx:(R() - .5) * 50, vy:-40 - R() * 60, w:W * (.03 + R() * .03), life:1.2 + R(), blend:'lighter', sway:20, flick:1}));
+    if(R() < dt * 16 * on) pt(FX.pV, {k:'smoke', x:T0[0] + (R() - .5) * W * .15, y:T0[1], vx:(R() - .5) * 20, vy:-25 - R() * 30, r:W * (.04 + R() * .05), grow:2.2, life:1.5 + R() * .7, col:'34,27,24', al:.6});
+    // bruciature e lava dove passa
+    if(x - lastBurn > .14 && on > .6){ lastBurn = x; scorch(T0[0] + (R() - .5) * W * .04, T0[1] + (R() - .5) * W * .04, W * (.34 + R() * .14), END - F0 - x) }
+    if(!dmg && sw > .3){ dmg = true; SP.vPunch.v -= .9; SP.vLife.v += 2.4; SP.vLifeR.v += sgn() * 20; flash('#FFB070', .18, .5); damage(8) }
+    return true });
+  // bruciatura: prima una macchia annerita che si allarga sotto le fiamme, poi il metallo/la roccia incandescente e la lava che si raffredda
+  function scorch(x, y, w, life){ const bi = I('forgia', pick(['burn', 'burn2', 'burn3']), 0), lv = I('forgia', R() < .5 ? 'lava' : 'crater', 0), rot = R() * TAU, seed = R() * 9;
+    add('V', function(c, dt){ this.a += dt; const t = this.a; if(t > life) return false; const al = t < life - 1.4 ? 1 : (life - t) / 1.4, g = eo(t / .45), hot = Math.exp(-t * .8);
+      const gr = c.createRadialGradient(x, y, 0, x, y, w * .55 * g); gr.addColorStop(0, `rgba(12,7,5,${.75 * al})`); gr.addColorStop(.7, `rgba(20,12,8,${.4 * al})`); gr.addColorStop(1, 'rgba(20,12,8,0)'); c.fillStyle = gr; c.beginPath(); c.ellipse(x, y, w * .55 * g, w * .45 * g, rot, 0, TAU); c.fill();
+      reveal(c, R() < 0 ? bi : lv, x, y, w * .9, rot, al * .95, eo(t / .7), seed);
+      reveal(c, lv, x, y, w * .9, rot, al * hot * 1.1, eo(t / .7), seed, 'lighter');
+      reveal(c, bi, x, y, w * .7, rot + 1, al * hot * .8, g, seed + 3, 'lighter');
+      if(R() < dt * 3 * hot) pt(FX.pV, {k:'smoke', x:x + (R() - .5) * w * .4, y, vx:(R() - .5) * 10, vy:-15 - R() * 15, r:W * .03, grow:2, life:1.5, col:'40,32,28', al:.45});
+      return true }) }
+};
+
 // ---------- SELVA: il boa di liane
 function vinePath(a, b, t, tile){
   const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
