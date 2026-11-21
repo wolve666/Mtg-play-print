@@ -787,7 +787,7 @@ function waterJet(c, x0, y0, x1, y1, w, t, al, flare = 0, fl = 0, texW = w){
     if(!flare){ c.beginPath(); c.rect(0, -H, l, H * 2); c.clip(); for(let x = off - tl; x < l; x += tl) c.drawImage(lp, x, -H / 2, tl + .5, H) }
     else { const prof = x => 1 + flare * Math.exp(-x / fl) * (1 + .06 * Math.sin(t * 18 - x * .1)), st = Math.max(4, w * .15);
       for(let x = 0; x < l; x += st){ const h = H * prof(x), u = (((x - off) % tl) + tl) % tl / tl, sw = st / tl * pw;
-        let sx = u * pw; if(sx + sw > pw) sx = pw - sw; c.globalAlpha = al * Math.min(1, .35 + x / (fl * .5)); c.drawImage(lp, sx, 0, sw, ph, x, -h / 2, st + .8, h) } }
+        let sx = u * pw; if(sx + sw > pw) sx = pw - sw; { const q = clamp(x / (fl * 1.1)); c.globalAlpha = al * q * q * (3 - 2 * q) } c.drawImage(lp, sx, 0, sw, ph, x, -h / 2, st + .8, h) } }
     c.restore() }
   if(l > w){ glow(c, l, 0, w * 1.1, '220,245,255', .8 * al); img(c, I('abisso', 'spray', (t * 18 | 0) % 8), l - w * .4, 0, w * 2.6, 0, .9 * al, null, .15, .5) }
   c.restore();
@@ -836,6 +836,10 @@ TH.abisso = {
           pt(FX.pA, {k:'smoke', x:bx + (R() - .5) * jw * 1.2, y:by + (R() - .5) * jw * 1.2, vx:Math.cos(sa) * v, vy:Math.sin(sa) * v - 10, drag:1.3, r:jw * (big ? .45 + R() * .3 : .14 + R() * .18), grow:big ? 1.2 : 1.8, life:big ? .5 + R() * .3 : .6 + R() * .5, col:'228,244,255', al:big ? .32 : .14 + R() * .12}) }
         if(R() < dt * 70 * wk){ const sa = ja + PI + (R() - .5) * 3, v = 30 + R() * 110; FX.sA.push(sp({im:I('abisso', 'bubble'), x:bx + (R() - .5) * jw * 1.6, y:by + (R() - .5) * jw * 1.6, vx:Math.cos(sa) * v, vy:Math.sin(sa) * v - 25, drag:1.4, w:W * (.008 + R() * R() * .035), life:.5 + R() * .5, pop:.1, fout:.3, sway:18})) }
         if(R() < dt * 12 * wk){ const sa = ja + PI + (R() - .5) * 2.4, v = 60 + R() * 80; FX.sA.push(sp({im:I('abisso', 'spray'), x:bx, y:by, vx:Math.cos(sa) * v * 2, vy:Math.sin(sa) * v * 2, drag:2.5, rot:sa, w:jw * (1.1 + R() * .8), life:.4, grow:.4, fin:.03, fout:.6, alpha:.75})) }
+        // ciuffo di schizzi dipinti sopra l'attacco del getto: acqua che esplode fuori dal vortice e nasconde il bordo
+        const spl = L('abisso', 'splash');
+        if(spl.length) for(let k = 0; k < 3; k++){ const im = spl[((T * 10 | 0) + k * 3) % spl.length], ox = Math.cos(ja) * jw * (.15 + .25 * k), oy = Math.sin(ja) * jw * (.15 + .25 * k);
+          img(c, im, hb.x + ox, hb.y + oy, jw * (2.3 - .4 * k) * fo * (.92 + .12 * Math.sin(T * 17 + k * 2)), T * (2 + k) + k * 2.1, .8 * wk) }
         glow(c, hb.x + Math.cos(ja) * W * .03, hb.y + Math.sin(ja) * W * .03, jw * .8, '225,245,255', .35 * wk);
         lit('A', (hb.x + hx) / 2, Math.max((hb.y + hy) / 2, hb.y * .4), W * .7, [.35, .75, 1.1], 1.3 * wk) }
       if(R() < dt * 30 * op * wa){ const a = R() * TAU, r = rad * (1 + R() * .3); FX.sA.push(sp({im:I('abisso', 'bubble'), x:hb.x + Math.cos(a) * r, y:hb.y + Math.sin(a) * r * .78, vx:-Math.sin(a) * r * 3 - Math.cos(a) * r * 1.4, vy:(Math.cos(a) * r * 3 - Math.sin(a) * r * 1.4) * .78, drag:2.5, w:W * (.015 + R() * .025), life:.5, fout:.4, grow:-.5})) }
