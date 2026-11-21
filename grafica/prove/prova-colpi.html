@@ -961,6 +961,24 @@ function summonHand(){
     return true });
   return h;
 }
+// pentacolo rovesciato con anello, stella disegnata tratto per tratto e glifi; p = quanto è disegnato (0..1), boost = lampo
+function pentacle(c, cx, cy, PR, W, p, GL, boost = 0){
+  if(p <= 0) return; const o = {x:cx, y:cy};
+      c.save(); c.translate(o.x, o.y); c.scale(1, .82); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round'; c.lineJoin = 'round';
+      c.shadowColor = 'rgba(170,90,255,.9)'; c.shadowBlur = W * .045; c.strokeStyle = `rgba(${190 + 60 * boost | 0},${130 + 100 * boost | 0},255,${Math.min(1, .85 * Math.min(1, p * 1.5) + boost)})`; if(boost > 0) c.shadowBlur = W * (.045 + .08 * boost);
+      const ring = clamp(p / .35), star = clamp((p - .3) / .45), gly = clamp((p - .6) / .4);
+      c.lineWidth = W * .016; c.beginPath(); c.arc(0, 0, PR, -PI / 2, -PI / 2 + TAU * ring); c.stroke();
+      c.lineWidth = W * .009; c.beginPath(); c.arc(0, 0, PR * .86, PI / 2, PI / 2 - TAU * ring, true); c.stroke();
+      // stella a cinque punte con la punta in basso, disegnata tratto per tratto
+      const P5 = [0, 1, 2, 3, 4].map(i => { const a = PI / 2 + i * TAU / 5; return [Math.cos(a) * PR * .86, Math.sin(a) * PR * .86] }), ord = [0, 2, 4, 1, 3, 0];
+      c.lineWidth = W * .013; c.beginPath(); c.moveTo(P5[0][0], P5[0][1]);
+      for(let i = 0; i < 5; i++){ const u = clamp(star * 5 - i); if(u <= 0) break; const A = P5[ord[i]], B = P5[ord[i + 1]]; c.lineTo(lerp(A[0], B[0], u), lerp(A[1], B[1], u)) } c.stroke();
+      // glifi sull'anello esterno
+      if(gly > 0){ c.lineWidth = W * .007; GL.forEach((g, i) => { const a = -PI / 2 + (i + .5) * TAU / 12, gx = Math.cos(a) * PR * .93, gy = Math.sin(a) * PR * .93, gs = W * .022, al2 = clamp(gly * 12 - i);
+        if(al2 <= 0) return; c.save(); c.globalAlpha = al2; c.translate(gx, gy); c.rotate(a + PI / 2); c.beginPath();
+        g.forEach(([x0, y0, x1, y1, arc]) => { if(arc){ c.moveTo(x0 * gs + gs * .4, y0 * gs); c.arc(x0 * gs, y0 * gs, gs * .4, 0, PI * (1 + Math.abs(x1))) } else { c.moveTo(x0 * gs, y0 * gs); c.lineTo(x1 * gs, y1 * gs) } }); c.stroke(); c.restore() }) }
+  c.restore();
+}
 TH.cripta = {
   name:'Cripta', sub:'Nero · demoni e oscurità', col:'#B784F2',
   desc:'La mano che prosciuga. Trascini e verso il dito corre un filo sottilissimo di particelle, con bollicine nere di varie misure e nuvole di fumo che si diramano. Al rilascio la mano scheletrica nasce dal bottone di Bea. Da Federico non cade nulla: il tappeto avvizzisce e ne esce un gruppetto di fumo, luci e anime, risucchiato verso Bea; poi un raggio di fumo e anime parte dal tappeto di Federico e arriva alla mano, che si accende di viola e si chiude. Il tappeto di Federico torna normale. Colpo grosso: sul tappeto di Federico si disegna un pentacolo rovesciato con i glifi, nuvole nere fanno una nebbia fitta, il teschio appare nella nebbia e colpisce, poi tutto svanisce a ritroso.',
@@ -1040,21 +1058,8 @@ TH.cripta = {
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const p = ph(x, PEN), s = st('V');
       s.with = Math.max(s.with, ph(x, CLOUD)); s.dark = Math.max(s.dark, .35 * ph(x, CLOUD));
       lit('V', o.x, o.y, W * 1.2, [.8, .9, .6], -1.1 * ph(x, CLOUD)); lit('V', o.x, o.y, PR * 1.3, [.6, .25, 1.1], .8 * p * (.85 + .15 * Math.sin(x * 6)));
-      if(p <= 0) return true;
-      c.save(); c.translate(o.x, o.y); c.scale(1, .82); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round'; c.lineJoin = 'round';
-      c.shadowColor = 'rgba(170,90,255,.9)'; c.shadowBlur = W * .045; c.strokeStyle = `rgba(190,130,255,${.85 * Math.min(1, p * 1.5)})`;
-      const ring = clamp(p / .35), star = clamp((p - .3) / .45), gly = clamp((p - .6) / .4);
-      c.lineWidth = W * .016; c.beginPath(); c.arc(0, 0, PR, -PI / 2, -PI / 2 + TAU * ring); c.stroke();
-      c.lineWidth = W * .009; c.beginPath(); c.arc(0, 0, PR * .86, PI / 2, PI / 2 - TAU * ring, true); c.stroke();
-      // stella a cinque punte con la punta in basso, disegnata tratto per tratto
-      const P5 = [0, 1, 2, 3, 4].map(i => { const a = PI / 2 + i * TAU / 5; return [Math.cos(a) * PR * .86, Math.sin(a) * PR * .86] }), ord = [0, 2, 4, 1, 3, 0];
-      c.lineWidth = W * .013; c.beginPath(); c.moveTo(P5[0][0], P5[0][1]);
-      for(let i = 0; i < 5; i++){ const u = clamp(star * 5 - i); if(u <= 0) break; const A = P5[ord[i]], B = P5[ord[i + 1]]; c.lineTo(lerp(A[0], B[0], u), lerp(A[1], B[1], u)) } c.stroke();
-      // glifi sull'anello esterno
-      if(gly > 0){ c.lineWidth = W * .007; GL.forEach((g, i) => { const a = -PI / 2 + (i + .5) * TAU / 12, gx = Math.cos(a) * PR * .93, gy = Math.sin(a) * PR * .93, gs = W * .022, al2 = clamp(gly * 12 - i);
-        if(al2 <= 0) return; c.save(); c.globalAlpha = al2; c.translate(gx, gy); c.rotate(a + PI / 2); c.beginPath();
-        g.forEach(([x0, y0, x1, y1, arc]) => { if(arc){ c.moveTo(x0 * gs + gs * .4, y0 * gs); c.arc(x0 * gs, y0 * gs, gs * .4, 0, PI * (1 + Math.abs(x1))) } else { c.moveTo(x0 * gs, y0 * gs); c.lineTo(x1 * gs, y1 * gs) } }); c.stroke(); c.restore() }) }
-      c.restore(); return true });
+      pentacle(c, o.x, o.y, PR, W, p, GL);
+      return true });
     // nuvole nere che arrivano dai bordi e fanno nebbia fitta; dentro il teschio; la nebbia resta davanti all'elemento centrale ma sotto il numero
     const BF = Array.from({length:16}, (_, i) => { const face = i < 3; return {a:face ? PI / 2 + (R() - .5) * 2 : R() * TAU, r:face ? .05 + R() * .15 : .38 + R() * .2, s:face ? .22 + R() * .1 : .3 + R() * .2, al:face ? .4 : .85, col:pick(['12,5,20', '22,10,34', '8,3,14']), sp:(R() - .5) * .25, ph:R() * TAU} });
     const BL = Array.from({length:22}, (_, i) => { const a = R() * TAU, r = .25 + R() * .55; return {a, r, s:W * (.25 + R() * .25), col:i % 4 ? pick(['12,5,20', '22,10,34', '8,3,14']) : pick(CDARK), sp:(R() - .5) * .3, ph:R() * TAU} });
@@ -1072,6 +1077,13 @@ TH.cripta = {
         // fumo nella nebbia, davanti al teschio
         if(R() < dt * 10 * sv){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * sz * .4, y:y + sz * .3, vx:Math.cos(a) * 20, vy:-8, r:W * (.05 + R() * .04), grow:1.6, life:1.2, col:pick(CDARK), al:.4}) } }
       return true });
+    // il pentacolo compare anche sul mio bottone quando appare il teschio, fa un lampo al colpo e svanisce
+    add('A', function(c, dt){ this.a += dt; if(this.a < 0) return true; const x = this.a + SKULL[0]; if(x > HIT + 1.2) return false; const Wa = pA.clientWidth, ha = hubBox(pA);
+      const p = x < HIT ? eo((x - SKULL[0]) / .7) : 1, fl = x < HIT ? 0 : Math.exp(-(x - HIT) * 6), out = x < HIT + .3 ? 1 : 1 - (x - HIT - .3) / .9;
+      c.save(); c.globalAlpha = out; const pw = ha.w * .96, phh = ha.w * .3; c.beginPath(); c.rect(0, 0, Wa, pA.clientHeight); c.rect(ha.x - pw / 2, ha.y - phh / 2, pw, phh); c.clip('evenodd'); pentacle(c, ha.x, ha.y, Wa * .38, Wa, p, GL, fl); c.restore();
+      if(fl > .02) glow(c, ha.x, ha.y, Wa * .5, '170,80,255', .7 * fl);
+      lit('A', ha.x, ha.y, Wa * .7, [.6, .25, 1.1], (.5 * p + 1.5 * fl) * out); return true }, SKULL[0]);
+    after(HIT, () => { SP.aHub.v -= 1.5 });
     after(HIT, () => { SP.vPunch.v -= .8; SP.vLife.v += 1.6; flash('rgba(40,10,70,1)', .45, .9); st('V').chr = 4; damage(8) });
   }
 };
