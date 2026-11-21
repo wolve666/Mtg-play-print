@@ -76,11 +76,11 @@ A rectangular frame border of polished blue crystal and silver filigree, small p
 ```
 12. **Elemento centrale largo (H&O)**, 2048×768
 ```
-UI element, front view, flat: a wide horizontal plaque of smooth blue crystal framed in silver filigree, rectangular with rounded corners, proportion about 8:3, a thin film of water flowing over its border. The center is a smooth dark-blue recessed area, completely empty. Transparent background. 2048×768.
+UI element, front view, flat: a wide horizontal plaque of smooth blue crystal framed in silver filigree, rectangular with rounded corners, proportion about 8:3, a thin film of water flowing over its border. The center is a smooth dark-blue recessed area, completely empty and unlit: no glow, no symbol. Transparent background. 2048×768.
 ```
 13. **Elemento centrale quadrato**, 1024×1024
 ```
-UI element, front view, flat: a square plaque of smooth blue crystal framed in silver filigree, rounded corners, a thin film of water flowing over its border. The center is a smooth dark-blue recessed area, completely empty. Transparent background. 1024×1024.
+UI element, front view, flat: a square plaque of smooth blue crystal framed in silver filigree, rounded corners, a thin film of water flowing over its border. The center is a smooth dark-blue recessed area, completely empty and unlit: no glow, no symbol. Transparent background. 1024×1024.
 ```
 14. **Tasto principale**, 1024×256
 ```

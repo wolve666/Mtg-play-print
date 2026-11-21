@@ -76,11 +76,11 @@ A rectangular frame border of black carved stone with old bone ornaments and sma
 ```
 12. **Elemento centrale largo (H&O)**, 2048×768
 ```
-UI element, front view, flat: a wide horizontal slab of black stone, rectangular with cut corners, proportion about 8:3, bone ornaments on the two short ends, a thin violet glow in the carved border. The center is a smooth very dark recessed area, completely empty. Transparent background. 2048×768.
+UI element, front view, flat: a wide horizontal slab of black stone, rectangular with cut corners, proportion about 8:3, bone ornaments on the two short ends, a thin violet glow in the carved border. The center is a smooth very dark recessed area, completely empty and unlit: no glow, no symbol. Transparent background. 2048×768.
 ```
 13. **Elemento centrale quadrato**, 1024×1024
 ```
-UI element, front view, flat: a square slab of black stone with cut corners, bone ornaments on the four corners, a thin violet glow in the carved border. The center is a smooth very dark recessed area, completely empty. Transparent background. 1024×1024.
+UI element, front view, flat: a square slab of black stone with cut corners, bone ornaments on the four corners, a thin violet glow in the carved border. The center is a smooth very dark recessed area, completely empty and unlit: no glow, no symbol. Transparent background. 1024×1024.
 ```
 14. **Tasto principale**, 1024×256
 ```
