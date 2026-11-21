@@ -22,6 +22,8 @@ Lampo, bagliori e tremolio li faccio io a codice; le immagini danno la materia d
 
 **Seconda idea, da provare (Federico, 21 novembre)**: **raggio continuo** tra i due telefoni. Quando la mira si aggancia, sul telefono dell'avversario compare già un filo di luce che entra dal bordo in alto, sopra il quadratino di chi attacca; al rilascio il raggio pieno si accende sui due telefoni insieme (dall'elemento centrale al bordo su uno, dal bordo al centro del campo sull'altro), resta acceso un secondo o due con lo stesso tremolio, poi aureola, lampo e piume. Due messaggi piccoli per colpo (aggancio e rilascio). Stessi file. Nella pagina di prova ci sono tutte e due le versioni, con un interruttore; le nuvole, se vince il raggio continuo, passano al colpo grosso.
 
+**Carica del raggio (Federico, 21 novembre)**: il filo di luce nasce sottile e si allarga mentre il dito si muove o resta fermo durante il trascinamento, come se si caricasse; al massimo tremola e manda scintille. Al rilascio parte un raggio largo quanto la carica. La carica è solo grafica: i punti persi restano quelli scelti. Si carica solo dopo che il trascinamento è partito (il dito fermo all'inizio resta la pedina a voce). Nessun file nuovo: il raggio lo stringo e lo allargo io; facoltativa la sfera di carica (punto 8).
+
 ## Come lavorare
 1. Sempre **nella stessa chat** di ChatGPT, così tiene lo stile.
 2. **Incolla prima il blocco base**, poi la richiesta del pezzo.
@@ -66,45 +68,50 @@ A sheet of 6 separate single white feathers of different sizes and curves, soft 
 A sheet of 8 separate small things on a 4×2 grid, evenly spaced and not touching: 4 tiny soft white down feathers, fluffy and curled, and 4 small sparkles of golden light of different shapes. 1536×1024.
 ```
 
+8. **Sfera di carica** (facoltativa: cresce sull'elemento centrale mentre il raggio si carica), 1024×1024
+```
+A small sphere of radiant white-gold light seen from the front, a bright white core, soft golden glow, thin wisps of light swirling around it, tiny motes of light, everything else transparent. 1024×1024.
+```
+
 ### B. Il colpo grosso
-8. **Ali** (5 punti persi di fila: le ali si aprono sul campo e lo coprono di luce), 2048×1024
+9. **Ali** (5 punti persi di fila: le ali si aprono sul campo e lo coprono di luce), 2048×1024
 ```
 A pair of large white angelic wings fully spread, seen from the front, symmetrical, long flight feathers with soft glowing edges and a hint of gold, no body, nothing between the wings. 2048×1024.
 ```
 
 ### C. L'interfaccia
-9. **Cornice delle caselle**, 1024×1024
+10. **Cornice delle caselle**, 1024×1024
 ```
 A rectangular frame border of white marble with polished gold filigree and small feathers on the four corners, front view, flat; straight sides simple and uniform; frame thickness about 70 px; center completely empty and transparent. 1024×1024.
 ```
-10. **Elemento centrale largo (H&O)**, 2048×768
+11. **Elemento centrale largo (H&O)**, 2048×768
 ```
 UI element, front view, flat: a wide horizontal plaque of white marble framed in polished gold, rectangular with rounded corners, proportion about 8:3, two small feathered wings on the two short ends. The center is a smooth dark slate-grey recessed area, completely empty and unlit: no glow, no symbol. Transparent background. 2048×768.
 ```
-11. **Elemento centrale quadrato**, 1024×1024
+12. **Elemento centrale quadrato**, 1024×1024
 ```
 UI element, front view, flat: a square plaque of white marble framed in polished gold with rounded corners, small feathers on the four corners. The center is a smooth dark slate-grey recessed area, completely empty and unlit: no glow, no symbol. Transparent background. 1024×1024.
 ```
-12. **Tasto principale**, 1024×256
+13. **Tasto principale**, 1024×256
 ```
 A horizontal button plate of white marble with a gold frame and a pale gold inlay in the middle, small feathers at the two ends, front view, flat; the middle is plain and uniform, empty for text. 1024×256.
 ```
-13. **Sfondo della pagina iniziale**, tre immagini 1080×2400 (verticali)
-- 13a, lontano (questa senza trasparenza):
+14. **Sfondo della pagina iniziale**, tre immagini 1080×2400 (verticali)
+- 14a, lontano (questa senza trasparenza):
 ```
 Background, NOT transparent: a vast sanctuary of white marble above the clouds at dawn, tall columns, golden light from the top-left, soft and bright at the top but darker toward the bottom, no people. Portrait 1080×2400.
 ```
-- 13b, medio:
+- 14b, medio:
 ```
 Transparent background: white marble columns only along the left and right edges, the center completely empty. Portrait 1080×2400.
 ```
-- 13c, vicino:
+- 14c, vicino:
 ```
 Transparent background: drifting feathers and soft light rays in the two top corners, soft clouds in the two bottom corners, the center completely empty. Portrait 1080×2400.
 ```
 
 ### D. I grandi momenti
-14. **Colomba di luce** (inizio partita), 1024×1024
+15. **Colomba di luce** (inizio partita), 1024×1024
 ```
 A glowing white dove with spread wings made of soft light, seen from the front, golden glow at the edges of the feathers. 1024×1024.
 ```
