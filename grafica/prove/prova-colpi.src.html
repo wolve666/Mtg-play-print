@@ -211,7 +211,7 @@ varying vec2 vP;
 uniform vec2 uRes, uRad; uniform vec4 uField; uniform vec3 uC0, uC1, uC2;
 uniform sampler2D uG; uniform float uT, uPunch;
 uniform vec4 uW[6]; uniform float uWW[6];
-uniform vec4 uRip; uniform vec3 uHeat; uniform vec4 uSh; uniform vec4 uPin;
+uniform vec4 uRip; uniform vec3 uHeat; uniform vec4 uSh; uniform vec4 uPin; uniform vec4 uSw;
 uniform vec4 uL[4]; uniform vec3 uLC[4];
 uniform vec4 uFl; uniform float uWith, uDark, uChr;
 float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -227,6 +227,7 @@ void main(){
   if(md > 1.){ gl_FragColor = vec4(0.); return; }
   float edge = clamp(.5 - md, 0., 1.);
   vec2 off = vec2(0.); float shine = 0.;
+  if(uSw.z != 0.){ vec2 d = p - uSw.xy; float l = length(d); float a = uSw.z * exp(-l * l / (uSw.w * uSw.w)); float cs = cos(a), sn = sin(a); off += vec2(d.x * cs - d.y * sn, d.x * sn + d.y * cs) - d; shine += abs(a) * .02 * max(0., sin(l * .12 - a * 3.)); }
   for(int i = 0; i < 6; i++){ vec4 w = uW[i]; if(w.w == 0.) continue; vec2 d = p - w.xy; float l = length(d) + .001; float x = (l - w.z) / uWW[i]; float g = exp(-x * x); off -= d / l * w.w * x * g; shine += abs(w.w) * .012 * g * max(0., -x + .3); }
   if(uRip.z > 0.){ vec2 d = p - uRip.xy; float l = length(d) + .001; float s = sin(l * .085 - uRip.w * 6.5); float a = uRip.z * exp(-l * .003) * (1. - smoothstep(uRip.w * 260. - 60., uRip.w * 260. + 40., l)); off += d / l * a * s; shine += a * .045 * max(0., s) * max(0., s); }
   if(uHeat.z > 0.){ vec2 d = p - uHeat.xy; float k = exp(-dot(d, d) / 26000.); off += (vec2(n2(p * .06 + vec2(0., uT * 4.)), n2(p * .06 + vec2(5.2, uT * 4.))) - .5) * uHeat.z * k * 2.; }
@@ -271,13 +272,13 @@ function makeField(scr, pcol){
     const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
     [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR)); [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-    const U = {}; ['uRes', 'uField', 'uRad', 'uC0', 'uC1', 'uC2', 'uG', 'uT', 'uPunch', 'uW', 'uWW', 'uRip', 'uHeat', 'uSh', 'uPin', 'uL', 'uLC', 'uFl', 'uWith', 'uDark', 'uChr'].forEach(n => U[n] = gl.getUniformLocation(pr, n));
+    const U = {}; ['uRes', 'uField', 'uRad', 'uC0', 'uC1', 'uC2', 'uG', 'uT', 'uPunch', 'uW', 'uWW', 'uRip', 'uHeat', 'uSh', 'uPin', 'uL', 'uLC', 'uFl', 'uWith', 'uDark', 'uChr', 'uSw'].forEach(n => U[n] = gl.getUniformLocation(pr, n));
     fdiv.style.visibility = 'hidden';
     const c = hex3(pcol);
     return {scr, cv, gl, U, tex, gnd:document.createElement('canvas'), col:[lerp3(c, [1, 1, 1], .09), c, lerp3(c, [0, 0, 0], .32)], st:null, lights:[], waves:[]};
   }catch(e){ console.warn('Campo senza WebGL:', e); cv.remove(); return null }
 }
-function resetF(F){ F.st = {rip:[0, 0, 0, 0], heat:[0, 0, 0], sh:[0, 0, 0, 0], pin:[0, 0, 0, 1], fl:[0, 0, 0, 0], with:0, dark:0, chr:0}; F.lights.length = 0; F.waves.length = 0 }
+function resetF(F){ F.st = {rip:[0, 0, 0, 0], heat:[0, 0, 0], sh:[0, 0, 0, 0], pin:[0, 0, 0, 1], sw:[0, 0, 0, 1], fl:[0, 0, 0, 0], with:0, dark:0, chr:0}; F.lights.length = 0; F.waves.length = 0 }
 function gndCtx(F){ const W = F.scr.clientWidth, H = F.scr.clientHeight, g = F.gnd, pw = Math.round(W * DPR), ph = Math.round(H * DPR); if(g.width !== pw || g.height !== ph){ g.width = pw; g.height = ph } const c = g.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H); return c }
 function renderF(F, punch, t){
   const gl = F.gl, U = F.U, W = F.scr.clientWidth, H = F.scr.clientHeight, cv = F.cv, pw = Math.round(W * DPR), ph = Math.round(H * DPR);
@@ -289,13 +290,13 @@ function renderF(F, punch, t){
   gl.uniform3fv(U.uC0, F.col[0]); gl.uniform3fv(U.uC1, F.col[1]); gl.uniform3fv(U.uC2, F.col[2]); gl.uniform1i(U.uG, 0); gl.uniform1f(U.uT, t); gl.uniform1f(U.uPunch, punch);
   const wv = new Float32Array(24), ww = new Float32Array(6).fill(1); F.waves.slice(0, 6).forEach((w, i) => { wv.set(w.slice(0, 4), i * 4); ww[i] = w[4] }); gl.uniform4fv(U.uW, wv); gl.uniform1fv(U.uWW, ww);
   const Ls = F.lights.sort((a, b) => Math.abs(b[3]) - Math.abs(a[3])).slice(0, 4), lv = new Float32Array(16), lc = new Float32Array(12); Ls.forEach((l, i) => { lv.set(l.slice(0, 4), i * 4); lc.set(l[4], i * 3) }); gl.uniform4fv(U.uL, lv); gl.uniform3fv(U.uLC, lc);
-  const s = F.st; gl.uniform4fv(U.uRip, s.rip); gl.uniform3fv(U.uHeat, s.heat); gl.uniform4fv(U.uSh, s.sh); gl.uniform4fv(U.uPin, s.pin); gl.uniform4fv(U.uFl, s.fl); gl.uniform1f(U.uWith, s.with); gl.uniform1f(U.uDark, s.dark); gl.uniform1f(U.uChr, s.chr);
+  const s = F.st; gl.uniform4fv(U.uRip, s.rip); gl.uniform4fv(U.uSw, s.sw); gl.uniform3fv(U.uHeat, s.heat); gl.uniform4fv(U.uSh, s.sh); gl.uniform4fv(U.uPin, s.pin); gl.uniform4fv(U.uFl, s.fl); gl.uniform1f(U.uWith, s.with); gl.uniform1f(U.uDark, s.dark); gl.uniform1f(U.uChr, s.chr);
   gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 // luce sul campo (intensità negativa = buio), onda d'urto sul campo
 function lit(ph, x, y, r, col, i){ const F = FLD[ph]; if(F && i) F.lights.push([x, y, r, i, col]) }
 function wave(ph, x, y, r, amp, w){ const F = FLD[ph]; if(F && amp) F.waves.push([x, y, r, amp, w]) }
-const st = ph => FLD[ph] ? FLD[ph].st : {rip:[], heat:[], sh:[], pin:[], fl:[0, 0, 0, 0], with:0, dark:0, chr:0};
+const st = ph => FLD[ph] ? FLD[ph].st : {rip:[], heat:[], sh:[], pin:[], sw:[], fl:[0, 0, 0, 0], with:0, dark:0, chr:0};
 function lightAt(F, x, y){ const o = [0, 0, 0]; if(!F) return o; F.lights.forEach(l => { const d = Math.hypot(x - l[0], y - l[1]) / l[2], k = l[3] / (1 + d * d * 6) * (1 - clamp((d - .6) / 1)); o[0] += l[4][0] * k; o[1] += l[4][1] * k; o[2] += l[4][2] * k }); return o }
 
 // ---------- molle
@@ -756,56 +757,103 @@ TH.mox = {
   }
 };
 
-// ---------- ABISSO
+// ---------- ABISSO: il gorgo e il getto a spirale
 function wavyPath(a, b, amp, t, n = 32){ const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
   for(let i = 0; i <= n; i++){ const u = i / n, o = (Math.sin(u * PI * 2.2 - t * 6) * amp + Math.sin(u * PI) * amp * .9) * Math.sin(PI * u); pts.push([a[0] + dx * u + nx * o, a[1] + dy * u + ny * o]) } return prep(pts) }
+// gorgo visto dall'alto (un po' schiacciato): fondo scuro, braccia di schiuma a spirale che girano, anello chiaro
+function whirl(c, x, y, R0, t, k, al = 1){
+  if(R0 < 2 || al <= 0) return; const sy = .78;
+  c.save(); c.translate(x, y); c.scale(1, sy);
+  let g = c.createRadialGradient(0, 0, 0, 0, 0, R0); g.addColorStop(0, `rgba(2,20,45,${.85 * al})`); g.addColorStop(.45, `rgba(10,70,130,${.55 * al})`); g.addColorStop(1, 'rgba(30,120,190,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, R0, 0, TAU); c.fill();
+  c.lineCap = 'round'; const arms = 5, spin = t * (3 + 4 * k);
+  for(let i = 0; i < arms; i++){ for(let layer = 0; layer < 2; layer++){
+    c.strokeStyle = layer ? `rgba(235,250,255,${.85 * al})` : `rgba(120,200,240,${.5 * al})`; c.lineWidth = layer ? Math.max(1, R0 * .05) : Math.max(2, R0 * .13); c.beginPath();
+    for(let j = 0; j <= 26; j++){ const u = j / 26, r = R0 * (.08 + .92 * u), a = -spin + i / arms * TAU + Math.log(.08 + u * 3) * (2.2 + k * 1.2) + layer * .06; j ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r) }
+    c.globalAlpha = 1; c.stroke() } }
+  c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(170,230,255,${.5 * al})`; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, R0 * .9, 0, TAU); c.stroke();
+  c.restore();
+}
+// getto d'acqua a spirale: corpo d'acqua trasparente, anima chiara, due bande di schiuma che girano a cavatappi, bolle che corrono
+function waterJet(c, x0, y0, x1, y1, w, t, al){
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return;
+  const N = Math.max(14, l / 5 | 0), prof = u => (.8 + .14 * Math.sin(u * l * .06 - t * 20)) * Math.min(1, u * l / (w * .8) + .35);
+  c.save(); c.translate(x0, y0); c.rotate(Math.atan2(dy, dx));
+  const body = (k, fill) => { c.fillStyle = fill; c.beginPath(); for(let i = 0; i <= N; i++){ const u = i / N, hw = w * k * .5 * prof(u) * (1 + .06 * Math.sin(u * 50 - t * 35)); i ? c.lineTo(u * l, -hw) : c.moveTo(0, -hw) } for(let i = N; i >= 0; i--){ const u = i / N, hw = w * k * .5 * prof(u) * (1 + .06 * Math.sin(u * 47 - t * 31 + 2)); c.lineTo(u * l, hw) } c.fill() };
+  body(1.35, `rgba(20,90,160,${.35 * al})`); body(1, `rgba(40,140,215,${.65 * al})`);
+  const g = c.createLinearGradient(0, -w / 2, 0, w / 2); g.addColorStop(0, `rgba(120,210,255,${.0})`); g.addColorStop(.3, `rgba(190,240,255,${.75 * al})`); g.addColorStop(.5, `rgba(255,255,255,${.85 * al})`); g.addColorStop(.75, `rgba(120,210,255,${.4 * al})`); g.addColorStop(1, 'rgba(120,210,255,0)');
+  c.fillStyle = g; c.fillRect(0, -w * .3, l, w * .6);
+  c.lineCap = 'round';
+  for(let s = 0; s < 2; s++){ const pts = []; for(let i = 0; i <= N; i++){ const u = i / N, ph = u * l * .07 - t * 28 + s * PI; pts.push([u * l, Math.sin(ph) * w * .55 * prof(u), Math.cos(ph)]) }
+    for(let i = 0; i < N; i++){ const a = pts[i], b = pts[i + 1]; c.strokeStyle = a[2] > 0 ? `rgba(235,250,255,${(.45 + .4 * a[2]) * al})` : `rgba(150,210,240,${.25 * al})`; c.lineWidth = Math.max(1, w * (a[2] > 0 ? .07 + .06 * a[2] : .07)); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke() } }
+  c.fillStyle = `rgba(230,250,255,${.8 * al})`;
+  for(let k = 0; k < 7; k++){ const u = (t * 2.2 + k / 7) % 1, yy = Math.sin(k * 2.7 + t * 9) * w * .3; c.beginPath(); c.arc(u * l, yy, w * .06, 0, TAU); c.fill() }
+  c.restore();
+}
+// spruzzi che il getto lancia di lato (gocce vere, ricadono e fanno il cerchietto) e nebbiolina
+function jetFX(list, x0, y0, x1, y1, w, dt, k, W){
+  const l = Math.hypot(x1 - x0, y1 - y0); if(l < 4) return; const a = Math.atan2(y1 - y0, x1 - x0), nx = -Math.sin(a), ny = Math.cos(a);
+  if(R() < dt * 70 * k){ const u = R(), s = sgn(), v = 80 + R() * 200; pt(list, {k:'drop', x:x0 + (x1 - x0) * u + nx * s * w * .4, y:y0 + (y1 - y0) * u + ny * s * w * .4, vx:nx * s * v + Math.cos(a) * 120, vy:ny * s * v + Math.sin(a) * 120, vz:60 + R() * 140, gz:900, rest:.2, life:.8, r:W * (.006 + R() * .01), col:'190,235,255'}) }
+  if(R() < dt * 16 * k){ const u = R(); pt(list, {k:'smoke', x:x0 + (x1 - x0) * u, y:y0 + (y1 - y0) * u, vx:(R() - .5) * 30, vy:(R() - .5) * 30, r:w * .5, grow:1.6, life:.6, col:'215,240,255', al:.35}) }
+}
 TH.abisso = {
   name:'Abisso', sub:'Blu · acqua e onde', col:'#5CC8F2',
-  desc:'L\'onda. Il getto d\'acqua ondeggia e spruzza gocce vere, e la sua luce azzurra scorre sul tappeto di Bea. Da Federico arriva l\'ombra, poi l\'onda si abbatte: il tappeto stesso si increspa a cerchi che si allargano (tutto quello che c\'è sopra ondeggia con lui), con riflessi di luce sulle creste; corona di gocce, schiuma che si spande, velo d\'acqua che scola e gocce che scivolano sul vetro.',
+  desc:'Il gorgo e il getto. Tocchi il bottone e sull\'elemento centrale si forma un gorgo che gira sempre più forte: il tappeto di Bea si avvita davvero intorno a lui. Al rilascio il gorgo si stringe e spara un getto d\'acqua a spirale, con la schiuma che gira a cavatappi e gli spruzzi che volano. Da Federico il getto entra dall\'alto, trivella il tappeto e fa splash: corona di gocce, il tappeto si increspa e resta un gorgo che lo avvita e poi si srotola, schiuma e gocce sul vetro.',
   aim(c, d, dt){
-    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .85] : d.p, t = follow(d, tg[0], tg[1], dt);
-    d.wave = d.wave ?? (R() * 4 | 0);
-    const pts = wavyPath([hb.x, hb.y], [t.x, t.y], W * .05, T), Lp = plen(pts), end = at(pts, Lp), tr2 = I('abisso', 'trail', 0);
-    along(c, tr2, pts, 0, Lp, W * .15, 1, .35, true); along(c, tr2, pts, 0, Lp, W * (.13 + .02 * Math.sin(T * 7)), 1, .95);
-    for(let i = 1; i <= 3; i++){ const p = at(pts, Lp * i / 3); lit('A', p[0], p[1], W * .35, [.35, .75, 1.1], .7) }
-    const im = I('abisso', 'wave' + d.wave, 0), sq = 1 + .06 * Math.sin(T * 11);
-    img(c, im, end[0], end[1], W * .5, end[2], 1, null, .78, .55, sq, 1 / sq, end[2]);
-    if(R() < dt * (on ? 60 : 30)){ const a = end[2] + (R() - .5) * 1.6, v = 60 + R() * 140; pt(FX.pA, {k:'drop', x:end[0], y:end[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:80 + R() * 160, gz:900, rest:.2, life:.9, r:W * (.008 + R() * .01), col:'190,235,255', land:p => pt(FX.pA, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * .05, life:.4, col:'210,245,255', lw:1})}) }
+    const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h * .8] : d.p, t = follow(d, tg[0], tg[1], dt);
+    const ch = d.charge = clamp((T - d.t0) / 1.2), ang = Math.atan2(t.y - hb.y, t.x - hb.x);
+    d.vr = d.vr || spr(0, 160, 8); d.vr.t = W * (.15 + .12 * ch); stepS(d.vr, dt);
+    const lean = W * .03 * ch, cx = hb.x + Math.cos(ang) * lean, cy = hb.y + Math.sin(ang) * lean, Rv = Math.max(0, d.vr.x);
+    const s = st('A'); s.sw[0] = cx; s.sw[1] = cy; s.sw[2] = (.7 + 2.2 * ch) * (1 + .1 * Math.sin(T * 5)); s.sw[3] = W * (.25 + .15 * ch);
+    s.rip[0] = cx; s.rip[1] = cy; s.rip[2] = 2.5 + 3 * ch; s.rip[3] = T;
+    whirl(c, cx, cy, Rv, T, ch); lit('A', cx, cy, W * .6, [.35, .75, 1.1], .6 + .8 * ch);
+    // gocce che girano intorno al gorgo e ne vengono risucchiate
+    if(R() < dt * (30 + 50 * ch)){ const a = R() * TAU, r = Rv * (1 + R() * .4); pt(FX.pA, {k:'drop', x:cx + Math.cos(a) * r, y:cy + Math.sin(a) * r * .78, vx:-Math.sin(a) * r * 4 - Math.cos(a) * r * 1.5, vy:(Math.cos(a) * r * 4 - Math.sin(a) * r * 1.5) * .78, drag:3, life:.45, r:W * (.006 + R() * .008), col:'190,235,255'}) }
+    // filo d'acqua che indica la direzione
+    waterJet(c, cx, cy, t.x, t.y, W * (.02 + .02 * ch), T, .45);
     if(on && R() < dt * 10) FX.sA.push(sp({im:I('abisso', 'foam'), x:tg[0] + (R() - .5) * tr.w * .7, y:tg[1] - tr.h * .3, w:W * .12, life:.6, pop:.15, rot:R() * TAU, spin:(R() - .5)}));
+    if(on && R() < dt * 3) pt(FX.pA, {k:'ripple', x:tg[0], y:tg[1] - tr.h * .3, r:4, grow:tr.w * .35, life:.45, col:'210,245,255', lw:1, al:.45});
   },
   launch(d){
-    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ex = tr.x + tr.w / 2, p0 = d.tip ? [d.tip.x, d.tip.y] : d.p.slice(), im = I('abisso', 'wave' + (d.wave ?? 0), 0);
-    SP.aHub.v -= 2.5; SP.aPunch.v -= .6;
-    add('A', function(c, dt){ this.a += dt; const k = this.a / .42; if(k > 1.3) return false; const kk = Math.min(1, k), x = lerp(p0[0], ex, eo(kk)), y = lerp(p0[1], -W * .4, ei(kk)), al = k > 1 ? 1 - (k - 1) / .3 : 1;
-      const pts = wavyPath([hb.x, hb.y], [x, y], W * .05 * (1 - kk), T), Lp = plen(pts), end = at(pts, Lp), from = Lp * ei(Math.max(0, k - .2) / .8);
-      along(c, I('abisso', 'trail', 0), pts, 0, Lp, W * .14, 1, .95 * al, false, from); img(c, im, end[0], end[1], W * .5, end[2], al, null, .78, .55, 1.2, .85, end[2]);
-      lit('A', end[0], Math.max(end[1], hb.y * .5), W * .5, [.35, .75, 1.1], al);
-      if(R() < dt * 80) pt(FX.pA, {k:'drop', x:end[0], y:end[1], vx:(R() - .5) * 160, vy:R() * 80, vz:100 + R() * 150, gz:900, life:.7, r:W * .01, col:'190,235,255'}); return true });
-    return .45;
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ex = tr.x + tr.w / 2, ey = tr.y + tr.h / 2, ch = d.charge || 0, k0 = (-W * .3 - hb.y) / (ey - hb.y), x1 = hb.x + (ex - hb.x) * k0, y1 = -W * .3;
+    const jw = W * (.1 + .07 * ch), wr = spr(1, 300, 10); wr.t = 0;
+    SP.aHub.v -= 3.5; SP.aPunch.v -= .9; if(navigator.vibrate) try{ navigator.vibrate([25, 20, 40]) }catch(e){}
+    add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > .8) return false; stepS(wr, dt);
+      const head = eo(x / .2), tail = ei(clamp((x - .42) / .3)), hx = lerp(hb.x, x1, head), hy = lerp(hb.y, y1, head), tx0 = lerp(hb.x, x1, tail), ty0 = lerp(hb.y, y1, tail);
+      const s = st('A'); s.sw[0] = hb.x; s.sw[1] = hb.y; s.sw[2] = 2.5 * Math.max(0, wr.x); s.sw[3] = W * .3;
+      whirl(c, hb.x, hb.y, W * .25 * Math.max(0, wr.x), T, 1, Math.max(0, wr.x));
+      waterJet(c, tx0, ty0, hx, hy, jw * (1 - tail * .5), T, 1); jetFX(FX.pA, tx0, ty0, hx, hy, jw, dt, 1.6 * (1 - tail), W);
+      lit('A', (tx0 + hx) / 2, Math.max((ty0 + hy) / 2, hb.y * .4), W * .7, [.35, .75, 1.1], 1.4 * (1 - tail)); return true });
+    for(let i = 0; i < 20; i++){ const a = R() * TAU, v = 100 + R() * 200; pt(FX.pA, {k:'drop', x:hb.x, y:hb.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:100 + R() * 200, gz:1000, rest:.2, life:.9, r:W * (.007 + R() * .01), col:'190,235,255', land:p => pt(FX.pA, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * .05, life:.4, col:'210,245,255', lw:1})}) }
+    return .5;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), im = I('abisso', 'wave' + (R() * 4 | 0), 0);
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), y0 = -W * .3, jw = W * .2;
     if(RM){ flash('#6CC8FF', .6, .9); damage(); return }
-    const D = .4;
-    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > D + .1) return false; const k = clamp(x / D), y = lerp(fb.y - W * .2, o.y, ei(k));
-      const g = c.createLinearGradient(0, y - W * .6, 0, y + W * .1); g.addColorStop(0, 'rgba(0,20,45,0)'); g.addColorStop(.8, `rgba(0,20,45,${.5 * k})`); g.addColorStop(1, 'rgba(0,20,45,0)'); c.fillStyle = g; c.fillRect(0, y - W * .6, W, W * .7);
-      wave('V', o.x, y, W * .2, 5 * k, W * .15); return true });
-    add('V2', function(c, dt){ this.a += dt; const k = this.a / D; if(k > 1.12) return false; const kk = Math.min(1, k), x = lerp(x0, o.x, kk), y = lerp(-W * .35, o.y - W * .05, ei(kk)), al = k > 1 ? 1 - (k - 1) / .12 : 1, s = 1 + .9 * ei(kk);
-      const pts = wavyPath([x0, -W * .6], [x, y], W * .06, T * 2), Lp = plen(pts), end = at(pts, Lp);
-      along(c, I('abisso', 'trail', 0), pts, 0, Lp, W * .22 * s, 1, .9 * al); img(c, im, end[0], end[1], W * .62 * s, end[2], al, null, .8, .55, 1.15, .9, end[2]);
-      lit('V', end[0], Math.max(end[1], fb.y), W * .7, [.4, .8, 1.15], 1.2 * al);
-      if(R() < dt * 90) pt(FX.pV2, {k:'drop', x:end[0] + (R() - .5) * W * .3, y:end[1], vx:(R() - .5) * 90, vy:120 + R() * 160, life:.4, r:W * (.008 + R() * .012), col:'190,235,255'}); return true });
+    const D = .16, END = .85;
+    // il getto entra dall'alto, trivella il tappeto per un attimo, poi la coda ci cade dentro
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .25) return false;
+      const head = eo(x / D), tail = ei(clamp((x - END) / .25)), hx = lerp(x0, o.x, head), hy = lerp(y0, o.y, head), sx = lerp(x0, o.x, tail), sy = lerp(y0, o.y, tail);
+      waterJet(c, sx, sy, hx, hy, jw * (1 - tail * .6), T, 1); jetFX(FX.pV2, sx, sy, hx, hy, jw, dt, 1.5 * (1 - tail), W);
+      lit('V', hx, hy, W * .6, [.4, .8, 1.15], 1.2 * (1 - tail));
+      // mentre trivella: spruzzo continuo dal punto d'impatto
+      if(x > D && x < END + .1 && R() < dt * 90){ const a = R() * TAU, v = 120 + R() * 260; pt(FX.pV2, {k:'drop', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 300, gz:1100, rest:.2, life:1, r:W * (.007 + R() * .014), col:'185,232,255', land:p => pt(FX.pV, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * (.04 + R() * .04), life:.5, col:'225,248,255', lw:1.2, sq:.85})}) }
+      return true });
     after(D, () => {
       impact(PI / 2, 1.15);
-      // il campo s'increspa davvero: anelli che si allargano dal punto dello schianto, con i riflessi sulle creste
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.6) return false; const s = st('V'); s.rip[0] = o.x; s.rip[1] = o.y; s.rip[2] = 10 * Math.pow(1 - x / 3.6, 1.4); s.rip[3] = x;
-        lit('V', o.x, o.y, W * (.5 + .4 * eo(x)), [.35, .8, 1.1], 1.4 * Math.exp(-x * 1.2)); return true });
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; img(c, I('abisso', 'burst', 0), o.x, o.y, W * 1.25 * eb(x / .32), x * .5, x < .35 ? 1 : 1 - (x - .35) / .95); return true });
-      [0, .14, .3].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.4) return false; if(x < 0) return true; const k = eo(x / 1.4); img(c, I('abisso', 'ring', 0), o.x, o.y, W * (.3 + (1.6 - i * .3) * k), i, (1 - k) * .9); return true }, dl));
-      for(let i = 0; i < 52; i++){ const a = R() * TAU, v = 90 + R() * 300; pt(FX.pV2, {k:'drop', x:o.x + Math.cos(a) * W * .08, y:o.y + Math.sin(a) * W * .06, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:180 + R() * 380, gz:1150, rest:.2, life:1.1 + R() * .5, r:W * (.007 + R() * .016), col:'185,232,255',
+      // il gorgo sul tappeto: lo avvita forte e poi si srotola piano; intanto il tappeto si increspa
+      const tw = spr(0, 18, 3.2); tw.v = 14;
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.6) return false; stepS(tw, dt); const s = st('V'), fade = 1 - clamp((x - 2.2) / 1.4);
+        s.sw[0] = o.x; s.sw[1] = o.y; s.sw[2] = tw.x * fade * (x < END ? 1.3 : 1); s.sw[3] = W * .42;
+        s.rip[0] = o.x; s.rip[1] = o.y; s.rip[2] = 9 * Math.pow(1 - x / 3.6, 1.4); s.rip[3] = x;
+        whirl(c, o.x, o.y, W * (.22 + .2 * eo(x / .6)), T * 1.3, 1, .9 * fade);
+        lit('V', o.x, o.y, W * (.5 + .4 * eo(x)), [.35, .8, 1.1], 1.4 * Math.exp(-x * 1.1)); return true });
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; img(c, I('abisso', 'burst', 0), o.x, o.y, W * 1.3 * eb(x / .32), x * 2, x < .35 ? 1 : 1 - (x - .35) / .95); return true });
+      [0, .14, .3].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.4) return false; if(x < 0) return true; const k = eo(x / 1.4); img(c, I('abisso', 'ring', 0), o.x, o.y, W * (.3 + (1.6 - i * .3) * k), i + x * 2, (1 - k) * .9); return true }, dl));
+      for(let i = 0; i < 56; i++){ const a = R() * TAU, v = 90 + R() * 320; pt(FX.pV2, {k:'drop', x:o.x + Math.cos(a) * W * .08, y:o.y + Math.sin(a) * W * .06, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:180 + R() * 400, gz:1150, rest:.2, life:1.1 + R() * .5, r:W * (.007 + R() * .016), col:'185,232,255',
         land:p => { pt(FX.pV, {k:'ripple', x:p.x, y:p.y, r:2, grow:W * (.04 + R() * .05), life:.6, col:'225,248,255', lw:1.3, sq:.85}); const q = {x:p.x, y:p.y}; add('V', function(c, dt){ this.a += dt; if(this.a > .5) return false; wave('V', q.x, q.y, W * (.01 + .12 * this.a), 3 * (1 - this.a / .5), W * .02); return true }) }}) }
       for(let i = 0; i < 7; i++){ const a = i / 7 * TAU + R() * .5, r = W * (.16 + R() * .22); FX.sV.push(sp({im:I('abisso', 'splash'), x:o.x + Math.cos(a) * r, y:o.y + Math.sin(a) * r, vx:Math.cos(a) * 70, vy:Math.sin(a) * 70, drag:2.4, w:W * (.16 + R() * .1), life:1, pop:.22, fout:.5, rot:a + PI / 2, delay:R() * .12})) }
-      for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 50 + R() * 90; FX.sV.push(sp({im:I('abisso', 'foam'), x:o.x + Math.cos(a) * W * .1, y:o.y + Math.sin(a) * W * .1, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.1, w:W * (.2 + R() * .12), life:3.2 + R(), pop:.3, fout:.55, alpha:.9, rot:R() * TAU, spin:(R() - .5) * .5, grow:.5, delay:.05 + R() * .2})) }
+      // la schiuma gira intorno al gorgo mentre si allontana
+      for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 50 + R() * 90; FX.sV.push(sp({im:I('abisso', 'foam'), x:o.x + Math.cos(a) * W * .1, y:o.y + Math.sin(a) * W * .1, vx:Math.cos(a) * v - Math.sin(a) * 90, vy:Math.sin(a) * v + Math.cos(a) * 90, drag:1.1, w:W * (.2 + R() * .12), life:3.2 + R(), pop:.3, fout:.55, alpha:.9, rot:R() * TAU, spin:1.5 + R(), grow:.5, delay:.05 + R() * .2})) }
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false;
         const y = fb.y + fb.h * ei(x / 3.2) * 1.1, g = c.createLinearGradient(0, y - fb.h * .6, 0, y); g.addColorStop(0, 'rgba(40,140,220,0)'); g.addColorStop(1, `rgba(40,140,220,${.38 * (1 - x / 3.2)})`); c.fillStyle = g; c.fillRect(0, y - fb.h * .6, W, fb.h * .6); return true });
       flash('rgba(90,190,255,1)', .3, .9);
@@ -813,6 +861,8 @@ TH.abisso = {
       for(let i = 0; i < 4; i++) FX.sV2.push(sp({im:I('abisso', 'drop'), x:W * (.1 + R() * .8), y:H * (.2 + R() * .5), vy:6, g:10 + R() * 14, w:W * (.06 + R() * .04), life:3 + R(), fout:.3, alpha:.9, delay:.1 + R() * .3}));
       damage();
     });
+    // la coda del getto cade nel gorgo: ultimo spruzzo
+    after(END + .25, () => { impact(PI / 2, .4); for(let i = 0; i < 24; i++){ const a = R() * TAU, v = 80 + R() * 200; pt(FX.pV2, {k:'drop', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:150 + R() * 250, gz:1150, rest:.2, life:.9, r:W * (.007 + R() * .012), col:'185,232,255'}) } });
   }
 };
 
