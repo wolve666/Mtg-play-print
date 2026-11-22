@@ -179,28 +179,20 @@ Front view of a gathering sphere of molten fire energy: a white-hot core, swirli
 ```
 - Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.
 
-### Il goblin matto e la bomba che si spacca (22 novembre, idea di Federico)
-Il goblin diventa un **pazzo che ride**: ghigno enorme, occhi spiritati, risata isterica mentre lancia e mentre la bomba esplode. La risata si vede anche scritta: tre **«HA»** che saltano fuori uno dopo l'altro, storti e tremolanti, come in un fumetto. Tra la bomba intera e l'esplosione c'è un **inframezzo**: la bomba si crepa, si gonfia di luce e si spacca in pezzi. Restiamo sul generico: un goblin nostro, nessun personaggio di fumetti o film copiato (niente trucco da clown, niente vestito viola, niente capelli verdi).
-Stesso blocco base; per H1 il blocco base vale tranne la regola «niente testo», perché lì la scritta è il soggetto.
+### La risata e la bomba che si spacca (22 novembre, idea di Federico)
+Il goblin resta com'è. Dopo che la bomba esplode, sullo schermo compaiono delle **risatine scritte «HA! HA! HA!»** come nei fumetti d'epoca: il goblin non si vede, si sente solo ridere. Le faccio saltare fuori una alla volta, storte e tremolanti, poi svaniscono. Prima dell'esplosione c'è un **inframezzo**: la bomba si crepa, si gonfia di luce e si spacca in pezzi. Restiamo sul generico: scritta in stile fumetto d'epoca, nessun personaggio copiato.
+Stesso blocco base; per H1 il blocco base vale tranne la regola «niente testo, niente lettere», perché lì la scritta è il soggetto.
 
-G1. **Goblin che ride a crepapelle** (stesso goblin delle richieste 5 e 6, stessa vista e misura), 1024×1024
+H1. **Foglio di 3 risatine «HA!»** (le faccio comparire una alla volta dopo l'esplosione), 1536×512
 ```
-The same small mischievous goblin seen from above and slightly from the side, empty-handed, laughing maniacally: head thrown back, huge wide grin full of crooked sharp teeth, wild bulging eyes, hands clutching his belly, shoulders shaking. Painterly-realistic, funny and a bit unhinged, not cartoon. Everything else transparent. 1024×1024.
-```
-G2. **Goblin che sghignazza col dito puntato**, 1024×1024
-```
-The same small goblin seen from above and slightly from the side, pointing a crooked finger forward and cackling with a manic toothy grin, eyes squinted with glee, one hand on his knee. Painterly-realistic, funny and a bit unhinged, not cartoon. Everything else transparent. 1024×1024.
-```
-H1. **Foglio di 3 «HA»** (le faccio saltare fuori una alla volta), 1536×512
-```
-A sheet of 3 separate hand-lettered comic words "HA", each one different: big chunky jagged letters, slightly crooked and wobbly as if shaking with laughter, sickly green fill with a thick dark outline and an orange glow, small motion lines around them, sizes from large to small, on a 3×1 row, evenly spaced and not touching. Only the word HA, no other text. Everything else transparent. 1536×512.
+A sheet of 3 separate hand-lettered vintage comic book sound words "HA!", each one slightly different: bold chunky letters, crooked and wobbly as if shaking with laughter, bright acid green fill with a thick black outline and a purple drop shadow, halftone dots inside the letters, a few small motion lines around them, sizes from large to small, on a 3x1 row, evenly spaced and not touching. Only the word HA! three times, no other text. Everything else transparent. 1536x512.
 ```
 B1. **Bomba che si spacca, 3 momenti** (inframezzo tra bomba intera ed esplosione), 1536×512
 ```
-A sheet of 3 separate stages of the same round black iron bomb seen from above and slightly from the side, on a 3×1 row, evenly spaced and not touching: 1) glowing orange cracks spreading across the iron shell, the fuse burned out; 2) the shell bulging and splitting along the cracks, bright yellow-white fire light bursting out of every crack; 3) the shell breaking apart into big curved iron pieces flying outward around a white-hot core of fire. Everything else transparent. 1536×512.
+A sheet of 3 separate stages of the same round black iron bomb seen from above and slightly from the side, on a 3x1 row, evenly spaced and not touching: 1) glowing orange cracks spreading across the iron shell, the fuse burned out; 2) the shell bulging and splitting along the cracks, bright yellow-white fire light bursting out of every crack; 3) the shell breaking apart into big curved iron pieces flying outward around a white-hot core of fire. Everything else transparent. 1536x512.
 ```
 B2. **Foglio di 8 cocci della bomba**, 1536×1024
 ```
-A sheet of 8 separate curved fragments of a broken black iron bomb shell of different sizes, jagged edges glowing orange-hot, a few with rivets, on a 4×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+A sheet of 8 separate curved fragments of a broken black iron bomb shell of different sizes, jagged edges glowing orange-hot, a few with rivets, on a 4x2 grid, evenly spaced and not touching. Everything else transparent. 1536x1024.
 ```
-- Quando arrivano: il goblin ride mentre lancia (G2) e mentre la bomba esplode (G1), gli «HA» saltano fuori sopra di lui con un rimbalzo e tremano; la bomba passa per i tre momenti di B1 prima dell'esplosione e i cocci di B2 volano e rimbalzano sul tappeto.
+- Quando arrivano: la bomba passa per i tre momenti di B1, esplode, i cocci di B2 volano e rimbalzano sul tappeto; poi, a esplosione finita, gli «HA!» saltano fuori uno dopo l'altro in punti a caso con un rimbalzo, tremano e svaniscono.
