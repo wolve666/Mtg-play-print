@@ -1227,38 +1227,46 @@ TH.forgia = {
       lit('V', o.x, o.y, W * .9, [.6, .85, 1.35], 3 * (1 - x / .32)); const mid = m[m.length >> 1]; lit('V', mid[0], mid[1], W * .6, [.6, .85, 1.35], 2); return true });
     after(.12, () => forgeImpact(o, W));
   },
-  // il goblin sbuca da un angolo in basso del tappeto colpito (dal fianco o da sotto), grande, fino a poco sotto la vita; non si sposta:
-  // si muovono solo le braccia, che caricano e lanciano la bomba; poi torna da dove è venuto
+  // il goblin sbuca da un angolo in basso del tappeto colpito con la bomba in mano, ghigna e sparisce; poco dopo la bomba piomba dall'alto:
+  // enorme, rimpicciolisce mentre cade (si avvicina al tappeto), rimbalza 3 o 4 volte sempre più basso, si ferma, sfrigola ed esplode quando capita
   goblin(){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), im = I('forgia', 'gob1', 0), im2 = I('forgia', 'gob2', 0);
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), im = I('forgia', 'gob1', 0), bomb = I('forgia', 'bomb', 0);
     if(RM || !ok(im)){ forgeImpact(o, W); return }
     const left = R() < .5, fromSide = R() < .5, gw = W * .62, gh = gw * ih(im) / iw(im), face = left ? 1 : -1;
-    const gx = left ? fb.x + gw * .32 : fb.x + fb.w - gw * .32, gy = H + gh * .25, hx0 = gx + (left ? -1 : 1) * W * .7, hy0 = H + gh * 1.05;
-    const IN = .45, WIND = .45, THROW = .14, STAY = .35, OUT = .45, t1 = IN, t2 = t1 + WIND, t3 = t2 + THROW, t4 = t3 + STAY, t5 = t4 + OUT;
-    // le braccia si piegano senza tagli: la parte alta dell'immagine viene spostata a strisce sottili, di più in cima (mani e bomba), niente in basso
-    const V = .5, BOMB = [.53, .2];
-    const armAmt = x => x < t1 ? 0 : x < t2 ? -.14 * eo((x - t1) / WIND) + .01 * Math.sin(x * 30) : x < t3 ? lerp(-.14, .2, eo((x - t2) / THROW)) : .2 * (1 - eo((x - t3) / .25));
-    const bend = (v, amt) => v >= V ? 0 : amt * Math.pow((V - v) / V, 1.6);
-    const pos = x => { const k = x < t1 ? eo(x / IN) : x < t4 ? 1 : 1 - ei((x - t4) / OUT); return fromSide ? [lerp(hx0, gx, k), gy] : [gx, lerp(hy0, gy, k)] };
-    const toScr = (x, u, v) => { const p = pos(x), dx = bend(v, armAmt(x)) * gw, dy = -Math.abs(bend(v, armAmt(x))) * gh * .25; return [p[0] + ((u - .5) * gw + dx) * face, p[1] + (v - 1) * gh + dy] };
-    const drawBent = (c, amt) => { const n = 50, sh = ih(im) * V / n, dh = gh * V / n;
-      for(let i = 0; i < n; i++){ const v = (i + .5) / n * V, dx = bend(v, amt) * gw, dy = -Math.abs(bend(v, amt)) * gh * .25; c.drawImage(im, 0, i * sh, iw(im), sh + .6, -gw / 2 + dx, -gh + i * dh + dy, gw, dh + .8) }
-      c.drawImage(im, 0, ih(im) * V, iw(im), ih(im) * (1 - V), -gw / 2, -gh + gh * V, gw, gh * (1 - V)) };
-    let thrown = false;
-    add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > t5) return false; const p = pos(x), after_ = x > t3;
-      c.save(); c.translate(p[0], p[1]); c.scale(face, 1);
-      if(!after_) drawBent(c, armAmt(x));
-      else { const k = clamp((x - t3) / .12); c.globalAlpha = 1 - k; drawBent(c, armAmt(x)); c.globalAlpha = k; const w2 = gw * 1.25, h2 = w2 * ih(im2) / iw(im2); c.drawImage(im2, -w2 * .48, -h2 * .93, w2, h2) }
-      c.restore();
-      // miccia accesa mentre la tiene in mano
-      if(!after_){ const b = toScr(x, BOMB[0] + .2, BOMB[1] - .14); glow(c, b[0], b[1], W * .05, '255,200,80', .6 + .4 * Math.sin(x * 60)); if(R() < .5) pt(FX.pV2, {k:'spark', x:b[0], y:b[1], vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}) }
-      if(!thrown && x >= t3 - .02){ thrown = true; const b0 = toScr(x, BOMB[0], BOMB[1]), du = .6, tx = o.x + (R() - .5) * W * .2, ty = o.y + (R() - .5) * W * .1;
-        const b = sp({im:I('forgia', 'bomb', 0), x:b0[0], y:b0[1], w:W * .19, vx:(tx - b0[0]) / du, vy:(ty - b0[1]) / du, z:W * .05, vz:620, gz:2000, rest:.42, drag:0, sh:1, spin:face * 9, life:1.3, fout:.01, land:() => impact(PI / 2, .25, b.x, b.y)});
-        FX.sV2.push(b); SP.vPunch.v -= .3;
-        add('V2', function(c, dt){ this.a += dt; if(this.a > 1.3) return false; const fl = .6 + .4 * Math.sin(this.a * 60); glow(c, b.x + W * .05, b.y - b.z - W * .07, W * .06, '255,200,80', fl); lit('V', b.x, b.y, W * .3, [1.2, .7, .3], fl);
-          if(R() < .6) pt(FX.pV2, {k:'spark', x:b.x + W * .05, y:b.y - b.z - W * .07, vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}); return true });
-        after(1.3, () => forgeImpact({x:b.x, y:b.y}, W, 1.2)) }
+    const gx = left ? fb.x + gw * .32 : fb.x + fb.w - gw * .32, gy = H + gh * .25, hx0 = gx + (left ? -1 : 1) * W * .7, hy0 = H + gh * 1.05, IN = .45, HOLD = .75, OUT = .4, GT = IN + HOLD + OUT;
+    const pos = x => { const k = x < IN ? eo(x / IN) : x < IN + HOLD ? 1 : 1 - ei((x - IN - HOLD) / OUT); return fromSide ? [lerp(hx0, gx, k), gy] : [gx, lerp(hy0, gy, k)] };
+    add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > GT) return false; const p = pos(x), bob = x > IN && x < IN + HOLD ? Math.sin((x - IN) * 9) * W * .008 : 0;
+      c.save(); c.translate(p[0], p[1] + bob); c.scale(face, 1); c.drawImage(im, -gw / 2, -gh, gw, gh); c.restore();
+      // la miccia accesa
+      const fx = p[0] + (.73 - .5) * gw * face, fy = p[1] + bob + (.06 - 1) * gh; glow(c, fx, fy, W * .05, '255,200,80', .6 + .4 * Math.sin(x * 60));
+      if(R() < .5) pt(FX.pV2, {k:'spark', x:fx, y:fy, vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}); return true });
+    // la bomba dall'alto
+    const F0 = GT + .25, FALL = .6, LX = o.x + (R() - .5) * W * .3, LY = o.y + (R() - .5) * W * .1, BS = W * .19, SX = W * .5 + (R() - .5) * W * .15;
+    const nB = 3 + (R() < .5 ? 1 : 0), drift = (R() - .5) * W * .5, hops = []; let t = 0, h = W * .32, x0 = LX;
+    for(let i = 0; i < nB; i++){ const d = .18 + Math.sqrt(h / W) * .55, x1 = x0 + drift * (.55 ** i) * .5; hops.push({t0:t, d, h, x0, x1}); t += d; x0 = x1; h *= .5 }
+    const REST = t, BOOM = REST + .5 + R() * 1.8, ex = x0;
+    add('V2', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > BOOM) return false; if(x < 0) return true;
+      let bx, by, z, sz, rot, shadow;
+      if(x < FALL){ const k = x / FALL, e = k * k; bx = lerp(SX, LX, k); by = lerp(H * .14, LY, e); sz = lerp(W * 1.25, BS, Math.pow(k, .6)); z = 0; rot = (1 - k) * 2.5 * face; shadow = k }
+      else { const y = x - FALL; let hp = hops.find(q => y >= q.t0 && y < q.t0 + q.d); bx = ex; z = 0; rot = 0; shadow = 1;
+        if(hp){ const u = (y - hp.t0) / hp.d; bx = lerp(hp.x0, hp.x1, u); z = 4 * hp.h * u * (1 - u); rot = (bx - LX) / W * 6 }
+        else rot = (ex - LX) / W * 6;
+        by = LY; sz = BS * (1 + z / W * .9) }
+      // ombra sul tappeto
+      const sh = BS * (x < FALL ? .6 + .4 * shadow : 1) / (1 + z / W * 2);
+      c.save(); c.globalAlpha = .35 * shadow; c.fillStyle = '#000'; c.beginPath(); c.ellipse(bx, LY + BS * .38, sh * .5, sh * .16, 0, 0, TAU); c.fill(); c.restore();
+      img(c, bomb, bx, by - z, sz, rot, 1);
+      // miccia: sfrigola sempre, di più quando è ferma; tremolio prima di esplodere
+      const fx = bx + sz * .22 * Math.cos(rot - .9), fy = by - z - sz * .4, rest = x - FALL > REST;
+      glow(c, fx, fy, sz * .3, '255,200,80', .6 + .4 * Math.sin(this.a * 60)); lit('V', bx, by, W * .3, [1.2, .7, .3], .8 + .4 * Math.sin(this.a * 50));
+      if(R() < (rest ? .9 : .5)) pt(FX.pV2, {k:'spark', x:fx, y:fy, vx:(R() - .5) * 180, vy:-60 - R() * 90, g:400, life:.3, r:1.2, col:'255,210,120'});
+      // tocca il tappeto: botto, polvere, scintille
+      const y = x - FALL; hops.forEach((hp, i) => { if(!hp.hit && y >= hp.t0){ hp.hit = 1; const pw = .7 * (.6 ** i); SP.vPunch.v -= pw; rumble = {a:0, dur:.2, amt:pw * .4}; if(navigator.vibrate) try{ navigator.vibrate(i ? 15 : 35) }catch(e){}
+        for(let j = 0; j < 10 * (.7 ** i); j++){ const a = PI + R() * PI, v = 60 + R() * 140; pt(FX.pV2, {k:'spark', x:bx, y:LY + BS * .35, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .5, vz:60 + R() * 120, gz:1300, rest:.3, drag:2, life:.4, r:1 + R(), col:'255,200,120'}) }
+        for(let j = 0; j < 3; j++) pt(FX.pV, {k:'smoke', x:bx + (R() - .5) * BS, y:LY + BS * .3, vx:(R() - .5) * 60, vy:-10 - R() * 15, r:W * .03, grow:1.8, life:.8, col:'60,52,46', al:.45}) } });
+      if(rest){ const w = clamp((x - FALL - REST) / (BOOM - REST)); if(w > .7){ const j = (w - .7) / .3 * W * .006; c.save(); c.globalAlpha = .0; c.restore(); this.j = j } }
       return true });
+    after(F0 + BOOM, () => forgeImpact({x:ex, y:LY}, W, 1.2));
   }
 };
 

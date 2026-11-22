@@ -96,3 +96,4 @@ Da fare / aperto:
 - Cripta, colpo grosso: i due pentacoli (avversario e chi attacca) si disegnano insieme fin dall'inizio, come un rito; al colpo il mio brilla, poi resta l'impronta bruciata con due fili di fumo dalle punte della stella, che svanisce.
 - Forgia: colpo grosso «il fuoco del drago» nella prova (ombra su entrambi i tappeti, getto di fuoco in diagonale sotto il numero, lava che si raffredda); immagini del cratere preparate con `strumenti/prepara-forgia.py`. Il fulmine (colpo normale) non toccato: approvato in passato, da sentire Federico.
 - Forgia: fulmine d'arrivo più grosso e frastagliato (`bolt` con scala e frastagliatura); goblin nuovo che sbuca da un angolo in basso e lancia la bomba piegando solo le braccia (immagine piegata a strisce, senza tagli).
+- Forgia, goblin rifatto: compare con la bomba e sparisce; la bomba cade dall'alto in prospettiva (enorme → piccola), 3-4 rimbalzi, si ferma ed esplode quando capita.
