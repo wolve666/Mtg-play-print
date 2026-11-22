@@ -447,18 +447,16 @@ const PUFF = [0, 1].map(v => { const s = document.createElement('canvas'); s.wid
   c.globalCompositeOperation = 'source-atop'; const g = c.createLinearGradient(0, 50, 0, 130); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,196,96,.55)'); c.fillStyle = g; c.fillRect(0, 0, 160, 160); return s });
 // la nuvola d'arrivo: una sola, intera, nella fascia più alta del display; entra dall'alto per 4/5 (la parte di sopra resta fuori dallo schermo),
 // copre anche i quadratini, non scende nel campo; il raggio esce dal suo fondo; poi si dissolve sul posto. Restituisce dove nasce il raggio.
+// la nuvola d'arrivo: un solo disegno, fatto apposta per stare attaccato al bordo alto dello schermo (la parte sopra resta fuori).
+// scende fino a farsi vedere per 4/5, respira piano, poi si dissolve salendo un poco. Restituisce l'altezza del sole, da cui parte il raggio.
 function cloudsArrive(cx, dur){
-  const W = W_(), H = pV.clientHeight, cl = I('santuario', 'clouds', 0), w = W * 1.35, h = ok(cl) ? w * ih(cl) / iw(cl) : W * .45, yEnd = h * .3, yStart = -h * .55;
-  const puffs = Array.from({length:12}, (_, i) => ({u:(i + .5) / 12 + (R() - .5) * .05, d:R() * .15, s:.13 + R() * .1, v:PUFF[i % 2], dy:(R() - .2) * h * .35, side:i < 6 ? -1 : 1, sp:.4 + R() * .6, ph:R() * TAU}));
+  const W = W_(), cl = I('santuario', 'cloud', 0), w = W * 1.65, h = ok(cl) ? w * ih(cl) / iw(cl) : W * .5, yEnd = h * .5 - h * .2, yStart = -h * .5;
   add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > dur) return false;
-    const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .2) * (1 - fade), y = lerp(yStart, yEnd, eo(x / .55)) - fade * h * .08, sc = 1 + fade * .12;
-    glow(c, cx, y + h * .35, W * (.25 + .25 * eo((x - .4) / .5)), '255,230,160', al * .9); lit('V', cx, Math.max(0, y + h * .5), W * .9, [1, .85, .5], al * 1.2);
-    // sbuffi a codice dentro la stessa fascia: respirano, e mentre la nuvola si dissolve scivolano piano di lato e svaniscono
-    puffs.forEach(p => { const xx = x - p.d; if(xx < 0) return; const sz = W * p.s * (1 + .5 * fade) * (1 + .05 * Math.sin(T * 1.3 + p.ph)), dr = p.side * W * .12 * fade * p.sp;
-      c.save(); c.globalAlpha = al * .85 * clamp(xx / .3); c.drawImage(p.v, cx + (p.u - .5) * w * .95 + dr - sz, y + p.dy - sz * .7, sz * 2, sz * 2); c.restore() });
-    img(c, cl, cx + Math.sin(x * .9) * W * .01, y, w * sc, 0, al);
+    const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .25) * (1 - fade), y = lerp(yStart, yEnd, eo(x / .6)) - fade * h * .1, sun = y - h * .5 + h * .31;
+    glow(c, cx, sun, W * (.2 + .2 * eo((x - .4) / .5)), '255,230,160', al * .8); lit('V', cx, Math.max(0, sun + h * .3), W * .9, [1, .85, .5], al * 1.2);
+    img(c, cl, cx + Math.sin(x * .9) * W * .01, y, w * (1 + fade * .08), 0, al, null, .5, .5, 1, 1 + .015 * Math.sin(T * 1.3));
     return true });
-  return yEnd + h * .32;
+  return yEnd - h * .5 + h * .31;
 }
 TH.santuario = {
   name:'Santuario', sub:'Bianco · luce e angeli', col:'#F2D27A',
@@ -794,7 +792,11 @@ function waterJet(c, x0, y0, x1, y1, w, t, al, flare = 0, fl = 0, texW = w){
   const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy); if(l < 2 || al <= 0 || w < .5) return;
   c.save(); c.translate(x0, y0); c.rotate(Math.atan2(dy, dx));
   jetBody(c, I('abisso', 'jet', 0), l, w, t, al, flare, fl, texW);
-  if(l > w){ glow(c, l, 0, w * 1.1, '220,245,255', .8 * al); img(c, I('abisso', 'spray', (t * 18 | 0) % 8), l - w * .4, 0, w * 2.6, 0, .9 * al, null, .15, .5) }
+  // in punta la testa dipinta del getto: la sua coda sfuma dentro il corpo, la schiuma davanti pulsa
+  const hd = I('abisso', 'head', 0);
+  if(ok(hd) && l > w * .5){ const hh = w * 3.4, hw = hh * iw(hd) / ih(hd), sx = Math.min(1, l * 1.05 / hw);
+    glow(c, l, 0, w * 1.2, '220,245,255', .55 * al); img(c, hd, l + w * .5, 0, hw, 0, al, null, .9, .5, sx * (1 + .04 * Math.sin(t * 11)), 1 + .07 * Math.sin(t * 15)) }
+  else if(l > w){ glow(c, l, 0, w * 1.1, '220,245,255', .8 * al); img(c, I('abisso', 'spray', (t * 18 | 0) % 8), l - w * .4, 0, w * 2.6, 0, .9 * al, null, .15, .5) }
   c.restore();
 }
 // spruzzi che il getto lancia di lato (gocce vere e ciuffi dipinti) e qualche bolla

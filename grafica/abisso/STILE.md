@@ -130,3 +130,4 @@ G5. **Foglio di 9 bolle**, 1024×1024
 A sheet of 9 separate clear air bubbles of different sizes, glossy and transparent with bright highlights and thin blue rims, on a 3×3 grid, evenly spaced and not touching. Everything else transparent. 1024×1024.
 ```
 - 22 novembre: arrivate G1 (gorgo), G2 (getto), G4 (spruzzi), G5 (bolle), tutte con trasparente vero; montate nella prova. Manca G3 (punta del getto): per ora la punta è schiuma a codice più uno spruzzo del foglio G4.
+- 22 novembre: arrivata G3 (punta del getto), montata in punta al getto sia alla partenza sia all'arrivo.

@@ -53,6 +53,7 @@ os.makedirs(OUT,exist_ok=True)
 # Santuario
 T('santuario','beam',  one('santuario/Scia di luce dorata scintillante.png','s_beam',1000))
 T('santuario','beam2', one('santuario/Nastro di luce dorata con piume candide.png','s_beam2',1000))
+T('santuario','cloud', one("santuario/Nuvola d'arrivo.png",'s_cloud',1000,docrop=False))
 T('santuario','clouds',one('santuario/Nuvole dorate con raggi di luce.png','s_clouds',800))
 T('santuario','burst', one('santuario/Esplosione dorata di luce e piume.png','s_burst',560))
 T('santuario','halo',  one('santuario/Aureola dorata ornamentale luminosa.png','s_halo',560))
@@ -79,6 +80,7 @@ T('abisso','splash',sheet('abisso/Sei effetti di schizzi d’acqua realistici.pn
 T('abisso','foam',  sheet('abisso/Sei chiazze di schiuma marina bianca realistico-dettagliate.png','a_f',220))
 T('abisso','drop',  sheet('abisso/Griglia di gocce d’acqua realistiche.png','a_d',120,fix='gocce'))
 T('abisso','tent',  one('abisso/Tentacolo Gigante Lucido con Ventose.png','a_tent',900))
+T('abisso','head',  one('abisso/Punta del getto.png','a_head',900))
 T('abisso','tent2', one('abisso/Tentacolo di polpo gigante bagnato.png','a_tent2',900,fix='alone'))
 # Cripta
 T('cripta','dart',  one('cripta/Dardo di Fumo Viola Oscuro.png','c_dart',900))
