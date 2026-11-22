@@ -131,3 +131,32 @@ A sheet of 9 separate clear air bubbles of different sizes, glossy and transpare
 ```
 - 22 novembre: arrivate G1 (gorgo), G2 (getto), G4 (spruzzi), G5 (bolle), tutte con trasparente vero; montate nella prova. Manca G3 (punta del getto): per ora la punta è schiuma a codice più uno spruzzo del foglio G4.
 - 22 novembre: arrivata G3 (punta del getto), montata in punta al getto sia alla partenza sia all'arrivo.
+
+## Pezzi senza tagli (22 novembre)
+I tagli netti nascono quando un'immagine fatta per il mezzo finisce all'inizio o alla fine di un flusso. Con la punta del getto dell'Abisso si è visto: un pezzo pensato per la fine e il taglio sparisce. Quindi per ogni flusso servono **partenza**, **corpo** e **punta**, più qualche **tappo**: pezzi morbidi da mettere sopra gli attacchi.
+Regole per tutti i pezzi qui sotto (si aggiungono al blocco base):
+- il lato che si attacca a un altro pezzo **sfuma piano fino al trasparente**, senza bordo;
+- un **corpo ripetibile** ha il bordo sinistro e il destro **uguali**, così lo ripeto senza giunta, e non ha teste né code;
+- un **tappo** ha i bordi sfrangiati e morbidi tutto intorno, niente forme tagliate;
+- i fogli con più pezzi: pezzi separati, ben distanziati, che non si toccano.
+K1. **Partenza del getto** (esce dal vortice: così niente più imbuto finto), 1024×512
+```
+The birth of a powerful water jet seen from the side, pointing to the right: on the left a churning round knot of swirling water, white foam and bubbles where the jet is born, the water column leaving it to the right, the right end clean and fading softly to transparent so it can join a water column. Everything else transparent. 1024×512.
+```
+K2. **Corpo del getto, ripetibile** (come G2 ma ripetibile: oggi la giunta la nascondo con una sfumatura), 2048×512
+```
+A straight horizontal jet of rushing water seen from the side: a translucent blue water column with a bright white core, white foam twisting around it like a corkscrew, small bubbles inside. Seamless and tileable horizontally: the left and right edges match exactly, uniform along its whole length, no head, no tail. Everything else transparent. 2048×512.
+```
+K3. **Foglio di 6 tappi di schiuma** (li metto sopra gli attacchi e dove l'acqua sbatte), 1536×1024
+```
+A sheet of 6 separate frothy foam caps of different shapes, white sea foam with tiny bubbles and a few droplets, translucent blue at the base, soft feathered edges fading to transparent all around, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+K4. **Carica d'acqua** (l'acqua che si raccoglie sul bottone mentre trascini), 1024×1024
+```
+Front view of a gathering sphere of swirling water energy: a spinning ball of translucent blue water with white foam spirals and bubbles drawn inward, a soft turquoise glow, the outer edge fading softly to transparent, circular. Everything else transparent. 1024×1024.
+```
+K5. **Foglio di 4 esplosioni d'acqua** (per l'arrivo sul tappeto e la sferzata del tentacolo), 2048×1024
+```
+A sheet of 4 separate water explosions seen from above, each a round burst crown of splashing water, white foam and droplets flying outward, translucent blue, soft edges fading to transparent, on a 2×2 grid, evenly spaced and not touching. Everything else transparent. 2048×1024.
+```
+- Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.

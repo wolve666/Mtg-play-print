@@ -98,3 +98,4 @@ Da fare / aperto:
 - Forgia: fulmine d'arrivo più grosso e frastagliato (`bolt` con scala e frastagliatura); goblin nuovo che sbuca da un angolo in basso e lancia la bomba piegando solo le braccia (immagine piegata a strisce, senza tagli).
 - Forgia, goblin rifatto: compare con la bomba e sparisce; la bomba cade dall'alto in prospettiva (enorme → piccola), 3-4 rimbalzi, si ferma ed esplode quando capita.
 - **Prossimo lavoro (deciso da Federico): Selva.** Cripta e Forgia concluse nella prova dei colpi (link della pagina pubblicata: https://claude.ai/artifact/WwnnurLvTgtmTV4Mw5DQf4). Attenzione: i colpi nuovi vivono solo nella pagina di prova, non ancora nell'app; un'APK compilata oggi non li contiene.
+- 22 novembre: in ogni `grafica/<tema>/STILE.md` c'è la sezione «Pezzi senza tagli» (partenza, corpo ripetibile, punta, tappi, carica, esplosioni) e per Mox il cannone nuovo in due pezzi (C1–C3).

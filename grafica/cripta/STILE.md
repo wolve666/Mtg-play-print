@@ -122,3 +122,33 @@ M1. **Mano che sale dal basso**, 1024×1024
 ```
 A skeletal demonic hand rising straight up from below, seen from the front, fingers open and reaching upward, old bone with black claws, violet smoke and mist curling around the wrist and fading to transparent at the bottom. 1024×1024.
 ```
+
+## Pezzi senza tagli (22 novembre)
+I tagli netti nascono quando un'immagine fatta per il mezzo finisce all'inizio o alla fine di un flusso. Con la punta del getto dell'Abisso si è visto: un pezzo pensato per la fine e il taglio sparisce. Quindi per ogni flusso servono **partenza**, **corpo** e **punta**, più qualche **tappo**: pezzi morbidi da mettere sopra gli attacchi.
+Regole per tutti i pezzi qui sotto (si aggiungono al blocco base):
+- il lato che si attacca a un altro pezzo **sfuma piano fino al trasparente**, senza bordo;
+- un **corpo ripetibile** ha il bordo sinistro e il destro **uguali**, così lo ripeto senza giunta, e non ha teste né code;
+- un **tappo** ha i bordi sfrangiati e morbidi tutto intorno, niente forme tagliate;
+- i fogli con più pezzi: pezzi separati, ben distanziati, che non si toccano.
+(La Cripta la sta sistemando un'altra sessione: questi pezzi servono comunque a tutte e due.)
+K1. **Partenza della scia d'anime**, 1024×512
+```
+The birth of a stream of ghostly violet smoke and drained souls seen from the side, flowing to the right: on the left a dark swirling knot of black and violet mist where the stream is born, faint screaming faces in the smoke, the right end clean and fading softly to transparent so it can join a smoke column. Everything else transparent. 1024×512.
+```
+K2. **Corpo della scia, ripetibile**, 2048×512
+```
+A straight horizontal stream of ghostly violet smoke seen from the side, with wisps of black mist and faint pale souls drifting along it. Seamless and tileable horizontally: the left and right edges match exactly, uniform along its whole length, no head, no tail. Everything else transparent. 2048×512.
+```
+K3. **Punta della scia**, 1024×512
+```
+The front tip of a stream of ghostly violet smoke seen from the side, flowing to the right: the smoke curls forward into a reaching ghostly claw shape that dissolves into wisps, the left end clean and fading softly to transparent so it can join a smoke column. Everything else transparent. 1024×512.
+```
+K4. **Foglio di 6 tappi di nebbia**, 1536×1024
+```
+A sheet of 6 separate puffs of black and deep violet mist of different shapes, soft wispy edges fading to transparent all around, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+K5. **Carica oscura**, 1024×1024
+```
+Front view of a gathering sphere of dark necromantic energy: a black core with a violet glow, wisps of smoke and tiny pale souls spiralling inward, the outer edge fading softly to transparent, circular. Everything else transparent. 1024×1024.
+```
+- Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.

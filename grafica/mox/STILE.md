@@ -121,3 +121,41 @@ A brass clockwork core opening like a flower, its petals made of brass plates an
 
 ## Stato
 - 21 novembre 2026: scheda pronta. Si parte dal colpo (A, prima la bomba e le crepe); la pagina di prova si fa appena arrivano le prime immagini. Colpo grosso (B) da decidere; interfaccia e pagina iniziale (C, D) solo dopo le indicazioni di Federico.
+
+## Pezzi senza tagli (22 novembre)
+I tagli netti nascono quando un'immagine fatta per il mezzo finisce all'inizio o alla fine di un flusso. Con la punta del getto dell'Abisso si è visto: un pezzo pensato per la fine e il taglio sparisce. Quindi per ogni flusso servono **partenza**, **corpo** e **punta**, più qualche **tappo**: pezzi morbidi da mettere sopra gli attacchi.
+Regole per tutti i pezzi qui sotto (si aggiungono al blocco base):
+- il lato che si attacca a un altro pezzo **sfuma piano fino al trasparente**, senza bordo;
+- un **corpo ripetibile** ha il bordo sinistro e il destro **uguali**, così lo ripeto senza giunta, e non ha teste né code;
+- un **tappo** ha i bordi sfrangiati e morbidi tutto intorno, niente forme tagliate;
+- i fogli con più pezzi: pezzi separati, ben distanziati, che non si toccano.
+
+### Il cannone nuovo
+Oggi il cannone è disegnato a codice e si vede. Lo voglio in **due pezzi**, visti **dall'alto**, così la canna la giro verso il bersaglio e la faccio rinculare da sola.
+C1. **Base del cannone**, 1024×1024
+```
+Seen from directly above: the round base of a small antique clockwork cannon turret, a heavy ring of polished brass and brushed steel with rivets, small gears and dials around the edge, a glowing colorless crystal core with pale cyan light set in the center where the barrel pivots, circular. Everything else transparent. 1024×1024.
+```
+C2. **Canna del cannone** (il perno a sinistra, la bocca a destra), 1024×512
+```
+Seen from directly above: the barrel of an antique clockwork cannon pointing to the right, long and elegant, brushed steel with engraved brass rings, rivets and small pistons along its sides, a faint pale cyan glow inside the muzzle, the left end is a round brass pivot cap. Everything else transparent. 1024×512.
+```
+C3. **Vampata di sparo**, 1024×512
+```
+Seen from directly above: the muzzle blast of a magical cannon pointing to the right, a short burst of pale cyan energy and white light with a ring of grey steam and brass sparks, the left end clean and fading softly to transparent so it can sit on the barrel mouth. Everything else transparent. 1024×512.
+```
+
+### Tappi e pezzi morbidi
+K1. **Foglio di 6 sbuffi di vapore** (escono dal cannone e coprono gli attacchi), 1536×1024
+```
+A sheet of 6 separate puffs of grey-white steam and graphite smoke of different shapes, soft wispy edges fading to transparent all around, a faint cyan tint inside, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+K2. **Carica del nucleo** (il cannone che si carica prima di sparare), 1024×1024
+```
+Front view of a gathering sphere of colorless crystal energy: a bright pale cyan core, thin rings of light and tiny brass sparks drawn inward, the outer glow fading softly to transparent, circular. Everything else transparent. 1024×1024.
+```
+K3. **Foglio di 4 esplosioni** (per la bomba; oggi l'esplosione ha un bordo), 2048×1024
+```
+A sheet of 4 separate explosions seen from above, each a round billowing cloud of grey smoke lit pale cyan from inside, with brass fragments and sparks flying outward, soft edges fading to transparent, on a 2×2 grid, evenly spaced and not touching. Everything else transparent. 2048×1024.
+```
+- Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.

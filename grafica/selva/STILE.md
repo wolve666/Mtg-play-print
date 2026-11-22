@@ -97,3 +97,32 @@ Four parallel deep claw slashes torn into a surface, seen from directly above: d
 ```
 A single glowing green seed cracking open with two small fresh leaves sprouting from it, soft magical green glow around it.
 ```
+
+## Pezzi senza tagli (22 novembre)
+I tagli netti nascono quando un'immagine fatta per il mezzo finisce all'inizio o alla fine di un flusso. Con la punta del getto dell'Abisso si è visto: un pezzo pensato per la fine e il taglio sparisce. Quindi per ogni flusso servono **partenza**, **corpo** e **punta**, più qualche **tappo**: pezzi morbidi da mettere sopra gli attacchi.
+Regole per tutti i pezzi qui sotto (si aggiungono al blocco base):
+- il lato che si attacca a un altro pezzo **sfuma piano fino al trasparente**, senza bordo;
+- un **corpo ripetibile** ha il bordo sinistro e il destro **uguali**, così lo ripeto senza giunta, e non ha teste né code;
+- un **tappo** ha i bordi sfrangiati e morbidi tutto intorno, niente forme tagliate;
+- i fogli con più pezzi: pezzi separati, ben distanziati, che non si toccano.
+K1. **Partenza della liana** (da dove esce la liana), 1024×1024
+```
+Seen from above: a round clod of dark earth and moss bursting open, roots and soil crumbs around it, a thick green vine emerging from its center toward the right, the vine cut short and fading softly to transparent on the right so it can join a vine. Everything else transparent. 1024×1024.
+```
+K2. **Corpo della liana, ripetibile**, 2048×512
+```
+A thick twisted jungle vine running straight from left to right, seen from the side, dark green with moss, small leaves and short thorns. Seamless and tileable horizontally: the left and right edges match exactly, uniform along its whole length, no head, no tail. Everything else transparent. 2048×512.
+```
+K3. **Punta della liana**, 1024×512
+```
+The tip of a thick jungle vine seen from the side, pointing to the right: the vine narrows into a curling tendril with fresh young leaves and a small bud, the left end clean and fading softly to transparent so it can join a vine. Everything else transparent. 1024×512.
+```
+K4. **Foglio di 6 tappi di foglie** (li metto sopra gli attacchi della liana), 1536×1024
+```
+A sheet of 6 separate small clusters of leaves, moss and twigs of different shapes, soft natural edges, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+K5. **Foglio di 6 sbuffi di terra** (quando la liana stritola o esce dal terreno), 1536×1024
+```
+A sheet of 6 separate puffs of brown dust and flying soil crumbs of different shapes, with a few small leaves, soft wispy edges fading to transparent all around, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+- Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.

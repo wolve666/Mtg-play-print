@@ -144,3 +144,37 @@ A glowing red-hot anvil seen from slightly above, sparks bursting from it. 1024�
 - 22 novembre, dopo il parere di Federico: ombra del drago lenta e sempre diversa (lato, curva, velocità, grandezza, battito d'ali); il fuoco non è più un disegno stirato che pulsa, ma scende dall'alto come tante lingue di fiamma che corrono verso il tappeto e schizzano ovunque dove toccano; sotto restano bruciature annerite con la lava che si raffredda.
 - 22 novembre: fulmine d'arrivo più grosso e frastagliato in modo irregolare (più rami, sottorami). Goblin nuovo: sbuca grande da un angolo in basso del tappeto colpito (dal fianco o da sotto, a caso), fino a poco sotto la vita; non si sposta, si piegano solo le braccia che caricano e lanciano la bomba; poi passa alla posa a braccio teso e torna da dove è venuto.
 - 22 novembre, goblin rifatto (il lancio a braccia piegate bocciato): il goblin sbuca da un angolo in basso con la bomba in mano, ghigna e sparisce; poi la bomba piomba dall'alto, enorme, rimpicciolisce mentre cade, rimbalza 3 o 4 volte sempre più basso, si ferma, sfrigola ed esplode dopo un tempo a caso.
+
+## Pezzi senza tagli (22 novembre)
+I tagli netti nascono quando un'immagine fatta per il mezzo finisce all'inizio o alla fine di un flusso. Con la punta del getto dell'Abisso si è visto: un pezzo pensato per la fine e il taglio sparisce. Quindi per ogni flusso servono **partenza**, **corpo** e **punta**, più qualche **tappo**: pezzi morbidi da mettere sopra gli attacchi.
+Regole per tutti i pezzi qui sotto (si aggiungono al blocco base):
+- il lato che si attacca a un altro pezzo **sfuma piano fino al trasparente**, senza bordo;
+- un **corpo ripetibile** ha il bordo sinistro e il destro **uguali**, così lo ripeto senza giunta, e non ha teste né code;
+- un **tappo** ha i bordi sfrangiati e morbidi tutto intorno, niente forme tagliate;
+- i fogli con più pezzi: pezzi separati, ben distanziati, che non si toccano.
+(La Forgia la sta sistemando un'altra sessione: questi pezzi servono comunque a tutte e due.)
+K1. **Partenza della fiammata** (dalla bocca del drago o dal bottone), 1024×512
+```
+The birth of a roaring stream of fire seen from the side, flowing to the right: on the left a bright white-yellow knot of flame where the stream is born, the fire leaving it to the right in orange tongues, the right end clean and fading softly to transparent so it can join a fire column. Everything else transparent. 1024×512.
+```
+K2. **Corpo della fiamma, ripetibile**, 2048×512
+```
+A straight horizontal stream of roaring fire seen from the side, a white-yellow core with orange and deep red tongues of flame and small embers. Seamless and tileable horizontally: the left and right edges match exactly, uniform along its whole length, no head, no tail. Everything else transparent. 2048×512.
+```
+K3. **Punta della fiamma**, 1024×512
+```
+The front tip of a stream of fire seen from the side, pointing to the right: the flame bursts forward into a rolling fireball with embers and sparks flying ahead, the left end clean and fading softly to transparent so it can join a fire column. Everything else transparent. 1024×512.
+```
+K4. **Foglio di 6 sbuffi di fumo e brace**, 1536×1024
+```
+A sheet of 6 separate puffs of dark grey smoke of different shapes, lit orange from below with a few glowing embers, soft wispy edges fading to transparent all around, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+K5. **Foglio di 4 esplosioni di fuoco** (per la bomba del goblin), 2048×1024
+```
+A sheet of 4 separate fire explosions seen from above, each a round rolling fireball, white-yellow at the center, orange and red outward, black smoke at the rim, embers flying out, soft edges fading to transparent, on a 2×2 grid, evenly spaced and not touching. Everything else transparent. 2048×1024.
+```
+K6. **Carica di lava**, 1024×1024
+```
+Front view of a gathering sphere of molten fire energy: a white-hot core, swirling orange lava and flames drawn inward, small embers, the outer glow fading softly to transparent, circular. Everything else transparent. 1024×1024.
+```
+- Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.
