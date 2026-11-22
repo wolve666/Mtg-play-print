@@ -1172,14 +1172,17 @@ TH.cripta = {
 };
 
 // ---------- FORGIA
-function bolt(c, a, b, W, seed, al = 1, forks = 2){
+function bolt(c, a, b, W, seed, al = 1, forks = 2, sc = 1, jag = 1){
   let s = seed; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
-  const path = (a, b, amp) => { const n = Math.max(5, Math.hypot(b[0] - a[0], b[1] - a[1]) / (W * .05) | 0), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [a];
-    for(let i = 1; i < n; i++){ const u = i / n, j = (rnd() - .5) * amp * Math.sin(PI * u) * 2; pts.push([a[0] + dx * u + nx * j, a[1] + dy * u + ny * j]) } pts.push(b); return pts };
-  const main = path(a, b, W * .09), all = [[main, 1]];
-  for(let f = 0; f < forks; f++){ const p = main[1 + (rnd() * (main.length - 2) | 0)], ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + (rnd() - .5) * 1.8, l = W * (.1 + rnd() * .15); all.push([path(p, [p[0] + Math.cos(ang) * l, p[1] + Math.sin(ang) * l], W * .04), .5]) }
+  const path = (a, b, amp) => { const n = Math.max(5, Math.hypot(b[0] - a[0], b[1] - a[1]) / (W * .05 / jag) | 0), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [a];
+    let dr = 0; for(let i = 1; i < n; i++){ const u = clamp((i + (jag > 1 ? (rnd() - .5) * .7 : 0)) / n), sn = Math.sin(PI * u);
+      let j; if(jag > 1){ dr = dr * .7 + (rnd() - .5) * amp * 1.3; j = (dr + (rnd() < .2 ? (rnd() - .5) * amp * 1.6 : (rnd() - .5) * amp * .5)) * sn } else j = (rnd() - .5) * amp * sn * 2;
+      pts.push([a[0] + dx * u + nx * j, a[1] + dy * u + ny * j]) } pts.push(b); return pts };
+  const main = path(a, b, W * .09 * jag), all = [[main, 1]];
+  for(let f = 0; f < forks; f++){ const p = main[1 + (rnd() * (main.length - 2) | 0)], ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + (rnd() - .5) * 1.8, l = W * (.1 + rnd() * .15) * sc; const fp = path(p, [p[0] + Math.cos(ang) * l, p[1] + Math.sin(ang) * l], W * .04 * jag); all.push([fp, .5]);
+    if(jag > 1){ const q = fp[fp.length >> 1], a2 = ang + (rnd() - .5) * 1.6, l2 = l * .5; all.push([path(q, [q[0] + Math.cos(a2) * l2, q[1] + Math.sin(a2) * l2], W * .025 * jag), .3]) } }
   c.save(); c.globalCompositeOperation = 'lighter'; c.lineJoin = 'round'; c.lineCap = 'round';
-  all.forEach(([pts, k]) => [[W * .07, `rgba(255,255,255,${.12 * al})`], [W * .035, `rgba(255,255,255,${.3 * al})`], [W * .016, `rgba(60,150,255,${.95 * al})`], [W * .006, `rgba(220,240,255,${al})`]].forEach(([lw, col]) => { c.strokeStyle = col; c.lineWidth = lw * k; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() }));
+  all.forEach(([pts, k]) => [[W * .07, `rgba(255,255,255,${.12 * al})`], [W * .035, `rgba(255,255,255,${.3 * al})`], [W * .016, `rgba(60,150,255,${.95 * al})`], [W * .006, `rgba(220,240,255,${al})`]].forEach(([lw, col]) => { c.strokeStyle = col; c.lineWidth = lw * k * sc; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() }));
   c.restore(); return main;
 }
 function forgeImpact(o, W, pow = 1){
@@ -1222,28 +1225,50 @@ TH.forgia = {
   hit(tx){
     const W = W_(), o = fieldO(pV), x0 = clamp(tx, W * .2, W * .8);
     if(RM){ flash('#FFF4E0', .8, .6); damage(); return }
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; const m = bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32, 3);
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; const m = bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32, 6, 1.7, 1.9);
       lit('V', o.x, o.y, W * .9, [.6, .85, 1.35], 3 * (1 - x / .32)); const mid = m[m.length >> 1]; lit('V', mid[0], mid[1], W * .6, [.6, .85, 1.35], 2); return true });
     after(.12, () => forgeImpact(o, W));
   },
+  // il goblin sbuca da un angolo in basso del tappeto colpito con la bomba in mano, ghigna e sparisce; poco dopo la bomba piomba dall'alto:
+  // enorme, rimpicciolisce mentre cade (si avvicina al tappeto), rimbalza 3 o 4 volte sempre più basso, si ferma, sfrigola ed esplode quando capita
   goblin(){
-    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), dir = sgn(), sx = dir > 0 ? -W * .2 : W * 1.2, gx = dir > 0 ? W * .24 : W * .76, gy = fb.y + fb.h * .82;
-    if(RM){ forgeImpact(o, W); return }
-    const sq = spr(1, 300, 10);
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.7) return false; stepS(sq, dt);
-      let px, pose = 'gob1', face = dir;
-      if(x < .55){ px = lerp(sx, gx, eo(x / .55)) } else if(x < .8){ px = gx; pose = 'gob2'; if(!this.t){ this.t = 1; sq.v -= 3 } } else { px = lerp(gx, sx, ei((x - .8) / .8)); pose = 'gob2'; face = -dir }
-      const ph = x * 16, hop = Math.abs(Math.sin(ph)) * W * .03, land = 1 - Math.abs(Math.sin(ph)); if(land > .97 && x < .55) sq.v -= .6;
-      c.save(); c.globalAlpha = .3; c.fillStyle = '#000'; c.beginPath(); c.ellipse(px, gy + W * .17, W * .12 * (1 - hop / W * 3), W * .03, 0, 0, TAU); c.fill(); c.restore();
-      c.save(); c.translate(px, gy - hop + W * .17); c.scale(face / Math.sqrt(sq.x), sq.x); img(c, I('forgia', pose, 0), 0, 0, W * .42, 0, 1, null, .5, 1); c.restore(); return true });
-    after(.55, () => {
-      const b = sp({im:I('forgia', 'bomb', 0), x:gx, y:gy + W * .12, w:W * .17, vx:(o.x - gx) / .55, vy:(o.y - gy - W * .12) / .55, z:W * .3, vz:560, gz:2200, rest:.42, drag:0, sh:1, spin:dir * 9, life:1.25, fout:.01,
-        land:() => impact(PI / 2, .25, b.x, b.y)});
-      FX.sV2.push(b);
-      add('V2', function(c, dt){ this.a += dt; if(this.a > 1.25) return false; const fl = .6 + .4 * Math.sin(this.a * 60); glow(c, b.x + W * .05, b.y - b.z - W * .07, W * .06, '255,200,80', fl); lit('V', b.x, b.y, W * .3, [1.2, .7, .3], fl);
-        if(R() < .6) pt(FX.pV2, {k:'spark', x:b.x + W * .05, y:b.y - b.z - W * .07, vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}); return true });
-      after(1.25, () => forgeImpact({x:b.x, y:b.y}, W, 1.2));
-    });
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), im = I('forgia', 'gob1', 0), bomb = I('forgia', 'bomb', 0);
+    if(RM || !ok(im)){ forgeImpact(o, W); return }
+    const left = R() < .5, fromSide = R() < .5, gw = W * .62, gh = gw * ih(im) / iw(im), face = left ? 1 : -1;
+    const gx = left ? fb.x + gw * .32 : fb.x + fb.w - gw * .32, gy = H + gh * .25, hx0 = gx + (left ? -1 : 1) * W * .7, hy0 = H + gh * 1.05, IN = .45, HOLD = .75, OUT = .4, GT = IN + HOLD + OUT;
+    const pos = x => { const k = x < IN ? eo(x / IN) : x < IN + HOLD ? 1 : 1 - ei((x - IN - HOLD) / OUT); return fromSide ? [lerp(hx0, gx, k), gy] : [gx, lerp(hy0, gy, k)] };
+    add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > GT) return false; const p = pos(x), bob = x > IN && x < IN + HOLD ? Math.sin((x - IN) * 9) * W * .008 : 0;
+      c.save(); c.translate(p[0], p[1] + bob); c.scale(face, 1); c.drawImage(im, -gw / 2, -gh, gw, gh); c.restore();
+      // la miccia accesa
+      const fx = p[0] + (.73 - .5) * gw * face, fy = p[1] + bob + (.06 - 1) * gh; glow(c, fx, fy, W * .05, '255,200,80', .6 + .4 * Math.sin(x * 60));
+      if(R() < .5) pt(FX.pV2, {k:'spark', x:fx, y:fy, vx:(R() - .5) * 160, vy:-60 - R() * 80, g:400, life:.3, r:1.2, col:'255,210,120'}); return true });
+    // la bomba dall'alto
+    const F0 = GT + .25, FALL = .6, LX = o.x + (R() - .5) * W * .3, LY = o.y + (R() - .5) * W * .1, BS = W * .19, SX = W * .5 + (R() - .5) * W * .15;
+    const nB = 3 + (R() < .5 ? 1 : 0), drift = (R() - .5) * W * .5, hops = []; let t = 0, h = W * .32, x0 = LX;
+    for(let i = 0; i < nB; i++){ const d = .18 + Math.sqrt(h / W) * .55, x1 = x0 + drift * (.55 ** i) * .5; hops.push({t0:t, d, h, x0, x1}); t += d; x0 = x1; h *= .5 }
+    const REST = t, BOOM = REST + .5 + R() * 1.8, ex = x0;
+    add('V2', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > BOOM) return false; if(x < 0) return true;
+      let bx, by, z, sz, rot, shadow;
+      if(x < FALL){ const k = x / FALL, e = k * k; bx = lerp(SX, LX, k); by = lerp(H * .14, LY, e); sz = lerp(W * 1.25, BS, Math.pow(k, .6)); z = 0; rot = (1 - k) * 2.5 * face; shadow = k }
+      else { const y = x - FALL; let hp = hops.find(q => y >= q.t0 && y < q.t0 + q.d); bx = ex; z = 0; rot = 0; shadow = 1;
+        if(hp){ const u = (y - hp.t0) / hp.d; bx = lerp(hp.x0, hp.x1, u); z = 4 * hp.h * u * (1 - u); rot = (bx - LX) / W * 6 }
+        else rot = (ex - LX) / W * 6;
+        by = LY; sz = BS * (1 + z / W * .9) }
+      // ombra sul tappeto
+      const sh = BS * (x < FALL ? .6 + .4 * shadow : 1) / (1 + z / W * 2);
+      c.save(); c.globalAlpha = .35 * shadow; c.fillStyle = '#000'; c.beginPath(); c.ellipse(bx, LY + BS * .38, sh * .5, sh * .16, 0, 0, TAU); c.fill(); c.restore();
+      img(c, bomb, bx, by - z, sz, rot, 1);
+      // miccia: sfrigola sempre, di più quando è ferma; tremolio prima di esplodere
+      const fx = bx + sz * .22 * Math.cos(rot - .9), fy = by - z - sz * .4, rest = x - FALL > REST;
+      glow(c, fx, fy, sz * .3, '255,200,80', .6 + .4 * Math.sin(this.a * 60)); lit('V', bx, by, W * .3, [1.2, .7, .3], .8 + .4 * Math.sin(this.a * 50));
+      if(R() < (rest ? .9 : .5)) pt(FX.pV2, {k:'spark', x:fx, y:fy, vx:(R() - .5) * 180, vy:-60 - R() * 90, g:400, life:.3, r:1.2, col:'255,210,120'});
+      // tocca il tappeto: botto, polvere, scintille
+      const y = x - FALL; hops.forEach((hp, i) => { if(!hp.hit && y >= hp.t0){ hp.hit = 1; const pw = .7 * (.6 ** i); SP.vPunch.v -= pw; rumble = {a:0, dur:.2, amt:pw * .4}; if(navigator.vibrate) try{ navigator.vibrate(i ? 15 : 35) }catch(e){}
+        for(let j = 0; j < 10 * (.7 ** i); j++){ const a = PI + R() * PI, v = 60 + R() * 140; pt(FX.pV2, {k:'spark', x:bx, y:LY + BS * .35, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .5, vz:60 + R() * 120, gz:1300, rest:.3, drag:2, life:.4, r:1 + R(), col:'255,200,120'}) }
+        for(let j = 0; j < 3; j++) pt(FX.pV, {k:'smoke', x:bx + (R() - .5) * BS, y:LY + BS * .3, vx:(R() - .5) * 60, vy:-10 - R() * 15, r:W * .03, grow:1.8, life:.8, col:'60,52,46', al:.45}) } });
+      if(rest){ const w = clamp((x - FALL - REST) / (BOOM - REST)); if(w > .7){ const j = (w - .7) / .3 * W * .006; c.save(); c.globalAlpha = .0; c.restore(); this.j = j } }
+      return true });
+    after(F0 + BOOM, () => forgeImpact({x:ex, y:LY}, W, 1.2));
   }
 };
 
