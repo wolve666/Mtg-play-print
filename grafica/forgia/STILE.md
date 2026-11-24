@@ -196,3 +196,5 @@ B2. **Foglio di 8 cocci della bomba**, 1536×1024
 A sheet of 8 separate curved fragments of a broken black iron bomb shell of different sizes, jagged edges glowing orange-hot, a few with rivets, on a 4x2 grid, evenly spaced and not touching. Everything else transparent. 1536x1024.
 ```
 - Quando arrivano: la bomba passa per i tre momenti di B1, esplode, i cocci di B2 volano e rimbalzano sul tappeto; poi, a esplosione finita, gli «HA!» saltano fuori uno dopo l'altro in punti a caso con un rimbalzo, tremano e svaniscono.
+
+- 24 novembre: arrivati H1, B1, B2 (risate, bomba che si spacca, frammenti), montati nella sorpresa del goblin. Montate anche le 4 esplosioni e i tappi di fumo nella scarica.

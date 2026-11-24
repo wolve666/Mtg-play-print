@@ -160,3 +160,5 @@ K5. **Foglio di 4 esplosioni d'acqua** (per l'arrivo sul tappeto e la sferzata d
 A sheet of 4 separate water explosions seen from above, each a round burst crown of splashing water, white foam and droplets flying outward, translucent blue, soft edges fading to transparent, on a 2×2 grid, evenly spaced and not touching. Everything else transparent. 2048×1024.
 ```
 - Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.
+
+- 24 novembre: arrivati K1-K5. Montati: K1 alla base del getto, K3 e K5 sul punto colpito, K5 anche sulla sferzata del tentacolo.

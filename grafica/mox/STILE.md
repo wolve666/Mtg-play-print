@@ -189,3 +189,5 @@ L6. **Foglio di 8 schizzi di metallo fuso**, 1536×1024
 A sheet of 8 separate splashes and drops of molten metal seen from above, different shapes and sizes, glowing white-yellow at the center, orange and dark red at the edges, a few cooling to grey, on a 4×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
 ```
 - Insieme servono anche C1, C2 (torretta), K1 (sbuffi di vapore) e K2 (carica del nucleo) delle richieste sopra.
+
+- 24 novembre: arrivati C1, C2, C3, K1, K2, K3, L1, L2, L4, L5, L6, montati nella pagina di prova (torretta, sparo, laserone). L3 (corpo del laser) non serve: il raggio lo disegno io a strati.

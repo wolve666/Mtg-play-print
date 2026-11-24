@@ -105,6 +105,11 @@ T('forgia','bomb',  one('forgia/Bomba di ferro con miccia scintillante.png','f_b
 T('forgia','dragon',one('forgia/Sagoma d’ombra di drago alato.png','f_drag',900))
 T('forgia','fire',  one('forgia/Soffio di fuoco draconico in esplosione.png','f_fire',900))
 T('forgia','lava',  one('forgia/Isola di Roccia Vulcanica Incandescente.png','f_lava',700))
+
+# 24 novembre: pezzi senza tagli, torretta e laserone di Mox, risate e bomba della Forgia
+# (corpo ripetibile: vtile taglia solo sopra e sotto; canne di Mox: stesso riquadro per tenere lo stesso perno; fogli con pezzi staccati: sheet con DIL più grande)
+# mox: barrel/barrel2 (pair), base, muzzle, lmouth, limp, groove (vtile), molten, steam, charge (2), boom
+# abisso/cripta/forgia/santuario/selva: jstart, jbody (vtile), jtip, caps, charge; abisso/forgia: boom; forgia: ha (DIL 16), bombx (DIL 30), frag; selva: bush
 json.dump(M,open(OUT+'/manifest.json','w'),indent=0)
 tot=sum(x['b'] for t in M.values() for v in t.values() for x in v)
 for t,v in M.items(): print(t,{k:len(x) for k,x in v.items()})
