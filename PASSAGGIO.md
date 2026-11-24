@@ -125,6 +125,8 @@ Cosa c'è di nuovo nella prova (22-24 novembre):
 
 Selva oggi nella prova: colpo «il boa» (la liana avvolge il tappeto, stritola, molla), selezione e lancio della liana; **nessun colpo grosso** (il tasto non compare). Immagini già usate: `liana`, `vine`, `clod`, `leaf` (e preparate `root`, `hole`, `claw` = zampa). Pezzi nuovi del 24 novembre preparati ma **non ancora montati**: `jstart` (vite e terra che esplode, partenza), `jbody` (bordo di liane, corpo ripetibile), `jtip` (ramo di vite, punta), `caps` (6 nuvole di polvere e detriti), `bush` (6 composizioni di fogliame). Idee nelle schede: zampa della bestia e squarci degli artigli (`grafica/selva/STILE.md`, punti 13 e 14). Il colpo grosso della Selva lo decide Federico.
 
+Regola di Federico: quando ci sono due versioni della stessa immagine (es. «-1» e «-2») si usano tutte e due a caso, una per colpo. Già così: impatti della Forgia, venature della Cripta, crepe di Mox, tentacoli dell'Abisso, sfere di carica di Mox. Da fare così anche le due sfere di carica di Santuario quando si montano.
+
 Ancora da montare negli altri temi (pezzi preparati): cariche di tutti i temi; partenza, corpo e punta dei flussi di Cripta, Santuario e Forgia; tappi di Santuario e Cripta. Federico ha detto di partire dalla Selva.
 
 ## 24 novembre (pomeriggio): Selva, liana senza tagli
