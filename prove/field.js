@@ -54,8 +54,9 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   await B.waitForFunction(() => NET.role === 'client'); await wait(300);
   await A.evaluate(() => netSeat(Object.keys(NET.names).find(id => id !== NID()), 1)); await wait(300);
   await A.evaluate(() => closeAllOv()); await wait(400);
-  for(const th of ['classico', 'forgia']){
-    for(const p of [A, B]) await p.evaluate(th => { SET.theme = th; saveSet(); applyTheme(); renderBoard() }, th);
+  // THEMES=abisso,abisso-liscio,... per fotografare altri temi (con «-liscio» la versione senza immagini)
+  for(const th of (process.env.THEMES || 'classico,forgia').split(',')){
+    for(const p of [A, B]) await p.evaluate(th => { SET.theme = th.replace('-liscio', ''); SET.full = !th.endsWith('-liscio'); saveSet(); applyTheme(); renderBoard() }, th);
     await wait(500);
     await B.screenshot({path:path.join(SHOTS, `${th}-1-campo.png`)});
     // tanti indicatori insieme

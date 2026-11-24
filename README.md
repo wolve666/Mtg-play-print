@@ -37,7 +37,7 @@ Scarica l'ultima `MagicPlayPrint.apk` da [Releases](https://github.com/wolve666/
 
 **Temi**
 - Due temi da scegliere nel Menu: Classico e Forgia (acciaio scuro, braci, angoli tagliati, animazioni particellari).
-- In prova (prerelease): Selva, il tema del Verde (legno e muschio, foglie e lucciole, colpo di radici e spine).
+- In prova (prerelease): i sei temi a colori, Forgia, Selva, Abisso, Cripta, Santuario e Mox, ognuno in versione completa (immagini dipinte) e liscia.
 
 **Aggiornamenti**
 - La versione è visibile accanto al nome. Toccandola, l'app verifica gli aggiornamenti.
@@ -69,6 +69,14 @@ Struttura:
 - `icon-512.png`: l'icona dell'app.
 
 ## Registro delle modifiche
+
+### v2.2.0 (prerelease)
+Solo per Federico (APK tra gli allegati della compilazione).
+- **Sei temi a colori**: oltre a Forgia (Rosso) e Selva (Verde) arrivano **Abisso** (Blu: acqua profonda, Marcellus SC), **Cripta** (Nero: pietra e viola, Pirata One), **Santuario** (Bianco: marmo e oro, Cinzel, l'unico tema chiaro) e **Mox** (Incolore: ottone e cristallo, Chakra Petch). Ognuno veste pagina iniziale, Menu, tavolo, pannello personale, scheda, finestre e H&O, con particelle e colori degli effetti propri. I colpi da un telefono all'altro dei quattro temi nuovi per ora sono il fulmine: quelli veri arrivano dalla prova dei colpi.
+- **Due versioni per tema**: **completa**, con sfondo dipinto, bordi, cornici sulle caselle, sui tasti e sulle sezioni del Menu, targhe per il tasto principale e per l'elemento centrale H&O (immagini disegnate con ChatGPT); **liscia**, tutta a codice. Il tavolo resta pulito in tutte e due.
+- **Semi**: primo tocco tema completo (seme tutto colorato), secondo tocco tema liscio (seme colorato a metà), terzo tocco si torna al Classico. I semi ci sono sulla pagina iniziale e nel Menu alla voce «Tema».
+- **Selva**: numeri e titoli in Barlow Condensed al posto di Fraunces.
+- La pagina dell'app pesa circa 3 MB per le immagini dei temi completi.
 
 ### v2.1.3 (V2 beta)
 - **Android 12 come minimo**: da questa APK l'app si installa solo su Android 12 o successivo (telefoni da fine 2021 in poi, circa l'80% di quelli in uso). Chi ha Android 11 o precedente tiene la versione che ha.

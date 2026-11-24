@@ -69,3 +69,10 @@ Da fare / aperto:
 - **In pausa** (chiesto da Federico): compilazione e lavoro nell'app. Si riprende quando arrivano le immagini.
 - **Santuario** (Bianco), 21 novembre sera: nome confermato; scheda di stile e richieste in `grafica/santuario/STILE.md`. Si parte dal colpo: **raggio di grazia** (niente spade, deciso da Federico), nuvole che si aprono sul campo colpito, aureola, lampo bianco, piume; pagina di prova `grafica/prove/prova-santuario.html` appena arrivano le immagini.
 - **Mox** (Incolore, prima «Officina»), 21 novembre sera: nome deciso; scheda di stile e richieste in `grafica/mox/STILE.md`. Si parte dal colpo: **bomba a orologeria** che cade, esplode e frantuma lo schermo, poi si ricompone; pagina di prova `grafica/prove/prova-mox.html` appena arrivano le immagini.
+
+## 24 novembre (sera): temi nell'app, v2.2.0
+- Ramo `claude/wonderful-knuth-sp5exd` (partito da `v2-prerelease`): **sei temi nell'app**. Abisso, Cripta, Santuario e Mox usano uno schema comune (`body.th-gen`, blocco «Temi a colori nuovi» nello stile) ricavato dalla Selva, con forme, colori e caratteri a token (`--shL`, `--clip`, `--pri`, `--sel`, `--ttl`, `--tnum`…). Registro in JS: `GENT`, `GEN()`, `THC`, `FULL()`.
+- **Completo / liscio**: `SET.full`; con il completo il body ha la classe `full` e le variabili delle immagini del tema (`TIMG`, blocco di dati prima del codice dell'app, WebP in base64, circa 2,3 MB). Cornici solo su pagina iniziale, Menu (`#ov-tokens`), Stampa (`#ov-menu`) e tasti; tavolo pulito, targa solo sull'elemento centrale H&O.
+- Semi a tre tocchi sulla pagina iniziale e nel Menu («Tema»).
+- Prove: `node prove/temi.js` (foto di pagina iniziale, tavolo, Menu e Stampa per ogni tema, completo e liscio); `THEMES=abisso,mox-liscio node prove/field.js` fotografa H&O in altri temi.
+- Da fare: colpi veri dei temi nell'app (oggi i temi nuovi mandano il fulmine), conferma dei caratteri, pagina di prova «Prova generale dei temi» (fuori dal repository).
