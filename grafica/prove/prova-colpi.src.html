@@ -1563,7 +1563,7 @@ function dryIm(im){ if(!ok(im)) return im; let d = DRY.get(im); if(d) return d;
   x.filter = 'sepia(1) saturate(1.3) hue-rotate(-12deg) brightness(0.75)'; x.drawImage(im, 0, 0, d.width, d.height); DRY.set(im, d); return d }
 // liana intera: dalla partenza (o da «from», dove la coda sfuma) fino alla punta in «tip»
 function vineFlow(c, pts, tip, H, a = 1, o = {}){
-  const tp = o.dry ? dryIm(I('selva', 'jtip', 0)) : I('selva', 'jtip', 0), Ht = H * 1.25, tipL = ok(tp) ? Ht * iw(tp) / ih(tp) : 0, sc = o.start || 0;
+  const bo = o.boa != null, tp = bo ? I('selva', 'bhead', 0) : o.dry ? dryIm(I('selva', 'jtip', 0)) : I('selva', 'jtip', 0), Ht = bo ? H * .62 / .51 * 1.5 : H * 1.25, tipL = ok(tp) ? Ht * iw(tp) / ih(tp) * (bo ? .8 : 1) : 0, sc = o.start || 0;
   const sj = sc ? H * VS.k * sc * (VS.jx - VS.ax) * .8 : 0, b0 = Math.max(o.from == null ? 0 : o.from, sj), b1 = tip - tipL * .78;
   const fin = sc && b0 === sj ? H * 1.2 : (o.fin || 0), hf = sc ? s => lerp(.6, 1, clamp((s - sj) / (H * 3))) : null, ph = o.ph == null ? tip : o.ph;
   // liana alzata da terra: l'ombra è una striscia morbida e continua, spostata di quanto è alta (quella a pezzi veniva a righe)
@@ -1571,8 +1571,9 @@ function vineFlow(c, pts, tip, H, a = 1, o = {}){
     c.translate(lf * H * .5, lf * H * .9); c.beginPath(); for(let i = 0; i <= n; i++){ const q = at(pts, b0 + (tip - b0) * i / n); i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]) } c.stroke(); c.restore() }
   for(const sh of o.shadow && !o.lift ? [true, false] : [false]){ const lf = 0;
     if(lf){ c.save(); c.translate(lf * H * .5, lf * H * .9) }
-    vineTile(c, pts, b0, b1, H, a, sh, ph, fin, hf, o.dry);
-    if(ok(tp)) along(c, tp, pts, tip - tipL, tip, Ht, o.flip || 1, a * (o.from != null ? clamp((tip - o.from) / tipL) : 1), sh);
+    if(bo) vineTile(c, pts, b0, b1 + tipL * .1, H * .62 / .52, a, sh, ph, fin, hf, false, I('selva', 'bbody', 0)); else vineTile(c, pts, b0, b1, H, a, sh, ph, fin, hf, o.dry);
+    if(bo){ const hL = Ht * 2, ta = a * (o.from != null ? clamp((tip - o.from) / hL) : 1); if(o.boa < 1) along(c, tp, pts, tip - hL, tip, Ht, 1, ta * (sh ? 1 : 1 - o.boa), sh); if(o.boa > 0 && !sh) along(c, I('selva', 'bhead2', 0), pts, tip - hL, tip, Ht, 1, ta * o.boa, false) }
+    else if(ok(tp)) along(c, tp, pts, tip - tipL, tip, Ht, o.flip || 1, a * (o.from != null ? clamp((tip - o.from) / tipL) : 1), sh);
     if(lf) c.restore() }
   if(sc) vineStart(c, pts, H, a * (o.sa == null ? 1 : o.sa), sc * (o.ss || 1), o.sr || 0);
 }
@@ -1601,7 +1602,7 @@ function boaStrand(tx){ const W = W_();
   return {turns:3.6 + R() * 2.2, dir:R() < .5 ? 1 : -1, f0:R() * TAU, ak:.88 + R() * .2, y0:.02 + R() * .12, y1:.84 + R() * .13, tilt:W * (.07 + R() * .08), tw:(R() - .5) * W * .05,
     ex:tx + (R() - .5) * W * .5, bulge:(R() - .5) * W * .5, pk:1.2 + R() * 1.6, pp:R() * TAU, pa:.08 + R() * .08, aw:R() * TAU, out:(R() - .5) * W * .6, yn:W * (.03 + R() * .04), yf:1.3 + R(), yp:R() * TAU, tm:.4 + R() * .5, tf:1 + R() * 2, d:R() * .3, T1:1.25 + R() * .45, H:.1 + R() * .035} }
 // il boa: più grosso, disegnato sopra le liane, parte subito e finisce sempre con la testa davanti al tappeto
-function boaOne(tx){ const B = Object.assign(boaStrand(tx), {boa:true, H:.2, d:0, T1:1.8, y1:.8 + R() * .06, qx:(R() - .5) * .12}); B.pa *= .5; B.f0 = -B.dir * B.turns * TAU + PI * .35 * B.dir; B.qb = -B.dir * .35; return B }
+function boaOne(tx){ const B = Object.assign(boaStrand(tx), {boa:true, H:.2, d:0, T1:1.8, y1:.8 + R() * .06, qx:(R() - .5) * .12}); B.pa *= .5; B.f0 = -B.dir * B.turns * TAU + PI * .35 * B.dir; B.side = B.dir; B.qx = R() * .08; return B }
 function boaPath(S, sq, slither){
   const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), cx = fb.x + fb.w / 2, y0 = fb.y + fb.h * S.y0, y1 = fb.y + fb.h * S.y1, pts = [], dep = [];
   const A = (fb.w / 2 + W * .05) * S.ak * (1 - .24 * sq), N = BOA_N;
@@ -1611,8 +1612,10 @@ function boaPath(S, sq, slither){
   for(let i = 0; i <= 12; i++){ const u = i / 12, e = u * u * (3 - 2 * u); pts.push([lerp(S.ex, st0[0], e) + S.bulge * Math.sin(PI * u), lerp(-W * .5, st0[1], u)]); dep.push(1) }
   for(let i = 1; i <= N; i++){ const q = P(i / N); pts.push([q[0], q[1]]); dep.push(q[2]) }
   // il boa, finito l'ultimo giro, risale davanti al tappeto e si ferma con la testa al centro, sopra il bottone
-  if(S.boa){ const e = pts[pts.length - 1], Q = [cx + S.qx * W, fb.y + fb.h * .44], C2 = [lerp(e[0], Q[0], .5) + S.qb * W, lerp(e[1], Q[1], .35)];
-    for(let i = 1; i <= 16; i++){ const u = i / 16, v = 1 - u; pts.push([v * v * e[0] + 2 * v * u * C2[0] + u * u * Q[0], v * v * e[1] + 2 * v * u * C2[1] + u * u * Q[1]]); dep.push(1) } }
+  // la testa resta di fianco: la curva sale davanti al tappeto e finisce con un tratto dritto orizzontale lungo quanto la testa
+  if(S.boa){ const e = pts[pts.length - 1], sd = S.side, Q = [cx + sd * W * (.32 + S.qx), fb.y + fb.h * .27], Q0 = [Q[0] - sd * W * .6, Q[1]], C1 = [e[0] - sd * W * .1, lerp(e[1], Q0[1], .55)], C2 = [Q0[0] - sd * W * .25, Q0[1] + W * .02];
+    for(let i = 1; i <= 18; i++){ const u = i / 18, v = 1 - u; pts.push([v * v * v * e[0] + 3 * v * v * u * C1[0] + 3 * v * u * u * C2[0] + u * u * u * Q0[0], v * v * v * e[1] + 3 * v * v * u * C1[1] + 3 * v * u * u * C2[1] + u * u * u * Q0[1]]); dep.push(1) }
+    for(let i = 1; i <= 8; i++){ const u = i / 8; pts.push([lerp(Q0[0], Q[0], u), Q[1] + Math.sin(u * PI) * W * .015 * sd]); dep.push(1) } }
   const iH = pts.length - 1, last = pts[iH]; for(let i = 1; i <= 12; i++){ const u = i / 12; pts.push([last[0] + S.out * u * u, last[1] + (H + W * .8 - last[1]) * u]); dep.push(1) }
   prep(pts); pts.dep = dep; pts.Lh = pts.L[iH]; return pts;
 }
@@ -1627,7 +1630,7 @@ TH.selva = {
     const pts = vinePath([hb.x, hb.y], [t.x, t.y], T, null), Lp = plen(pts), grow = eo((T - d.t0) / .3), H = W * .1, pop = eo((T - d.t0) / .2);
     if(!d.burst){ d.burst = 1; dust(FX.sA, hb.x, hb.y, W, 4, null, .8); for(let i = 0; i < 10; i++){ const a = R() * TAU; pt(FX.pA, {k:'crumb', x:hb.x, y:hb.y, vx:Math.cos(a) * (80 + R() * 160), vy:Math.sin(a) * (80 + R() * 160), vz:120 + R() * 200, gz:1100, rest:.3, life:.9, r:W * (.006 + R() * .009), col:pick(['74,50,28', '58,40,22', '96,70,40'])}) } }
     for(let i = 1; i <= 3; i++){ const p = at(pts, Lp * i / 3); lit('A', p[0] + 5, p[1] + 9, W * .25, [.7, .8, .6], -.6) }
-    vineFlow(c, pts, Lp * grow, H, 1, {start:.62, ss:.6 + .4 * pop + .03 * Math.sin(T * 9), shadow:true});
+    d.open = clamp((d.open || 0) + (on ? dt : -dt) * 5); vineFlow(c, pts, Lp * grow, H, 1, {start:.62, ss:.6 + .4 * pop + .03 * Math.sin(T * 9), shadow:true, boa:d.open});
     if(R() < dt * 5){ const p = at(pts, R() * Lp); FX.sA.push(sp({im:I('selva', 'leaf'), x:p[0], y:p[1], vx:(R() - .5) * 60, vy:10, g:60, w:W * .05, life:1.3, flut:.6, sway:30, spin:(R() - .5) * 3})) }
   },
   launch(d){
@@ -1644,7 +1647,7 @@ TH.selva = {
     for(let i = 0; i < 4; i++) FX.sA.push(sp({im:I('selva', 'clod'), x:hb.x + (R() - .5) * W * .1, y:hb.y, vx:(R() - .5) * 260, vy:-60 - R() * 120, g:500, w:W * (.05 + R() * .04), life:1, spin:(R() - .5) * 8, fout:.3}));
     add('A', function(c, dt){ this.a += dt; const k = Math.min(1, this.a / .35); if(this.a > .45) return false;
       const tip = L40 + (Lp - L40) * Math.pow(k, 1.6) * .9 + Lp * .3 * Math.max(0, k - .6), from = Math.pow(k, 2) * L40;
-      vineFlow(c, pts, tip, H, 1, {start:.62, from, fin:H * 1.5, sa:1 - eo(this.a / .3), ss:1 + .25 * this.a / .3}); return true });
+      vineFlow(c, pts, tip, H, 1, {start:.62, from, fin:H * 1.5, sa:1 - eo(this.a / .3), ss:1 + .25 * this.a / .3, boa:1}); return true });
     for(let i = 0; i < 5; i++){ const p = at(pts, R() * L40); FX.sA.push(sp({im:I('selva', 'leaf'), x:p[0], y:p[1], vx:(R() - .5) * 120, vy:-40, g:120, w:W * .05, life:1.2, flut:.6, spin:(R() - .5) * 6})) }
     return .55;
   },
