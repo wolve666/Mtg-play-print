@@ -558,6 +558,8 @@ TH.santuario = {
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .3) return false; st('V').dark = Math.max(st('V').dark, .6 * env(x, .5, .5, .5)); lit('V', o.x, o.y, W * (.25 + .3 * eo(x / .95)), [1, .85, .5], x < .95 ? 1.4 * eo(x / .95) : 0); return true });
     for(let i = 0; i < 60; i++){ const x = fb.x + R() * fb.w, y = fb.y + R() * fb.h, d = .5 + R() * .4; pt(FX.pV, {k:'mote', x, y, vx:(o.x - x) / d, vy:(o.y - y) / d, life:d, r:W * (.01 + R() * .014), col:'255,236,180', tw:1, fout:.1, delay:R() * .35}) }
     const cxS = clamp(srcX(), W * .14, W * .86), sunY = cloudsArrive(cxS, END + .2);
+    // la spada arriva dalle nubi, quindi dal lato di Bea: cade inclinata e resta piantata inclinata (dritta solo se Bea è al centro)
+    const tS = clamp(Math.atan2(o.x - cxS, o.y - sunY), -.55, .55), sS = Math.sin(tS), cS = Math.cos(tS), aS = PI / 2 - tS;
     // una luce leggera scende dalle nubi verso il punto dove cadrà la spada, e si dissolve quando la spada arriva
     add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > D0 + D + .45) return false; const k = x < D0 + D ? eo((x - .3) / .5) * (.85 + .15 * Math.sin(x * 7)) : 1 - (x - D0 - D) / .45; if(k <= 0) return true;
       const a = Math.atan2(o.y - sunY, o.x - cxS), l = Math.hypot(o.x - cxS, o.y - sunY);
@@ -578,18 +580,18 @@ TH.santuario = {
       c.restore() };
     add('M', function(c, dt){ this.a += dt; const x = this.a - D0; if(x > END - D0) return false; if(x < 0) return true; stepS(S.q, dt); stepS(S.sink, dt);
       const k = Math.min(1, x / D), al = x < HOLD - D0 ? 1 : 1 - (x - HOLD + D0) / (END - HOLD), rot = PI / 2 + S.q.x;
-      if(x < D){ const tipY = lerp(-H * .15, o.y, ei(k)), sc = lerp(2.1, 1, ei(k));
-        for(let i = 0; i < 4; i++) img(c, swd, o.x, tipY - (i + 1) * W * .16 * sc, len * sc, PI / 2, .14 * (4 - i), 'lighter', 1, .5);
-        img(c, swd, o.x, tipY, len * sc, PI / 2, 1, null, 1, .5); glow(c, o.x, tipY - len * sc * .45, W * .45 * sc, '255,240,200', .35); return true }
+      if(x < D){ const dd = (o.y + H * .15) / cS * (1 - ei(k)), tx = o.x - sS * dd, ty = o.y - cS * dd, sc = lerp(2.1, 1, ei(k));
+        for(let i = 0; i < 4; i++){ const b = (i + 1) * W * .16 * sc; img(c, swd, tx - sS * b, ty - cS * b, len * sc, aS, .14 * (4 - i), 'lighter', 1, .5) }
+        img(c, swd, tx, ty, len * sc, aS, 1, null, 1, .5); glow(c, tx - sS * len * sc * .45, ty - cS * len * sc * .45, W * .45 * sc, '255,240,200', .35); return true }
       // piantata: la punta sta sotto il terreno di «sink»; ruota (vibra) intorno al punto d'ingresso
       hole(c, al, false);
-      glow(c, o.x, o.y - len * .4, W * .4, '255,240,200', .25 * al);
+      glow(c, o.x - sS * len * .4, o.y - cS * len * .4, W * .4, '255,240,200', .25 * al);
       c.save(); c.beginPath(); c.rect(0, -H, W, H + o.y); c.clip();
-      c.translate(o.x, o.y); c.rotate(S.q.x); img(c, swd, 0, Math.max(0, S.sink.x), len, PI / 2, al, null, 1, .5);
+      c.translate(o.x, o.y); c.rotate(S.q.x - tS); img(c, swd, 0, Math.max(0, S.sink.x), len, PI / 2, al, null, 1, .5);
       if(x > HOLD - D0 - .5) img(c, swd, 0, Math.max(0, S.sink.x), len, PI / 2, clamp((x - HOLD + D0 + .5) / .6) * al * 1.6, 'lighter', 1, .5);
       c.restore();
       hole(c, al, true);
-      lit('V', o.x, o.y - len * .35, W * .7, [1, .9, .65], .9 * al);
+      lit('V', o.x - sS * len * .35, o.y - cS * len * .35, W * .7, [1, .9, .65], .9 * al);
       return true });
     after(D0 + D, () => {
       S.sink.t = depth; S.sink.v = depth * 11; S.q.v += sgn() * 1.1;
@@ -624,8 +626,8 @@ TH.santuario = {
         fromTile((q, WA, d) => pt(FX.pA, {k:'mote', x:q.x, y:q.y, vx:d[0] * 1.4, vy:d[1] * 1.4, drag:1.5, life:1.8 + R() * 1.4, r:WA * (.008 + R() * .014), col:'255,236,180', tw:1, delay:q.delay}), 50, 0, 1, 1.1) }
     });
     // si scioglie in luce e piume che salgono
-    after(HOLD + .1, () => { for(let i = 0; i < 18; i++){ const u = R(); FX.sV2.push(sp({im:I('santuario', R() < .5 ? 'feath' : 'down'), x:o.x + (R() - .5) * W * .08, y:o.y - len * .7 * u, vx:(R() - .5) * 60, vy:-30 - R() * 50, w:W * (.04 + R() * .05), life:1.8 + R(), flut:.6, sway:40, blend:'lighter'})) }
-      for(let i = 0; i < 40; i++) pt(FX.pV2, {k:'mote', x:o.x + (R() - .5) * W * .06, y:o.y - len * .7 * R(), vx:(R() - .5) * 40, vy:-40 - R() * 80, life:1.2 + R(), r:W * (.01 + R() * .015), col:'255,240,200', tw:1}) });
+    after(HOLD + .1, () => { for(let i = 0; i < 18; i++){ const u = R(); FX.sV2.push(sp({im:I('santuario', R() < .5 ? 'feath' : 'down'), x:o.x - sS * len * .7 * u + (R() - .5) * W * .08, y:o.y - cS * len * .7 * u, vx:(R() - .5) * 60, vy:-30 - R() * 50, w:W * (.04 + R() * .05), life:1.8 + R(), flut:.6, sway:40, blend:'lighter'})) }
+      for(let i = 0; i < 40; i++) { const u = R(); pt(FX.pV2, {k:'mote', x:o.x - sS * len * .7 * u + (R() - .5) * W * .06, y:o.y - cS * len * .7 * u, vx:(R() - .5) * 40, vy:-40 - R() * 80, life:1.2 + R(), r:W * (.01 + R() * .015), col:'255,240,200', tw:1}) } });
   }
 };
 
