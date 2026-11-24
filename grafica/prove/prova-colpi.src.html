@@ -784,6 +784,8 @@ TH.mox = {
     const trA = tileRect(pA), UP = Math.atan2(trA.y + trA.h / 2 - hb.y, trA.x + trA.w / 2 - hb.x), POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x + Math.cos(UP) * Wa * MOXL, hb.y + Math.sin(UP) * Wa * MOXL];
     // 1. sul mio tappeto: la torretta sbuca, cambia testa, si carica e spara verso l'alto
     const cs = spr(0, 240, 10), rc = spr(0, 300, 8); let pw = 0, steamed = 0, fired = 0;
+    // delle due sfere di carica disegnate ne prendo una a caso per ogni colpo
+    const chI = I('mox', 'charge');
     add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > BACK + .5) return false;
       cs.t = x < BACK ? 1 : 0; stepS(cs, dt); stepS(rc, dt);
       pw = x < SW0 ? 0 : x < SW1 ? (x - SW0) / (SW1 - SW0) : x < OFF + .3 ? 1 : Math.max(0, 1 - (x - OFF - .3) / .45);
@@ -805,7 +807,7 @@ TH.mox = {
         if(R() < dt * 50){ const a = UP + PI + (R() - .5) * 2.4, v = 150 + R() * 300; pt(FX.pA, {k:'spark', x:mz[0], y:mz[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:60 + R() * 100, gz:1000, drag:2.5, life:.3 + R() * .3, r:1.2, col:R() < .6 ? '170,240,255' : '255,255,255'}) }
         if(R() < dt * 30) SP.aPunch.v -= .05 }
       cannon(c, hb.x, hb.y, Math.max(0, cs.x), UP, Math.max(0, rc.x), .3 + .7 * ck + on, pw);
-      if(x > SW1 && x < OFF){ const r = Wa * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, I('mox', 'charge', 0), mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
+      if(x > SW1 && x < OFF){ const r = Wa * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, chI, mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
       // dopo lo sparo la canna sfiata vapore
       if(x > OFF && x < OFF + .6 && R() < dt * 14) FX.sA.push(sp({im:I('mox', 'steam'), x:mz[0] + (R() - .5) * Wa * .05, y:mz[1], vx:(R() - .5) * 40, vy:-40 - R() * 40, drag:1, w:Wa * (.1 + R() * .06), rot:R() * TAU, spin:(R() - .5), life:1, grow:1, fin:.05, fout:.6, alpha:.7}));
       return true });
