@@ -150,3 +150,7 @@ Ancora da montare negli altri temi (pezzi preparati): cariche di tutti i temi; p
 - Ombra delle liane alzate: striscia morbida continua (`o.lift` in `vineFlow`); quella a pezzi veniva a righe.
 - Immagini: `prepara-selva-25nov.py` ora prepara `wood1`, `wood2`, `hole`, `gash` (la zampa non serve più).
 - Fluidità nel browser di prova (lento): boa 23, bosco 16, frustate 29 fotogrammi al secondo, nessuno scatto lungo.
+
+## 25 novembre (notte): mani della Cripta, boa con testa e coda
+- **Cripta**: la mano si sceglie a caso a ogni colpo tra la scheletrica (`claw`) e la spiritica di fumo (`jtip`, «Artiglio spettrale di fumo viola»), tutte e due inclinate verso il quadratino di chi viene prosciugato (`HANDS`, `handPos().tilt`; il punto del palmo dove entra il raggio gira con l'inclinazione). Quella di fumo ondeggia di più e quando si chiude si stringe di traverso. Nelle prove: prima di chiamare un colpo della Cripta mettere anche `HAND = null`, se no resta la mano del colpo di prima.
+- **Selva, boa con testa e coda** (idea di Federico, approvata): richieste B1–B4 in `grafica/selva/STILE.md` (testa a bocca chiusa e aperta, coda, corpo a squame facoltativo). Si monta quando arrivano le immagini.

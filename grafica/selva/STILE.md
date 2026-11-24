@@ -126,3 +126,24 @@ K5. **Foglio di 6 sbuffi di terra** (quando la liana stritola o esce dal terreno
 A sheet of 6 separate puffs of brown dust and flying soil crumbs of different shapes, with a few small leaves, soft wispy edges fading to transparent all around, on a 3×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
 ```
 - Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.
+
+## Il boa di liane: testa e coda (25 novembre)
+Idea di Federico: la liana del colpo normale diventa un boa fatto di liane. La testa prende il posto del ramo di vite in punta, la coda chiude l'altra estremità (oggi sfuma). Il corpo resta il bordo di liane che c'è già; il B4 è facoltativo, per dare le squame anche al corpo.
+Regole come i «Pezzi senza tagli»: il lato che si attacca al corpo **sfuma piano fino al trasparente**; vista dall'alto, leggermente di lato, come la liana; spessore del collo e della coda uguale a quello del bordo di liane (circa metà dell'altezza dell'immagine del corpo).
+B1. **Testa del boa, bocca chiusa**, 1024×512
+```
+Seen from above: the head of a giant boa constrictor made entirely of twisted green jungle vines and dark mossy bark, pointing to the right. Leaf-shaped scales, two glowing amber eyes, small curved thorns along the jaw, a few fresh leaves on the head. The neck on the left is a thick twisted vine that fades softly to transparent so it can join a vine body. Everything else transparent. 1024×512.
+```
+B2. **Testa del boa, bocca aperta** (quando stritola), 1024×512
+```
+The same boa head made of vines and bark, seen from above, pointing to the right, jaws wide open showing thorn fangs and a forked tongue made of a thin curling tendril, amber eyes glowing brighter. The neck on the left fades softly to transparent. Everything else transparent. 1024×512.
+```
+B3. **Coda del boa**, 1024×512
+```
+Seen from above: the tail of the same giant boa made of twisted green vines and mossy bark, pointing to the left, tapering to a thin curling tendril tip with a couple of small leaves. The thick end on the right fades softly to transparent so it can join a vine body. Everything else transparent. 1024×512.
+```
+B4. (facoltativa) **Corpo del boa con squame, ripetibile**, 2048×512
+```
+The body of the same vine boa running straight from left to right, seen from above: thick twisted vines with bark plates shaped like snake scales, moss and a few leaves. Seamless and tileable horizontally: the left and right edges match exactly, uniform along its whole length, no head, no tail. Everything else transparent. 2048×512.
+```
+- Quando arrivano: testa al posto della punta nel boa (bocca chiusa mentre si avvolge, aperta mentre stritola), coda al posto della sfumatura; nel lancio e nella selezione resta il ramo di vite.
