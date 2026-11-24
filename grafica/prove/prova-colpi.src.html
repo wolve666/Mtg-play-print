@@ -1505,6 +1505,40 @@ TH.forgia.big = function(){
 };
 
 // ---------- SELVA: il boa di liane
+// liana senza tagli (pezzi del 24 novembre): partenza = la zolla che esplode, corpo = il bordo di liane ripetuto lungo la curva, punta = il ramo di vite.
+// il corpo è una sola immagine ripetuta: il disegno scorre con la punta («ph»), così sembra che la liana avanzi davvero; «hf» cambia lo spessore lungo la liana.
+function vineTile(c, pts, s0, s1, H, a = 1, shadow = false, ph = 0, fin = 0, hf){
+  const im = I('selva', 'jbody', 0); if(!ok(im) || s1 - s0 < 2 || a <= 0) return;
+  let src = im, sx0 = 0, sw = iw(im), sh = ih(im), hk = 1;
+  if(shadow){ src = sil(im); if(!src) return; sx0 = src.pad; sw = src.iw; sh = src.height; hk = src.height / src.ih }
+  const tl = H * iw(im) / ih(im), stp = Math.max(4, H * .3);
+  c.save();
+  for(let s = s0, n = 0; s < s1 && n < 400; n++){
+    const u = (((s - ph) % tl) + tl) % tl, len = Math.min(stp, s1 - s, tl - u);
+    if(len < .2){ s += .2; continue }
+    const p = at(pts, s), q = at(pts, s + len), ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
+    let va = 1; if(pts.dep){ va = clamp((pts.dep[p[3]] + .22) / .3) } if(fin) va *= clamp((s - s0) / fin);
+    if(va > 0){ const Hh = H * hk * (hf ? hf(s) : 1); c.globalAlpha = Math.min(1, a) * va * (shadow ? .3 : 1);
+      c.save(); c.translate(p[0] + (shadow ? 4 : 0), p[1] + (shadow ? 7 : 0)); c.rotate(ang); c.drawImage(src, sx0 + u / tl * sw, 0, len / tl * sw, sh, 0, -Hh / 2, len + 1.2, Hh); c.restore() }
+    s += len }
+  c.restore();
+}
+// la partenza: zolla di terra e muschio che esplode, con la liana che ne esce verso la curva (la sua coda sfuma sotto il corpo)
+const VS = {ax:.23, ay:.49, jx:.82, k:7.9};
+function vineStart(c, pts, H, a = 1, sc = 1, rot = 0){
+  const js = I('selva', 'jstart', 0); if(!ok(js) || a <= 0) return; const w = H * VS.k * sc, p = at(pts, w * (VS.jx - VS.ax));
+  img(c, js, pts[0][0], pts[0][1], w, Math.atan2(p[1] - pts[0][1], p[0] - pts[0][0]) + rot, a, null, VS.ax, VS.ay);
+}
+// liana intera: dalla partenza (o da «from», dove la coda sfuma) fino alla punta in «tip»
+function vineFlow(c, pts, tip, H, a = 1, o = {}){
+  const tp = I('selva', 'jtip', 0), Ht = H * 1.25, tipL = ok(tp) ? Ht * iw(tp) / ih(tp) : 0, sc = o.start || 0;
+  const sj = sc ? H * VS.k * sc * (VS.jx - VS.ax) * .8 : 0, b0 = Math.max(o.from == null ? 0 : o.from, sj), b1 = tip - tipL * .78;
+  const fin = sc && b0 === sj ? H * 1.2 : (o.fin || 0), hf = sc ? s => lerp(.6, 1, clamp((s - sj) / (H * 3))) : null, ph = o.ph == null ? tip : o.ph;
+  for(const sh of o.shadow ? [true, false] : [false]){
+    vineTile(c, pts, b0, b1, H, a, sh, ph, fin, hf);
+    if(ok(tp)) along(c, tp, pts, tip - tipL, tip, Ht, o.flip || 1, a * (o.from != null ? clamp((tip - o.from) / tipL) : 1), sh) }
+  if(sc) vineStart(c, pts, H, a * (o.sa == null ? 1 : o.sa), sc * (o.ss || 1), o.sr || 0);
+}
 function vinePath(a, b, t, tile){
   const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
   for(let i = 0; i <= 40; i++){ const u = i / 40, w = Math.sin(u * PI * 2.2 - t * 7) * Math.min(18, l * .08) * Math.sin(PI * u), bow = l * .18 * Math.sin(PI * u); pts.push([a[0] + dx * u + nx * (w + bow), a[1] + dy * u + ny * (w + bow)]) }
@@ -1520,29 +1554,36 @@ function boaPath(tx, sq, turns, slither){
   const last = pts[pts.length - 1]; for(let i = 1; i <= 10; i++){ pts.push([last[0], last[1] + (H + W * .8 - last[1]) * i / 10]); dep.push(1) }
   prep(pts); pts.dep = dep; return pts;
 }
+// sbuffo di terra (i tappi dipinti) e fogliame che resta sul tappeto
+function dust(list, x, y, W, n, dir, sz = 1){ for(let i = 0; i < n; i++){ const a = dir == null ? R() * TAU : dir + (R() - .5) * 1.4, v = 40 + R() * 90;
+  list.push(sp({im:I('selva', 'caps'), x:x + (R() - .5) * W * .05, y:y + (R() - .5) * W * .05, vx:Math.cos(a) * v, vy:Math.sin(a) * v - 15, drag:2, w:W * (.2 + R() * .12) * sz, rot:a + (R() - .5) * .6, life:.9 + R() * .5, grow:.5, fin:.05, fout:.6, alpha:.85})) } }
 TH.selva = {
   name:'Selva', sub:'Verde · piante e bestie', col:'#86CC4E',
-  desc:'Il boa. La liana esce dall\'elemento centrale, ondeggia dietro al dito e avvolge il quadratino. Da Federico la liana entra dall\'alto e si avvolge intorno a TUTTO il tappeto, giro dopo giro, passando davanti e sparendo dietro; si allenta un attimo, poi stritola: il tappeto stesso si stringe a clessidra, scricchiola, schizzano terra, foglie e schegge; poi molla la presa (il tappeto rimbalza) e la liana scivola via verso il basso.',
+  desc:'Il boa. Dall\'elemento centrale esplode una zolla di terra e muschio e ne esce la liana, che ondeggia dietro al dito e avvolge il quadratino. Da Federico la liana entra dall\'alto e si avvolge intorno a TUTTO il tappeto, giro dopo giro, passando davanti e sparendo dietro, con il ramo di vite in testa; si allenta un attimo, poi stritola: il tappeto stesso si stringe a clessidra, scricchiola, schizzano terra, polvere, foglie e schegge; poi molla la presa (il tappeto rimbalza), la liana scivola via verso il basso e sul tappeto restano ciuffi di fogliame che svaniscono.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
-    const pts = vinePath([hb.x, hb.y], [t.x, t.y], T, on ? tr : null), Lp = plen(pts), grow = eo((T - d.t0) / .25), H = W * .15;
+    const pts = vinePath([hb.x, hb.y], [t.x, t.y], T, on ? tr : null), Lp = plen(pts), grow = eo((T - d.t0) / .3), H = W * .1, pop = eo((T - d.t0) / .2);
+    if(!d.burst){ d.burst = 1; dust(FX.sA, hb.x, hb.y, W, 4, null, .8); for(let i = 0; i < 10; i++){ const a = R() * TAU; pt(FX.pA, {k:'crumb', x:hb.x, y:hb.y, vx:Math.cos(a) * (80 + R() * 160), vy:Math.sin(a) * (80 + R() * 160), vz:120 + R() * 200, gz:1100, rest:.3, life:.9, r:W * (.006 + R() * .009), col:pick(['74,50,28', '58,40,22', '96,70,40'])}) } }
     for(let i = 1; i <= 3; i++){ const p = at(pts, Lp * i / 3); lit('A', p[0] + 5, p[1] + 9, W * .25, [.7, .8, .6], -.6) }
-    chain(c, [I('selva', 'liana', 0), I('selva', 'vine', 0)], pts, Lp * grow, Lp, H, 1, 1, true, 0);
+    vineFlow(c, pts, Lp * grow, H, 1, {start:.62, ss:.6 + .4 * pop + .03 * Math.sin(T * 9), shadow:true});
     if(R() < dt * 5){ const p = at(pts, R() * Lp); FX.sA.push(sp({im:I('selva', 'leaf'), x:p[0], y:p[1], vx:(R() - .5) * 60, vy:10, g:60, w:W * .05, life:1.3, flut:.6, sway:30, spin:(R() - .5) * 3})) }
   },
   launch(d){
-    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), tx = tr.x + tr.w / 2, t = d.tip || {x:d.p[0], y:d.p[1]}, pts = prep(vinePath([hb.x, hb.y], [t.x, t.y], T, tr).slice(0, 41).concat([[tx, -80], [tx, -400]])), Lp = plen(pts), L40 = pts.L[40];
+    // la liana si strappa via verso l'alto: la coda lascia la zolla, che si sbriciola in polvere
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), tx = tr.x + tr.w / 2, t = d.tip || {x:d.p[0], y:d.p[1]}, pts = prep(vinePath([hb.x, hb.y], [t.x, t.y], T, tr).slice(0, 41).concat([[tx, -80], [tx, -400]])), Lp = plen(pts), L40 = pts.L[40], H = W * .1;
     SP.aHub.v -= 3; SP.aPunch.v -= .5;
+    dust(FX.sA, hb.x, hb.y, W, 5, null, 1);
+    for(let i = 0; i < 4; i++) FX.sA.push(sp({im:I('selva', 'clod'), x:hb.x + (R() - .5) * W * .1, y:hb.y, vx:(R() - .5) * 260, vy:-60 - R() * 120, g:500, w:W * (.05 + R() * .04), life:1, spin:(R() - .5) * 8, fout:.3}));
     add('A', function(c, dt){ this.a += dt; const k = Math.min(1, this.a / .35); if(this.a > .45) return false;
       const tip = L40 + (Lp - L40) * Math.pow(k, 1.6) * .9 + Lp * .3 * Math.max(0, k - .6), from = Math.pow(k, 2) * L40;
-      chain(c, [I('selva', 'liana', 0), I('selva', 'vine', 0)], pts, tip, Math.max(tip - from, 10), W * .15, 1, 1, false, from); return true });
+      vineFlow(c, pts, tip, H, 1, {start:.62, from, fin:H * 1.5, sa:1 - eo(this.a / .3), ss:1 + .25 * this.a / .3}); return true });
     for(let i = 0; i < 5; i++){ const p = at(pts, R() * L40); FX.sA.push(sp({im:I('selva', 'leaf'), x:p[0], y:p[1], vx:(R() - .5) * 120, vy:-40, g:120, w:W * .05, life:1.2, flut:.6, spin:(R() - .5) * 6})) }
     return .55;
   },
   hit(tx){
     const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .18, W * .82), turns = 4.4;
     if(RM){ flash('#2A5A1A', .5, .9); damage(); return }
-    const sq = spr(0, 70, 6.5), ims = [I('selva', 'liana', 0), I('selva', 'vine', 0)], Hv = W * .25, T1 = 1.35, TC = 1.62, TR = 2.75, TE = 3.9;
+    const sq = spr(0, 70, 6.5), Hv = W * .17, T1 = 1.35, TC = 1.62, TR = 2.75, TE = 3.9;
     let crunched = false;
     add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > TE) { return false }
       if(x > T1 && x < TC) sq.t = -.12; else if(x >= TC && x < TR) sq.t = 1 + .04 * Math.sin(x * 23); else sq.t = 0;
@@ -1552,21 +1593,29 @@ TH.selva = {
       // la testa corre lungo la spirale, poi (lasciata la presa) prosegue e la coda la segue fuori dal campo
       const head = x < T1 ? Lhel * (1 - Math.pow(1 - x / T1, 1.6)) : x < TR ? Lhel : Lhel + (Lt - Lhel + Lhel) * ei((x - TR) / (TE - TR));
       const body = Lhel - pts.L[8] + W * .3;
-      chain(c, ims, pts, head, body, Hv, 1, 1, true, -1e9, 30);
+      // mentre stritola il disegno della liana scorre avanti e indietro di poco: sembra che le spire si stringano
+      const ph = head + (x >= TC && x < TR ? Math.sin((x - TC) * 9) * W * .02 : 0);
+      vineFlow(c, pts, head, Hv, 1, {from:head - body, fin:W * .25, ph, shadow:true});
       const s = st('V'); s.pin[0] = fb.y + fb.h * .52; s.pin[1] = Math.max(0, sq.x) * .3; s.pin[2] = fb.h * .55; s.pin[3] = (fb.h * .86) / turns;
       s.dark = Math.max(s.dark, .3 * clamp(sq.x));
       // ombre delle spire sul campo
       for(let i = 0; i < 4; i++){ const p = at(pts, pts.L[8] + (head - pts.L[8]) * (i + .5) / 4); if(pts.dep[p[3]] > 0) lit('V', p[0], p[1] + W * .04, W * .35, [.7, .8, .6], -.5) }
+      // dove la testa entra nel tappeto si alza un po' di polvere
+      if(x < T1 && R() < dt * 6){ const p = at(pts, head); if(pts.dep[p[3]] > .3) dust(FX.sV2, p[0], p[1], W, 1, p[2] + PI, .6) }
       return true });
     function crunch(){
       impact(PI / 2, 1.3); SP.vLifeR.v += sgn() * 60;
       if(navigator.vibrate) try{ navigator.vibrate([60, 30, 30, 30, 90]) }catch(e){}
       const wy = fb.y + fb.h * .52;
       for(let s = -1; s <= 1; s += 2){ const ex = s < 0 ? fb.x + W * .04 : fb.x + fb.w - W * .04;
+        dust(FX.sV2, ex, wy, W, 3, s < 0 ? PI : 0, 1.1); dust(FX.sV2, ex, fb.y + fb.h * (.25 + R() * .1), W, 1, s < 0 ? PI : 0, .8); dust(FX.sV2, ex, fb.y + fb.h * (.75 + R() * .1), W, 1, s < 0 ? PI : 0, .8);
         for(let i = 0; i < 26; i++) pt(FX.pV2, {k:'crumb', x:ex, y:wy + (R() - .5) * fb.h * .7, vx:-s * (40 + R() * 160), vy:(R() - .5) * 120, vz:150 + R() * 300, gz:1300, rest:.3, life:1.2 + R() * .6, r:W * (.006 + R() * .01), col:pick(['74,50,28', '58,40,22', '96,70,40', '60,90,34'])});
         for(let i = 0; i < 4; i++) FX.sV2.push(sp({im:I('selva', 'clod'), x:ex, y:wy + (R() - .5) * fb.h * .6, vx:-s * (60 + R() * 140), vy:(R() - .5) * 80, vz:200 + R() * 260, gz:1300, rest:.3, w:W * (.07 + R() * .05), life:1.8, spin:(R() - .5) * 8, sh:1, fout:.3})) }
       for(let i = 0; i < 22; i++) FX.sV2.push(sp({im:I('selva', 'leaf'), x:fb.x + R() * fb.w, y:fb.y + R() * fb.h, vx:(R() - .5) * 220, vy:(R() - .5) * 220, drag:2, g:30, w:W * (.05 + R() * .04), life:2 + R(), flut:.7, sway:40, spin:(R() - .5) * 8}));
       for(let i = 0; i < 12; i++){ const a = R() * TAU; pt(FX.pV, {k:'smoke', x:o.x + Math.cos(a) * W * .3, y:wy + Math.sin(a) * W * .4, vx:Math.cos(a) * 40, vy:Math.sin(a) * 30 - 10, drag:1.5, r:W * .08, grow:2, life:1.4, col:'110,85,55', al:.5}) }
+      // ciuffi di fogliame strappati dalla liana che restano sul tappeto lungo i bordi e poi svaniscono
+      for(let i = 0; i < 5; i++){ const s = i % 2 ? 1 : -1, y = fb.y + fb.h * (.15 + .7 * (i + R() * .5) / 5);
+        FX.sV2.push(sp({im:I('selva', 'bush'), x:s < 0 ? fb.x + W * (.06 + R() * .06) : fb.x + fb.w - W * (.06 + R() * .06), y, vx:-s * (30 + R() * 40), vz:120 + R() * 120, gz:1100, rest:.2, w:W * (.2 + R() * .08), rot:(R() - .5) * .8, life:3.2, sh:1, fin:.03, fout:.25, delay:.05 + R() * .25})) }
       damage(5);
     }
   }
@@ -1609,7 +1658,7 @@ const NOTES = {
   abisso:'Immagini: gorgo, getto a spirale, spruzzi, bolle, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il tappeto: luce azzurra, il tappeto che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel tappeto.',
   cripta:'Immagini: mano scheletrica, scia di fumo (il raggio), anime, due venature, teschio. A codice: il filo di particelle, le bollicine nere, le nuvole che si diramano, il pentacolo con i glifi, la nebbia. Il tappeto: avvizzisce e torna, nessuna onda; nel colpo grosso si spegne sotto la nebbia.',
   forgia:'Immagini: tre bruciature, schegge di roccia lavica, braci, archi elettrici; goblin e bomba. Il tappeto: lampi blu del fulmine, la bruciatura che scalda il tappeto da bianco a rosso, l\'aria che trema per il calore, ogni scossa e ogni scheggia che illumina.',
-  selva:'Immagini: liane intrecciate e viticcio, zolle, foglie. Il tappeto: la spirale che passa davanti e dietro, il tappeto che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
+  selva:'Immagini (pezzi senza tagli): zolla che esplode (partenza), bordo di liane ripetuto (corpo), ramo di vite (punta), sbuffi di polvere, ciuffi di fogliame, zolle, foglie. Il tappeto: la spirale che passa davanti e dietro, il tappeto che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
 };
 function setTheme(k){
   TK = k; document.body.className = 't-' + k;
