@@ -51,6 +51,7 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
 .scr{position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;background:#090B0F;container-type:inline-size}
 .scr canvas.full{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .bar{position:absolute;left:0;right:0;top:0;height:15%;padding:7cqw 3cqw 2cqw;display:flex;gap:2cqw;z-index:1}
+.bar.many .tile b{font-size:7.5cqw}.bar.many .tile small{font-size:2.6cqw}
 .bar i{position:absolute;left:0;right:0;top:0;height:1.2cqw;background:#6CC24A;box-shadow:0 0 3cqw #6CC24A}
 .tile{flex:1;border-radius:5cqw 1.6cqw 5cqw 1.6cqw;background:var(--pc);color:#fff;display:grid;place-items:center;align-content:center;font-family:var(--tf);line-height:1}
 .tile small{font:700 3.4cqw var(--ui);opacity:.9}
@@ -96,6 +97,10 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
       <button class="btn alt" id="goBig" hidden>Colpo grosso</button>
       <button class="btn alt" id="goGob" hidden>Sorpresa: il goblin</button>
       <label class="chk"><input type="checkbox" id="slow"> Al rallentatore</label>
+    </div>
+    <div class="row">
+      <label class="chk">Giocatori <select id="nPl"><option>2</option><option>3</option><option selected>4</option></select></label>
+      <button class="btn alt" id="seats">Cambia posti</button>
     </div>
     <div class="phones">
       <div class="pcol"><div class="phone"><div class="scr" id="pA">
@@ -324,7 +329,7 @@ function drawSprites(list, c, dt){
     p.a += dt; if(p.a > p.life){ list.splice(i, 1); continue }
     const f = Math.exp(-p.drag * dt); p.vx *= f; p.vy = p.vy * f + p.g * dt; p.x += (p.vx + (p.sway ? Math.sin(p.a * 2.4 + p.ph) * p.sway : 0)) * dt; p.y += p.vy * dt; p.rot += p.spin * dt;
     if(p.gz){ p.vz -= p.gz * dt; p.z += p.vz * dt; if(p.z < 0){ p.z = 0; if(p.vz < -40){ p.vz = -p.vz * p.rest; p.vx *= .6; p.vy *= .6; p.spin *= .5; p.land && p.land(p) } else { p.vz = 0; const fr = Math.exp(-7 * dt); p.vx *= fr; p.vy *= fr; p.spin *= fr } } }
-    if(p.lit) lit('V', p.x, p.y - p.z, p.lit[0], p.lit[1], p.lit[2] * (1 - p.a / p.life));
+    if(p.lit) lit(p.lph || 'V', p.x, p.y - p.z, p.lit[0], p.lit[1], p.lit[2] * (1 - p.a / p.life));
     if(!ok(p.im)) continue;
     const k = p.a / p.life, al = p.alpha * Math.min(1, p.a / p.fin) * Math.min(1, (1 - k) / p.fout) * (p.flick ? .55 + .45 * Math.sin(p.a * 40 + p.ph) : 1);
     let w = p.w * (1 + p.grow * k) * (1 + p.z / 260) * (p.pop ? eb(p.a / p.pop) : 1);
@@ -382,18 +387,38 @@ function hubBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x
 function fieldBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x:W * .025, y:H * .16, w:W * .95, h:H * .825} }
 function fieldO(scr){ const fb = fieldBox(scr); return {x:fb.x + fb.w / 2, y:scr.clientHeight * .6} }
 function rel(e, el){ const r = el.getBoundingClientRect(); return [(e.clientX - r.left) * el.clientWidth / r.width, (e.clientY - r.top) * el.clientHeight / r.height] }
-function tileRect(scr){ const t = scr.querySelector('.tile'), r = t.getBoundingClientRect(), s = scr.getBoundingClientRect(), k = scr.clientWidth / s.width; return {x:(r.left - s.left) * k, y:(r.top - s.top) * k, w:r.width * k, h:r.height * k} }
+function tileRect(scr){ const t = scr.querySelector('.tile.t') || scr.querySelector('.tile'), r = t.getBoundingClientRect(), s = scr.getBoundingClientRect(), k = scr.clientWidth / s.width; return {x:(r.left - s.left) * k, y:(r.top - s.top) * k, w:r.width * k, h:r.height * k} }
 function overTile(p){ const t = tileRect(pA); return p[0] > t.x - 6 && p[0] < t.x + t.w + 6 && p[1] > t.y - 6 && p[1] < t.y + t.h + 14 }
 const FLD = {A:makeField(pA, '#B23A2A'), V:makeField(pV, '#2D6FA3')};
 if(FLD.V) cvV.style.display = 'none';
 // V = a terra (dentro il campo), M = sopra l'elemento centrale ma sotto la vita, V2 = sopra tutto
 const FX = {A:[], V:[], M:[], V2:[], sA:[], sV:[], sM:[], sV2:[], pA:[], pV:[], pV2:[]};
+
+// i posti al tavolo, come nell'app: in alto i quadratini degli altri giocatori in ordine di posto (senza sé stessi).
+// Bea colpisce Federico: sul telefono di Bea il bersaglio è il quadratino di Federico, sul telefono di Federico il colpo arriva dal quadratino di Bea.
+const PL = [['Bea', '#B23A2A'], ['Federico', '#2D6FA3'], ['Luca', '#3E8E4A'], ['Sara', '#8A5BB8']];
+let SEATS = [0, 1, 2, 3];
+function renderBars(){
+  const sel = document.getElementById('nPl'), n = sel ? +sel.value : 2, seats = SEATS.filter(i => i < n);
+  [[pA, 0, 1], [pV, 1, 0]].forEach(([scr, me, t]) => { const bar = scr.querySelector('.bar');
+    bar.innerHTML = '<i></i>' + seats.filter(i => i !== me).map(i => `<div class="tile${i === t ? ' t' : ''}" style="--pc:${PL[i][1]}"><small>${PL[i][0]}</small><b${scr === pA && i === 1 ? ' id="aTile"' : ''}>${scr === pA && i === 1 ? life : 40}</b></div>`).join('');
+    bar.classList.toggle('many', n > 2) });
+}
+// da dove arriva il colpo sul tappeto di Federico: il centro del quadratino di Bea
+function srcX(){ const t = tileRect(pV); return t.x + t.w / 2 }
+// gli schizzi dei colpi grossi che tornano sul mio tappeto: partono dal quadratino colpito ed entrano nel campo con un arco
+function fromTile(fn, n, t0 = 0, dur = 0, spread = .7){
+  const tr = tileRect(pA), fb = fieldBox(pA), WA = pA.clientWidth;
+  for(let i = 0; i < n; i++){ const sx = tr.x + tr.w * (.2 + R() * .6), sy = tr.y + tr.h, tx = clamp(sx + (R() - .5) * WA * spread, fb.x + WA * .05, fb.x + fb.w - WA * .05), ty = fb.y + fb.h * (.08 + R() * .7);
+    const tf = .45 + R() * .45, gz = 1200, z0 = WA * .04, vz = (.5 * gz * tf * tf - z0) / tf;
+    fn({x:sx, y:sy, vx:(tx - sx) / tf, vy:(ty - sy) / tf, z:z0, vz, gz, delay:t0 + R() * dur}, WA, [tx - sx, ty - sy]) }
+}
 const add = (k, draw, delay = 0) => FX[k].push({a:-delay, draw});
 // disegna un livello di effetti: quelli creati mentre si disegna (es. l'esplosione nata dalla bomba) non vanno persi
 function runFX(k, c, dt){ const cur = FX[k]; FX[k] = []; const keep = cur.filter(f => f.draw(c, dt)); FX[k] = keep.concat(FX[k]) }
 let wither = null, life = 40;
 function damage(n = 3){
-  life -= n; if(life < 10) life = 40; lifeV.textContent = life; aTile.textContent = life; dV.textContent = '−' + n; dV.classList.remove('on'); void dV.offsetWidth; dV.classList.add('on');
+  life -= n; if(life < 10) life = 40; lifeV.textContent = life; const at = document.getElementById('aTile'); if(at) at.textContent = life; dV.textContent = '−' + n; dV.classList.remove('on'); void dV.offsetWidth; dV.classList.add('on');
   SP.aHub.v += 1.5; if(navigator.vibrate) try{ navigator.vibrate(n > 5 ? [40, 30, 80, 40, 120] : [20, 40, 30]) }catch(e){}
 }
 function rgbOf(col){ if(col[0] === '#'){ const c = hex3(col); return c } const m = col.match(/[\d.]+/g); return [m[0] / 255, m[1] / 255, m[2] / 255] }
@@ -476,7 +501,8 @@ TH.santuario = {
     energyBeam(c, hb.x, hb.y, t.x, t.y, w, T, .55 + .45 * ch);
     beamFX(FX.pA, hb.x, hb.y, t.x, t.y, w, dt, .4 + .8 * ch);
     starFlare(c, t.x, t.y, W * (.07 + .07 * ch), T, .8);
-    if(d.hs.x > .02) img(c, I('santuario', 'halo', 0), tg[0], tg[1], tr.w * 1.1 * Math.max(0, d.hs.x), T * .4, Math.min(1, d.hs.x), 'lighter');
+    if(d.hs.x > .02) img(c, I('santuario', 'halo', 0), tg[0], tg[1], tr.h * 1.5 * Math.max(0, d.hs.x), T * .4, Math.min(1, d.hs.x), 'lighter');
+    if(on && T - (d.hr || 0) > .55){ d.hr = T; FX.sA.push(sp({im:I('santuario', 'halo', 0), x:tg[0], y:tg[1], w:tr.h * 1.4, grow:1.3, life:.7, fin:.05, fout:1, alpha:.7, blend:'lighter', rot:T * .4})) }
   },
   launch(d){
     const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ch = d.charge || 0, ex = tr.x + tr.w / 2, ty = tr.y + tr.h / 2;
@@ -487,14 +513,14 @@ TH.santuario = {
       glow(c, hb.x, hb.y, W * .3, '255,240,200', al * .7);
       stretch(c, I('santuario', 'beam', 0), hb.x, hb.y, x1, -20, H * w * 1.8, al * .5, 'lighter');
       energyBeam(c, hb.x, hb.y, x1, -20, H * w, T, al); beamFX(FX.pA, hb.x, hb.y, x1, -20, H * w, dt, 2 * al);
-      img(c, I('santuario', 'halo', 0), ex, ty, tr.w * (1 + eo(x / .6) * 1.4), 0, al, 'lighter'); return true });
+      img(c, I('santuario', 'halo', 0), ex, ty, tr.h * 1.5 * (1 + eo(x / .6) * 2), 0, al * (1 - eo(x / .6) * .6), 'lighter'); return true });
     const ang = Math.atan2(-20 - hb.y, x1 - hb.x);
     for(let i = 0; i < 30; i++){ const u = R(), n = sgn() * (60 + R() * 120); pt(FX.pA, {k:'mote', x:lerp(hb.x, x1, u), y:lerp(hb.y, -20, u), vx:-Math.sin(ang) * n, vy:Math.cos(ang) * n, drag:3, life:.6 + R() * .4, r:W * (.012 + R() * .015), col:'255,236,180', tw:1}) }
     for(let i = 0; i < 6; i++){ const u = .2 + R() * .6; FX.sA.push(sp({im:I('santuario', 'feath'), x:lerp(hb.x, x1, u), y:lerp(hb.y, -20, u), vx:(R() - .5) * 30, vy:20 + R() * 30, g:20, w:W * (.07 + R() * .05), life:1.8, flut:.5, sway:40, delay:R() * .2})) }
     return .5;
   },
   hit(tx){
-    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .3, W * .7);
+    const W = W_(), fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .14, W * .86);
     if(RM){ flash('#FFF8E8', .9, 1.2); damage(); return }
     const yC = cloudsArrive(cx, 3.4) - W * .04;
     // il raggio esce dal centro delle nuvole quando sono arrivate
@@ -531,7 +557,17 @@ TH.santuario = {
     const D0 = .85, D = .2, HOLD = 3.1, END = 3.9;
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .3) return false; st('V').dark = Math.max(st('V').dark, .6 * env(x, .5, .5, .5)); lit('V', o.x, o.y, W * (.25 + .3 * eo(x / .95)), [1, .85, .5], x < .95 ? 1.4 * eo(x / .95) : 0); return true });
     for(let i = 0; i < 60; i++){ const x = fb.x + R() * fb.w, y = fb.y + R() * fb.h, d = .5 + R() * .4; pt(FX.pV, {k:'mote', x, y, vx:(o.x - x) / d, vy:(o.y - y) / d, life:d, r:W * (.01 + R() * .014), col:'255,236,180', tw:1, fout:.1, delay:R() * .35}) }
-    cloudsArrive(o.x, END + .2);
+    const cxS = clamp(srcX(), W * .14, W * .86), sunY = cloudsArrive(cxS, END + .2);
+    // una luce leggera scende dalle nubi verso il punto dove cadrà la spada, e si dissolve quando la spada arriva
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > D0 + D + .45) return false; const k = x < D0 + D ? eo((x - .3) / .5) * (.85 + .15 * Math.sin(x * 7)) : 1 - (x - D0 - D) / .45; if(k <= 0) return true;
+      const a = Math.atan2(o.y - sunY, o.x - cxS), l = Math.hypot(o.x - cxS, o.y - sunY);
+      c.save(); c.globalCompositeOperation = 'lighter'; c.translate(cxS, sunY); c.rotate(a - PI / 2);
+      for(let i = 0; i < 3; i++){ const w0 = W * (.05 + .04 * i), w1 = W * (.12 + .09 * i), g = c.createLinearGradient(0, 0, 0, l); g.addColorStop(0, `rgba(255,240,200,${.22 * k / (i + 1)})`); g.addColorStop(.85, `rgba(255,236,185,${.14 * k / (i + 1)})`); g.addColorStop(1, 'rgba(255,236,185,0)');
+        c.fillStyle = g; c.beginPath(); c.moveTo(-w0, 0); c.lineTo(w0, 0); c.lineTo(w1, l); c.lineTo(-w1, l); c.fill() } c.restore();
+      glow(c, o.x, o.y, W * .2, '255,236,185', .4 * k); lit('V', o.x, o.y, W * .5, [1, .88, .55], .9 * k);
+      if(R() < dt * 25 * k){ const u = R(); pt(FX.pV2, {k:'mote', x:lerp(cxS, o.x, u) + (R() - .5) * W * .08, y:lerp(sunY, o.y, u), vx:(R() - .5) * 10, vy:30 + R() * 30, life:.8, r:W * (.006 + R() * .01), col:'255,240,200', tw:1}) }
+      return true });
+    FX.V2.unshift(FX.V2.pop());
     // la spada: cade, entra nel terreno (la parte sotto la superficie non si vede), affonda con un piccolo rimbalzo, vibra, resta piantata
     const S = {q:spr(0, 140, 15), sink:spr(0, 420, 15)}, len = W * 1.15, depth = len * .42;
     const hole = (c, a, front) => { c.save(); c.globalAlpha = a; const rx = W * .1, ry = W * .035;
@@ -581,6 +617,11 @@ TH.santuario = {
       for(let i = 0; i < 22; i++){ const a = R() * TAU, v = 120 + R() * 280; FX.sV2.push(sp({im:I('santuario', 'feath'), x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.8, g:14, w:W * (.06 + R() * .06), life:2.4 + R(), flut:.6, sway:40, fout:.3})) }
       for(let i = 0; i < 40; i++){ const a = R() * TAU, v = 200 + R() * 500; pt(FX.pV2, {k:'spark', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:100 + R() * 250, gz:1200, drag:2, life:.6 + R() * .5, r:1.2 + R(), col:'255,235,170'}) }
       damage(8);
+      // sul mio tappeto: dal quadratino di Federico entrano piume e lucette che lo invadono piano
+      { const tr = tileRect(pA), Wa = pA.clientWidth;
+        add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.6) return false; const k = env(x, .1, .4, 1.1); glow(c, tr.x + tr.w / 2, tr.y + tr.h, Wa * .3, '255,236,185', .6 * k); lit('A', tr.x + tr.w / 2, tr.y + tr.h, Wa * .8, [1, .88, .55], 1.4 * k); return true });
+        fromTile((q, WA, d) => FX.sA.push(sp({im:I('santuario', R() < .6 ? 'feath' : 'down'), x:q.x, y:q.y, vx:d[0] * 1.1, vy:d[1] * 1.1, drag:1.3, g:8, w:WA * (.05 + R() * .05), life:2.8 + R(), flut:.6, sway:35, fout:.3, delay:q.delay})), 18, .1, .9, 1.1);
+        fromTile((q, WA, d) => pt(FX.pA, {k:'mote', x:q.x, y:q.y, vx:d[0] * 1.4, vy:d[1] * 1.4, drag:1.5, life:1.8 + R() * 1.4, r:WA * (.008 + R() * .014), col:'255,236,180', tw:1, delay:q.delay}), 50, 0, 1, 1.1) }
     });
     // si scioglie in luce e piume che salgono
     after(HOLD + .1, () => { for(let i = 0; i < 18; i++){ const u = R(); FX.sV2.push(sp({im:I('santuario', R() < .5 ? 'feath' : 'down'), x:o.x + (R() - .5) * W * .08, y:o.y - len * .7 * u, vx:(R() - .5) * 60, vy:-30 - R() * 50, w:W * (.04 + R() * .05), life:1.8 + R(), flut:.6, sway:40, blend:'lighter'})) }
@@ -705,7 +746,7 @@ TH.mox = {
     if(RM){ flash('#E8FFFF', .9, .9, true); damage(); return }
     // fisica della bomba: posizione a terra (x, y), altezza z; cade dall'alto come capita, rimbalza, rotola, sbatte sui bordi
     const r = W * .12, yL = fb.y + fb.h * (.3 + R() * .4);
-    const B = {x:clamp(tx + (R() - .5) * W * .3, fb.x + r, fb.x + fb.w - r), y:yL, z:yL + W * .25, vx:(R() - .5) * W * 1.4, vy:(R() - .5) * W * .9, vz:-150 - R() * 200, rot:R() * TAU, spin:(R() - .5) * 16, rest:.3 + R() * .25, land:null, boom:null};
+    const B = {x:clamp(tx + (R() - .5) * W * .12, fb.x + r, fb.x + fb.w - r), y:yL, z:yL + W * .25, vx:(W / 2 - tx) * (1 + R()) + (R() - .5) * W * .5, vy:(R() - .5) * W * .9, vz:-150 - R() * 200, rot:R() * TAU, spin:(R() - .5) * 16, rest:.3 + R() * .25, land:null, boom:null};
     add('V2', function(c, dt){ this.a += dt; const x = this.a;
       B.vz -= 2600 * dt; B.x += B.vx * dt; B.y += B.vy * dt; B.z += B.vz * dt;
       if(B.x < fb.x + r * .6){ B.x = fb.x + r * .6; B.vx = Math.abs(B.vx) * .55; B.spin *= -.6; impact(0, .15, B.x, B.y) } if(B.x > fb.x + fb.w - r * .6){ B.x = fb.x + fb.w - r * .6; B.vx = -Math.abs(B.vx) * .55; B.spin *= -.6; impact(PI, .15, B.x, B.y) }
@@ -738,7 +779,7 @@ TH.mox = {
   big(){
     const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), Wa = pA.clientWidth, Ha = pA.clientHeight, hb = hubBox(pA);
     if(RM){ flash('#DFF8FF', .95, 1); damage(8); return }
-    const UP = -PI / 2, POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x, hb.y - Wa * MOXL];
+    const trA = tileRect(pA), UP = Math.atan2(trA.y + trA.h / 2 - hb.y, trA.x + trA.w / 2 - hb.x), POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x + Math.cos(UP) * Wa * MOXL, hb.y + Math.sin(UP) * Wa * MOXL];
     // 1. sul mio tappeto: la torretta sbuca, cambia testa, si carica e spara verso l'alto
     const cs = spr(0, 240, 10), rc = spr(0, 300, 8); let pw = 0, steamed = 0, fired = 0;
     add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > BACK + .5) return false;
@@ -757,7 +798,7 @@ TH.mox = {
       if(x > CH && !fired){ fired = 1; rc.v = 7; SP.aHub.v -= 3; SP.aPunch.v -= 1.2; flash('#E0FAFF', .55, .2); if(navigator.vibrate) try{ navigator.vibrate([60, 20, 200]) }catch(e){} }
       // il laser verso il campo avversario (in alto)
       if(on){ const k = Math.min(1, (x - CH) / .08) * Math.min(1, (OFF - x) / .15), wb = Wa * (.11 + .015 * Math.sin(x * 47));
-        laserBeam(c, mz[0], mz[1], mz[0], -Wa * .2, wb * k, x, k);
+        laserBeam(c, mz[0], mz[1], mz[0] + Math.cos(UP) * Ha * 1.5, mz[1] + Math.sin(UP) * Ha * 1.5, wb * k, x, k);
         img(c, I('mox', 'lmouth', 0), mz[0], mz[1], Wa * .62 * (1 + .05 * Math.sin(x * 60)), UP, k, 'lighter', .2, .5);
         if(R() < dt * 50){ const a = UP + PI + (R() - .5) * 2.4, v = 150 + R() * 300; pt(FX.pA, {k:'spark', x:mz[0], y:mz[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:60 + R() * 100, gz:1000, drag:2.5, life:.3 + R() * .3, r:1.2, col:R() < .6 ? '170,240,255' : '255,255,255'}) }
         if(R() < dt * 30) SP.aPunch.v -= .05 }
@@ -769,7 +810,7 @@ TH.mox = {
     // 2. sul tappeto colpito: arriva dall'alto, poi il punto colpito traccia una riga dritta
     const F0 = CH + .15, DROP = .1, SWP = 1.75, F1 = F0 + DROP + SWP, END = F1 + 4.2;
     const ang = (R() - .5) * 1.1 + (R() < .3 ? PI / 2 : 0), dir = sgn(), half = Math.min(fb.w, fb.h) * .4, cx = o.x + (R() - .5) * W * .1, cy = o.y + (R() - .5) * W * .1;
-    const A0 = [cx - Math.cos(ang) * half * dir, cy - Math.sin(ang) * half * dir], A1 = [cx + Math.cos(ang) * half * dir, cy + Math.sin(ang) * half * dir], SRC = [W * (.5 + (R() - .5) * .3), -H * .25];
+    const A0 = [cx - Math.cos(ang) * half * dir, cy - Math.sin(ang) * half * dir], A1 = [cx + Math.cos(ang) * half * dir, cy + Math.sin(ang) * half * dir], SRC = [srcX(), -H * .25];
     const segs = [], GH = W * .2; let dist = 0, last = null, dmg = false, hit = false;
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
       // il tappeto si scurisce e si illumina di azzurro dall'alto prima del colpo
@@ -802,6 +843,10 @@ TH.mox = {
         if(R() < .35) FX.sV.push(sp({im:I('mox', 'molten'), x:T0[0] + (R() - .5) * GH * .5, y:T0[1] + (R() - .5) * GH * .5, w:W * (.06 + R() * .05), rot:R() * TAU, life:END - F0 - x, fin:.05, fout:.3, lit:[W * .1, [1.3, .55, .15], .8]})) }
       if(!dmg && sw > .3){ dmg = true; SP.vLife.v += 2.4; SP.vLifeR.v += sgn() * 20; damage(8) }
       return true });
+    // sul mio tappeto: dal quadratino di Federico schizzano metallo fuso e scintille finché il laser taglia
+    after(F0 + DROP, () => {
+      fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:I('mox', 'molten'), w:WA * (.03 + R() * .035), rest:.12, drag:1.2, spin:(R() - .5) * 8, sh:1, life:1.8 + R() * .8, fout:.5, lit:[WA * .1, [1.3, .6, .2], 1], lph:'A'}))), 16, 0, SWP);
+      fromTile((q, WA) => pt(FX.pA, Object.assign(q, {k:'spark', rest:.3, drag:.6, life:.6 + R() * .5, r:1 + R() * 1.3, col:R() < .5 ? '255,200,110' : R() < .5 ? '180,240,255' : '255,255,255'})), 70, 0, SWP) });
     // i due capi del solco: una pozza di metallo fuso copre l'inizio e la fine
     after(F0 + DROP + .05, () => FX.sV.push(sp({im:I('mox', 'molten'), x:A0[0], y:A0[1], w:W * .12, rot:R() * TAU, life:END - F0 - .3, fin:.05, fout:.25, lit:[W * .12, [1.3, .55, .15], .9]})));
     after(F1, () => FX.sV.push(sp({im:I('mox', 'molten'), x:A1[0], y:A1[1], w:W * .13, rot:R() * TAU, life:END - F1, fin:.05, fout:.3, lit:[W * .12, [1.3, .55, .15], .9]})));
@@ -907,7 +952,7 @@ TH.abisso = {
     return OUT + .2;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .25, W * .75), y0 = -W * .3, jw = W * .2;
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .12, W * .88), y0 = -W * .3, jw = W * .2;
     if(RM){ flash('#6CC8FF', .6, .9); damage(); return }
     const D = .16, END = .85;
     // il getto entra dall'alto, trivella il tappeto per un attimo, poi la coda ci cade dentro
@@ -1017,8 +1062,10 @@ TH.abisso = {
         // qualche goccia arriva fin sul tappeto di chi attacca
         after(.35, () => { const WA = pA.clientWidth, HA = pA.clientHeight;
           for(let i = 0; i < 10; i++) pt(FX.pA, {k:'glass', x:WA * (.1 + R() * .8), y:HA * (.2 + R() * .55), r:WA * (.016 + R() * .02), life:2.2 + R(), fout:.25, delay:R() * .4});
-          for(let i = 0; i < 16; i++){ const x = WA * (.1 + R() * .8), y = HA * (.3 + R() * .6); pt(FX.pA, {k:'drop', x, y, vx:(R() - .5) * 40, vy:0, z:200 + R() * 150, vz:-100, gz:1200, rest:.15, life:.9, r:WA * (.009 + R() * .012), col:'190,235,255', delay:R() * .5,
-            land:d => pt(FX.pA, {k:'ripple', x:d.x, y:d.y, r:2, grow:WA * (.03 + R() * .04), life:.6, col:'225,248,255', lw:1.1, sq:.85})}) } }) }
+          // le gocce volano dal quadratino di Federico ed entrano nel mio campo
+          fromTile((q, W2) => pt(FX.pA, Object.assign(q, {k:'drop', rest:.15, life:1.3, r:W2 * (.009 + R() * .012), col:'190,235,255',
+            land:d => pt(FX.pA, {k:'ripple', x:d.x, y:d.y, r:2, grow:WA * (.03 + R() * .04), life:.6, col:'225,248,255', lw:1.1, sq:.85})})), 22, 0, .5);
+          for(let i = 0; i < 3; i++) FX.sA.push(sp({im:I('abisso', 'spray'), x:tileRect(pA).x + tileRect(pA).w * R(), y:tileRect(pA).y + tileRect(pA).h, vx:(R() - .5) * 80, vy:120 + R() * 80, drag:2.5, rot:PI / 2, w:WA * (.12 + R() * .08), life:.5, grow:.5, fin:.03, fout:.6, alpha:.8, delay:R() * .2})) }) }
     }));
   }
 };
@@ -1078,7 +1125,7 @@ function summonHand(){
     if(h.halo > .01){ glow(c, cx, cy - W * .05, W * (.3 + .18 * h.halo), '150,70,240', .55 * h.halo * al); lit('A', cx, cy, W * .45, [.6, .25, 1.1], 1.1 * h.halo * al) }
     lit('A', P.bx, P.by, W * .5, [.8, .9, .6], -.7 * al);
     // il raggio entra nel palmo: disegnato prima della mano, così passa dietro le dita
-    const bm = h.beam; if(bm && bm.on){ soulJet(c, P.px, bm.sy, P.px, bm.hy, bm.w, T, bm.al); bm.on = false }
+    const bm = h.beam; if(bm && bm.on){ soulJet(c, bm.x0 ?? P.px, bm.sy, bm.x1 ?? P.px, bm.hy, bm.w, T, bm.al); bm.on = false }
     img(c, I('cripta', 'claw', 0), cx + W * .02, cy, sz, -PI / 4 + sw - .12 * h.clench, al);
     // fiotti di nubi sul palmo, che coprono la fine del raggio
     if(bm && bm.k > .05){ glow(c, P.px, P.py, W * .14, '160,80,250', .5 * bm.k);
@@ -1136,7 +1183,7 @@ TH.cripta = {
   hit(tx){
     const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV);
     if(RM){ flash('#1A0A26', .6, 1); damage(); return }
-    const G0 = .35, G1 = 1.1, B0 = 1.05, B1 = 2.3, top = -W * .3, hv = hubBox(pV), bx = hv.x, by = hv.y;
+    const G0 = .35, G1 = 1.1, B0 = 1.05, B1 = 2.3, top = -W * .3, hv = hubBox(pV), bx = hv.x, by = hv.y, sxV = srcX(), fxV = y => lerp(bx, sxV, (by - y) / (by - top));
     // il tappeto avvizzisce: buio che si allarga, venature, colori spenti; poi torna normale e svanisce
     const v = I('cripta', R() < .5 ? 'vein' : 'vein2', 0), vr = R() * TAU, seed = R() * 9, END = 3.4;
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const al = x < 2.4 ? 1 : 1 - (x - 2.4) / 1, g = eo(x / 1.2);
@@ -1147,12 +1194,12 @@ TH.cripta = {
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > G1) return false; if(x < G0) return true;
       if(R() < dt * 30){ const a = R() * TAU, r = W * (.05 + R() * .2); pt(FX.pV, {k:'smoke', x:bx + Math.cos(a) * r, y:by + Math.sin(a) * r * .6, vx:-Math.cos(a) * 40, vy:-30 - R() * 40, drag:.8, r:W * (.03 + R() * .03), grow:1.4, life:.9, col:pick(R() < .6 ? CDARK : CFOG), al:.5}) }
       if(R() < dt * 50){ const a = R() * TAU, r = W * R() * .3; pt(FX.pV2, {k:'mote', x:bx + Math.cos(a) * r, y:by + Math.sin(a) * r * .6, vx:-Math.cos(a) * r * .6, vy:-80 - R() * 120, g:-500, r:1 + R() * 1.6, life:1.2, col:pick(CMOTE), al:.85}) }
-      if(R() < dt * 6){ const a = R() * TAU, r = W * (.05 + R() * .2), px = bx + Math.cos(a) * r, py = by + Math.sin(a) * r * .6; FX.sV2.push(sp({im:I('cripta', 'souls'), x:px, y:py, vx:(bx - px) * .8, vy:-60, g:-600, rot:-PI / 2, w:W * (.045 + R() * .025), life:1.1, fin:.25, fout:.3, alpha:.85})) }
+      if(R() < dt * 6){ const a = R() * TAU, r = W * (.05 + R() * .2), px = bx + Math.cos(a) * r, py = by + Math.sin(a) * r * .6; FX.sV2.push(sp({im:I('cripta', 'souls'), x:px, y:py, vx:(srcX() - px) * .9, vy:-60, g:-600, rot:-PI / 2, w:W * (.045 + R() * .025), life:1.1, fin:.25, fout:.3, alpha:.85})) }
       return true });
     // il raggio parte dal tappeto colpito verso l'alto
     add('V2', function(c, dt){ this.a += dt; const x = this.a - B0; if(x > B1 - B0 + .3) return false; if(x < 0) return true;
       const head = eo(x / .25), wk = x < B1 - B0 ? 1 : 1 - ei((x - (B1 - B0)) / .3), w = W * .15 * wk, hy = lerp(by, top, head), tail = x < B1 - B0 ? by : lerp(by, top, ei((x - (B1 - B0)) / .3));
-      soulJet(c, bx, tail, bx, hy, w, T, Math.min(1, wk * 2)); soulMotes(FX.pV2, bx, tail, bx, hy, w, dt, wk);
+      soulJet(c, fxV(tail), tail, fxV(hy), hy, w, T, Math.min(1, wk * 2)); soulMotes(FX.pV2, fxV(tail), tail, fxV(hy), hy, w, dt, wk);
       glow(c, bx, by, W * .16, '150,70,240', .5 * wk); lit('V', bx, by, W * .5, [.6, .25, 1.1], .7 * wk);
       // base del raggio: nubi intense e particelle sul bottone, che coprono l'inizio del raggio
       if(x < B1 - B0){ if(R() < dt * 45){ const a = R() * TAU, v = 20 + R() * 70; pt(FX.pV2, {k:'smoke', x:bx + Math.cos(a) * W * .06, y:by + Math.sin(a) * W * .025, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .5 - 15, drag:1.8, r:W * (.035 + R() * .035), grow:1.6, life:.7 + R() * .4, col:pick(R() < .6 ? CDARK : CFOG), al:.75}) }
@@ -1160,13 +1207,14 @@ TH.cripta = {
       return true });
     // da chi attacca: prima arriva il gruppetto di anime, poi il raggio scende dall'alto fino alla mano
     const h = summonHand(); h.hold = Math.max(h.hold, h.a + B1 + 1.4);
-    const Wa = pA.clientWidth;
-    after(G0 + .5, () => { for(let i = 0; i < 5; i++){ const P = handPos(), sx = P.x + (R() - .5) * Wa * .4, du = .5 + R() * .3;
+    const Wa = pA.clientWidth, trA = tileRect(pA), txA = trA.x + trA.w / 2;
+    after(G0 + .5, () => { for(let i = 0; i < 5; i++){ const P = handPos(), sx = txA + (R() - .5) * Wa * .15, du = .5 + R() * .3;
       FX.sA.push(sp({im:I('cripta', 'souls'), x:sx, y:-Wa * .05, vx:(P.x - sx) / du, vy:(P.y - Wa * .05 + Wa * .05) / du, rot:PI / 2, w:Wa * (.045 + R() * .025), life:du, grow:-.5, fin:.2, fout:.3, alpha:.85, delay:R() * .4}));
       for(let j = 0; j < 6; j++) pt(FX.pA, {k:'mote', x:sx + (R() - .5) * Wa * .1, y:-Wa * .02, vx:(P.x - sx) / du, vy:(P.y - Wa * .05) / du, r:1 + R() * 1.4, life:du, col:pick(CMOTE), al:.85, delay:R() * .4}) } h.halo = Math.max(h.halo, .3) });
     add('A', function(c, dt){ this.a += dt; const x = this.a - B0 - .2; if(x > B1 - B0 + .3){ h.beam = null; return false } if(x < 0) return true; const P = handPos();
       const head = eo(x / .3), wk = x < B1 - B0 ? 1 : 1 - ei((x - (B1 - B0)) / .3), w = Wa * .15 * wk, ty = P.py, sy = x < B1 - B0 ? -Wa * .3 : lerp(-Wa * .3, ty, ei((x - (B1 - B0)) / .3)), hy = lerp(-Wa * .3, ty, head);
-      h.beam = {on:true, sy, hy, w, al:Math.min(1, wk * 2), k:head > .9 ? wk : 0}; soulMotes(FX.pA, P.px, sy, P.px, hy, w, dt, wk);
+      const fx = y => lerp(txA, P.px, (y + Wa * .3) / (ty + Wa * .3));
+      h.beam = {on:true, sy, hy, x0:fx(sy), x1:fx(hy), w, al:Math.min(1, wk * 2), k:head > .9 ? wk : 0}; soulMotes(FX.pA, fx(sy), sy, fx(hy), hy, w, dt, wk);
       if(head > .95){ h.halo = Math.min(1, h.halo + dt * 1.2);
         if(R() < dt * 10 * wk){ const sx = P.px + (R() - .5) * w, sy2 = ty - Wa * .12, du = .25 + R() * .1; FX.sA.push(sp({im:I('cripta', 'souls'), x:sx, y:sy2, vx:(P.px - sx) / du, vy:(ty - sy2) / du, w:Wa * (.035 + R() * .02), life:du, rot:PI / 2, grow:-.7, fin:.2, fout:.3, alpha:.9})) } }
       return true });
@@ -1183,6 +1231,11 @@ TH.cripta = {
     // tempi: a = andata, poi tutto a ritroso
     const PEN = [0, 1.3, 5.2, 6.2], CLOUD = [.9, 2.2, 4.3, 5.4], SKULL = [2.2, 3.1, 3.7, 4.5], HIT = 3.1, END = 6.3;
     const ph = (x, q) => x < q[0] ? 0 : x < q[1] ? (x - q[0]) / (q[1] - q[0]) : x < q[2] ? 1 : x < q[3] ? 1 - (x - q[2]) / (q[3] - q[2]) : 0;
+    // quando il teschio colpisce, dal quadratino di Federico scivolano nel mio campo fumo nero, lucine viola e qualche anima
+    after(HIT, () => { const tr = tileRect(pA), Wa = pA.clientWidth;
+      for(let i = 0; i < 12; i++) pt(FX.pA, {k:'smoke', x:tr.x + tr.w * R(), y:tr.y + tr.h, vx:(R() - .5) * 70, vy:40 + R() * 80, drag:1, r:Wa * (.04 + R() * .04), grow:2, life:1.6 + R() * .6, col:pick(R() < .6 ? CDARK : CFOG), al:.55, delay:R() * .4});
+      fromTile((q, WA, d) => pt(FX.pA, {k:'mote', x:q.x, y:q.y, vx:d[0] * 1.3, vy:d[1] * 1.3, drag:1.6, r:1 + R() * 1.6, life:1.4 + R(), col:pick(CMOTE), al:.9, delay:q.delay}), 30, 0, .6, 1);
+      fromTile((q, WA, d) => FX.sA.push(sp({im:I('cripta', 'souls'), x:q.x, y:q.y, vx:d[0] * 1.2, vy:d[1] * 1.2, drag:1.5, w:WA * (.05 + R() * .03), rot:Math.atan2(d[1], d[0]), life:1.3, fin:.2, fout:.5, alpha:.8, delay:q.delay})), 4, .1, .5, 1) });
     // il pentacolo sul tappeto (si deforma e si scurisce con lui)
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const p = ph(x, PEN), s = st('V');
       s.with = Math.max(s.with, ph(x, CLOUD)); s.dark = Math.max(s.dark, .35 * ph(x, CLOUD));
@@ -1297,7 +1350,7 @@ TH.forgia = {
     return .4;
   },
   hit(tx){
-    const W = W_(), o = fieldO(pV), x0 = clamp(tx, W * .2, W * .8);
+    const W = W_(), o = fieldO(pV), x0 = clamp(tx, W * .1, W * .9);
     if(RM){ flash('#FFF4E0', .8, .6); damage(); return }
     // tre fulmini insieme, da punti diversi in alto, che lampeggiano a scatti e cambiano forma; poi altri due colpi di coda
     const tops = [x0, clamp(x0 - W * (.25 + R() * .15), W * .05, W * .95), clamp(x0 + W * (.25 + R() * .15), W * .05, W * .95)];
@@ -1347,8 +1400,11 @@ TH.forgia = {
       c.save(); c.globalAlpha = .35 * shadow; c.fillStyle = '#000'; c.beginPath(); c.ellipse(bx, LY + BS * .38, sh * .5, sh * .16, 0, 0, TAU); c.fill(); c.restore();
       // gli ultimi istanti: la bomba si crepa, si arroventa e si spacca (tre fasi disegnate)
       const lf = BOOM - x, bx3 = L('forgia', 'bombx');
-      if(lf < .42 && bx3.length >= 3){ const f = lf > .26 ? 0 : lf > .12 ? 1 : 2, j = W * .006 * (1 - lf / .42); img(c, bx3[f], bx + (R() - .5) * j * 2, by - z + (R() - .5) * j * 2, sz * (f === 2 ? 1.25 + (.12 - lf) * 3 : 1 + .05 * f), rot, 1); if(f) glow(c, bx, by, sz * (.6 + .4 * f), '255,160,60', .5 * f) }
-      else img(c, bomb, bx, by - z, sz, rot, 1);
+      // trema un attimo, poi in un lampo passa da intera a crepata a spaccata, in dissolvenza (niente scatti)
+      const j = lf < .45 ? W * .007 * (1 - lf / .45) : 0, jx = bx + (R() - .5) * j * 2, jy = by - z + (R() - .5) * j * 2;
+      if(lf < .2 && bx3.length >= 3){ const fr = [bomb, bx3[1], bx3[2]], ph = clamp(1 - lf / .2) * 2, i0 = Math.min(1, ph | 0), f = ph - i0, sc = sz * (1 + .12 * ph);
+        img(c, fr[i0], jx, jy, sc, rot, i0 ? 1 - f * .8 : 1); img(c, fr[i0 + 1], jx, jy, sc * (i0 ? 1.15 : 1), rot, f); glow(c, bx, by - z, sz * (.5 + .4 * ph), '255,170,70', .35 * ph) }
+      else img(c, bomb, jx, jy, sz, rot, 1);
       // miccia: sfrigola sempre, di più quando è ferma; tremolio prima di esplodere
       const fx = bx + sz * .22 * Math.cos(rot - .9), fy = by - z - sz * .4, rest = x - FALL > REST;
       glow(c, fx, fy, sz * .3, '255,200,80', .6 + .4 * Math.sin(this.a * 60)); lit('V', bx, by, W * .3, [1.2, .7, .3], .8 + .4 * Math.sin(this.a * 50));
@@ -1362,7 +1418,14 @@ TH.forgia = {
     after(F0 + BOOM, () => { forgeImpact({x:ex, y:LY}, W, 1.2);
       // i pezzi della corazza della bomba volano via roventi
       for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 220 + R() * 380; FX.sV2.push(sp({im:I('forgia', 'frag', i), x:ex, y:LY, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .8, vz:250 + R() * 400, gz:1300, rest:.3, drag:.7, w:W * (.07 + R() * .05), life:1.8 + R() * .5, spin:(R() - .5) * 14, sh:1, fout:.35, lit:[W * .15, [1.2, .5, .15], .9]})) }
-      laughs(W, H, fb) });
+      laughs(W, H, fb);
+      // sul mio tappeto arrivano dal quadratino di Federico pezzi di bomba, schegge di vetro e fumo
+      after(.1, () => { const tr = tileRect(pA), Wa = pA.clientWidth; SP.aHub.v -= .6;
+        add('A', function(c, dt){ this.a += dt; if(this.a > .5) return false; const k = 1 - this.a / .5; glow(c, tr.x + tr.w / 2, tr.y + tr.h, Wa * .25, '255,170,70', .7 * k); lit('A', tr.x + tr.w / 2, tr.y + tr.h, Wa * .7, [1.3, .6, .2], 1.6 * k); return true });
+        fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:I('forgia', 'frag'), w:WA * (.045 + R() * .04), rest:.3, drag:.6, spin:(R() - .5) * 12, sh:1, life:1.7 + R() * .6, fout:.4, lit:[WA * .12, [1.2, .5, .15], .8], lph:'A'}))), 7, 0, .15);
+        fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:I('mox', 'shard'), w:WA * (.04 + R() * .04), rest:.35, drag:.5, spin:(R() - .5) * 10, sh:1, life:1.5 + R() * .5, fout:.4, alpha:.9}))), 8, 0, .2);
+        fromTile((q, WA) => pt(FX.pA, Object.assign(q, {k:'spark', rest:.3, drag:.6, life:.5 + R() * .4, r:1 + R() * 1.2, col:'255,200,120'})), 26, 0, .15);
+        for(let i = 0; i < 9; i++) pt(FX.pA, {k:'smoke', x:tr.x + tr.w * R(), y:tr.y + tr.h, vx:(R() - .5) * 60, vy:50 + R() * 70, drag:1, r:Wa * (.04 + R() * .04), grow:2.4, life:1.6 + R() * .6, col:'48,40,36', al:.55, delay:R() * .3}) }) });
   }
 };
 
@@ -1392,13 +1455,19 @@ TH.forgia.big = function(){
   shadowPass('A', pA, 0, dA, 1); after(.3, () => { SP.aHub.v -= 1.2; rumble = {a:0, dur:.8, amt:.2}; if(navigator.vibrate) try{ navigator.vibrate([30, 40, 60]) }catch(e){} });
   shadowPass('V', pV, vS, dV, -1); after(vS + dV * .4, () => { rumble = {a:0, dur:.9, amt:.35}; SP.vHub.v -= 1.2 });
   const F0 = vS + dV * .7, SW = 1.6 + R() * .8, F1 = F0 + .35 + SW, END = F1 + 4.5;
+  after(F0 + .45, () => { const Wa = pA.clientWidth, tr = tileRect(pA);
+    add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > SW) return false; const k = env(x, .15, SW - .5, .35) * (.75 + .25 * Math.sin(x * 31)); glow(c, tr.x + tr.w / 2, tr.y + tr.h, Wa * .3, '255,150,50', .6 * k); lit('A', tr.x + tr.w / 2, tr.y + tr.h, Wa * .6, [1.3, .55, .15], 1.3 * k); return true });
+    fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:fire, w:WA * (.08 + R() * .08), rot:Math.atan2(q.vy, q.vx), rest:.1, drag:1, life:.6 + R() * .4, grow:.7, fin:.03, fout:.6, alpha:.9}))), 28, 0, SW - .3);
+    fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:I('forgia', 'shard'), w:WA * (.035 + R() * .03), rest:.25, drag:.8, spin:(R() - .5) * 10, sh:1, life:2 + R(), fout:.4, lit:[WA * .14, [1.3, .5, .12], 1], lph:'A'}))), 9, 0, SW - .3);
+    fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:I('forgia', 'ember'), w:WA * (.03 + R() * .03), rest:.2, drag:1, life:1.6 + R(), flick:1, blend:'lighter', fout:.5}))), 10, 0, SW - .3);
+    fromTile((q, WA) => pt(FX.pA, Object.assign(q, {k:'spark', rest:.3, drag:.6, life:.6 + R() * .5, r:1 + R() * 1.4, col:R() < .7 ? '255,190,80' : '255,240,200'})), 50, 0, SW - .3) });
   // il tappeto colpito si scurisce dall'arrivo dell'ombra fino alla fine del fuoco
   add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const dk = env(x - vS, .8, F1 - vS - .6, 1.4); lit('V', o.x, o.y, W * 1.3, [.8, .8, .9], -1.2 * dk); st('V').dark = Math.max(st('V').dark, .45 * dk); return true });
   // il riflesso del fuoco lontano sul mio tappeto
   add('A', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > F1 - F0 + .6) return false; if(x < 0) return true; const Wa = pA.clientWidth, k = env(x, .2, F1 - F0 - .3, .6) * (.7 + .3 * Math.sin(T * 23) * Math.sin(T * 7));
     lit('A', Wa * .5, -Wa * .1, Wa * 1.1, [1.3, .6, .2], 1.1 * k); return true });
   // 2. il fuoco: la sorgente è in alto fuori schermo; la testa scende fino al tappeto, poi il punto colpito spazza il tappeto lungo una curva a caso
-  const side = sgn(), S = [W * (.5 + side * (.2 + R() * .35)), -W * (.5 + R() * .3)], A0 = [W * (.5 - side * (.15 + R() * .2)), fb.y + fb.h * (.15 + R() * .15)], A1 = [W * (.5 + side * (.1 + R() * .25)), fb.y + fb.h * (.72 + R() * .15)], AC = [W * (.5 + (R() - .5) * .6), fb.y + fb.h * (.4 + R() * .2)];
+  const side = srcX() < W / 2 ? -1 : 1, S = [clamp(srcX() + side * W * .15, -W * .1, W * 1.1), -W * (.5 + R() * .3)], A0 = [W * (.5 - side * (.15 + R() * .2)), fb.y + fb.h * (.15 + R() * .15)], A1 = [W * (.5 + side * (.1 + R() * .25)), fb.y + fb.h * (.72 + R() * .15)], AC = [W * (.5 + (R() - .5) * .6), fb.y + fb.h * (.4 + R() * .2)];
   const tgt = u => { const v = 1 - u; return [v * v * A0[0] + 2 * v * u * AC[0] + u * u * A1[0], v * v * A0[1] + 2 * v * u * AC[1] + u * u * A1[1]] };
   let lastBurn = -1, dmg = false;
   add('M', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > F1 - F0 + .5) return false; if(x < 0) return true;
@@ -1469,7 +1538,7 @@ TH.selva = {
     return .55;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .3, W * .7), turns = 4.4;
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .18, W * .82), turns = 4.4;
     if(RM){ flash('#2A5A1A', .5, .9); damage(); return }
     const sq = spr(0, 70, 6.5), ims = [I('selva', 'liana', 0), I('selva', 'vine', 0)], Hv = W * .25, T1 = 1.35, TC = 1.62, TR = 2.75, TE = 3.9;
     let crunched = false;
@@ -1527,6 +1596,9 @@ document.getElementById('goLaunch').addEventListener('click', demo);
 document.getElementById('goHit').addEventListener('click', () => { const tr = tileRect(pV); TH[TK].hit(tr.x + tr.w / 2) });
 document.getElementById('goGob').addEventListener('click', () => TH.forgia.goblin());
 document.getElementById('goBig').addEventListener('click', () => TH[TK].big && TH[TK].big());
+document.getElementById('nPl').addEventListener('change', renderBars);
+document.getElementById('seats').addEventListener('click', () => { for(let i = SEATS.length - 1; i > 0; i--){ const j = R() * (i + 1) | 0; [SEATS[i], SEATS[j]] = [SEATS[j], SEATS[i]] } renderBars() });
+renderBars();
 document.getElementById('slow').addEventListener('change', e => slow = e.target.checked);
 
 const NOTES = {
