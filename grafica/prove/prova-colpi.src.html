@@ -1534,8 +1534,8 @@ TH.forgia.big = function(){
 // ---------- SELVA: il boa di liane
 // liana senza tagli (pezzi del 24 novembre): partenza = la zolla che esplode, corpo = il bordo di liane ripetuto lungo la curva, punta = il ramo di vite.
 // il corpo è una sola immagine ripetuta: il disegno scorre con la punta («ph»), così sembra che la liana avanzi davvero; «hf» cambia lo spessore lungo la liana.
-function vineTile(c, pts, s0, s1, H, a = 1, shadow = false, ph = 0, fin = 0, hf, dry){
-  const im0 = I('selva', 'jbody', 0), im = dry ? dryIm(im0) : im0; if(!ok(im) || s1 - s0 < 2 || a <= 0) return;
+function vineTile(c, pts, s0, s1, H, a = 1, shadow = false, ph = 0, fin = 0, hf, dry, imo){
+  const im0 = imo || I('selva', 'jbody', 0), im = dry ? dryIm(im0) : im0; if(!ok(im) || s1 - s0 < 2 || a <= 0) return;
   let src = im, sx0 = 0, sw = iw(im), sh = ih(im), hk = 1;
   if(shadow){ src = sil(im); if(!src) return; sx0 = src.pad; sw = src.iw; sh = src.height; hk = src.height / src.ih }
   const tl = H * iw(im) / ih(im), stp = Math.max(6, H * .4);
@@ -1576,6 +1576,18 @@ function vineFlow(c, pts, tip, H, a = 1, o = {}){
     if(lf) c.restore() }
   if(sc) vineStart(c, pts, H, a * (o.sa == null ? 1 : o.sa), sc * (o.ss || 1), o.sr || 0);
 }
+// il boa di liane: coda (punta a sinistra, sfuma a destra nel corpo), corpo a squame ripetuto, testa (collo che sfuma a sinistra, muso a destra).
+// spessori misurati sulle immagini: la liana occupa il 52% dell'altezza del corpo, il 51% della testa, il 57% della coda.
+// «open» 0..1: la bocca si apre (le due teste si sfumano l'una nell'altra)
+function boaFlow(c, pts, tip, from, H, a = 1, o = {}){
+  const hd = I('selva', 'bhead', 0), hd2 = I('selva', 'bhead2', 0), tl = I('selva', 'btail', 0), bb = I('selva', 'bbody', 0), op = o.open || 0;
+  const Hh = H * 1.02 * (o.hs || 1.5), hL = Hh * 2, Ht = H * .91, tL = Ht * 2, b0 = from + tL * .84, b1 = tip - hL * .8, ph = o.ph == null ? tip : o.ph;
+  for(const sh of [true, false]){
+    if(b1 > b0) vineTile(c, pts, b0, b1, H, a, sh, ph, 0, null, false, bb);
+    along(c, tl, pts, from, from + tL, Ht, 1, a, sh);
+    if(op < 1) along(c, hd, pts, tip - hL, tip, Hh, 1, a * (sh ? 1 : 1 - op), sh);
+    if(op > 0 && !sh) along(c, hd2, pts, tip - hL, tip, Hh, 1, a * op, false) }
+}
 function vinePath(a, b, t, tile){
   const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
   for(let i = 0; i <= 40; i++){ const u = i / 40, w = Math.sin(u * PI * 2.2 - t * 7) * Math.min(18, l * .08) * Math.sin(PI * u), bow = l * .18 * Math.sin(PI * u); pts.push([a[0] + dx * u + nx * (w + bow), a[1] + dy * u + ny * (w + bow)]) }
@@ -1588,6 +1600,8 @@ const BOA_N = 300;
 function boaStrand(tx){ const W = W_();
   return {turns:3.6 + R() * 2.2, dir:R() < .5 ? 1 : -1, f0:R() * TAU, ak:.88 + R() * .2, y0:.02 + R() * .12, y1:.84 + R() * .13, tilt:W * (.07 + R() * .08), tw:(R() - .5) * W * .05,
     ex:tx + (R() - .5) * W * .5, bulge:(R() - .5) * W * .5, pk:1.2 + R() * 1.6, pp:R() * TAU, pa:.08 + R() * .08, aw:R() * TAU, out:(R() - .5) * W * .6, yn:W * (.03 + R() * .04), yf:1.3 + R(), yp:R() * TAU, tm:.4 + R() * .5, tf:1 + R() * 2, d:R() * .3, T1:1.25 + R() * .45, H:.1 + R() * .035} }
+// il boa: più grosso, disegnato sopra le liane, parte subito e finisce sempre con la testa davanti al tappeto
+function boaOne(tx){ const B = Object.assign(boaStrand(tx), {boa:true, H:.2, d:0, T1:1.8, y1:.8 + R() * .06, qx:(R() - .5) * .12}); B.pa *= .5; B.f0 = -B.dir * B.turns * TAU + PI * .35 * B.dir; B.qb = -B.dir * .35; return B }
 function boaPath(S, sq, slither){
   const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), cx = fb.x + fb.w / 2, y0 = fb.y + fb.h * S.y0, y1 = fb.y + fb.h * S.y1, pts = [], dep = [];
   const A = (fb.w / 2 + W * .05) * S.ak * (1 - .24 * sq), N = BOA_N;
@@ -1596,8 +1610,11 @@ function boaPath(S, sq, slither){
   const st0 = P(0);
   for(let i = 0; i <= 12; i++){ const u = i / 12, e = u * u * (3 - 2 * u); pts.push([lerp(S.ex, st0[0], e) + S.bulge * Math.sin(PI * u), lerp(-W * .5, st0[1], u)]); dep.push(1) }
   for(let i = 1; i <= N; i++){ const q = P(i / N); pts.push([q[0], q[1]]); dep.push(q[2]) }
-  const last = pts[pts.length - 1]; for(let i = 1; i <= 12; i++){ const u = i / 12; pts.push([last[0] + S.out * u * u, last[1] + (H + W * .8 - last[1]) * u]); dep.push(1) }
-  prep(pts); pts.dep = dep; return pts;
+  // il boa, finito l'ultimo giro, risale davanti al tappeto e si ferma con la testa al centro, sopra il bottone
+  if(S.boa){ const e = pts[pts.length - 1], Q = [cx + S.qx * W, fb.y + fb.h * .44], C2 = [lerp(e[0], Q[0], .5) + S.qb * W, lerp(e[1], Q[1], .35)];
+    for(let i = 1; i <= 16; i++){ const u = i / 16, v = 1 - u; pts.push([v * v * e[0] + 2 * v * u * C2[0] + u * u * Q[0], v * v * e[1] + 2 * v * u * C2[1] + u * u * Q[1]]); dep.push(1) } }
+  const iH = pts.length - 1, last = pts[iH]; for(let i = 1; i <= 12; i++){ const u = i / 12; pts.push([last[0] + S.out * u * u, last[1] + (H + W * .8 - last[1]) * u]); dep.push(1) }
+  prep(pts); pts.dep = dep; pts.Lh = pts.L[iH]; return pts;
 }
 // sbuffo di terra (i tappi dipinti) e fogliame che resta sul tappeto
 function dust(list, x, y, W, n, dir, sz = 1){ for(let i = 0; i < n; i++){ const a = dir == null ? R() * TAU : dir + (R() - .5) * 1.4, v = 40 + R() * 90;
@@ -1636,7 +1653,7 @@ TH.selva = {
     if(RM){ flash('#2A5A1A', .5, .9); damage(); return }
     // tre liane che si avvolgono sfasate: tante spire fitte. Poi la stretta come un cappio: prima piano, poi sempre più forte, nessun rimbalzo; tiene; molla piano e scivola via
     // tre liane, ognuna con la sua forma, il suo spessore e il suo ritardo
-    const SS = [boaStrand(tx), boaStrand(tx), boaStrand(tx)], turns = (SS[0].turns + SS[1].turns + SS[2].turns) / 3, T1 = Math.max(...SS.map(q => q.d + q.T1)), TS = T1 + .1, TC = TS + 1.15, TR = TC + .75, TL = TR + .5, TE = TL + 1.1;
+    const SS = [boaStrand(tx), boaStrand(tx), boaOne(tx)], turns = (SS[0].turns + SS[1].turns + SS[2].turns) / 3, T1 = Math.max(...SS.map(q => q.d + q.T1)), TS = T1 + .1, TC = TS + 1.15, TR = TC + .75, TL = TR + .5, TE = TL + 1.1;
     let crunched = false;
     add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > TE) { return false }
       // la stretta: ei^1.8 = lenta all'inizio e decisa alla fine, come un nodo che si chiude; a tratti dà uno strattone in più
@@ -1646,12 +1663,14 @@ TH.selva = {
       if(x > TS && x < TC) rumble = {a:0, dur:.06, amt:.06 * u};
       let p0 = null;
       SS.forEach((S, j) => { const xx = x - S.d; if(xx <= 0) return;
-        const pts = boaPath(S, sq, x * 4 + j), Lt = plen(pts), L0 = pts.L[12], Lhel = pts.L[12 + BOA_N];
+        const pts = boaPath(S, sq, x * 4 + j), Lt = plen(pts), L0 = pts.L[12], Lhel = pts.Lh;
         // la testa rallenta e accelera a caso mentre gira (non a velocità costante)
         const k = clamp(xx / S.T1), kk = k + .06 * Math.sin(k * 11 + S.pp) * Math.sin(PI * k);
         const head = xx < S.T1 ? Lhel * (1 - Math.pow(1 - kk, 1.6)) : x < TL ? Lhel : Lhel + Lhel * ei((x - TL - S.d * .5) / (TE - TL)) * 1.1;
         const body = Lhel - L0 + W * .3;
-        vineFlow(c, pts, head, W * S.H, 1, {from:head - body, fin:W * .25, ph:head, shadow:true});
+        // il boa apre la bocca quando comincia a stringere e la richiude quando molla
+        if(S.boa) boaFlow(c, pts, head, head - body, W * S.H, 1, {ph:head, open:clamp((x - TS + .1) / .2) * (1 - clamp((x - TL) / .3))});
+        else vineFlow(c, pts, head, W * S.H, 1, {from:head - body, fin:W * .25, ph:head, shadow:true});
         if(!j) p0 = [pts, head, L0] });
       const s = st('V'); s.pin[0] = fb.y + fb.h * .5; s.pin[1] = sq * .36; s.pin[2] = fb.h * .6; s.pin[3] = (fb.h * .88) / turns;
       s.dark = Math.max(s.dark, .35 * clamp(sq));
