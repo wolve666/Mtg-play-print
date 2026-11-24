@@ -76,6 +76,13 @@ Solo per Federico (APK tra gli allegati della compilazione).
 - **Due versioni per tema**: **completa**, con sfondo dipinto, bordi, cornici sulle caselle, sui tasti e sulle sezioni del Menu, targhe per il tasto principale e per l'elemento centrale H&O (immagini disegnate con ChatGPT); **liscia**, tutta a codice. Il tavolo resta pulito in tutte e due.
 - **Semi**: primo tocco tema completo (seme tutto colorato), secondo tocco tema liscio (seme colorato a metà), terzo tocco si torna al Classico. I semi ci sono sulla pagina iniziale e nel Menu alla voce «Tema».
 - **Selva**: numeri e titoli in Barlow Condensed al posto di Fraunces.
+- **I colpi dei temi** (quelli approvati nella prova dei colpi) entrano nell'app, per tutti e sei i temi, in H&O e nel gioco su un telefono:
+  - trascinando dall'elemento centrale (H&O) o dal proprio nome (un telefono) si vede la carica del tema e la mira verso l'avversario;
+  - alla conferma del danno (finestrella o pagina Combattimento) parte il colpo: in H&O esce dal mio telefono ed esplode su quello di chi è colpito, con lo stile di chi attacca; su un telefono va da scheda a scheda, girato verso ogni giocatore;
+  - tocchi veloci di fila (+1 +1 +1…) fanno un colpo solo con tutto il danno;
+  - **colpo grosso** con 10 o più danni in una volta, e ogni tanto a caso (circa uno su otto); in Forgia ogni tanto arriva il goblin bombarolo;
+  - il tappeto colpito è vivo (luci, onde, crepe), disegnato dalla scheda grafica solo durante il colpo;
+  - le immagini dei colpi (circa 10 MB) stanno nell'APK, nella cartella `colpi/`: per questo serve la nuova APK (parte nativa 8) e la pagina non si aggiorna da sola sulle APK precedenti.
 - La pagina dell'app pesa circa 3 MB per le immagini dei temi completi.
 
 ### v2.1.3 (V2 beta)

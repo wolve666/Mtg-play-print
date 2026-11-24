@@ -66,6 +66,7 @@ jobs:
             case "$f" in package*.json|capacitor.config.json) ;; *) [ -f "$f" ] && cp "$f" www/ ;; esac
           done
           [ -d assets ] && cp -r assets www/ || true
+          [ -d colpi ] && cp -r colpi www/ || true
       - name: Collego gli aggiornamenti alla vetrina (e scadenza della prova generale)
         run: |
           CH=stable; [ "${{ steps.c.outputs.kind }}" = prova ] && CH=test

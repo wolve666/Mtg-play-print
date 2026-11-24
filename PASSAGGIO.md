@@ -76,3 +76,10 @@ Da fare / aperto:
 - Semi a tre tocchi sulla pagina iniziale e nel Menu («Tema»).
 - Prove: `node prove/temi.js` (foto di pagina iniziale, tavolo, Menu e Stampa per ogni tema, completo e liscio); `THEMES=abisso,mox-liscio node prove/field.js` fotografa H&O in altri temi.
 - Da fare: colpi veri dei temi nell'app (oggi i temi nuovi mandano il fulmine), conferma dei caratteri, pagina di prova «Prova generale dei temi» (fuori dal repository).
+
+## 24 novembre (notte): colpi nell'app
+- Modulo «Colpi dei temi» in fondo a `index.html` (un `<script>` a parte, `window.COLPI`): motore della prova (`grafica/prove/prova-colpi.src.html` sul ramo `claude/optimistic-bohr-l0asp9`) + collegamento all'app (schermi `SCR.A`/`SCR.V`, `screenOf`, `setup`, `strike`, `incoming`, `aim`). Su un telefono H&O lo schermo dell'altro giocatore esiste lo stesso ma si disegna su una tela finta, così la storia del colpo è uguale sui due telefoni.
+- Immagini: `colpi/<tema>.js` (WebP in base64, circa 10 MB), copiate nell'APK dalla compilazione; si caricano 2,5 secondi dopo l'avvio. `APPN` = 8.
+- Ganci nell'app: `dragMove`/`dragEnd` (mira), `fgStrike(a, v, dmg)` (colpo, con raffiche raccolte), `netZap`/`netZapIn` (messaggio con `k` e `w`).
+- Prova: `node prove/colpi.js` (colpo normale e grosso per ogni tema, su un telefono e in H&O, foto in `prove/out/colpi/`).
+- Per rifare i pacchetti di immagini: dalla pagina costruita `prova-colpi.html` si leggono `A` e `MAN` e si divide per tema (script nella chat del 24 novembre; da mettere in `grafica/prove/strumenti/` se serve di nuovo).
