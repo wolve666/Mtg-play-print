@@ -76,6 +76,9 @@ Solo per Federico (APK tra gli allegati della compilazione).
 - **Due versioni per tema**: **completa**, con sfondo dipinto, bordi, cornici sulle caselle, sui tasti e sulle sezioni del Menu, targhe per il tasto principale e per l'elemento centrale H&O (immagini disegnate con ChatGPT); **liscia**, tutta a codice. Il tavolo resta pulito in tutte e due.
 - **Semi**: primo tocco tema completo (seme tutto colorato), secondo tocco tema liscio (seme colorato a metà), terzo tocco si torna al Classico. I semi ci sono sulla pagina iniziale e nel Menu alla voce «Tema».
 - **Selva**: numeri e titoli in Barlow Condensed al posto di Fraunces.
+- **Numero della vita in Oswald** in tutti i temi, Forgia compresa, dritto (anche sui quadratini H&O, nella pagina Combattimento e nella striscia del pannello personale).
+- **Selva**: tolto il seme che germogliava all'inizio della partita.
+- **Finestrella dei danni**: la voce «Combattimento» (danni normali) c'è anche nel gioco su un telefono.
 - **I colpi dei temi** (quelli approvati nella prova dei colpi) entrano nell'app, per tutti e sei i temi, in H&O e nel gioco su un telefono:
   - trascinando dall'elemento centrale (H&O) o dal proprio nome (un telefono) si vede la carica del tema e la mira verso l'avversario;
   - alla conferma del danno (finestrella o pagina Combattimento) parte il colpo: in H&O esce dal mio telefono ed esplode su quello di chi è colpito, con lo stile di chi attacca; su un telefono va da scheda a scheda, girato verso ogni giocatore;

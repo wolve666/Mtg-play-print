@@ -56,7 +56,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   for(const th of themes){
     await A.evaluate(th => { SET.theme = th; SET.full = true; saveSet(); applyTheme(true) }, th); await wait(400);
     for(const [k, dmg] of [['normale', 3], ['grosso', 12]]){
-      await A.evaluate(([v, d]) => fgStrike(NET.me, v, d), [seatB, dmg]); await wait(900);
+      await A.evaluate(([v, d]) => fgStrike(NET.me, v, d), [seatB, dmg]);
+      // FRAMES=1: la partenza fotogramma per fotogramma sul telefono di chi attacca
+      if(process.env.FRAMES) for(let f = 0; f < 8; f++){ await wait(130); await A.screenshot({path:path.join(SHOTS, `${th}-HO-${k}-partenza-${f}.png`)}) }
+      else await wait(900);
       await A.screenshot({path:path.join(SHOTS, `${th}-HO-${k}-attacca.png`)});
       await wait(600);
       await B.screenshot({path:path.join(SHOTS, `${th}-HO-${k}-colpita.png`)});
