@@ -916,6 +916,48 @@ body.th-selva.netv #hub::before{width:190px;height:110px;margin:-55px 0 0 -95px}
 @keyframes svClaw{0%{transform:translateY(var(--o)) rotate(-38deg) scaleX(0);opacity:1}55%{transform:translateY(var(--o)) rotate(-38deg) scaleX(1);opacity:1}100%{transform:translateY(var(--o)) rotate(-38deg) scaleX(1);opacity:0}}
 .seed[data-seed=verde].on{text-shadow:0 0 14px var(--sc),0 0 2px rgba(255,255,255,.6)}
 .mTema{flex-wrap:wrap}
+
+/* ================= Passaggio al cambio tema (dalla prova generale) =================
+   Un velo breve sopra tutto lo schermo; il tema cambia a metà, quando il velo copre. Solo movimento e trasparenza. */
+#thTx{position:fixed;inset:0;z-index:80;pointer-events:none;opacity:0;visibility:hidden}
+#thTx.go{visibility:visible}
+#thTx.go-classico{animation:txFade .6s ease both;background:#22252B}
+@keyframes txFade{0%,100%{opacity:0}45%,55%{opacity:1}}
+#thTx.go-forgia{animation:txForgia .75s cubic-bezier(.4,0,.3,1) both;background:radial-gradient(120% 80% at 50% 100%,#FFB13A,#FF4A1C 30%,#5a0d04 60%,#0B0A0D 80%)}
+@keyframes txForgia{0%{opacity:1;transform:translateY(100%)}45%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30%)}}
+#thTx.go-selva{animation:txSelva .8s cubic-bezier(.4,0,.3,1) both;background:linear-gradient(100deg,#0A100B 70%,#2F6A20 85%,transparent)}
+@keyframes txSelva{0%{opacity:1;transform:translateX(-120%)}45%{opacity:1;transform:translateX(0)}100%{opacity:1;transform:translateX(130%)}}
+#thTx.go-abisso{animation:txAbisso .85s cubic-bezier(.4,0,.3,1) both;background:linear-gradient(180deg,rgba(130,230,255,.9),#1A6FB0 6%,#06121D 40%)}
+@keyframes txAbisso{0%{opacity:1;transform:translateY(105%)}45%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(-110%)}}
+#thTx.go-cripta{animation:txCripta .9s ease both;background:radial-gradient(closest-side,#0C0910 40%,rgba(60,20,90,.95) 75%,rgba(12,9,16,0))}
+@keyframes txCripta{0%{opacity:0;transform:scale(2.6)}45%{opacity:1;transform:scale(1.5)}100%{opacity:0;transform:scale(1.2)}}
+#thTx.go-santuario{animation:txSant .8s ease both;background:radial-gradient(60% 45% at 50% 0%,#fff,#FFF6DC 45%,rgba(255,246,220,0) 100%);transform-origin:top}
+@keyframes txSant{0%{opacity:0;transform:scaleY(.2)}40%,55%{opacity:1;transform:scaleY(2.4)}100%{opacity:0;transform:scaleY(2.4)}}
+#thTx.go-mox{opacity:1}
+#thTx.go-mox::before,#thTx.go-mox::after{content:'';position:absolute;left:0;right:0;height:50%;background-image:radial-gradient(circle,#B48A42 2px,transparent 2.6px),linear-gradient(180deg,#2B2F35,#15171A);background-size:30px 30px,100% 100%}
+#thTx.go-mox::before{top:0;animation:shTop .8s cubic-bezier(.6,0,.3,1) both;border-bottom:2px solid #8EE7F4;box-shadow:0 2px 14px #8EE7F4}
+#thTx.go-mox::after{bottom:0;animation:shBot .8s cubic-bezier(.6,0,.3,1) both}
+@keyframes shTop{0%{transform:translateY(-100%)}38%,55%{transform:none}100%{transform:translateY(-100%)}}
+@keyframes shBot{0%{transform:translateY(100%)}38%,55%{transform:none}100%{transform:translateY(100%)}}
+/* ================= Apertura del Menu e della pagina Stampa, una per tema =================
+   Una volta sola; le sezioni entrano una dopo l'altra. Le altre pagine salgono dal basso come sempre. */
+@media (prefers-reduced-motion:no-preference){
+  body.th-forgia :is(#ov-tokens,#ov-menu).open{animation:opForgia .5s cubic-bezier(.3,0,.4,1) both}
+  @keyframes opForgia{0%{transform:translateY(-104%)}62%{transform:translateY(0)}72%{transform:translateY(-10px)}84%{transform:translateY(0)}92%{transform:translateY(-3px)}100%{transform:none}}
+  body.th-selva :is(#ov-tokens,#ov-menu).open{animation:opSelva .5s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes opSelva{from{transform:none;clip-path:ellipse(0% 30% at 50% 55%)}to{transform:none;clip-path:ellipse(120% 120% at 50% 55%)}}
+  body.th-abisso :is(#ov-tokens,#ov-menu).open{animation:opAbisso .6s cubic-bezier(.25,.7,.25,1) both}
+  @keyframes opAbisso{0%{transform:none;clip-path:polygon(0 100%,15% 100%,30% 100%,45% 100%,60% 100%,75% 100%,90% 100%,100% 100%,100% 100%,0 100%)}55%{transform:none;clip-path:polygon(0 30%,15% 22%,30% 30%,45% 38%,60% 30%,75% 22%,90% 30%,100% 34%,100% 100%,0 100%)}100%{transform:none;clip-path:polygon(0 -6%,15% -6%,30% -6%,45% -6%,60% -6%,75% -6%,90% -6%,100% -6%,100% 100%,0 100%)}}
+  body.th-cripta :is(#ov-tokens,#ov-menu).open{animation:opCripta .6s ease-out both}
+  @keyframes opCripta{0%{opacity:0;transform:scale(1.06)}40%{opacity:.6}100%{opacity:1;transform:none}}
+  body.th-santuario :is(#ov-tokens,#ov-menu).open{animation:opSantuario .55s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes opSantuario{0%{transform:none;clip-path:circle(0% at 50% 0%);filter:brightness(1.6)}70%{filter:brightness(1.15)}100%{transform:none;clip-path:circle(150% at 50% 0%);filter:none}}
+  body.th-mox :is(#ov-tokens,#ov-menu).open{animation:opMox .55s cubic-bezier(.6,0,.3,1) both}
+  @keyframes opMox{0%{transform:none;clip-path:inset(50% 0 50% 0)}35%{transform:none;clip-path:inset(47% 0 47% 0)}100%{transform:none;clip-path:inset(0 0 0 0)}}
+  :is(body.th-forgia,body.th-selva,body.th-gen) :is(#ov-tokens,#ov-menu).open .ovBody > .sec,:is(body.th-forgia,body.th-selva,body.th-gen) #ov-tokens.open #tkMenu > .sec{animation:secIn .45s cubic-bezier(.2,.8,.2,1) both}
+  :is(#ov-tokens,#ov-menu).open .sec:nth-child(2){animation-delay:.05s}:is(#ov-tokens,#ov-menu).open .sec:nth-child(3){animation-delay:.1s}:is(#ov-tokens,#ov-menu).open .sec:nth-child(4){animation-delay:.15s}:is(#ov-tokens,#ov-menu).open .sec:nth-child(n+5){animation-delay:.2s}
+  @keyframes secIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+}
 /* numero della vita: Oswald in tutti i temi, dritto */
 body .life,body .ntL,body .cbTL,body .strip b{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:700;letter-spacing:0}
 body .strip b{transform:none}
@@ -1372,6 +1414,7 @@ body.full.netv #hub::before{display:none}
 </section>
 
 <div id="toast"></div>
+<div id="thTx" aria-hidden="true"></div>
 
 <script src="app-config.js"></script>
 <script>
@@ -4095,12 +4138,25 @@ document.addEventListener('click', e => {
   const b = e.target.closest('.seed[data-seed]'); if(!b) return;
   const sd = SEEDS.find(x => x[0] === b.dataset.seed); if(!sd) return; buzz(10);
   // primo tocco: tema completo; secondo: liscio; terzo: si torna al Classico
-  if(SET.theme !== sd[2]){ SET.theme = sd[2]; SET.full = true }
-  else if(SET.full !== false) SET.full = false;
-  else { SET.theme = 'classico'; SET.full = true }
+  let th = SET.theme, full = SET.full;
+  if(th !== sd[2]){ th = sd[2]; full = true }
+  else if(full !== false) full = false;
+  else { th = 'classico'; full = true }
   // niente avviso: la scritta sopra i semi dice già il tema, e l'avviso li copriva
-  saveSet(); applyTheme(true);
+  themeSwap(th, () => { SET.theme = th; SET.full = full; saveSet(); applyTheme(true) });
 });
+// passaggio al cambio tema: il velo del tema nuovo copre lo schermo, il tema cambia a metà, poi il velo se ne va
+const TX_MID = {classico:270, forgia:340, selva:360, abisso:380, cripta:400, santuario:340, mox:330};
+let txT = null;
+function themeSwap(th, apply){
+  const tx = $('#thTx');
+  if(txT){ clearTimeout(txT.mid); clearTimeout(txT.end); txT.apply() }   // tocchi veloci: il cambio di prima si chiude subito
+  if(RMOT || !tx){ txT = null; apply(); return }
+  tx.className = ''; void tx.offsetWidth; tx.className = 'go go-' + (TX_MID[th] ? th : 'classico');
+  const t = txT = {apply:() => { if(t.done) return; t.done = true; apply() }};
+  t.mid = setTimeout(t.apply, TX_MID[th] || 300);
+  t.end = setTimeout(() => { tx.className = ''; if(txT === t) txT = null }, 950);
+}
 function wzStep(n){
   if(n < 3) document.activeElement?.blur?.();
   WZ.step = n;

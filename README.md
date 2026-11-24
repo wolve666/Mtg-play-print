@@ -79,6 +79,7 @@ Solo per Federico (APK tra gli allegati della compilazione).
 - **Numero della vita in Oswald** in tutti i temi, Forgia compresa, dritto (anche sui quadratini H&O, nella pagina Combattimento e nella striscia del pannello personale).
 - **Selva**: tolto il seme che germogliava all'inizio della partita.
 - **Finestrella dei danni**: la voce «Combattimento» (danni normali) c'è anche nel gioco su un telefono.
+- **Passaggi dei temi** (dalla prova generale): toccando un seme un velo del tema nuovo copre lo schermo e il tema cambia a metà (calore in Forgia, foglie in Selva, onda in Abisso, fumo in Cripta, luce in Santuario, saracinesche in Mox, dissolvenza per il Classico). Menu e pagina Stampa si aprono con l'animazione del tema e le sezioni entrano una dopo l'altra; le altre pagine salgono dal basso come sempre.
 - **I colpi dei temi** (quelli approvati nella prova dei colpi) entrano nell'app, per tutti e sei i temi, in H&O e nel gioco su un telefono:
   - trascinando dall'elemento centrale (H&O) o dal proprio nome (un telefono) si vede la carica del tema e la mira verso l'avversario;
   - alla conferma del danno (finestrella o pagina Combattimento) parte il colpo: in H&O esce dal mio telefono ed esplode su quello di chi è colpito, con lo stile di chi attacca; su un telefono va da scheda a scheda, girato verso ogni giocatore;
