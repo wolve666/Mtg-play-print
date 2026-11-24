@@ -496,7 +496,7 @@ TH.santuario = {
     if(R() < dt * (25 + 60 * ch)){ const a = R() * TAU, r = W * (.22 + R() * .12), tv = sgn() * 0 + 1; pt(FX.pA, {k:'mote', x:hb.x + Math.cos(a) * r, y:hb.y + Math.sin(a) * r * .8, vx:-Math.cos(a) * r * 1.6 - Math.sin(a) * r * 2.2 * tv, vy:-Math.sin(a) * r * 1.3 + Math.cos(a) * r * 1.8 * tv, drag:2.5, life:.45, r:W * (.008 + R() * .012), col:'255,236,180', fout:.25}) }
     if(T - (d.rg || 0) > .42 - .2 * ch){ d.rg = T; pt(FX.pA, {k:'ripple', x:hb.x, y:hb.y, r:W * .06, grow:W * (.25 + .2 * ch), life:.5, col:'255,225,150', lw:1.6 + ch}) }
     glow(c, hb.x, hb.y, W * (.14 + .22 * ch), '255,230,160', .5 + .3 * ch);
-    img(c, I('santuario', 'orb', 0), hb.x, hb.y, W * (.12 + .2 * ch) * (1 + .08 * Math.sin(T * 9)), T * .6, .55 + .45 * ch, 'lighter');
+    if(!d.chI) d.chI = I('santuario', 'charge'); img(c, d.chI, hb.x, hb.y, W * (.12 + .2 * ch) * (1 + .08 * Math.sin(T * 9)), T * .6, .55 + .45 * ch, 'lighter');
     const w = Math.max(1, d.bw.x);
     stretch(c, I('santuario', 'beam', 0), hb.x, hb.y, t.x, t.y, w * 1.6, .35 + .25 * ch, 'lighter');
     energyBeam(c, hb.x, hb.y, t.x, t.y, w, T, .55 + .45 * ch);
@@ -1822,6 +1822,22 @@ TH.selva.big2 = function(){
     return true });
 };
 
+// ---------- le cariche: mentre trascini, sul bottone si raccoglie la carica del tema (cresce, gira, risucchia particelle; al massimo trema);
+// al rilascio si sprigiona in un lampo che si allarga e svanisce. Santuario ha la sua (le due sfere di luce, una a caso) dentro il suo disegno; Mox la usa nel laserone.
+const CHG = {abisso:{col:'170,230,255', lc:[.4, .8, 1.1], blend:null}, cripta:{col:'170,90,255', lc:[.6, .25, 1.1], blend:null}, forgia:{col:'255,150,60', lc:[1.2, .6, .2], blend:'lighter'}};
+// i nomi scritti per esteso, così la costruzione della pagina mette dentro le immagini
+const CHGIM = {abisso:() => I('abisso', 'charge'), cripta:() => I('cripta', 'charge'), forgia:() => I('forgia', 'charge')};
+function chargeAim(c, d, dt){ const g = CHG[TK]; if(!g) return; const W = pA.clientWidth, hb = hubBox(pA), ch = clamp((T - d.t0) / 1.2), im = d.chg || (d.chg = CHGIM[TK]());
+  const sz = W * (.1 + .15 * ch) * (1 + (ch > .98 ? .05 * Math.sin(T * 31) : .03 * Math.sin(T * 7))), al = .45 + .55 * ch;
+  glow(c, hb.x, hb.y, sz * 1.1, g.col, .35 + .35 * ch); lit('A', hb.x, hb.y, W * (.3 + .3 * ch), g.lc, .4 + .8 * ch);
+  img(c, im, hb.x, hb.y, sz, T * 1.4, al, g.blend);
+  if(R() < dt * 28 * (.3 + ch)){ const a = R() * TAU, r = W * (.16 + R() * .12), v = 120 + R() * 80; pt(FX.pA, {k:'mote', x:hb.x + Math.cos(a) * r, y:hb.y + Math.sin(a) * r * .8, vx:-Math.cos(a) * v, vy:-Math.sin(a) * v * .8, r:1 + R() * 1.4, life:r / v * .95, col:g.col, al:.9, fout:.15}) }
+}
+function chargePop(d){ const g = CHG[TK]; if(!g || !d.chg) return; const W = pA.clientWidth, hb = hubBox(pA), ch = clamp((T - d.t0) / 1.2);
+  FX.sA.push(sp({im:d.chg, x:hb.x, y:hb.y, w:W * (.1 + .15 * ch), rot:T * 1.4, spin:3, life:.3, grow:1.4, fin:.01, fout:.9, alpha:.9, blend:g.blend}));
+  for(let i = 0; i < 14; i++){ const a = R() * TAU, v = 90 + R() * 140; pt(FX.pA, {k:'mote', x:hb.x, y:hb.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2, r:1 + R() * 1.6, life:.45, col:g.col, al:.9}) }
+}
+
 // ================= trascinamento, lancio, arrivo =================
 let TK = 'santuario', DR = null;
 function startDrag(p){ DR = {p, t0:T}; SP.aHub.v -= 1.2 }
@@ -1833,6 +1849,7 @@ function release(){
   const d = DR; DR = null; if(!d) return;
   if(!overTile(d.p)){ SP.aHub.v += 1; return }
   if(navigator.vibrate) try{ navigator.vibrate(25) }catch(e){}
+  chargePop(d);
   const tr = tileRect(pV), th = TH[TK], wait = th.launch(d);
   after(wait, () => th.hit(tr.x + tr.w / 2));
 }
@@ -1896,7 +1913,7 @@ function frame(now){
   if(FLD.A) resetF(FLD.A); if(FLD.V) resetF(FLD.V);
   const W = pV.clientWidth, H = pV.clientHeight, cA = fit(cvA), cV = FLD.V ? gndCtx(FLD.V) : fit(cvV), cM = fit(cvVm), cV2 = fit(cvV2);
   if(FLD.A) gndCtx(FLD.A);
-  if(DR) TH[TK].aim(cA, DR, dt);
+  if(DR){ TH[TK].aim(cA, DR, dt); chargeAim(cA, DR, dt) }
   runFX('A', cA, dt); drawSprites(FX.sA, cA, dt); drawPts(FX.pA, cA, dt);
   const fb = fieldBox(pV);
   if(!FLD.V){ cV.save(); cV.beginPath(); cV.roundRect ? cV.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip() }
