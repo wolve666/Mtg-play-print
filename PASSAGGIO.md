@@ -1,7 +1,7 @@
 # Passaggio a una nuova chat
 
 Documento per riprendere il lavoro in una sessione nuova senza rileggere la chat precedente.
-Aggiornato al 21 novembre 2026 (sera). Leggere anche `V2.md` (decisioni e storia della V2) e `README.md` (registro delle modifiche e compilazione).
+Aggiornato al 24 novembre 2026 (per la ripartenza vedi in fondo «Ripartenza 24 novembre: si fa la Selva»). Leggere anche `V2.md` (decisioni e storia della V2) e `README.md` (registro delle modifiche e compilazione).
 
 ## Chi e come
 - Progetto di **Federico** (E-Duck Garage): **Magic Play&Print**, segnapunti per Magic: The Gathering con stampa delle pedine su stampantina termica Bluetooth da 58 mm. App Android (Capacitor 8).
@@ -99,3 +99,30 @@ Da fare / aperto:
 - Forgia, goblin rifatto: compare con la bomba e sparisce; la bomba cade dall'alto in prospettiva (enorme → piccola), 3-4 rimbalzi, si ferma ed esplode quando capita.
 - **Prossimo lavoro (deciso da Federico): Selva.** Cripta e Forgia concluse nella prova dei colpi (link della pagina pubblicata: https://claude.ai/artifact/WwnnurLvTgtmTV4Mw5DQf4). Attenzione: i colpi nuovi vivono solo nella pagina di prova, non ancora nell'app; un'APK compilata oggi non li contiene.
 - 22 novembre: in ogni `grafica/<tema>/STILE.md` c'è la sezione «Pezzi senza tagli» (partenza, corpo ripetibile, punta, tappi, carica, esplosioni) e per Mox il cannone nuovo in due pezzi (C1–C3).
+
+## Ripartenza 24 novembre: si fa la Selva
+**Prossimo lavoro, deciso da Federico: la Selva** (colpo, colpo grosso, pezzi nuovi). Gli altri cinque temi nella prova dei colpi Federico li ha approvati («stratosferico»): non si toccano se non li chiede lui.
+
+Dove sta tutto:
+- Ramo di lavoro della prova dei colpi: **`claude/optimistic-bohr-l0asp9`** (codice e testi). Le immagini originali stanno **solo** su `v2-prerelease` in `grafica/<tema>/`: non si fanno commit di PNG sul ramo di lavoro (un tentativo è stato fermato). Per usarle: `git fetch origin v2-prerelease && git checkout origin/v2-prerelease -- grafica/<tema>` e poi si tolgono (o si spostano fuori dal repository) prima del commit.
+- Pagina pubblicata per Federico (sempre la stessa, si aggiorna): https://claude.ai/artifact/WwnnurLvTgtmTV4Mw5DQf4 (arrivata alla versione 35). Si ripubblica con lo stesso link (`url`), dopo averla letta.
+- Sorgente: `grafica/prove/prova-colpi.src.html` (senza immagini). Pagina costruita: `grafica/prove/prova-colpi.html` (circa 8,7 MB, immagini dentro).
+- C'era anche un'altra sessione sul ramo `claude/nifty-feynman-1jc911` (Cripta, Forgia), ferma dal 22 novembre: prima di pubblicare controllare se ha cose nuove.
+
+Come si ricostruisce la pagina in una chat nuova (la cartella temporanea non c'è più), dalla cartella del repository:
+1. `python3 grafica/prove/strumenti/estrai-immagini.py`: rifà `/tmp/prova-colpi/as` dalle immagini già dentro la pagina (provato: la pagina ricostruita è identica al byte).
+2. Solo se servono i pezzi preparati ma non ancora usati (vedi sotto): prendere i PNG da `v2-prerelease` e lanciare `python3 grafica/prove/strumenti/prepara-immagini-24nov.py` (qualche minuto).
+3. Dopo ogni modifica al sorgente: `python3 grafica/prove/strumenti/costruisci-prova-colpi.py`. Mette nella pagina solo le immagini scritte per esteso nel sorgente come `I('tema', 'nome'` o `L('tema', 'nome'` (attenzione: con un nome costruito al volo l'immagine non entra).
+4. Controllo degli errori di sintassi: estrarre lo script e `node --check`. Foto di prova: `grafica/prove/strumenti/foto-prova.js` e `foglio-foto.py` (istruzioni in cima al file). `window.FREEZE = true` ferma il disegno; `window.TENT = ['L', true]` forza il tentacolo dell'Abisso.
+
+Cosa c'è di nuovo nella prova (22-24 novembre):
+- **Avversari in posizione come nell'app**: in alto i quadratini degli altri giocatori in ordine di posto senza sé stessi (`renderBars`, `SEATS`, comandi «Giocatori» e «Cambia posti»). Il bersaglio sul telefono di Bea è il quadratino di Federico (`.tile.t`), su quello di Federico il colpo arriva dal quadratino di Bea (`srcX()`). Colpi normali e grossi arrivano dal lato giusto; gli schizzi dei colpi grossi tornano sul tappeto di chi attacca uscendo dal quadratino colpito (`fromTile`). **Anche la Selva deve seguire queste regole.**
+- Abisso: tentacolo (uno a caso tra blu e rosso) che entra da un bordo a caso e dà una sferzata; partenza del getto dipinta; esplosioni e tappi di schiuma.
+- Santuario: nuvola d'arrivo unica; spada che affonda di più con un solo movimento, preceduta da una luce dalle nubi, cade e resta inclinata dal lato di chi attacca; mirino piccolo che si allarga in dissolvenza; piume e lucette sul tappeto di chi attacca.
+- Mox: torretta nuova (base e canna dipinte), colpo grosso **laserone** (la torretta sbuca, cambia testa, si carica, spara; il raggio traccia una riga e lascia un solco rovente con metallo fuso). Il pugno non c'è più.
+- Forgia: fulmini doppi in selezione e tripli all'arrivo; goblin da ogni lato (anche dall'alto); bomba che si crepa e si spacca in dissolvenza; frammenti; risate «HA! HA! HA!» da fumetto (niente Joker, solo le scritte).
+- Cripta: il raggio di anime è inclinato verso chi attacca.
+
+Selva oggi nella prova: colpo «il boa» (la liana avvolge il tappeto, stritola, molla), selezione e lancio della liana; **nessun colpo grosso** (il tasto non compare). Immagini già usate: `liana`, `vine`, `clod`, `leaf` (e preparate `root`, `hole`, `claw` = zampa). Pezzi nuovi del 24 novembre preparati ma **non ancora montati**: `jstart` (vite e terra che esplode, partenza), `jbody` (bordo di liane, corpo ripetibile), `jtip` (ramo di vite, punta), `caps` (6 nuvole di polvere e detriti), `bush` (6 composizioni di fogliame). Idee nelle schede: zampa della bestia e squarci degli artigli (`grafica/selva/STILE.md`, punti 13 e 14). Il colpo grosso della Selva lo decide Federico.
+
+Ancora da montare negli altri temi (pezzi preparati): cariche di tutti i temi; partenza, corpo e punta dei flussi di Cripta, Santuario e Forgia; tappi di Santuario e Cripta. Federico ha detto di partire dalla Selva.

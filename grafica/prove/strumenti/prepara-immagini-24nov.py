@@ -1,4 +1,6 @@
-exec(open('grafica/prove/strumenti/prepara-immagini.py').read().split('M={}')[0].replace('OUT="/tmp/prova-colpi/as"','OUT="/tmp/prova-colpi/as"'))
+# Pezzi arrivati il 24 novembre: si aggiungono all'elenco già preparato in /tmp/prova-colpi/as (da prepara-immagini.py o da estrai-immagini.py).
+# Si lancia dalla cartella del repository con le immagini originali di v2-prerelease presenti in grafica/<tema>/. Ci mette qualche minuto.
+exec(open('grafica/prove/strumenti/prepara-immagini.py').read().split('M={}')[0].replace('iterations=6','iterations=DIL').replace('def sheet(f,key,mx,fix=None,minfrac=.002,q=82):','def sheet(f,key,mx,fix=None,minfrac=.002,q=82,DIL=6):'))
 import json
 M=json.load(open(OUT+'/manifest.json'))
 def T(t,k,v): M.setdefault(t,{})[k]=v
@@ -18,7 +20,7 @@ T('mox','muzzle',one('mox/Esplosione energetica ciano con scintille auree.png','
 T('mox','lmouth',one('mox/Esplosione Magica Laser Ciano-Gold.png','m_lmouth',700))
 T('mox','limp',  one('mox/Impatto energetico su metallo fuso.png','m_limp',520))
 T('mox','groove',vtile('mox/Fenditura Metallica di Lava Incandescente.png','m_groove',1100))
-T('mox','molten',sheet('mox/Tavola di schizzi di lava incandescente.png','m_mo',150))
+T('mox','molten',sheet('mox/Tavola di schizzi di lava incandescente.png','m_mo',150,DIL=20,minfrac=.005))
 T('mox','steam', sheet('mox/Sei Scie di Fumo Luminoso Grigio e Ciano.png','m_st',230))
 T('mox','charge',one('mox/Sfera energetica magica ciano e oro-1.png','m_ch1',380)+one('mox/Sfera magica di energia luminosa-2.png','m_ch2',380))
 T('mox','boom',  sheet('mox/Esplosioni Steampunk di Fumo e Ottone.png','m_bo',320))
@@ -39,8 +41,8 @@ T('forgia','jtip',  one('forgia/Proiettile di fuoco incandescente.png','f_jt',80
 T('forgia','caps',  sheet('forgia/Griglia di nuvole di fumo e braci'+[f for f in os.listdir(G+'forgia') if f.startswith('Griglia di nuvole')][0][len('Griglia di nuvole di fumo e braci'):],'f_c',230))
 T('forgia','boom',  sheet('forgia/Quattro esplosioni di fuoco realistiche.png','f_bo',320))
 T('forgia','charge',one('forgia/Sfera di fuoco incandescente in vortice.png','f_ch',380))
-T('forgia','ha',    sheet('forgia/Tre Risate Comic Neon Verdi.png','f_ha',420))
-T('forgia','bombx', sheet('forgia/Tre fasi di esplosione di una bomba.png','f_bx',300))
+T('forgia','ha',    sheet('forgia/Tre Risate Comic Neon Verdi.png','f_ha',420,DIL=16,minfrac=.01))
+T('forgia','bombx', sheet('forgia/Tre fasi di esplosione di una bomba.png','f_bx',300,DIL=30,minfrac=.01))
 T('forgia','frag',  sheet('forgia/Frammenti di corazza incandescente.png','f_fr',150))
 T('santuario','jstart',one("santuario/Anello d’oro e fascio luminoso.png",'s_js',800))
 T('santuario','jbody', vtile('santuario/Raggio Magico Dorato con Scintille.png','s_jb',1100))
@@ -50,7 +52,7 @@ T('santuario','charge',one('santuario/Sfera Magica di Luce Dorata-1.png','s_ch1'
 T('selva','jstart',one('selva/Vite e terra in esplosione.png','v_js',800))
 T('selva','jbody', vtile('selva/Bordo di Liane Tropicali Intrecciate.png','v_jb',1100))
 T('selva','jtip',  one('selva/Ramo di vite tropicale intrecciata.png','v_jt',800))
-T('selva','caps',  sheet('selva/Sei nuvole di polvere e detriti.png','v_c',230))
+T('selva','caps',  sheet('selva/Sei nuvole di polvere e detriti.png','v_c',230,DIL=25,minfrac=.01))
 T('selva','bush',  sheet('selva/Tavola di sei composizioni di fogliame fantasy.png','v_bu',230))
 json.dump(M,open(OUT+'/manifest.json','w'))
 for t in M:
