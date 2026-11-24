@@ -1118,11 +1118,12 @@ body.th-gen.netv #hub::before{width:190px;height:110px;margin:-55px 0 0 -95px}
 .th-santuario .dlgCard{background:rgba(251,247,238,.9)}
 .th-santuario .wz h1,.th-santuario .dlg h1{text-shadow:0 2px 14px rgba(255,255,255,.6)}
 
+/* seme «a metà» = tema liscio (la classe non è .half: quella è delle metà + e − delle schede) */
 /* ================= Tema completo: le immagini dipinte sopra la versione liscia (body.full) =================
    Le immagini arrivano come variabili sul body (--frI cornice, --btnI targa del tasto, --plI targa dell'elemento centrale,
    --scI sfondo, --sdI bordi), solo per il tema scelto. Il tavolo resta pulito: solo l'elemento centrale H&O ha la targa. */
-.seed.on.half{color:transparent!important;background:linear-gradient(90deg,var(--sc) 50%,rgba(140,140,140,.45) 50%);-webkit-background-clip:text;background-clip:text;text-shadow:none!important;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--sc) 55%,transparent))}
-.th-santuario .seed.on.half{background:linear-gradient(90deg,#C99A2E 50%,rgba(90,75,50,.3) 50%);-webkit-background-clip:text;background-clip:text}
+.seed.on.mezzo{color:transparent!important;background:linear-gradient(90deg,var(--sc) 50%,rgba(140,140,140,.45) 50%);-webkit-background-clip:text;background-clip:text;text-shadow:none!important;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--sc) 55%,transparent))}
+.th-santuario .seed.on.mezzo{background:linear-gradient(90deg,#C99A2E 50%,rgba(90,75,50,.3) 50%);-webkit-background-clip:text;background-clip:text}
 body.full .wzBg{background:var(--scI) center/cover}
 body.full .wzBg i{display:none}
 body.full .wzBg::after{background:var(--scrim)}
@@ -1494,7 +1495,7 @@ const SEEDS = [['rosso','Rosso','forgia'], ['verde','Verde','selva'], ['blu','Bl
 const GLYPH = {rosso:'\ue603', verde:'\ue604', blu:'\ue601', nero:'\ue602', bianco:'\ue600', incolore:'\ue904'};
 const THC = {forgia:['#0B0A0D', COLORS_F], selva:['#0A100B', COLORS_S], abisso:['#06121D', COLORS_A], cripta:['#0C0910', COLORS_K], santuario:['#F1EADB', COLORS_W], mox:['#111316', COLORS_M]};
 const themeLabel = () => 'Tema: ' + (TNAME[SET.theme] || 'Classico') + (RICH() ? (FULL() ? ', completo' : ', liscio') : '');
-const seedBtns = () => SEEDS.map(([k, l, th]) => `<button class="seed${SET.theme === th ? ' on' + (FULL() ? '' : ' half') : ''}" data-seed="${k}" aria-label="${l}">${GLYPH[k]}</button>`).join('');
+const seedBtns = () => SEEDS.map(([k, l, th]) => `<button class="seed${SET.theme === th ? ' on' + (FULL() ? '' : ' mezzo') : ''}" data-seed="${k}" aria-label="${l}">${GLYPH[k]}</button>`).join('');
 function renderSeeds(){
   const el = document.getElementById('wzSeeds'); if(el) el.innerHTML = `<small>${themeLabel()}</small><div>${seedBtns()}</div>`;   // gira anche prima che $ esista
   document.querySelectorAll('.mSeeds').forEach(m => m.innerHTML = seedBtns());
@@ -1514,7 +1515,8 @@ function applyTheme(render){
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', th ? THC[th][0] : '#22252B');
   if(!render) return;
   renderBoard();
-  if($('#ov-wizard').classList.contains('open')){ wzStep.now = true; wzStep(WZ.step || 1) }
+  // cambio di tema con la pagina iniziale aperta: stessa pagina, senza rifare l'ingresso (i semi non si muovono)
+  if($('#ov-wizard').classList.contains('open')){ wzStep.now = true; wzStep.quiet = true; wzStep(WZ.step || 1) }
   fgAmbient();
 }
 applyTheme(false);
@@ -4091,7 +4093,8 @@ document.addEventListener('click', e => {
   if(SET.theme !== sd[2]){ SET.theme = sd[2]; SET.full = true }
   else if(SET.full !== false) SET.full = false;
   else { SET.theme = 'classico'; SET.full = true }
-  saveSet(); applyTheme(true); toast(themeLabel());
+  // niente avviso: la scritta sopra i semi dice già il tema, e l'avviso li copriva
+  saveSet(); applyTheme(true);
 });
 function wzStep(n){
   if(n < 3) document.activeElement?.blur?.();
@@ -4128,7 +4131,8 @@ function wzStepF(n, now){
   WZ.shown = n;
   if(now || prev === n || RMOT){
     steps.forEach(st => { fgStop(st); st.classList.toggle('cur', st === to) });
-    if(now && !RMOT) fgEnter(to, 1, 140);
+    if(now && !RMOT && !wzStep.quiet) fgEnter(to, 1, 140);
+    wzStep.quiet = false;
     return;
   }
   const dir = n > prev ? 1 : -1, end = fgLeave(from, dir);
