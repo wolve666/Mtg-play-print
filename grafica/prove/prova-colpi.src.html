@@ -95,6 +95,7 @@ section{display:grid;gap:14px;padding:18px;border-radius:22px 6px 22px 6px;backg
       <button class="btn" id="goLaunch">Guarda il colpo</button>
       <button class="btn alt" id="goHit">Solo l'arrivo</button>
       <button class="btn alt" id="goBig" hidden>Colpo grosso</button>
+      <button class="btn alt" id="goBig2" hidden>Colpo grosso 2</button>
       <button class="btn alt" id="goGob" hidden>Sorpresa: il goblin</button>
       <label class="chk"><input type="checkbox" id="slow"> Al rallentatore</label>
     </div>
@@ -335,7 +336,7 @@ function drawSprites(list, c, dt){
     let w = p.w * (1 + p.grow * k) * (1 + p.z / 260) * (p.pop ? eb(p.a / p.pop) : 1);
     if(p.sh){ c.save(); c.globalAlpha = clamp(al * .32 * (1 - p.z / 300)); c.fillStyle = '#000'; c.beginPath(); c.ellipse(p.x + p.z * .15, p.y + p.w * .12, p.w * .42 * (1 - p.z / 500), p.w * .18 * (1 - p.z / 500), 0, 0, TAU); c.fill(); c.restore() }
     const h = w * ih(p.im) / iw(p.im);
-    c.save(); c.globalAlpha = clamp(al); if(p.blend) c.globalCompositeOperation = p.blend; c.translate(p.x, p.y - p.z); c.rotate(p.rot + (p.flut ? Math.sin(p.a * 3 + p.ph) * p.flut : 0));
+    c.save(); c.globalAlpha = clamp(al); if(p.blend) c.globalCompositeOperation = p.blend; if(p.filt) c.filter = p.filt; c.translate(p.x, p.y - p.z); c.rotate(p.rot + (p.flut ? Math.sin(p.a * 3 + p.ph) * p.flut : 0));
     if(p.flut) c.scale(.45 + .55 * Math.abs(Math.cos(p.a * 2.2 + p.ph)), 1);
     c.drawImage(p.im, -w / 2, -h / 2, w, h); c.restore();
   }
@@ -784,6 +785,8 @@ TH.mox = {
     const trA = tileRect(pA), UP = Math.atan2(trA.y + trA.h / 2 - hb.y, trA.x + trA.w / 2 - hb.x), POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x + Math.cos(UP) * Wa * MOXL, hb.y + Math.sin(UP) * Wa * MOXL];
     // 1. sul mio tappeto: la torretta sbuca, cambia testa, si carica e spara verso l'alto
     const cs = spr(0, 240, 10), rc = spr(0, 300, 8); let pw = 0, steamed = 0, fired = 0;
+    // delle due sfere di carica disegnate ne prendo una a caso per ogni colpo
+    const chI = I('mox', 'charge');
     add('A', function(c, dt){ this.a += dt; const x = this.a; if(x > BACK + .5) return false;
       cs.t = x < BACK ? 1 : 0; stepS(cs, dt); stepS(rc, dt);
       pw = x < SW0 ? 0 : x < SW1 ? (x - SW0) / (SW1 - SW0) : x < OFF + .3 ? 1 : Math.max(0, 1 - (x - OFF - .3) / .45);
@@ -805,7 +808,7 @@ TH.mox = {
         if(R() < dt * 50){ const a = UP + PI + (R() - .5) * 2.4, v = 150 + R() * 300; pt(FX.pA, {k:'spark', x:mz[0], y:mz[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:60 + R() * 100, gz:1000, drag:2.5, life:.3 + R() * .3, r:1.2, col:R() < .6 ? '170,240,255' : '255,255,255'}) }
         if(R() < dt * 30) SP.aPunch.v -= .05 }
       cannon(c, hb.x, hb.y, Math.max(0, cs.x), UP, Math.max(0, rc.x), .3 + .7 * ck + on, pw);
-      if(x > SW1 && x < OFF){ const r = Wa * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, I('mox', 'charge', 0), mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
+      if(x > SW1 && x < OFF){ const r = Wa * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, chI, mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
       // dopo lo sparo la canna sfiata vapore
       if(x > OFF && x < OFF + .6 && R() < dt * 14) FX.sA.push(sp({im:I('mox', 'steam'), x:mz[0] + (R() - .5) * Wa * .05, y:mz[1], vx:(R() - .5) * 40, vy:-40 - R() * 40, drag:1, w:Wa * (.1 + R() * .06), rot:R() * TAU, spin:(R() - .5), life:1, grow:1, fin:.05, fout:.6, alpha:.7}));
       return true });
@@ -1511,9 +1514,9 @@ function vineTile(c, pts, s0, s1, H, a = 1, shadow = false, ph = 0, fin = 0, hf)
   const im = I('selva', 'jbody', 0); if(!ok(im) || s1 - s0 < 2 || a <= 0) return;
   let src = im, sx0 = 0, sw = iw(im), sh = ih(im), hk = 1;
   if(shadow){ src = sil(im); if(!src) return; sx0 = src.pad; sw = src.iw; sh = src.height; hk = src.height / src.ih }
-  const tl = H * iw(im) / ih(im), stp = Math.max(4, H * .3);
+  const tl = H * iw(im) / ih(im), stp = Math.max(6, H * .4);
   c.save();
-  for(let s = s0, n = 0; s < s1 && n < 400; n++){
+  for(let s = s0, n = 0; s < s1 && n < 2500; n++){
     const u = (((s - ph) % tl) + tl) % tl, len = Math.min(stp, s1 - s, tl - u);
     if(len < .2){ s += .2; continue }
     const p = at(pts, s), q = at(pts, s + len), ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
@@ -1546,11 +1549,12 @@ function vinePath(a, b, t, tile){
   return prep(pts);
 }
 // spirale intorno a tutto il campo: davanti si vede, dietro il campo sparisce; «sq» la stringe
-function boaPath(tx, sq, turns, slither){
-  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), cx = fb.x + fb.w / 2, y0 = fb.y + fb.h * .07, y1 = fb.y + fb.h * .93, tilt = W * .1, pts = [], dep = [];
-  const A = (fb.w / 2 + W * .05) * (1 - .21 * sq);
-  for(let i = 0; i <= 8; i++){ const u = i / 8; pts.push([lerp(tx, cx, u), lerp(-W * .5, y0 + tilt, u)]); dep.push(1) }
-  const N = 170; for(let i = 1; i <= N; i++){ const u = i / N, f = u * turns * TAU, wob = Math.sin(f * 2 + slither) * W * .006; pts.push([cx + A * Math.sin(f), y0 + (y1 - y0) * u + tilt * Math.cos(f) + wob]); dep.push(Math.cos(f)) }
+const BOA_N = 300;
+function boaPath(tx, sq, turns, slither, f0 = 0, ak = 1){
+  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), cx = fb.x + fb.w / 2, y0 = fb.y + fb.h * .06, y1 = fb.y + fb.h * .94, tilt = W * .08, pts = [], dep = [];
+  const A = (fb.w / 2 + W * .05) * ak * (1 - .24 * sq);
+  for(let i = 0; i <= 8; i++){ const u = i / 8; pts.push([lerp(tx, cx + A * Math.sin(f0), u), lerp(-W * .5, y0 + tilt * Math.cos(f0), u)]); dep.push(1) }
+  const N = BOA_N; for(let i = 1; i <= N; i++){ const u = i / N, f = f0 + u * turns * TAU, wob = Math.sin(f * 2 + slither) * W * .006; pts.push([cx + A * Math.sin(f), y0 + (y1 - y0) * u + tilt * Math.cos(f) + wob]); dep.push(Math.cos(f)) }
   const last = pts[pts.length - 1]; for(let i = 1; i <= 10; i++){ pts.push([last[0], last[1] + (H + W * .8 - last[1]) * i / 10]); dep.push(1) }
   prep(pts); pts.dep = dep; return pts;
 }
@@ -1559,10 +1563,10 @@ function dust(list, x, y, W, n, dir, sz = 1){ for(let i = 0; i < n; i++){ const 
   list.push(sp({im:I('selva', 'caps'), x:x + (R() - .5) * W * .05, y:y + (R() - .5) * W * .05, vx:Math.cos(a) * v, vy:Math.sin(a) * v - 15, drag:2, w:W * (.2 + R() * .12) * sz, rot:a + (R() - .5) * .6, life:.9 + R() * .5, grow:.5, fin:.05, fout:.6, alpha:.85})) } }
 TH.selva = {
   name:'Selva', sub:'Verde · piante e bestie', col:'#86CC4E',
-  desc:'Il boa. Dall\'elemento centrale esplode una zolla di terra e muschio e ne esce la liana, che ondeggia dietro al dito e avvolge il quadratino. Da Federico la liana entra dall\'alto e si avvolge intorno a TUTTO il tappeto, giro dopo giro, passando davanti e sparendo dietro, con il ramo di vite in testa; si allenta un attimo, poi stritola: il tappeto stesso si stringe a clessidra, scricchiola, schizzano terra, polvere, foglie e schegge; poi molla la presa (il tappeto rimbalza), la liana scivola via verso il basso e sul tappeto restano ciuffi di fogliame che svaniscono.',
+  desc:'Il boa. Dall\'elemento centrale esplode una zolla di terra e muschio e ne esce la liana, che ondeggia dietro al dito fino al quadratino. Al lancio foglioline e zollette volano verso l\'avversario. Da Federico la liana entra dall\'alto e si avvolge intorno a TUTTO il tappeto, giro dopo giro, passando davanti e sparendo dietro, con il ramo di vite in testa; tre liane sfasate, cinque giri ciascuna, fitte. Poi stringono come un cappio, piano e poi sempre più forte, senza rimbalzi: il tappeto si stringe a clessidra, scricchiola, schizzano terra, polvere, foglie e schegge; poi la presa si allenta piano, le liane scivolano via verso il basso e sul tappeto restano ciuffi di fogliame che svaniscono.',
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
-    const pts = vinePath([hb.x, hb.y], [t.x, t.y], T, on ? tr : null), Lp = plen(pts), grow = eo((T - d.t0) / .3), H = W * .1, pop = eo((T - d.t0) / .2);
+    const pts = vinePath([hb.x, hb.y], [t.x, t.y], T, null), Lp = plen(pts), grow = eo((T - d.t0) / .3), H = W * .1, pop = eo((T - d.t0) / .2);
     if(!d.burst){ d.burst = 1; dust(FX.sA, hb.x, hb.y, W, 4, null, .8); for(let i = 0; i < 10; i++){ const a = R() * TAU; pt(FX.pA, {k:'crumb', x:hb.x, y:hb.y, vx:Math.cos(a) * (80 + R() * 160), vy:Math.sin(a) * (80 + R() * 160), vz:120 + R() * 200, gz:1100, rest:.3, life:.9, r:W * (.006 + R() * .009), col:pick(['74,50,28', '58,40,22', '96,70,40'])}) } }
     for(let i = 1; i <= 3; i++){ const p = at(pts, Lp * i / 3); lit('A', p[0] + 5, p[1] + 9, W * .25, [.7, .8, .6], -.6) }
     vineFlow(c, pts, Lp * grow, H, 1, {start:.62, ss:.6 + .4 * pop + .03 * Math.sin(T * 9), shadow:true});
@@ -1570,8 +1574,14 @@ TH.selva = {
   },
   launch(d){
     // la liana si strappa via verso l'alto: la coda lascia la zolla, che si sbriciola in polvere
-    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), tx = tr.x + tr.w / 2, t = d.tip || {x:d.p[0], y:d.p[1]}, pts = prep(vinePath([hb.x, hb.y], [t.x, t.y], T, tr).slice(0, 41).concat([[tx, -80], [tx, -400]])), Lp = plen(pts), L40 = pts.L[40], H = W * .1;
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), tx = tr.x + tr.w / 2, t = d.tip || {x:d.p[0], y:d.p[1]}, pts = prep(vinePath([hb.x, hb.y], [t.x, t.y], T, null).concat([[tx, -80], [tx, -400]])), Lp = plen(pts), L40 = pts.L[40], H = W * .1;
     SP.aHub.v -= 3; SP.aPunch.v -= .5;
+    // foglioline e zollette strappate dal mio tappeto che volano verso l'avversario, e al quadratino uno sbuffo che ricade
+    const ta = Math.atan2(tr.y + tr.h / 2 - hb.y, tx - hb.x);
+    for(let i = 0; i < 16; i++){ const a = ta + (R() - .5) * .7, v = 260 + R() * 380, leaf = i % 3 !== 0;
+      FX.sA.push(sp({im:I('selva', leaf ? 'leaf' : 'clod'), x:hb.x + (R() - .5) * W * .2, y:hb.y + (R() - .5) * W * .06, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.6, g:leaf ? 120 : 420, w:W * (leaf ? .04 + R() * .03 : .03 + R() * .03), life:1 + R() * .5, spin:(R() - .5) * 9, flut:leaf ? .5 : 0, fout:.4, delay:R() * .12})) }
+    after(.3, () => { for(let i = 0; i < 9; i++){ const leaf = i % 3 !== 0; FX.sA.push(sp({im:I('selva', leaf ? 'leaf' : 'clod'), x:tx + (R() - .5) * tr.w * .8, y:tr.y + tr.h * (.4 + R() * .6), vx:(R() - .5) * 140, vy:-30 - R() * 90, g:leaf ? 160 : 600, w:W * (leaf ? .035 + R() * .025 : .025 + R() * .02), life:1.1 + R() * .4, spin:(R() - .5) * 8, flut:leaf ? .6 : 0, sway:leaf ? 25 : 0, fout:.4})) }
+      dust(FX.sA, tx, tr.y + tr.h, W, 2, PI / 2, .6) });
     dust(FX.sA, hb.x, hb.y, W, 5, null, 1);
     for(let i = 0; i < 4; i++) FX.sA.push(sp({im:I('selva', 'clod'), x:hb.x + (R() - .5) * W * .1, y:hb.y, vx:(R() - .5) * 260, vy:-60 - R() * 120, g:500, w:W * (.05 + R() * .04), life:1, spin:(R() - .5) * 8, fout:.3}));
     add('A', function(c, dt){ this.a += dt; const k = Math.min(1, this.a / .35); if(this.a > .45) return false;
@@ -1581,30 +1591,33 @@ TH.selva = {
     return .55;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .18, W * .82), turns = 4.4;
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .18, W * .82), turns = 5;
     if(RM){ flash('#2A5A1A', .5, .9); damage(); return }
-    const sq = spr(0, 70, 6.5), Hv = W * .17, T1 = 1.35, TC = 1.62, TR = 2.75, TE = 3.9;
+    // tre liane che si avvolgono sfasate: tante spire fitte. Poi la stretta come un cappio: prima piano, poi sempre più forte, nessun rimbalzo; tiene; molla piano e scivola via
+    const Hv = W * .115, ST = [[0, 1, 0], [2.1, .97, .14], [4.2, 1.03, .28]], T1 = 1.5, TS = T1 + .1, TC = TS + 1.15, TR = TC + .75, TL = TR + .5, TE = TL + 1.1;
     let crunched = false;
     add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > TE) { return false }
-      if(x > T1 && x < TC) sq.t = -.12; else if(x >= TC && x < TR) sq.t = 1 + .04 * Math.sin(x * 23); else sq.t = 0;
-      if(x >= TC && !crunched){ crunched = true; sq.v += 7; crunch() }
-      stepS(sq, dt);
-      const pts = boaPath(cx, Math.max(-.2, sq.x), turns, x * 6), Lt = plen(pts), Lhel = pts.L[8 + 170];
-      // la testa corre lungo la spirale, poi (lasciata la presa) prosegue e la coda la segue fuori dal campo
-      const head = x < T1 ? Lhel * (1 - Math.pow(1 - x / T1, 1.6)) : x < TR ? Lhel : Lhel + (Lt - Lhel + Lhel) * ei((x - TR) / (TE - TR));
-      const body = Lhel - pts.L[8] + W * .3;
-      // mentre stritola il disegno della liana scorre avanti e indietro di poco: sembra che le spire si stringano
-      const ph = head + (x >= TC && x < TR ? Math.sin((x - TC) * 9) * W * .02 : 0);
-      vineFlow(c, pts, head, Hv, 1, {from:head - body, fin:W * .25, ph, shadow:true});
-      const s = st('V'); s.pin[0] = fb.y + fb.h * .52; s.pin[1] = Math.max(0, sq.x) * .3; s.pin[2] = fb.h * .55; s.pin[3] = (fb.h * .86) / turns;
-      s.dark = Math.max(s.dark, .3 * clamp(sq.x));
+      // la stretta: ei^1.8 = lenta all'inizio e decisa alla fine, come un nodo che si chiude; a tratti dà uno strattone in più
+      const u = clamp((x - TS) / (TC - TS)), sq = x < TS ? 0 : x < TC ? Math.pow(u, 1.8) + .05 * Math.max(0, Math.sin(u * 19)) * u : x < TR ? 1.05 : x < TL ? 1.05 * (1 - eo((x - TR) / (TL - TR))) : 0;
+      if(x >= TC - .05 && !crunched){ crunched = true; crunch() }
+      if(x > TS && x < TC && R() < dt * 30 * u){ const yy = fb.y + fb.h * (.1 + R() * .8), s2 = sgn(); pt(FX.pV2, {k:'crumb', x:s2 < 0 ? fb.x + W * .05 : fb.x + fb.w - W * .05, y:yy, vx:-s2 * (30 + R() * 80), vy:(R() - .5) * 40, vz:80 + R() * 120, gz:1200, rest:.3, life:.8, r:W * (.004 + R() * .006), col:pick(['74,50,28', '96,70,40', '60,90,34'])}) }
+      if(x > TS && x < TC) rumble = {a:0, dur:.06, amt:.06 * u};
+      let p0 = null;
+      ST.forEach(([f0, ak, dl], j) => { const xx = x - dl; if(xx <= 0) return;
+        const pts = boaPath(cx, sq, turns, x * 4 + j, f0, ak), Lt = plen(pts), Lhel = pts.L[8 + BOA_N];
+        const head = xx < T1 ? Lhel * (1 - Math.pow(1 - xx / T1, 1.6)) : x < TL ? Lhel : Lhel + Lhel * ei((x - TL) / (TE - TL)) * 1.1;
+        const body = Lhel - pts.L[8] + W * .3;
+        vineFlow(c, pts, head, Hv, 1, {from:head - body, fin:W * .25, ph:head, shadow:true});
+        if(!j) p0 = [pts, head] });
+      const s = st('V'); s.pin[0] = fb.y + fb.h * .5; s.pin[1] = sq * .36; s.pin[2] = fb.h * .6; s.pin[3] = (fb.h * .88) / turns;
+      s.dark = Math.max(s.dark, .35 * clamp(sq));
       // ombre delle spire sul campo
-      for(let i = 0; i < 4; i++){ const p = at(pts, pts.L[8] + (head - pts.L[8]) * (i + .5) / 4); if(pts.dep[p[3]] > 0) lit('V', p[0], p[1] + W * .04, W * .35, [.7, .8, .6], -.5) }
-      // dove la testa entra nel tappeto si alza un po' di polvere
-      if(x < T1 && R() < dt * 6){ const p = at(pts, head); if(pts.dep[p[3]] > .3) dust(FX.sV2, p[0], p[1], W, 1, p[2] + PI, .6) }
+      if(p0){ const [pts, head] = p0; for(let i = 0; i < 4; i++){ const p = at(pts, pts.L[8] + (head - pts.L[8]) * (i + .5) / 4); if(pts.dep[p[3]] > 0) lit('V', p[0], p[1] + W * .04, W * .35, [.7, .8, .6], -.5) }
+        if(x < T1 && R() < dt * 6){ const p = at(pts, head); if(pts.dep[p[3]] > .3) dust(FX.sV2, p[0], p[1], W, 1, p[2] + PI, .6) } }
       return true });
     function crunch(){
-      impact(PI / 2, 1.3); SP.vLifeR.v += sgn() * 60;
+      // nessun rimbalzo: solo uno strattone verso il basso e il tappeto che scricchiola
+      SP.vLife.v += 2; SP.vHub.v -= 1.5; rumble = {a:0, dur:.5, amt:.5}; st('V').chr = 3;
       if(navigator.vibrate) try{ navigator.vibrate([60, 30, 30, 30, 90]) }catch(e){}
       const wy = fb.y + fb.h * .52;
       for(let s = -1; s <= 1; s += 2){ const ex = s < 0 ? fb.x + W * .04 : fb.x + fb.w - W * .04;
@@ -1619,6 +1632,104 @@ TH.selva = {
       damage(5);
     }
   }
+};
+
+// SELVA, colpo grosso 1: la zampata. Un'ombra enorme si avvicina dal lato di chi attacca, la zampa col muschio cala e squarcia il tappeto in diagonale:
+// quattro squarci che si aprono dietro gli artigli, zolle, schegge, foglie e polvere che volano nella direzione del colpo; la zampa risale e sparisce.
+TH.selva.bigName = 'Colpo grosso: la zampata';
+TH.selva.big = function(){
+  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), paw = I('selva', 'paw', 0), sl = I('selva', 'slash', 0);
+  if(RM){ flash('#2A5A1A', .7, 1); damage(8); return }
+  const side = srcX() < W / 2 ? -1 : 1, P0 = [W * (.5 + side * .36), fb.y + fb.h * (.16 + R() * .08)], P1 = [W * (.5 - side * .34), fb.y + fb.h * (.74 + R() * .1)];
+  const a = Math.atan2(P1[1] - P0[1], P1[0] - P0[0]), len = Math.hypot(P1[0] - P0[0], P1[1] - P0[1]), dx = Math.cos(a), dy = Math.sin(a);
+  const SH = .75, DN = .22, SW = .26, UP = .4, HIT = SH + DN, OUT = HIT + SW, END = OUT + 3.4, pw = W * .78, rot = a - PI / 2, slRot = a - 2.19, mid = [(P0[0] + P1[0]) / 2, (P0[1] + P1[1]) / 2];
+  // chi attacca: il tappeto trema e dal quadratino colpito tornano zolle, foglie e briciole
+  after(HIT + .05, () => { rumble = {a:0, dur:.5, amt:.35}; SP.aHub.v -= 1.5;
+    fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:I('selva', R() < .5 ? 'clod' : 'leaf'), w:WA * (.03 + R() * .03), rest:.3, drag:.8, spin:(R() - .5) * 10, sh:1, life:1.6 + R(), fout:.4}))), 14, 0, .3);
+    fromTile((q, WA) => pt(FX.pA, Object.assign(q, {k:'crumb', rest:.3, drag:.6, life:1 + R() * .5, r:WA * (.005 + R() * .007), col:pick(['74,50,28', '58,40,22', '96,70,40'])})), 30, 0, .3) });
+  // l'ombra della zampa sul tappeto (si avvicina: grande e sfocata, poi sempre più netta) e il buio
+  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > OUT + .3) return false;
+    const k = clamp(x / (HIT + .05)), dk = x < HIT ? eo(k) : 1 - clamp((x - HIT) / (OUT + .3 - HIT)), bp = x < HIT ? P0 : [lerp(P0[0], P1[0], eo((x - HIT) / SW)), lerp(P0[1], P1[1], eo((x - HIT) / SW))];
+    const sx = bp[0] - dx * W * .12 * (1 - k) + side * W * .25 * (1 - k), sy = bp[1] + W * .05;
+    c.save(); c.filter = `brightness(0) blur(${(1 - k) * W * .05 + 2}px)`; img(c, paw, sx, sy, pw * (1 + 1.2 * (1 - k)), rot, .5 * dk, null, .5, .62); c.filter = 'none'; c.restore();
+    lit('V', sx, sy, W * .8, [.8, .85, .8], -1.1 * dk); st('V').dark = Math.max(st('V').dark, .45 * dk); return true });
+  // i quattro squarci: macchia sul tappeto che si apre dietro gli artigli, poi resta e svanisce
+  add('V', function(c, dt){ this.a += dt; const x = this.a - HIT; if(x > END - HIT) return false; if(x < 0) return true;
+    const pr = eo(x / SW), al = Math.min(1, (END - HIT - x) / 1.2), front = -W * .35 + (len + W * .7) * pr;
+    c.save(); c.translate(P0[0], P0[1]); c.rotate(a); c.beginPath(); c.rect(-W * 2, -W * 2, front + W * 2, W * 4); c.rotate(-a); c.translate(-P0[0], -P0[1]); c.clip();
+    // un alone scuro sotto i tagli, poi i tagli
+    c.save(); c.globalAlpha = .35 * al; c.filter = 'brightness(0) blur(8px)'; img(c, sl, mid[0] + 3, mid[1] + 6, W * 1.05, slRot, 1); c.restore();
+    img(c, sl, mid[0], mid[1], W * 1.05, slRot, al); c.restore();
+    if(x < 1.2) lit('V', mid[0], mid[1], W * .6, [.9, .5, .3], .25 * (1 - x / 1.2));
+    return true });
+  // la zampa vera: cala, squarcia, risale
+  let hit = false;
+  add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > OUT + UP) return false; if(x < SH) return true;
+    let px, py, sc, al;
+    if(x < HIT){ const k = eo((x - SH) / DN); px = P0[0] - dx * W * .2 * (1 - k) + side * W * .2 * (1 - k); py = P0[1] - W * .35 * (1 - k); sc = 1.7 - .7 * k; al = Math.min(1, (x - SH) / .08) }
+    else if(x < OUT){ const k = (x - HIT) / SW, e = k * k * (3 - 2 * k); px = lerp(P0[0], P1[0], e); py = lerp(P0[1], P1[1], e); sc = 1; al = 1;
+      if(!hit){ hit = true; impact(a, 1.6, P0[0], P0[1]); SP.vLifeR.v += side * -50; flash('#1E3A12', .35, .6); damage(8); if(navigator.vibrate) try{ navigator.vibrate([80, 20, 60, 20, 120]) }catch(e){} }
+      // lungo la strisciata: zolle, briciole, foglie, polvere nella direzione del colpo
+      for(let i = 0; i < 3; i++) pt(FX.pV2, {k:'crumb', x:px + (R() - .5) * W * .3, y:py + (R() - .5) * W * .15, vx:dx * (150 + R() * 300) + (R() - .5) * 120, vy:dy * (150 + R() * 300) + (R() - .5) * 120, vz:100 + R() * 250, gz:1300, rest:.3, life:1 + R() * .6, r:W * (.006 + R() * .01), col:pick(['74,50,28', '58,40,22', '96,70,40', '60,90,34'])});
+      if(R() < .6) FX.sV2.push(sp({im:I('selva', 'clod'), x:px + (R() - .5) * W * .25, y:py, vx:dx * (200 + R() * 250) + (R() - .5) * 100, vy:dy * (200 + R() * 250), vz:180 + R() * 220, gz:1300, rest:.3, w:W * (.05 + R() * .05), life:1.8, spin:(R() - .5) * 9, sh:1, fout:.3}));
+      if(R() < .7) FX.sV2.push(sp({im:I('selva', 'leaf'), x:px + (R() - .5) * W * .3, y:py, vx:dx * 220 + (R() - .5) * 260, vy:dy * 220 + (R() - .5) * 260, drag:2, g:40, w:W * (.04 + R() * .04), life:1.8 + R(), flut:.7, sway:35, spin:(R() - .5) * 8}));
+      if(R() < .35) dust(FX.sV2, px, py, W, 1, a + (R() - .5) * .8, .9) }
+    else { const k = (x - OUT) / UP; px = P1[0] + dx * W * .25 * k; py = P1[1] + dy * W * .25 * k - W * .2 * k; sc = 1 + .4 * k; al = 1 - eo(k) }
+    c.save(); c.globalAlpha = .3 * al; c.filter = 'brightness(0) blur(6px)'; img(c, paw, px + W * .03, py + W * .06, pw * sc, rot, 1, null, .5, .62); c.restore();
+    img(c, paw, px, py, pw * sc, rot, al, null, .5, .62);
+    return true });
+};
+// SELVA, colpo grosso 2: il bosco che invade. Dal bordo crescono tronchi e felci, dall'alto scendono le chiome, le liane strisciano sul tappeto e i cespugli spuntano ovunque:
+// in un attimo il tappeto è una foresta all'ombra. Poi tutto appassisce, si secca e cade a pezzi; restano foglie secche che svaniscono.
+TH.selva.bigName2 = 'Colpo grosso: il bosco che invade';
+TH.selva.big2 = function(){
+  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), w1 = I('selva', 'wood1', 0), w2 = I('selva', 'wood2', 0);
+  if(RM){ flash('#2A5A1A', .7, 1); damage(8); return }
+  const GROW = 1.7, HOLD = 1.1, WI = 1.3, FALL = 1.3, TW = GROW + HOLD, TF = TW + WI, END = TF + FALL;
+  const wk = x => clamp((x - TW) / WI), fk = x => clamp((x - TF) / FALL), filt = k => k > 0 ? `sepia(${k.toFixed(2)}) saturate(${(1 + .3 * k).toFixed(2)}) hue-rotate(${(-12 * k).toFixed(0)}deg) brightness(${(1 - .25 * k).toFixed(2)})` : 'none';
+  const side = srcX() < W / 2 ? -1 : 1;
+  // le liane: entrano dai bordi e strisciano sul tappeto con un'onda
+  const vines = [];
+  for(let i = 0; i < 7; i++){ const fromL = (i % 2 ? 1 : -1) * side < 0, y0 = fb.y + fb.h * (.08 + .84 * (i + R() * .6) / 7), y1 = fb.y + fb.h * (.1 + R() * .8), xa = fromL ? fb.x - W * .1 : fb.x + fb.w + W * .1, xb = fromL ? fb.x + fb.w * (.55 + R() * .4) : fb.x + fb.w * (.45 - R() * .4), ph = R() * TAU, amp = W * (.04 + R() * .05), pts = [];
+    for(let j = 0; j <= 40; j++){ const u = j / 40; pts.push([lerp(xa, xb, u), lerp(y0, y1, u) + Math.sin(u * PI * 2.5 + ph) * amp]) }
+    vines.push({pts:prep(pts), d:.15 + i * .12 + R() * .1}) }
+  // i cespugli: sparsi su tutto il tappeto, spuntano uno dopo l'altro dal lato di chi attacca
+  const bushes = [];
+  for(let i = 0; i < 18; i++){ const gx = (i % 3 + .2 + R() * .6) / 3, gy = ((i / 3 | 0) + .15 + R() * .7) / 6, x = fb.x + fb.w * gx, y = fb.y + fb.h * gy;
+    bushes.push({x, y, im:I('selva', 'bush'), w:W * (.24 + R() * .12), rot:(R() - .5) * .5, d:.35 + (side < 0 ? gx : 1 - gx) * .6 + gy * .3 + R() * .2, ph:R() * TAU, fall:(R() - .5) * 2}) }
+  bushes.sort((p, q) => p.y - q.y);
+  // chi attacca: le foglie verdi tornano dal quadratino
+  after(.2, () => fromTile((q, WA) => FX.sA.push(sp(Object.assign(q, {im:I('selva', 'leaf'), w:WA * (.035 + R() * .03), rest:.2, drag:.8, spin:(R() - .5) * 6, life:2 + R(), flut:.5, fout:.4}))), 18, 0, 1));
+  // il tappeto all'ombra della foresta, poi la luce calda del bosco che secca
+  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const g = eo(x / GROW), w = wk(x), f = fk(x), on = g * (1 - f);
+    st('V').dark = Math.max(st('V').dark, .42 * on); lit('V', o.x, fb.y + fb.h * .2, W * 1.2, w > 0 ? [1, .75, .35] : [.45, 1, .35], .5 * on); return true });
+  let dmg = false;
+  add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
+    const g = eo(x / GROW), w = wk(x), f = fk(x), al = 1 - eo(f), sway = Math.sin(T * 1.6) * .012 * (1 - w);
+    if(!dmg && x > GROW * .8){ dmg = true; damage(8); rumble = {a:0, dur:.7, amt:.3}; SP.vHub.v -= 1.5; SP.vLife.v += 1.5; if(navigator.vibrate) try{ navigator.vibrate([40, 30, 40, 30, 90]) }catch(e){} }
+    c.save(); c.beginPath(); c.roundRect ? c.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : c.rect(fb.x, fb.y, fb.w, fb.h); c.clip();
+    c.filter = filt(w);
+    // tronchi e felci che salgono dal basso lungo i bordi
+    if(ok(w2)){ const gt = eo(clamp(x / (GROW * .8))), sy = .35 + .65 * gt, fall = W * .3 * ei(f);
+      c.save(); c.globalAlpha = al * Math.min(1, gt * 2); c.translate(fb.x, fb.y + fb.h + fall); c.transform(1, 0, sway, 1, 0, 0); c.scale(1, sy); c.drawImage(w2, 0, -fb.h, fb.w, fb.h); c.restore() }
+    // chiome che scendono dall'alto e felci in basso (la stessa cornice: metà di sopra ancorata in alto, metà di sotto in basso)
+    if(ok(w1)){ const gt = eo(clamp((x - .25) / (GROW * .8))), sy = .3 + .7 * gt, iw1 = iw(w1), ih1 = ih(w1);
+      c.save(); c.globalAlpha = al * Math.min(1, gt * 2); c.translate(fb.x, fb.y - W * .2 * ei(f)); c.transform(1, 0, -sway, 1, 0, 0); c.scale(1, sy); c.drawImage(w1, 0, 0, iw1, ih1 * .5, 0, 0, fb.w, fb.h * .5); c.restore();
+      c.save(); c.globalAlpha = al * Math.min(1, gt * 2); c.translate(fb.x, fb.y + fb.h + W * .2 * ei(f)); c.scale(1, sy); c.drawImage(w1, 0, ih1 * .5, iw1, ih1 * .5, 0, -fb.h * .5, fb.w, fb.h * .5); c.restore() }
+    // le liane che strisciano
+    vines.forEach(v => { const k = eo(clamp((x - v.d) / .9)); if(k <= 0) return; const Lp = plen(v.pts); vineFlow(c, v.pts, Lp * k, W * .075, al, {shadow:true}) });
+    // i cespugli che spuntano, ondeggiano, poi seccano e cadono
+    bushes.forEach(b => { const k = eo(clamp((x - b.d) / .4)); if(k <= 0) return; const sc = (.2 + .8 * k) * (1 - .35 * f), dy = W * .25 * ei(f), r = b.rot + Math.sin(T * 1.8 + b.ph) * .04 * (1 - w) + b.fall * ei(f) * .6;
+      c.save(); c.globalAlpha = .3 * al * k; c.fillStyle = '#000'; c.beginPath(); c.ellipse(b.x, b.y + b.w * .06, b.w * .36 * sc, b.w * .1 * sc, 0, 0, TAU); c.fill(); c.restore();
+      img(c, b.im, b.x, b.y + dy, b.w * sc, r, al * Math.min(1, k * 1.5), null, .5, .8) });
+    c.filter = 'none'; c.restore();
+    // mentre cresce: foglie e terra smossa; quando secca: foglie secche e briciole che cadono
+    if(x < GROW && R() < dt * 25){ const b = pick(bushes); FX.sV2.push(sp({im:I('selva', 'leaf'), x:b.x + (R() - .5) * b.w, y:b.y - b.w * .3, vx:(R() - .5) * 120, vy:-40 - R() * 60, g:120, w:W * (.035 + R() * .03), life:1.4, flut:.6, sway:30, spin:(R() - .5) * 6, fout:.4})) }
+    if(x < GROW && R() < dt * 6){ const b = pick(bushes); if(x > b.d) dust(FX.sV2, b.x, b.y, W, 1, -PI / 2 + (R() - .5), .55) }
+    if(w > .3 && R() < dt * 40 * (1 - f)){ const b = pick(bushes); FX.sV2.push(sp({im:I('selva', 'leaf'), x:b.x + (R() - .5) * b.w, y:b.y - b.w * .3 * R(), vx:(R() - .5) * 60, vy:20 + R() * 40, g:90, w:W * (.035 + R() * .03), life:1.8 + R(), flut:.7, sway:40, spin:(R() - .5) * 5, fout:.4, filt:filt(1)})) }
+    if(f > 0 && R() < dt * 30 * (1 - f)){ const b = pick(bushes); pt(FX.pV2, {k:'crumb', x:b.x + (R() - .5) * b.w * .6, y:b.y, vx:(R() - .5) * 40, vy:30 + R() * 40, vz:40 + R() * 60, gz:900, rest:.2, life:1, r:W * (.004 + R() * .007), col:pick(['120,92,48', '96,70,40', '140,110,60'])}) }
+    if(f > 0 && f < .1 && R() < dt * 10) dust(FX.sV2, fb.x + R() * fb.w, fb.y + fb.h * (.3 + R() * .6), W, 1, PI / 2, .7);
+    return true });
 };
 
 // ================= trascinamento, lancio, arrivo =================
@@ -1647,6 +1758,7 @@ document.getElementById('goLaunch').addEventListener('click', demo);
 document.getElementById('goHit').addEventListener('click', () => { const tr = tileRect(pV); TH[TK].hit(tr.x + tr.w / 2) });
 document.getElementById('goGob').addEventListener('click', () => TH.forgia.goblin());
 document.getElementById('goBig').addEventListener('click', () => TH[TK].big && TH[TK].big());
+document.getElementById('goBig2').addEventListener('click', () => TH[TK].big2 && TH[TK].big2());
 document.getElementById('nPl').addEventListener('change', renderBars);
 document.getElementById('seats').addEventListener('click', () => { for(let i = SEATS.length - 1; i > 0; i--){ const j = R() * (i + 1) | 0; [SEATS[i], SEATS[j]] = [SEATS[j], SEATS[i]] } renderBars() });
 renderBars();
@@ -1658,7 +1770,7 @@ const NOTES = {
   abisso:'Immagini: gorgo, getto a spirale, spruzzi, bolle, esplosione di schiuma, anello d\'onda, schizzi, schiuma, gocce. Il tappeto: luce azzurra, il tappeto che si increspa a cerchi con i riflessi, ogni goccia che cade fa il suo piccolo cerchio nel tappeto.',
   cripta:'Immagini: mano scheletrica, scia di fumo (il raggio), anime, due venature, teschio. A codice: il filo di particelle, le bollicine nere, le nuvole che si diramano, il pentacolo con i glifi, la nebbia. Il tappeto: avvizzisce e torna, nessuna onda; nel colpo grosso si spegne sotto la nebbia.',
   forgia:'Immagini: tre bruciature, schegge di roccia lavica, braci, archi elettrici; goblin e bomba. Il tappeto: lampi blu del fulmine, la bruciatura che scalda il tappeto da bianco a rosso, l\'aria che trema per il calore, ogni scossa e ogni scheggia che illumina.',
-  selva:'Immagini (pezzi senza tagli): zolla che esplode (partenza), bordo di liane ripetuto (corpo), ramo di vite (punta), sbuffi di polvere, ciuffi di fogliame, zolle, foglie. Il tappeto: la spirale che passa davanti e dietro, il tappeto che si stringe a clessidra e rimbalza quando la liana molla la presa, le ombre delle spire.'
+  selva:'Immagini (pezzi senza tagli): zolla che esplode (partenza), bordo di liane ripetuto (corpo), ramo di vite (punta), sbuffi di polvere, ciuffi di fogliame, zolle, foglie. Colpi grossi: zampa col muschio e i quattro squarci (la zampata); due cornici di bosco, ciuffi di fogliame e liane (il bosco che invade). Il tappeto: tre liane fitte che passano davanti e dietro, il tappeto che si stringe a clessidra come un cappio, le ombre delle spire; il buio sotto la zampa e sotto le chiome.'
 };
 function setTheme(k){
   TK = k; document.body.className = 't-' + k;
@@ -1667,6 +1779,7 @@ function setTheme(k){
   document.getElementById('note').textContent = NOTES[k] + (FLD.V ? '' : ' (Questo browser non ha WebGL: il tappeto resta fermo.)');
   document.getElementById('goGob').hidden = k !== 'forgia';
   const gb = document.getElementById('goBig'); gb.hidden = !TH[k].big; if(TH[k].big) gb.textContent = TH[k].bigName;
+  const gb2 = document.getElementById('goBig2'); gb2.hidden = !TH[k].big2; if(TH[k].big2) gb2.textContent = TH[k].bigName2;
   document.querySelectorAll('.hub .plate').forEach(im => im.src = 'data:image/webp;base64,' + A[HUBS[k][0].k]);
   try{ localStorage.setItem('prova-colpi-tema', k) }catch(e){}
 }

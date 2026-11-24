@@ -132,3 +132,10 @@ Ancora da montare negli altri temi (pezzi preparati): cariche di tutti i temi; p
 - Valgono sia per la selezione e il lancio sia per il boa sul telefono colpito. Pagina pubblicata aggiornata (versione 36).
 - Ancora da decidere con Federico: il **colpo grosso della Selva** (idee in `grafica/selva/STILE.md`, punti 13 e 14: zampa della bestia e squarci degli artigli).
 - Per ricostruire in una chat nuova servono anche `pip install scipy` e i PNG di `v2-prerelease` (poi `git checkout HEAD -- grafica && git clean -fd grafica` per non lasciarli nel ramo: il checkout da `v2-prerelease` sovrascrive anche gli `STILE.md`).
+
+## 25 novembre: Selva, richieste di Federico
+- Tolto il giro della liana intorno al quadratino dell'avversario (il «cerchio di selezione», brutto). Al lancio foglioline e zollette volano dal mio tappeto verso l'avversario e ricadono dal quadratino.
+- Boa: tre liane sfasate, cinque giri ciascuna (molto più fitto); la stretta è un cappio (lenta all'inizio, poi decisa, nessun rimbalzo), poi si allenta piano. Animazioni della liana approvate da Federico («perfette»).
+- Zampe: Federico ne ha fatte tre (raptor, muschio, pelo scuro su fondo nero). Scelta la **zampa col muschio** (verde come il tema, trasparente, quattro artigli come i quattro squarci); quella su fondo nero andrebbe scontornata.
+- Colpi grossi scelti da Federico, tutti e due nella prova (secondo tasto «Colpo grosso 2», `big2`/`bigName2`): **la zampata** (ombra dal lato di chi attacca, zampa che cala e squarcia in diagonale, quattro squarci che restano e svaniscono) e **il bosco che invade** (tronchi e felci dal basso, chiome dall'alto, liane che strisciano, cespugli che spuntano; poi tutto secca e cade). Nell'app si potranno alternare.
+- Immagini nuove: `strumenti/prepara-selva-25nov.py` (`paw`, `slash`, `wood1`, `wood2`). Pagina da 10 MB. Nelle foto di prova conviene svuotare gli effetti prima del comando: `for(const k in FX) FX[k].length = 0;`.
