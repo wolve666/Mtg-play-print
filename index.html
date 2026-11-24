@@ -7173,14 +7173,21 @@ function frame(now){
     for(const k in SP) stepS(SP[k], dt);
     const A = SCR.A, V = SCR.V, ending = !busy();
     if(FLD.A) resetF(FLD.A); if(FLD.V) resetF(FLD.V);
+    if(!NV()) fixedCv('cpA'), fixedCv('cpG');   // ordine delle tele: la mira sotto, poi la terra, poi il resto
     const cA = A && SHOW.A ? fitFix(fixedCv('cpA'), A) : dummyCtx;
     if(FLD.A) gndCtx(FLD.A);
     if(DR && A){ TH[DR.th].aim(cA, DR, dt); chargeAim(cA, DR, dt) }
     runFX('A', cA, dt); drawSprites(FX.sA, cA, dt); drawPts(FX.pA, cA, dt);
-    const cV = V && SHOW.V ? (FLD.V ? gndCtx(FLD.V) : fitGround(V)) : dummyCtx;
-    if(V && SHOW.V && !FLD.V){ const fb = V.field; cV.save(); cV.beginPath(); cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip() }
+    // un telefono solo: gli effetti a terra possono uscire dalla scheda colpita (il raggio della Cripta, le schegge…),
+    // quindi vanno su una tela grande quanto il tavolo, nel verso della scheda; il tappeto vivo tiene solo luci e onde
+    const solo = !NV();
+    if(solo && FLD.V && SHOW.V) gndCtx(FLD.V);
+    const cV = V && SHOW.V ? (solo ? fitFix(fixedCv('cpG'), V) : FLD.V ? gndCtx(FLD.V) : fitGround(V)) : dummyCtx;
+    if(V && SHOW.V && !FLD.V && !solo){ const fb = V.field; cV.save(); cV.beginPath(); cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip() }
     runFX('V', cV, dt); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt);
-    if(V && SHOW.V && !FLD.V) cV.restore();
+    if(V && SHOW.V && !FLD.V && !solo) cV.restore();
+    // …ma fuori dalla scheda colpita sfumano piano, senza taglio netto: le schede vicine restano pulite
+    if(V && SHOW.V && solo){ const fb = V.field, e = V.W * .1; cV.save(); cV.globalCompositeOperation = 'destination-in'; cV.filter = `blur(${Math.round(V.W * .08 * DPR)}px)`; cV.fillStyle = '#000'; cV.fillRect(fb.x - e, fb.y - e, fb.w + e * 2, fb.h + e * 2); cV.restore() }
     const cM = V && SHOW.V ? fitFix(fixedCv('cpM'), V) : dummyCtx;
     runFX('M', cM, dt); drawSprites(FX.sM, cM, dt);
     const cV2 = V && SHOW.V ? fitFix(fixedCv('cpV2'), V) : dummyCtx;
@@ -7214,7 +7221,7 @@ function reset(){
   DR = null; Q.length = 0; HAND = null; wither = null; rumble = null;
   for(const k in FX) FX[k].length = 0;
   for(const k in SP){ SP[k].x = SP[k].t; SP[k].v = 0 }
-  ['cpA', 'cpM', 'cpV2'].forEach(id => { const c = document.getElementById(id); if(c){ c.width = c.height = 0 } });
+  ['cpA', 'cpG', 'cpM', 'cpV2'].forEach(id => { const c = document.getElementById(id); if(c){ c.width = c.height = 0 } });
   for(const k of ['A', 'V']){ const S = SCR[k]; if(!S) continue;
     if(S.gcv){ S.gcv.remove(); S.gcv = null }
     S.shake.style.translate = ''; S.cell.style.filter = ''; S.cell.style.scale = '';
