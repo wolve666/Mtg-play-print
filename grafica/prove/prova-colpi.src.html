@@ -1134,11 +1134,11 @@ function handSoul(W, x, y){ const a = -PI / 2 + (R() - .5) * 1.2, v = 30 + R() *
   FX.sA.push(sp({im:I('cripta', 'souls'), x:x + (R() - .5) * W * .12, y:y - W * .02, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:.2, g:-12, rot:-PI / 2 + (R() - .5) * .4, spin:(R() - .5) * .3, w:W * (.06 + R() * .04), life:1.8 + R() * .6, sway:16, grow:.25, fin:.4, fout:.55, alpha:.7})) }
 function summonHand(){
   if(HAND && HAND.live) return HAND; const P0 = handPos(), W = P0.W, h = HAND = {live:true, a:0, halo:0, hold:3.2, clench:0, kind:R() < .5 ? 'claw' : 'spirit'};
-  SP.aHub.v -= 2.5; handPuff(W, P0.bx, P0.by, 9, true); for(let i = 0; i < 2; i++) handSoul(W, P0.bx, P0.by);
+  handPuff(W, P0.bx, P0.by, 9, true); for(let i = 0; i < 2; i++) handSoul(W, P0.bx, P0.by);
   let gone = false;
   add('A', function(c, dt){ h.a += dt; const x = h.a;
-    const rise = eo(clamp((x - .15) / .55)), sink = clamp((x - h.hold) / .55), k = rise * (1 - sink * sink * (3 - 2 * sink)), P = handPos(k), H2 = HANDS[h.kind];
-    if(sink >= 1){ if(!gone){ gone = true; handPuff(W, P.bx, P.by, 7, true); for(let i = 0; i < 2; i++) handSoul(W, P.bx, P.by); SP.aHub.v += 1.2 } h.live = false; return false }
+    const ss = q => q * q * (3 - 2 * q), rise = ss(clamp((x - .15) / .7)), sink = clamp((x - h.hold) / .6), k = rise * (1 - ss(sink)), P = handPos(k), H2 = HANDS[h.kind];
+    if(sink >= 1){ if(!gone){ gone = true; handPuff(W, P.bx, P.by, 7, true); for(let i = 0; i < 2; i++) handSoul(W, P.bx, P.by) } h.live = false; return false }
     // il fumetto ribolle finché la mano c'è; animelle che scappano
     const puff = Math.min(1, x / .2) * (1 - sink * .6);
     if(R() < dt * 14 * puff) handPuff(W, P.bx, P.by, 1, false);
@@ -1148,11 +1148,14 @@ function summonHand(){
     // il raggio entra nel palmo: disegnato prima della mano, così passa dietro le dita
     const bm = h.beam; if(bm && bm.on){ soulJet(c, bm.x0 ?? P.px, bm.sy, bm.x1 ?? P.px, bm.hy, bm.w, T, bm.al); bm.on = false }
     // la mano: si vede solo sopra la linea del fumetto (taglio dritto, coperto dal fumo che le viene disegnato sopra)
-    if(k > .01){ const sz = W * H2.w * (1 - .06 * h.clench), sw = Math.sin(T * 1.6) * .04, r = H2.rot + P.tilt + sw * (h.kind === 'spirit' ? 1.5 : 1);
+    // la mano sale ferma, senza ondeggiare né rimbalzare: trasparente in basso, sempre più concreta mentre sale (e il contrario quando torna giù)
+    if(k > .01){ const sz = W * H2.w, r = H2.rot + P.tilt, ha = .3 + .7 * k;
       c.save(); c.translate(P.bx, P.by); c.rotate(P.tilt); c.beginPath(); c.rect(-W, -W * 2, W * 2, W * 2 + W * .01); c.rotate(-P.tilt); c.translate(-P.bx, -P.by); c.clip();
-      if(h.kind === 'claw') img(c, H2.im(), P.x, P.y, sz, r - .12 * h.clench, Math.min(1, k * 3));
-      else img(c, H2.im(), P.x, P.y, sz, r, Math.min(1, k * 3), null, .5, .5, 1 + .05 * Math.sin(T * 3.1), 1 - .3 * h.clench, r);
+      img(c, H2.im(), P.x, P.y, sz, r, ha);
       c.restore() }
+    // una nuvoletta in più, ferma sul bottone, che nasconde lo stacco dove la mano esce dal fumo
+    { const na = (.2 + .8 * Math.min(1, x / .25)) * (1 - sink), nr = W * .15;
+      c.save(); c.translate(P.bx, P.by + W * .005); c.scale(1.35, .6); c.save(); c.rotate(T * .25); c.globalAlpha = .8 * na; c.drawImage(smk(CDARK[0]), -nr, -nr, nr * 2, nr * 2); c.restore(); c.rotate(-T * .3); c.globalAlpha = .5 * na; c.drawImage(smk(CFOG[0]), -nr * .8, -nr * .8, nr * 1.6, nr * 1.6); c.restore() }
     // fiotti di nubi sul palmo, che coprono la fine del raggio
     if(bm && bm.k > .05){ glow(c, P.px, P.py, W * .14, '160,80,250', .5 * bm.k);
       if(R() < dt * 40 * bm.k){ const a = R() * TAU, v = 20 + R() * 60; pt(FX.pA, {k:'smoke', x:P.px + Math.cos(a) * W * .03, y:P.py + Math.sin(a) * W * .02, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .6 - 10, drag:2, r:W * (.025 + R() * .03), grow:1.6, life:.6 + R() * .4, col:pick(R() < .55 ? CDARK : CFOG), al:.7}) }
