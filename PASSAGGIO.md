@@ -128,3 +128,9 @@ Selva oggi nella prova: colpo «il boa» (la liana avvolge il tappeto, stritola,
 Regola di Federico: quando ci sono due versioni della stessa immagine (es. «-1» e «-2») si usano tutte e due a caso, una per colpo. Già così: impatti della Forgia, venature della Cripta, crepe di Mox, tentacoli dell'Abisso, sfere di carica di Mox. Da fare così anche le due sfere di carica di Santuario quando si montano.
 
 Ancora da montare negli altri temi (pezzi preparati): cariche di tutti i temi; partenza, corpo e punta dei flussi di Cripta, Santuario e Forgia; tappi di Santuario e Cripta. Federico ha detto di partire dalla Selva.
+
+## 24 novembre (pomeriggio): Selva, liana senza tagli
+- Montati nella prova i pezzi nuovi della Selva: **partenza** (`jstart`, la zolla che esplode sull'elemento centrale), **corpo** (`jbody`, ripetuto lungo la curva senza giunte, il disegno scorre con la punta), **punta** (`jtip`, ramo di vite), **sbuffi di polvere** (`caps`), **ciuffi di fogliame** (`bush`, restano sul tappeto dopo lo stritolamento e svaniscono). Funzioni nuove: `vineTile`, `vineStart`, `vineFlow`, `dust`. La liana vecchia (`liana`, `vine`) non si usa più ed è uscita dalla pagina (ora 9,4 MB).
+- Valgono sia per la selezione e il lancio sia per il boa sul telefono colpito. Pagina pubblicata aggiornata (versione 36).
+- Ancora da decidere con Federico: il **colpo grosso della Selva** (idee in `grafica/selva/STILE.md`, punti 13 e 14: zampa della bestia e squarci degli artigli).
+- Per ricostruire in una chat nuova servono anche `pip install scipy` e i PNG di `v2-prerelease` (poi `git checkout HEAD -- grafica && git clean -fd grafica` per non lasciarli nel ramo: il checkout da `v2-prerelease` sovrascrive anche gli `STILE.md`).
