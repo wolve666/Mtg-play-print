@@ -7136,15 +7136,26 @@ function screenOf(me, other, role){
     return {W, H, m:[1, 0, 0, 1, 0, 0], frame, cell, life, hubEl:$('#tokenBtn'), shake:document.body, pcol, rad, ox:-fr.left, oy:-fr.top,
       hub:{x:hb.x, y:hb.y, w:Math.max(hb.w, W * .3), h:Math.max(hb.h, W * .12)}, field:{x:cr.left, y:cr.top, w:cr.width, h:cr.height}, tile:{x:tr.left, y:tr.top, w:tr.width, h:tr.height}};
   }
-  // un telefono solo: la scheda, nel suo verso
-  const W = frame.offsetWidth, H = frame.offsetHeight, c0 = rectC(cell), a = rotDeg(me) * PI / 180, co = Math.cos(a), si = Math.sin(a);
+  // un telefono solo. Le estremità dei colpi (dove escono e dove entrano) devono stare fuori dallo schermo, come in H&O:
+  // - chi attacca: uno schermo grande quanto la scheda, girato con l'«alto» verso chi è colpito e lungo fino al bordo del telefono;
+  // - chi è colpito: la sua scheda, nel suo verso (lì sta il tappeto vivo), con il «quadratino» di chi attacca fuori dallo schermo, dalla sua parte.
+  const vw = innerWidth, vh = innerHeight, exitT = (o, d) => { let t = 1e9; if(d[0] > 1e-6) t = Math.min(t, (vw - o.x) / d[0]); if(d[0] < -1e-6) t = Math.min(t, -o.x / d[0]); if(d[1] > 1e-6) t = Math.min(t, (vh - o.y) / d[1]); if(d[1] < -1e-6) t = Math.min(t, -o.y / d[1]); return t };
+  const oc = $(`.cell[data-i="${other}"]`), c0 = rectC(cell), op = oc ? rectC(oc) : {x:vw / 2, y:-200}, fw = frame.offsetWidth, fh = frame.offsetHeight;
+  if(role === 'A'){
+    const pn = cell.querySelector('.pname'), h = pn ? rectC(pn) : c0, dx = op.x - h.x, dy = op.y - h.y, dl = Math.hypot(dx, dy) || 1, d = [dx / dl, dy / dl];
+    const W = Math.max(fw, fh) * .8, Y0 = exitT(h, d) + 60, H = Y0 + W * .9, si = d[0], co = -d[1];
+    const m = [co, si, -si, co, h.x - (co * W / 2 - si * Y0), h.y - (si * W / 2 + co * Y0)];
+    const toS = (x, y) => { const ex = x - h.x, ey = y - h.y; return [co * ex + si * ey + W / 2, -si * ex + co * ey + Y0] };
+    const t = toS(op.x, op.y);
+    return {W, H, m, toS, frame, cell, life, hubEl:pn, shake:cell, pcol, rad, ox:0, oy:0, solo:true,
+      hub:{x:W / 2, y:Y0, w:W * .42, h:W * .15}, field:{x:0, y:Y0 - W * .35, w:W, h:W * .7}, tile:{x:t[0] - W * .15, y:t[1] - W * .07, w:W * .3, h:W * .14}};
+  }
+  const W = fw, H = fh, a = rotDeg(me) * PI / 180, co = Math.cos(a), si = Math.sin(a);
   const toS = (x, y) => { const dx = x - c0.x, dy = y - c0.y; return [dx * co + dy * si + W / 2, -dx * si + dy * co + H / 2] };
   const m = [co, si, -si, co, c0.x - (co * W / 2 - si * H / 2), c0.y - (si * W / 2 + co * H / 2)];
-  const pn = cell.querySelector('.pname'), pc = pn ? rectC(pn) : c0, hp = toS(pc.x, pc.y);
-  const oc = $(`.cell[data-i="${other}"]`), op = oc ? rectC(oc) : {x:c0.x, y:-200}, o = toS(op.x, op.y);
-  const tile = role === 'A' ? {x:o[0] - W * .15, y:o[1] - H * .07, w:W * .3, h:H * .14} : {x:clamp(o[0], W * .15, W * .85) - W * .14, y:-H * .1, w:W * .28, h:H * .1};
-  return {W, H, m, frame, cell, life, hubEl:pn, shake:cell, pcol, rad, ox:0, oy:0,
-    hub:{x:hp[0], y:hp[1], w:W * .42, h:W * .15}, field:{x:0, y:0, w:W, h:H}, tile};
+  const dx = op.x - c0.x, dy = op.y - c0.y, dl = Math.hypot(dx, dy) || 1, d = [dx / dl, dy / dl], tt = exitT(c0, d) + 80, P = toS(c0.x + d[0] * tt, c0.y + d[1] * tt);
+  return {W, H, m, toS, frame, cell, life, hubEl:null, shake:cell, pcol, rad, ox:0, oy:0, solo:true,
+    hub:{x:W / 2, y:H / 2, w:W * .42, h:W * .15}, field:{x:0, y:0, w:W, h:H}, tile:{x:P[0] - W * .14, y:P[1] - H * .05, w:W * .28, h:H * .1}};
 }
 // trasformazioni aggiunte a quelle dell'app (vita, bottone, scosse), tolte alla fine
 function tf(el, add){
@@ -7160,6 +7171,8 @@ function lightLife(F, S){
     el.style.textShadow = `0 4px 0 rgba(0,0,0,.25),0 0 ${12 + 26 * a}px rgba(${r},${g},${b},${a})`; S.lit = true }
   else if(S.lit){ el.style.textShadow = ''; S.lit = false }
 }
+// un telefono solo: quello che è pensato per tutto lo schermo (nuvole, lampi, schiuma…) sfuma attorno alla scheda colpita, senza bordi dritti
+function feather(c, S, grow, soft){ const fb = S.field, e = S.W * grow; c.save(); c.globalCompositeOperation = 'destination-in'; c.filter = `blur(${Math.round(S.W * soft * DPR)}px)`; c.fillStyle = '#000'; c.fillRect(fb.x - e, fb.y - e, fb.w + e * 2, fb.h + e * 2); c.restore() }
 let raf = 0, ACT = null;
 function kick(){ if(!raf) raf = requestAnimationFrame(frame) }
 const springsBusy = () => Object.values(SP).some(s => Math.abs(s.x - s.t) > .002 || Math.abs(s.v) > .01);
@@ -7187,11 +7200,13 @@ function frame(now){
     runFX('V', cV, dt); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt);
     if(V && SHOW.V && !FLD.V && !solo) cV.restore();
     // …ma fuori dalla scheda colpita sfumano piano, senza taglio netto: le schede vicine restano pulite
-    if(V && SHOW.V && solo){ const fb = V.field, e = V.W * .1; cV.save(); cV.globalCompositeOperation = 'destination-in'; cV.filter = `blur(${Math.round(V.W * .08 * DPR)}px)`; cV.fillStyle = '#000'; cV.fillRect(fb.x - e, fb.y - e, fb.w + e * 2, fb.h + e * 2); cV.restore() }
+    if(V && SHOW.V && solo) feather(cV, V, .1, .08);
     const cM = V && SHOW.V ? fitFix(fixedCv('cpM'), V) : dummyCtx;
     runFX('M', cM, dt); drawSprites(FX.sM, cM, dt);
+    if(V && SHOW.V && !NV()) feather(cM, V, .3, .14);
     const cV2 = V && SHOW.V ? fitFix(fixedCv('cpV2'), V) : dummyCtx;
     runFX('V2', cV2, dt); drawSprites(FX.sV2, cV2, dt); drawPts(FX.pV2, cV2, dt);
+    if(V && SHOW.V && !NV()) feather(cV2, V, .3, .14);
     // scosse, vita e bottone
     if(V && SHOW.V){
       let rx = 0, ry = 0; if(rumble){ rumble.a += dt; const k = rumble.a / rumble.dur; if(k >= 1) rumble = null; else { const m = rumble.amt * (1 - k) * V.W * .02; rx = (R() - .5) * m; ry = (R() - .5) * m } }
@@ -7240,7 +7255,7 @@ function setup(a, v, see){
   if(net && see === 'V'){ const t = $(`.ntile[data-i="${a}"]`); if(t){ const r = t.getBoundingClientRect(); A.tile = V.tile = {x:r.left, y:r.top, w:r.width, h:r.height} } }
   SCR.A = A; SCR.V = V; SHOW.A = see.includes('A'); SHOW.V = see.includes('V');
   FLD.V = SHOW.V ? fieldFor('V', V) : null;
-  FLD.A = SHOW.A && !net ? fieldFor('A', A) : null;
+  FLD.A = null;   // chi attacca non ha il tappeto vivo: su un telefono faceva un riquadro sulla sua scheda
   ACT = {a, v, see};
   return true;
 }
@@ -7268,8 +7283,9 @@ function aim(a, x, y, target){
     TK = th; DR = {th, t0:T, p:[SCR.A.hub.x, SCR.A.hub.y]}; AIM = {a, v, th}; SP.aHub.v -= 1.2;
   }
   // il bersaglio può cambiare mentre trascino: aggiorno il quadratino o la scheda di arrivo
-  if(target != null && target !== AIM.v && target !== a){ AIM.v = target; const n = NV() ? screenOf(NET.me, target, 'A') : screenOf(a, target, 'A'); if(n) SCR.A.tile = n.tile }
-  const Sa = SCR.A, p = NV() ? [x, y] : (() => { const c0 = rectC(Sa.cell), ang = rotDeg(a) * PI / 180, co = Math.cos(ang), si = Math.sin(ang), dx = x - c0.x, dy = y - c0.y; return [dx * co + dy * si + Sa.W / 2, -dx * si + dy * co + Sa.H / 2] })();
+  if(target != null && target !== AIM.v && target !== a){ AIM.v = target; const n = NV() ? screenOf(NET.me, target, 'A') : screenOf(a, target, 'A');
+    if(n){ if(NV()) SCR.A.tile = n.tile; else { SCR.A = n; DR.p = [n.hub.x, n.hub.y]; DR.tip = null } } }
+  const Sa = SCR.A, p = NV() ? [x, y] : Sa.toS(x, y);
   DR.p = p; kick(); return true;
 }
 // fine del trascinamento: sopra un avversario la carica si sprigiona, altrimenti si spegne
