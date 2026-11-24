@@ -533,7 +533,7 @@ TH.santuario = {
     for(let i = 0; i < 60; i++){ const x = fb.x + R() * fb.w, y = fb.y + R() * fb.h, d = .5 + R() * .4; pt(FX.pV, {k:'mote', x, y, vx:(o.x - x) / d, vy:(o.y - y) / d, life:d, r:W * (.01 + R() * .014), col:'255,236,180', tw:1, fout:.1, delay:R() * .35}) }
     cloudsArrive(o.x, END + .2);
     // la spada: cade, entra nel terreno (la parte sotto la superficie non si vede), affonda con un piccolo rimbalzo, vibra, resta piantata
-    const S = {q:spr(0, 140, 3), sink:spr(0, 420, 15)}, len = W * 1.15, depth = len * .3;
+    const S = {q:spr(0, 140, 15), sink:spr(0, 420, 15)}, len = W * 1.15, depth = len * .42;
     const hole = (c, a, front) => { c.save(); c.globalAlpha = a; const rx = W * .1, ry = W * .035;
       if(!front){ const g = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, rx); g.addColorStop(0, 'rgba(20,12,4,.95)'); g.addColorStop(1, 'rgba(60,40,15,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(o.x, o.y, rx * 1.3, ry * 1.4, 0, 0, TAU); c.fill() }
       else { c.fillStyle = 'rgba(214,204,186,1)'; c.beginPath(); c.ellipse(o.x, o.y, rx, ry, 0, 0, PI); c.ellipse(o.x, o.y + ry * .35, rx * .92, ry * .7, 0, PI, 0, true); c.fill();
@@ -556,11 +556,11 @@ TH.santuario = {
       lit('V', o.x, o.y - len * .35, W * .7, [1, .9, .65], .9 * al);
       return true });
     after(D0 + D, () => {
-      S.sink.t = depth; S.sink.v = depth * 9; S.q.v += sgn() * 2.6;
+      S.sink.t = depth; S.sink.v = depth * 11; S.q.v += sgn() * 1.1;
       impact(PI / 2, 1.9); flash('#FFFFFF', .95, .3, true); flash('#FFF2D0', .55, 1.8);
       [.12, .3].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const k = this.a / 1.1; if(k > 1) return false; if(k < 0) return true; wave('V', o.x, o.y, W * (.05 + 1.2 * eo(k)), 16 * (1 - k) / (i + 1), W * .07); return true }, dl));
-      // altri due colpetti mentre affonda: la spada «morde» il terreno
-      after(.35, () => { S.q.v += sgn() * 1.2; impact(PI / 2, .35) }); after(.7, () => { S.q.v += sgn() * .7; impact(PI / 2, .2) });
+      // altri due colpetti mentre affonda: la spada «morde» il terreno (senza altre oscillazioni: un movimento e basta)
+      after(.35, () => impact(PI / 2, .35)); after(.7, () => impact(PI / 2, .2));
       const cracks = Array.from({length:10}, (_, i) => { let a = i / 10 * TAU + R() * .4, x = 0, y = 0; const pts = [[0, 0]], n = 6 + (R() * 5 | 0), stp = W * (.045 + R() * .03);
         for(let j = 0; j < n; j++){ a += (R() - .5) * .8; x += Math.cos(a) * stp; y += Math.sin(a) * stp * .85; pts.push([x, y]) } return pts });
       const life = END - D0 - D;
@@ -1209,7 +1209,12 @@ TH.forgia = {
   aim(c, d, dt){
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), tg = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p, t = follow(d, tg[0], tg[1], dt);
     if(!d.seed || T - d.st > .06){ d.seed = 1 + R() * 9999 | 0; d.st = T; d.fl = .6 + R() * .8 }
-    const m = bolt(c, [hb.x, hb.y], [t.x, t.y], W, d.seed, 1, 2), mid = m[m.length >> 1];
+    // due fulmini che si intrecciano, ognuno con le sue ramificazioni
+    const m = bolt(c, [hb.x, hb.y], [t.x, t.y], W, d.seed, 1, 3), m2 = bolt(c, [hb.x, hb.y], [t.x, t.y], W, d.seed * 7 + 3, .8, 3, 1, 2.2), mid = m[m.length >> 1];
+    // scoppiettii lungo i fulmini: scintille, particelle elettriche che tremolano, piccoli archi che saltano
+    if(R() < dt * 70){ const q = (R() < .5 ? m : m2)[1 + (R() * (m.length - 2) | 0)] || mid, a = R() * TAU, v = 80 + R() * 220; pt(FX.pA, {k:'spark', x:q[0], y:q[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:40 + R() * 100, gz:1000, drag:2.5, life:.25 + R() * .25, r:1 + R(), col:R() < .6 ? '200,230,255' : '255,255,255'}) }
+    if(R() < dt * 40){ const q = m2[1 + (R() * (m2.length - 2) | 0)] || mid; pt(FX.pA, {k:'mote', x:q[0] + (R() - .5) * W * .05, y:q[1] + (R() - .5) * W * .05, vx:(R() - .5) * 60, vy:(R() - .5) * 60, life:.3 + R() * .3, r:W * (.008 + R() * .012), col:'150,200,255', tw:1}) }
+    if(R() < dt * 16){ const q = m[1 + (R() * (m.length - 2) | 0)] || mid, a = R() * TAU, l = W * (.04 + R() * .06), pts = [[q[0], q[1]]]; for(let j = 1; j <= 4; j++) pts.push([q[0] + Math.cos(a) * l * j / 4 + (R() - .5) * l * .5, q[1] + Math.sin(a) * l * j / 4 + (R() - .5) * l * .5]); pt(FX.pA, {k:'arc', pts, life:.08 + R() * .06, fout:1}) }
     lit('A', t.x, t.y, W * .5, [.55, .8, 1.3], 1.6 * d.fl); lit('A', mid[0], mid[1], W * .55, [.55, .8, 1.3], 1.1 * d.fl); lit('A', hb.x, hb.y, W * .4, [1.1, .6, .25], .6);
     glow(c, t.x, t.y, W * .12, '120,190,255', .6); glow(c, hb.x, hb.y, W * .15, '255,150,60', .4 + .2 * Math.sin(T * 20));
     if(R() < dt * 30){ const a = R() * TAU; pt(FX.pA, {k:'spark', x:t.x, y:t.y, vx:Math.cos(a) * 200, vy:Math.sin(a) * 200, vz:80 + R() * 120, gz:1200, drag:2, life:.4, r:1.2, col:'200,230,255'}) }
@@ -1225,8 +1230,22 @@ TH.forgia = {
   hit(tx){
     const W = W_(), o = fieldO(pV), x0 = clamp(tx, W * .2, W * .8);
     if(RM){ flash('#FFF4E0', .8, .6); damage(); return }
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .32) return false; if(((x * 22) | 0) % 3 === 2) return true; const m = bolt(c, [x0, -10], [o.x, o.y], W, 1 + (x * 30 | 0) * 13, 1 - x / .32, 6, 1.7, 1.9);
-      lit('V', o.x, o.y, W * .9, [.6, .85, 1.35], 3 * (1 - x / .32)); const mid = m[m.length >> 1]; lit('V', mid[0], mid[1], W * .6, [.6, .85, 1.35], 2); return true });
+    // tre fulmini insieme, da punti diversi in alto, che lampeggiano a scatti e cambiano forma; poi altri due colpi di coda
+    const tops = [x0, clamp(x0 - W * (.25 + R() * .15), W * .05, W * .95), clamp(x0 + W * (.25 + R() * .15), W * .05, W * .95)];
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .45) return false; if(((x * 24) | 0) % 4 === 3) return true; const al = 1 - x / .45, sd = 1 + (x * 30 | 0) * 13;
+      let m; tops.forEach((tx, i) => { const r = bolt(c, [tx, -10], [o.x + (i ? (R() - .5) * W * .06 : 0), o.y], W, sd + i * 101, al * (i ? .85 : 1), i ? 4 : 7, 1.7, 1.9 + i * .3); if(!i) m = r });
+      lit('V', o.x, o.y, W * .9, [.6, .85, 1.35], 3.4 * al); const mid = m[m.length >> 1]; lit('V', mid[0], mid[1], W * .6, [.6, .85, 1.35], 2.2); st('V').chr = Math.max(st('V').chr, 5 * al); return true });
+    [.6, .85].forEach((dl, i) => add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > .16) return false; if(x < 0) return true; const tx = clamp(o.x + (R() - .5) * W * .6, W * .1, W * .9);
+      bolt(c, [tx, -10], [o.x + (R() - .5) * W * .1, o.y], W, 7 + (x * 40 | 0) * 17 + i * 999, 1 - x / .16, 4, 1.4, 2); lit('V', o.x, o.y, W * .8, [.6, .85, 1.35], 2.2 * (1 - x / .16));
+      if(!this.k){ this.k = 1; impact(PI / 2, .45); flash('#CFE6FF', .35, .15, true) } return true }, dl));
+    // dopo il colpo l'elettricità resta sul tappeto: archi che saltano a caso intorno al punto colpito, scintille che scoppiettano, per più di un secondo
+    add('V2', function(c, dt){ this.a += dt; const x = this.a - .12; if(x > 1.6) return false; if(x < 0) return true; const k = 1 - x / 1.6;
+      if(R() < dt * 26 * k){ const a = R() * TAU, r0 = W * (.04 + R() * .12), a2 = a + (R() - .5) * 1.5, r1 = r0 + W * (.08 + R() * .18);
+        bolt(c, [o.x + Math.cos(a) * r0, o.y + Math.sin(a) * r0 * .8], [o.x + Math.cos(a2) * r1, o.y + Math.sin(a2) * r1 * .8], W, R() * 9999 | 0, .9 * k, 1, .6, 1.4);
+        lit('V', o.x + Math.cos(a) * r1, o.y + Math.sin(a) * r1 * .8, W * .3, [.6, .85, 1.35], 1.3 * k) }
+      if(R() < dt * 50 * k){ const a = R() * TAU, r = W * (.05 + R() * .3), v = 120 + R() * 260, b = R() * TAU; pt(FX.pV2, {k:'spark', x:o.x + Math.cos(a) * r, y:o.y + Math.sin(a) * r * .8, vx:Math.cos(b) * v, vy:Math.sin(b) * v, vz:60 + R() * 160, gz:1100, rest:.3, drag:2, life:.3 + R() * .3, r:1 + R() * 1.2, col:R() < .5 ? '200,230,255' : '255,255,255'}) }
+      if(R() < dt * 10 * k) FX.sV2.push(sp({im:I('forgia', 'arc'), x:o.x + (R() - .5) * W * .5, y:o.y + (R() - .5) * W * .4, w:W * (.15 + R() * .1), rot:R() * TAU, life:.12, fin:.01, blend:'lighter'}));
+      return true });
     after(.12, () => forgeImpact(o, W));
   },
   // il goblin sbuca da un angolo in basso del tappeto colpito con la bomba in mano, ghigna e sparisce; poco dopo la bomba piomba dall'alto:

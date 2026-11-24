@@ -159,3 +159,33 @@ K3. **Foglio di 4 esplosioni** (per la bomba; oggi l'esplosione ha un bordo), 20
 A sheet of 4 separate explosions seen from above, each a round billowing cloud of grey smoke lit pale cyan from inside, with brass fragments and sparks flying outward, soft edges fading to transparent, on a 2×2 grid, evenly spaced and not touching. Everything else transparent. 2048×1024.
 ```
 - Quando arrivano li monto nella pagina di prova e segno qui cosa è arrivato.
+
+## Colpo grosso nuovo: il laserone (24 novembre, idea di Federico, sostituisce il pugno)
+Dal centro sbuca la torretta (C1 + C2). Poi **cambia testa**: la canna classica si apre e si trasforma nella canna potenziata (L1), con vapore e un lampo. Le particelle di energia vengono risucchiate nella bocca (la carica la faccio a codice, più K2). Poi spara un **laser blu grosso e fisso** dritto nel tappeto avversario e lo **trascina tracciando una riga**, come il fuoco del drago della Forgia: dietro resta un **solco bruciato** con il **metallo fuso** che cola e si raffredda piano (da bianco a arancio a rosso scuro).
+Stessa vista della torretta: tutto **dall'alto**. Il laser è più blu e più forte del ciano del nucleo, ma sempre «magico», non fantascienza al neon.
+
+L1. **Canna potenziata** (stessa misura, vista e perno di C2: la scambio al volo), 1024×512
+```
+Seen from directly above: the same antique clockwork cannon barrel transformed into a powered crystal laser emitter, pointing to the right: the barrel opened into rings of brass fins and focusing glass lenses, glowing blue energy coils wrapped around it, a large faceted colorless crystal set at the muzzle glowing intense blue, the left end is the same round brass pivot cap as before. Everything else transparent. 1024×512.
+```
+L2. **Bocca del laser** (la partenza), 1024×512
+```
+Seen from directly above: the muzzle flare where a powerful magical laser beam is born, pointing to the right: a blinding white-blue star of light with a ring of blue energy and small crackling arcs, the beam leaving it to the right, the right end clean and fading softly to transparent so it can join a beam. Everything else transparent. 1024×512.
+```
+L3. **Corpo del laser, ripetibile**, 2048×512
+```
+A thick straight horizontal magical laser beam seen from the side: a blinding white core, an intense blue body, thin blue energy filaments twisting along it, tiny sparkles. Seamless and tileable horizontally: the left and right edges match exactly, uniform along its whole length, no head, no tail. Everything else transparent. 2048×512.
+```
+L4. **Punto d'impatto del laser**, 1024×1024
+```
+Seen from directly above: the point where a powerful blue laser hits and melts a dark steel surface: a white-hot glowing spot, a small crater of molten orange metal splashing outward, blue energy flare and sparks around it, the edge fading softly to transparent, circular. Everything else transparent. 1024×1024.
+```
+L5. **Solco bruciato, ripetibile** (lo stendo lungo la riga tracciata), 2048×512
+```
+Seen from directly above: a straight horizontal burned cut groove sliced into a dark metal plate by a laser, running from left to right: a narrow channel glowing with molten metal, bright orange at the center fading to dark red and black scorched edges, small drips and bubbles of melted metal along it, a faint smoke haze. Seamless and tileable horizontally: the left and right edges match exactly, no ends. Everything around the groove transparent. 2048×512.
+```
+L6. **Foglio di 8 schizzi di metallo fuso**, 1536×1024
+```
+A sheet of 8 separate splashes and drops of molten metal seen from above, different shapes and sizes, glowing white-yellow at the center, orange and dark red at the edges, a few cooling to grey, on a 4×2 grid, evenly spaced and not touching. Everything else transparent. 1536×1024.
+```
+- Insieme servono anche C1, C2 (torretta), K1 (sbuffi di vapore) e K2 (carica del nucleo) delle richieste sopra.
