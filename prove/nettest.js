@@ -131,7 +131,7 @@ const check = (ok, msg) => { log((ok ? 'OK   ' : 'FAIL ') + msg); if(!ok) fails+
   // --- menu dell'ospite: niente stampante, niente impostazioni della partita
   await B.evaluate(() => openTokens()); await wait(400);
   const gm = await B.evaluate(() => ({acts:[...document.querySelectorAll('#tkMenu [data-act]')].map(b => b.dataset.act + (b.dataset.v ? ':' + b.dataset.v : '')).join(','), pr:getComputedStyle($('#menuBtn')).display, tk:getComputedStyle($('#tkPrinter')).display}));
-  check(!/new|log|count|fmt|sl|cmd|turn|diag|export|update|install|net|starts/.test(gm.acts.replace(/show:\w+|theme:\w+|hold:\w+|netexit/g, '')) && gm.pr === 'none' && gm.tk === 'none', 'menu dell\'ospite ridotto: ' + gm.acts);
+  check(!/new|log|count|fmt|sl|cmd|turn|diag|export|update|install|net|starts/.test(gm.acts.replace(/show:\w+|theme:\w+|hold:\w+|netexit/g, '')) && gm.pr === 'none' && gm.tk !== 'none', 'menu dell\'ospite ridotto (con «Collega stampante»): ' + gm.acts);
   check(await A.evaluate(() => !!document.querySelector('#tkMenu [data-act="new"]') || (renderMenu(), !!document.querySelector('#tkMenu [data-act="new"]'))), 'il menu del principale resta completo');
   await shot(B, '08b-ospite-menu');
   await B.evaluate(() => history.back()); await wait(400);
@@ -143,6 +143,26 @@ const check = (ok, msg) => { log((ok ? 'OK   ' : 'FAIL ') + msg); if(!ok) fails+
   log('debug', await A.evaluate(() => JSON.stringify({q:NPQ.length, b:npBusy, pr:__pr, mk:typeof makeBits, t:$('#toast')?.textContent})), await B.evaluate(() => $('#toast')?.textContent));
   check(await A.evaluate(() => __pr.length) === 3, 'pedina dell\'ospite stampata 3 volte dal principale');
   check(await A.evaluate(() => S.log.some(l => /Goblin ×3 per Bea/.test(l.txt))), 'nel registro: stampata per Bea');
+  // --- stampa indipendente dal principale: il principale senza stampante, Carlo ce l'ha
+  const TK = {id:'x2', name:'Tesoro', type_line:'Token Artifact — Treasure', small:'https://cards.scryfall.io/small/y.jpg', large:'https://cards.scryfall.io/large/y.jpg', print:'https://cards.scryfall.io/border/y.jpg'};
+  const fake = () => { window.__pr = []; printer.ch = {}; printer.dev = {name:'Finta'}; printer.write = async d => { __pr.push(d.length) }; window.makeBits = async () => ({w:8, h:8, bits:new Uint8Array(64)}); window.escposImg = () => new Uint8Array(10); window.arcResolve = async t => t; updatePrinterUI() };
+  await A.evaluate(() => { printer.ch = null; printer.dev = null; __pr = []; updatePrinterUI() });
+  await C.evaluate(fake); await wait(400);
+  check(await A.evaluate(() => Object.entries(NET.pr).filter(([k, v]) => v).length === 1), 'il principale sa che Carlo ha la stampante');
+  await B.evaluate(tk => netPrintAsk(tk, 2), TK); await wait(800);
+  check(await C.evaluate(() => __pr.length) === 2 && await A.evaluate(() => __pr.length) === 0, 'principale senza stampante: la pedina di Bea la stampa Carlo (2 copie)');
+  check(/stampata da Carlo/.test(await B.evaluate(() => $('#toast')?.textContent || '')), 'Bea vede: stampata da Carlo');
+  await A.evaluate(tk => netPrintMine(tk, 1), TK); await wait(800);
+  check(await C.evaluate(() => __pr.length) === 3, 'la pedina del principale senza stampante la stampa Carlo');
+  // Bea si collega a una stampante: da ora stampa lei, senza passare dal principale
+  await B.evaluate(fake); await wait(300);
+  await B.evaluate(() => { const t = {id:'x3', name:'Indizio', print:'https://cards.scryfall.io/border/z.jpg'}; return printTk(t, 1) }); await wait(300);
+  check(await B.evaluate(() => __pr.length) === 1 && await C.evaluate(() => __pr.length) === 3, 'Bea con la sua stampante stampa da sé');
+  // ora Bea (posto 1) ha la stampante: è lei il numero più basso dopo il principale
+  await A.evaluate(tk => netPrintMine(tk, 1), TK); await wait(800);
+  check(await B.evaluate(() => __pr.length) === 2, 'con Bea e Carlo collegati alla stampante stampa Bea, il numero più basso');
+  await B.evaluate(() => { printer.ch = null; updatePrinterUI() }); await C.evaluate(() => { printer.ch = null; updatePrinterUI() });
+  await A.evaluate(() => { printer.ch = {}; printer.dev = {name:'Finta'}; updatePrinterUI() });
   // --- combattimento dalla scheda di Bea verso Carlo: 15 + 3 da comandante + 2 veleno + 1 radiazioni, recupero 4
   const lifeC0 = await A.evaluate(() => S.players[2].life), lifeB0 = await A.evaluate(() => S.players[1].life);
   // toccando il quadratino di Carlo si apre la pagina dei danni con lui già scelto

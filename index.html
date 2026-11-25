@@ -781,7 +781,7 @@ body.netv .ppF,body.netv .ppGear,body.netv .ppCmd{min-height:36px}
 body.netv .ppGear{min-width:36px}
 @media (min-width:700px){ body.netv .ovBody{width:100%;max-width:640px;margin:0 auto} }
 /* ospite: niente stampante sul suo telefono, stampa il principale */
-body.guest #menuBtn,body.guest #tkPrinter{display:none}
+body.guest #menuBtn{display:none}
 #expired{position:fixed;inset:0;z-index:300;background:var(--bg);display:grid;place-items:center;padding:24px;text-align:center}
 #expired>div{max-width:360px;display:grid;gap:12px;justify-items:center}
 #expired img{width:96px;height:96px}
@@ -1663,7 +1663,7 @@ const NT = (()=>{
 // stato della partita condivisa: la parte che resta dopo un riavvio dell'app, più quella che vive solo finché l'app è aperta
 const NETK = 'smtg-net', SOLOK = 'smtg-state-solo';
 const NET_KEEP = ['role','gid','me','seats','names','acks','seq','pend','base','hostName'];
-const NET_RUN = () => ({eps:{}, ids:{}, on:{}, reqs:[], found:{}, hostEp:null, online:false, joining:null, shadow:null, sent:null, parts:{}, kick:0, adv:false, scanning:false, pick:null, err:''});
+const NET_RUN = () => ({eps:{}, ids:{}, on:{}, pr:{}, prSent:null, reqs:[], found:{}, hostEp:null, online:false, joining:null, shadow:null, sent:null, parts:{}, kick:0, adv:false, scanning:false, pick:null, err:''});
 const NET_EMPTY = () => ({role:null, gid:'', me:null, seats:{}, names:{}, acks:{}, seq:0, pend:[], base:null, hostName:''});
 const NET = Object.assign(NET_EMPTY(), load(NETK) || {}, NET_RUN());
 if(!SET.netId){ SET.netId = Math.random().toString(36).slice(2, 10); saveSet() }
@@ -1836,6 +1836,8 @@ function netHostMsg(ep, m){
       break;
     case 'ops': netHostOps(inf.id, m); break;
     case 'print': netPrintQueue(inf.id, m); break;
+    case 'prs': NET.pr[inf.id] = !!m.on; break;
+    case 'pdone': { const w = NPW[m.jid]; if(w){ delete NPW[m.jid]; clearTimeout(w.t); w.back(!!m.ok, String(m.msg || '').slice(0, 80), w.by) } break }
     case 'ask':
       if(m.what === 'reset'){ toast(`${NET.names[inf.id] || 'Un giocatore'}: rivincita!`); closeAllOv(); resetGame() }
       break;
@@ -1885,6 +1887,7 @@ function netClientMsg(ep, m){
       NET.base = m.S; netAck(m.acks);
       netSeats(m, true); netRebuild(true);
       if(first) toast(`Sei nella partita di ${NET.hostName}`);
+      NET.prSent = null; netPrSync();
       renderNet();
       break;
     }
@@ -1898,7 +1901,8 @@ function netClientMsg(ep, m){
       break;
     case 'seats': netSeats(m); break;
     case 'zap': if(m.v === NET.me) netZapIn(m); break;
-    case 'printed': toast(m.ok ? `${m.name}: stampata da ${NET.hostName || 'chi ospita'}` : `${m.name}: ${m.msg || 'stampa non riuscita'}`, 3000); if(m.ok) sfx('done'); break;
+    case 'pjob': netPrintFor(m); break;
+    case 'printed': toast(m.ok ? `${m.name}: stampata da ${m.by || NET.hostName || 'chi ospita'}` : `${m.name}: ${m.msg || 'stampa non riuscita'}`, 3000); if(m.ok) sfx('done'); break;
     case 'bye': buzz([40, 60, 40]); openResume('bye'); break;
   }
 }
@@ -1954,42 +1958,99 @@ function netRejoin(){
   NET.found = {}; NET.scanning = true;
   NT.discover().catch(e => { NET.scanning = false; NET.err = netErrMsg(e); renderNet(); setTimeout(netRejoin, 10000) });
 }
-// stampa condivisa: l'ospite manda la pedina e le copie, il principale la stampa con la sua stampante
+// Stampa condivisa, indipendente da chi ospita (regola di Federico):
+// 1. chi chiede la pedina ed è collegato a una stampante la stampa da sé;
+// 2. altrimenti la manda al principale, che la stampa se ha la stampante;
+// 3. se il principale non ce l'ha, la passa al telefono collegato con il numero di giocatore più basso che ce l'ha.
+// Ogni ospite dice al principale se ha la stampante collegata (messaggio «prs»).
 const NET_URL = /^https:\/\/[\w.-]+\.scryfall\.(io|com)\//;
-function netPrintAsk(t, n){
-  if(!NET.online){ toast('Telefono principale non collegato'); return false }
+function netTk(t){
   const r = recentOf(t), tk = {};
   ['id', 'name', 'type_line', 'set'].forEach(k => tk[k] = String(r[k] || '').slice(0, 120));
   ['small', 'large', 'print'].forEach(k => { if(NET_URL.test(r[k] || '')) tk[k] = r[k] });
-  netSend([NET.hostEp], {t:'print', tk, n:Math.max(1, Math.min(10, n | 0))});
-  toast(`Mandata a ${NET.hostName || 'chi ospita'}: ${tk.name}${n > 1 ? ' ×' + n : ''}`);
-  return true;
+  return tk;
 }
-const NPQ = []; let npBusy = false;
-function netPrintQueue(id, m){
+function netTkClean(m){
   const tk = isObj(m.tk) ? m.tk : {};
   ['small', 'large', 'print'].forEach(k => { if(!NET_URL.test(tk[k] || '')) delete tk[k] });
   if(!tk.print) tk.print = tk.large || tk.small;
   tk.name = String(tk.name || 'Pedina').slice(0, 120);
-  NPQ.push({id, tk, n:Math.max(1, Math.min(10, m.n | 0))});
+  return tk;
+}
+function netPrSync(){
+  if(NET.role !== 'client' || !NET.online || !NET.hostEp) return;
+  const on = !!printer.ch; if(NET.prSent === on) return;
+  NET.prSent = on; netSend([NET.hostEp], {t:'prs', on});
+}
+// il telefono collegato con la stampante e il numero di giocatore più basso (il principale escluso)
+function netPrinterAt(){
+  let best = null;
+  for(const id in NET.pr){ if(!NET.pr[id] || id === NID() || !NET.on[id] || !NET.eps[id]) continue;
+    const seat = NET.seats[id] ?? 99; if(!best || seat < best.seat) best = {id, ep:NET.eps[id], seat} }
+  return best;
+}
+function netPrintAsk(t, n){
+  if(!NET.online){ toast('Telefono principale non collegato'); return false }
+  const tk = netTk(t);
+  netSend([NET.hostEp], {t:'print', tk, n:Math.max(1, Math.min(10, n | 0))});
+  toast(`Mandata a ${NET.hostName || 'chi ospita'}: ${tk.name}${n > 1 ? ' ×' + n : ''}`);
+  return true;
+}
+// il principale senza stampante: la sua pedina la stampa un ospite che ce l'ha
+function netPrintMine(t, n){
+  const fw = netPrinterAt(); if(!fw) return false;
+  NPQ.push({id:NID(), tk:netTkClean({tk:netTk(t)}), n:Math.max(1, Math.min(10, n | 0))}); netPrintRun();
+  toast(`Mandata a ${NET.names[fw.id] || 'un altro telefono'}: la stampa lui`);
+  return true;
+}
+// stampa sul mio telefono: torna {ok, msg}
+async function printTk(tk, n){
+  const t = await arcResolve(tk);
+  if(!t.print) return {ok:false, msg:'immagine non disponibile'};
+  if(!(await printer.ensure())) return {ok:false, msg:'stampante non collegata'};
+  const data = escposImg(await makeBits(t.print));
+  for(let k = 0; k < n; k++) await printer.write(data);
+  return {ok:true};
+}
+const NPQ = [], NPW = {}; let npBusy = false;
+function netPrintQueue(id, m){
+  NPQ.push({id, tk:netTkClean(m), n:Math.max(1, Math.min(10, m.n | 0))});
   netPrintRun();
 }
 async function netPrintRun(){
   if(npBusy) return; npBusy = true;
   while(NPQ.length){
-    const j = NPQ.shift(), who = NET.names[j.id] || 'Un giocatore', back = (ok, msg) => netSend([NET.eps[j.id]], {t:'printed', ok, msg, name:j.tk.name});
+    const j = NPQ.shift(), mine = j.id === NID(), who = mine ? (NET.hostName || 'te') : NET.names[j.id] || 'Un giocatore', x = j.n > 1 ? ' ×' + j.n : '';
+    const back = (ok, msg, by) => mine ? toast(ok ? `${j.tk.name}: stampata da ${by}` : `${j.tk.name}: ${msg || 'stampa non riuscita'}`, 3000)
+      : netSend([NET.eps[j.id]], {t:'printed', ok, msg, name:j.tk.name, by});
     try{
-      const t = await arcResolve(j.tk);
-      if(!t.print){ back(false, 'immagine non disponibile'); continue }
-      if(!(await printer.ensure())){ toast(`${who} vuole stampare ${j.tk.name}: collega la stampante`, 4000); back(false, 'la stampante del principale non è collegata'); continue }
-      toast(`Stampo per ${who}: ${j.tk.name}${j.n > 1 ? ' ×' + j.n : ''}`, 2500);
-      const data = escposImg(await makeBits(t.print));
-      for(let k = 0; k < j.n; k++) await printer.write(data);
-      logEv(`Stampata pedina ${j.tk.name}${j.n > 1 ? ' ×' + j.n : ''} per ${who}`);
-      back(true);
+      // 2. il principale ha la stampante: stampa lui
+      if(printer.ch || await printer.ensure()){
+        toast(`Stampo per ${who}: ${j.tk.name}${x}`, 2500);
+        const r = await printTk(j.tk, j.n);
+        if(r.ok) logEv(`Stampata pedina ${j.tk.name}${x} per ${who}`);
+        back(r.ok, r.msg, NET.hostName || 'chi ospita'); continue;
+      }
+      // 3. altrimenti il telefono collegato con il numero più basso
+      const fw = netPrinterAt();
+      if(!fw){ if(!mine) toast(`${who} vuole stampare ${j.tk.name}: nessun telefono ha la stampante collegata`, 4000); back(false, 'nessun telefono ha la stampante collegata'); continue }
+      const jid = Math.random().toString(36).slice(2, 9), by = NET.names[fw.id] || 'un altro telefono';
+      NPW[jid] = {back, by, t:setTimeout(() => { if(NPW[jid]){ delete NPW[jid]; back(false, 'stampa non riuscita') } }, 90000)};
+      netSend([fw.ep], {t:'pjob', jid, tk:j.tk, n:j.n, who});
+      logEv(`Pedina ${j.tk.name}${x} di ${who}: la stampa ${by}`);
     }catch(e){ back(false, 'stampa interrotta') }
   }
   npBusy = false;
+}
+// ospite con la stampante: stampa una pedina per conto di un altro giocatore (una alla volta)
+let npFor = Promise.resolve();
+function netPrintFor(m){
+  const tk = netTkClean(m), n = Math.max(1, Math.min(10, m.n | 0)), who = String(m.who || 'un giocatore').slice(0, 40);
+  npFor = npFor.then(async () => {
+    toast(`Stampo per ${who}: ${tk.name}${n > 1 ? ' ×' + n : ''}`, 2500);
+    let r; try{ r = await printTk(tk, n) }catch(e){ r = {ok:false, msg:'stampa interrotta'} }
+    netSend([NET.hostEp], {t:'pdone', jid:m.jid, ok:r.ok, msg:r.msg});
+  });
 }
 function netAsk(what){
   if(!NET.online){ toast('Telefono principale non collegato'); return }
@@ -3731,7 +3792,12 @@ async function openDetail(t, q){
 $('#qMinus').addEventListener('click', ()=>{ qty = Math.max(1, qty-1); $('#qOut').textContent = qty });
 $('#qPlus').addEventListener('click', ()=>{ qty = Math.min(10, qty+1); $('#qOut').textContent = qty });
 $('#dtPrint').addEventListener('click', async ()=>{
-  if(NET.role === 'client'){
+  if(NET.role === 'host' && !printer.ch && netPrintMine(cur, qty)){
+    RECENT = [recentOf(cur), ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
+    if(curEntry){ curEntry.printed = qty; saveVlog() }
+    history.back(); return;
+  }
+  if(NET.role === 'client' && !printer.ch){
     if(!netPrintAsk(cur, qty)) return;
     RECENT = [recentOf(cur), ...RECENT.filter(r => r.id !== cur.id)].slice(0, 12); saveRecent();
     if(curEntry){ curEntry.printed = qty; saveVlog() }
@@ -3887,12 +3953,13 @@ async function quickToken(alts){
     const bits = await bitsP;
     if(!bits){ fail('Immagine non disponibile.'); return }
     drawBits($('#tmBits'), bits);
-    if(NET.role === 'client'){
+    const mine = NET.role === 'host' && !printer.ch && netPrinterAt();
+    if((NET.role === 'client' && !printer.ch) || mine){
       if(seq !== TM.seq) return;
-      const ok = netPrintAsk(tk, qn);
+      const ok = mine ? netPrintMine(tk, qn) : netPrintAsk(tk, qn);
       if(ok){ RECENT = [recentOf(tk), ...RECENT.filter(r => r.id !== tk.id)].slice(0, 12); saveRecent(); if(TM.entry){ TM.entry.printed = qn; saveVlog() } }
       tmReveal(1); TM.phase = ok ? 'done' : 'msg';
-      tmSet('show', ok ? `Mandata a ${NET.hostName || 'chi ospita'}: la stampa lui` : 'Telefono principale non collegato');
+      tmSet('show', ok ? `Mandata a ${mine ? NET.names[mine.id] || 'un altro telefono' : NET.hostName || 'chi ospita'}: la stampa lui` : 'Telefono principale non collegato');
       sfx(ok ? 'done' : 'cancel');
       TM.timer = setTimeout(()=>{ if(seq === TM.seq){ TM.phase = 'msg'; tmClose() } }, 1800);
       return;
@@ -4156,6 +4223,7 @@ function updatePrinterUI(){
   $('#tkPrinter').textContent = on ? 'Collegata' : 'Collega stampante';
   const st = $('#prStatus'); if(st) st.textContent = on ? 'Collegata: ' + name + (printer.info ? ` (${printer.info})` : '') : 'Non collegata';
   const cb = $('#prConnect'); if(cb) cb.textContent = on ? 'Cambia stampante' : 'Collega stampante';
+  if(typeof NET !== 'undefined') netPrSync();
 }
 async function testPrint(){
   if(!printer.ch){ await connectPrinter(); if(!printer.ch) return }
