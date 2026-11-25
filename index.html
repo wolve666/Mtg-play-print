@@ -5674,10 +5674,20 @@ function damage(n = 3){ SP.aHub.v += 1.5; if(SHOW.V) vib(n > 5 ? [40, 30, 80, 40
 function rgbOf(col){ if(col[0] === '#'){ const c = hex3(col); return c } const m = col.match(/[\d.]+/g); return [m[0] / 255, m[1] / 255, m[2] / 255] }
 function flash(col, peak, dur, top){
   const env2 = k => peak * (k < .06 ? k / .06 : Math.pow(1 - (k - .06) / .94, 1.6));
+  if(TAV()){ add(top ? 'V2' : 'V', function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; const o = fieldO(pV), fb = fieldBox(pV), r = Math.max(fb.w, fb.h) * .85, rgb = rgbOf(col).map(v => v * 255 | 0).join(',');
+    const g = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, r); g.addColorStop(0, `rgba(${rgb},${env2(k)})`); g.addColorStop(.55, `rgba(${rgb},${env2(k) * .6})`); g.addColorStop(1, `rgba(${rgb},0)`);
+    c.save(); c.fillStyle = g; c.fillRect(o.x - r, o.y - r, r * 2, r * 2); c.restore(); return true }); return }
   if(top || !FLD.V){ add(top ? 'V2' : 'V', function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; c.save(); c.globalAlpha = env2(k); c.fillStyle = col; c.fillRect(0, 0, pV.clientWidth, pV.clientHeight); c.restore(); return true }); return }
   const rgb = rgbOf(col); add('V', function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; const a = env2(k), f = st('V').fl; if(a > f[3]){ f[0] = rgb[0]; f[1] = rgb[1]; f[2] = rgb[2]; f[3] = a } return true });
 }
 const W_ = () => pV.clientWidth;
+// tavolo comune (un telefono): qualche dettaglio pensato per «tutto lo schermo» di H&O va ammorbidito
+const TAV = () => !!(SCR.V && SCR.V.table);
+// immagini con i bordi pieni (la nuvola del Santuario, i tronchi del bosco): sul tavolo una copia con i bordi sfumati, fatta una volta
+const SOFT = new Map();
+function soft(im, f = .2){ if(!TAV() || !ok(im)) return im; let o = SOFT.get(im); if(o) return o; const w = iw(im), h = ih(im); o = document.createElement('canvas'); o.width = w; o.height = h; const x = o.getContext('2d'); x.drawImage(im, 0, 0);
+  x.globalCompositeOperation = 'destination-in'; for(const [x0, y0, x1, y1] of [[0, 0, w * f, 0], [w, 0, w * (1 - f), 0], [0, 0, 0, h * f], [0, h, 0, h * (1 - f)]]){ const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)'); x.fillStyle = g; x.fillRect(0, 0, w, h) }
+  SOFT.set(im, o); return o }
 // le vibrazioni dei colpi passano dalle impostazioni dell'app
 const vib = p => { try{ if(SET.vibrate && window.navigator.vibrate) window.navigator.vibrate(p) }catch(e){} };
 const navigator = {vibrate:p => vib(p)};
@@ -5728,7 +5738,7 @@ const PUFF = [0, 1].map(v => { const s = document.createElement('canvas'); s.wid
 // la nuvola d'arrivo: un solo disegno, fatto apposta per stare attaccato al bordo alto dello schermo (la parte sopra resta fuori).
 // scende fino a farsi vedere per 4/5, respira piano, poi si dissolve salendo un poco. Restituisce l'altezza del sole, da cui parte il raggio.
 function cloudsArrive(cx, dur){
-  const W = W_(), cl = I('santuario', 'cloud', 0), w = W * 1.65, h = ok(cl) ? w * ih(cl) / iw(cl) : W * .5, yEnd = h * .5 - h * .2, yStart = -h * .5;
+  const W = W_(), cl = soft(I('santuario', 'cloud', 0)), w = W * 1.65, h = ok(cl) ? w * ih(cl) / iw(cl) : W * .5, yEnd = h * .5 - h * .2, yStart = -h * .5;
   add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > dur) return false;
     const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .25) * (1 - fade), y = lerp(yStart, yEnd, eo(x / .6)) - fade * h * .1, sun = y - h * .5 + h * .31;
     glow(c, cx, sun, W * (.2 + .2 * eo((x - .4) / .5)), '255,230,160', al * .8); lit('V', cx, Math.max(0, sun + h * .3), W * .9, [1, .85, .5], al * 1.2);
@@ -6531,7 +6541,7 @@ TH.cripta = {
     add('M', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const f = ph(x, CLOUD), f2 = f * f * (3 - 2 * f);
       if(f > 0){ c.save(); c.beginPath(); c.roundRect ? c.roundRect(fb.x, fb.y, fb.w, fb.h, [fb.w * .085, fb.w * .025, fb.w * .085, fb.w * .025]) : c.rect(fb.x, fb.y, fb.w, fb.h); c.clip(); BL.forEach(b => { const rr = b.r * (1.9 - .9 * f2), a = b.a + b.sp * x, bx = o.x + Math.cos(a) * W * rr, by = o.y + Math.sin(a) * W * rr * 1.1 + Math.sin(x + b.ph) * W * .02, s = b.s * (1 + .4 * f2);
         c.globalAlpha = Math.min(1, f2 * 1.6); c.drawImage(smk(b.col), bx - s, by - s, s * 2, s * 2) });
-        const g = c.createRadialGradient(o.x, o.y - W * .1, 0, o.x, o.y - W * .1, W * .9); g.addColorStop(0, `rgba(6,2,10,${.6 * f2})`); g.addColorStop(1, `rgba(6,2,10,${.25 * f2})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore() }
+        const g = c.createRadialGradient(o.x, o.y - W * .1, 0, o.x, o.y - W * .1, W * .9); g.addColorStop(0, `rgba(6,2,10,${.6 * f2})`); g.addColorStop(1, `rgba(6,2,10,${TAV() ? 0 : .25 * f2})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore() }
       const sv = ph(x, SKULL); if(sv > 0){ const grow = x < HIT ? eo((x - SKULL[0]) / (HIT - SKULL[0])) : 1 + .08 * eo((x - HIT) / .3), y = o.y - W * .06, sz = W * (.38 + .2 * grow), rot = Math.sin(x * 1.7) * .03, skh = sz * 360 / 270;
         img(c, sk, o.x, y, sz, rot, sv * .95); lit('V', o.x, y, W * .6, [.6, .25, 1.1], 1.2 * sv);
         // gli occhi si accendono di viola quando colpisce
@@ -6721,11 +6731,12 @@ function flameTex(){ if(FLT) return FLT; const s = document.createElement('canva
   g.addColorStop(0, 'rgba(255,250,220,1)'); g.addColorStop(.25, 'rgba(255,210,90,.9)'); g.addColorStop(.55, 'rgba(255,120,30,.55)'); g.addColorStop(1, 'rgba(200,40,10,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); return FLT = s }
 // un passaggio d'ombra a caso: entra da un lato, curva, esce dall'altro; ali che battono piano
 function shadowPass(ph, scr, t0, dur, dir){
+  const tav = SCR.V && SCR.V.table; if(tav && ph === 'A') return;   // tavolo comune: il drago passa una volta sola, su tutto il tavolo
   const W = scr.clientWidth, H = scr.clientHeight, drag = I('forgia', 'dragon', 0), box = fieldBox(scr), sx = (R() - .5) * W * .9, ex = (R() - .5) * W * 1.1, cx = (R() - .5) * W * 1.4;
   const P0 = [W / 2 + sx, dir > 0 ? H * 1.35 : -H * .4], P2 = [W / 2 + ex, dir > 0 ? -H * .4 : H * 1.35], P1 = [W / 2 + cx, H * (.3 + R() * .4)], size = W * (1.5 + R() * .8), flap = 2 + R() * 1.5;
   const B = u => { const v = 1 - u; return [v * v * P0[0] + 2 * v * u * P1[0] + u * u * P2[0], v * v * P0[1] + 2 * v * u * P1[1] + u * u * P2[1]] };
   add(ph, function(c, dt){ this.a += dt; if(this.a < 0) return true; const k = this.a / dur; if(k > 1) return false; const p = B(k), q = B(Math.min(1, k + .01)), rot = Math.atan2(q[1] - p[1], q[0] - p[0]) + PI / 2, al = Math.min(1, Math.sin(PI * k) * 1.6), fl = 1 + .07 * Math.sin(this.a * flap * TAU);
-    c.save(); c.beginPath(); c.roundRect ? c.roundRect(box.x, box.y, box.w, box.h, [box.w * .085, box.w * .025, box.w * .085, box.w * .025]) : c.rect(box.x, box.y, box.w, box.h); c.clip();
+    c.save(); if(!tav){ c.beginPath(); c.roundRect ? c.roundRect(box.x, box.y, box.w, box.h, [box.w * .085, box.w * .025, box.w * .085, box.w * .025]) : c.rect(box.x, box.y, box.w, box.h); c.clip() }
     c.filter = 'brightness(0.15)'; img(c, drag, p[0], p[1], size, rot, al * .85, null, .5, .5, fl, 1, rot); c.filter = 'none'; c.restore();
     lit(ph === 'A' ? 'A' : 'V', p[0], p[1], W * .9, [.8, .8, .8], -1.3 * al); return true }, t0);
 }
@@ -6983,7 +6994,7 @@ function sprout(P, ang, Lv, d, Hs){
 // in un attimo il tappeto è una foresta all'ombra. Poi tutto appassisce, si secca e cade a pezzi; restano foglie secche che svaniscono.
 TH.selva.bigName = 'Colpo grosso 1: il bosco che invade';
 TH.selva.big = function(){
-  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), w1 = I('selva', 'wood1', 0), w2 = I('selva', 'wood2', 0);
+  const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), w1 = soft(I('selva', 'wood1', 0)), w2 = soft(I('selva', 'wood2', 0));
   if(RM){ flash('#2A5A1A', .7, 1); damage(8); return }
   const GROW = 1.7, HOLD = 1.1, WI = 1.3, FALL = 1.3, TW = GROW + HOLD, TF = TW + WI, END = TF + FALL;
   const wk = x => clamp((x - TW) / WI), fk = x => clamp((x - TF) / FALL);
@@ -7156,38 +7167,26 @@ function screenOf(me, other, role){
     return {W, H, m:[1, 0, 0, 1, 0, 0], frame, cell, life, hubEl:$('#tokenBtn'), shake:document.body, pcol, rad, ox:-fr.left, oy:-fr.top,
       hub:{x:hb.x, y:hb.y, w:Math.max(hb.w, W * .3), h:Math.max(hb.h, W * .12)}, field:{x:cr.left, y:cr.top, w:cr.width, h:cr.height}, tile:{x:tr.left, y:tr.top, w:tr.width, h:tr.height}};
   }
-  // ---- un telefono solo (schermata segnata da Federico, grafica/segnalazioni/2026-11-25-direzione-colpi-un-telefono.jpg):
-  // il colpo nasce dal nome di chi attacca e va dritto al centro del tappeto colpito; entra dal lato del tappeto
-  // da cui arriva quella retta (lato lungo per chi sta di fronte, lato corto per i vicini); sul tappeto colpito
-  // tutto è nel verso di quel tappeto, cioè com'è visto dal suo giocatore.
-  if(role === 'A'){
-    const pn = cell.querySelector('.pname'), P = pn ? rectC(pn) : rectC(cell), en = entryOf(other, P); if(!en) return null;
-    const dx = en.E[0] - P.x, dy = en.E[1] - P.y, dl = Math.hypot(dx, dy) || 1, si = dx / dl, co = -dy / dl;
-    const fw = frame.offsetWidth, fh = frame.offsetHeight, W = Math.max(fw, fh) * .8, Y0 = Math.max(dl, W * .25), H = Y0 + W * .9;
-    const m = [co, si, -si, co, P.x - (co * W / 2 - si * Y0), P.y - (si * W / 2 + co * Y0)];
-    const toS = (x, y) => { const ex = x - P.x, ey = y - P.y; return [co * ex + si * ey + W / 2, -si * ex + co * ey + Y0] };
-    return {W, H, m, toS, frame, cell, life, hubEl:pn, shake:cell, pcol, rad, ox:0, oy:0, solo:true,
-      hub:{x:W / 2, y:Y0, w:W * .42, h:W * .15}, field:{x:0, y:Y0 - W * .35, w:W, h:W * .7}, tile:{x:W / 2 - W * .15, y:-W * .07, w:W * .3, h:W * .14}};
-  }
-  const oc = $(`.cell[data-i="${other}"]`), opn = oc && oc.querySelector('.pname'), P = opn ? rectC(opn) : oc ? rectC(oc) : {x:innerWidth / 2, y:-100};
-  const en = entryOf(me, P); if(!en) return null;
-  const {fw, fh, b, c0, r0} = en, W = b === 0 || b === PI ? fw : fh, H = b === 0 || b === PI ? fh : fw, a = r0 + b, co = Math.cos(a), si = Math.sin(a);
-  const m = [co, si, -si, co, c0.x - (co * W / 2 - si * H / 2), c0.y - (si * W / 2 + co * H / 2)];
-  const toS = (x, y) => { const dx = x - c0.x, dy = y - c0.y; return [dx * co + dy * si + W / 2, -dx * si + dy * co + H / 2] };
-  const es = toS(en.E[0], en.E[1]), th = Math.max(H * .1, 22);
-  return {W, H, m, toS, frame, cell, life, hubEl:null, shake:cell, pcol, rad, ox:(fw - W) / 2, oy:(fh - H) / 2, glRot:Math.round(b * 180 / PI), solo:true, c0,
-    hub:{x:W / 2, y:H / 2, w:W * .42, h:W * .15}, field:{x:0, y:0, w:W, h:H}, tile:{x:clamp(es[0], W * .1, W * .9) - W * .14, y:-th * .8, w:W * .28, h:th}};
+  return null;
 }
-// dove la retta dal mirino P (sul tavolo) al centro del tappeto i entra nel tappeto: lato, punto d'ingresso, verso dello schermo del colpo
-// b = rotazione dello schermo del colpo rispetto alla scheda, perché il lato d'ingresso sia il suo «alto»
-function entryOf(i, P){
-  const cell = $(`.cell[data-i="${i}"]`), frame = cell && cell.querySelector('.frame'); if(!frame) return null;
-  const fw = frame.offsetWidth, fh = frame.offsetHeight, c0 = rectC(cell), r0 = rotDeg(i) * PI / 180, co = Math.cos(r0), si = Math.sin(r0);
-  const ex = P.x - c0.x, ey = P.y - c0.y, dx = co * ex + si * ey, dy = -si * ex + co * ey;   // il mirino nel verso della scheda
-  let b, e;
-  if(Math.abs(dy) / (fh / 2) >= Math.abs(dx) / (fw / 2)){ const k = (fh / 2) / (Math.abs(dy) || 1e-6); e = [dx * k, dy < 0 ? -fh / 2 : fh / 2]; b = dy < 0 ? 0 : PI }
-  else { const k = (fw / 2) / (Math.abs(dx) || 1e-6); e = [dx > 0 ? fw / 2 : -fw / 2, dy * k]; b = dx > 0 ? PI / 2 : -PI / 2 }
-  return {fw, fh, b, c0, r0, E:[c0.x + co * e[0] - si * e[1], c0.y + si * e[0] + co * e[1]]};
+// ---- tavolo comune (un telefono): il tappeto è uno, con una sezione per giocatore (idea di Federico, 25 novembre).
+// Un solo spazio per tutto il colpo, steso tra chi attacca e chi è colpito: chi attacca sta in «alto» (come il quadratino in H&O),
+// chi è colpito sta in fondo alla retta. Così l'arrivo dei colpi H&O, che nasce dalla parte di chi attacca, nasce da lui
+// e colpisce l'avversario, e i colpi grossi hanno tutto il tavolo. upright: spazio dritto (il goblin, che corre sul tavolo).
+function tableScreens(a, v, upright){
+  const ac = $(`.cell[data-i="${a}"]`), vc = $(`.cell[data-i="${v}"]`), vf = vc && vc.querySelector('.frame'); if(!ac || !vf) return null;
+  const pn = ac.querySelector('.pname'), P = pn ? rectC(pn) : rectC(ac), C = rectC(vc), W = Math.min(innerWidth, Math.min(vf.offsetWidth, vf.offsetHeight) * 1.7);
+  let m;
+  if(upright) m = [1, 0, 0, 1, C.x - W / 2, 0];
+  else { const D = Math.hypot(C.x - P.x, C.y - P.y) || 1, dx = (C.x - P.x) / D, dy = (C.y - P.y) / D, ya = W * .12;   // l'asse «in giù» va da chi attacca a chi è colpito
+    m = [dy, -dx, dx, dy, 0, 0]; m[4] = P.x - m[0] * W / 2 - m[2] * ya; m[5] = P.y - m[1] * W / 2 - m[3] * ya }
+  const toS = (x, y) => { const ex = x - m[4], ey = y - m[5]; return [m[0] * ex + m[1] * ey, m[2] * ex + m[3] * ey] };
+  const p = toS(P.x, P.y), c = toS(C.x, C.y), vs = Math.min(vf.offsetWidth, vf.offsetHeight), af = ac.querySelector('.frame'), as = Math.min(af.offsetWidth, af.offsetHeight), vb = {x:c[0] - vs / 2, y:c[1] - vs / 2, w:vs, h:vs}, ab = {x:p[0] - as / 2, y:p[1] - as / 2, w:as, h:as}, H = Math.max(vb.y + vb.h, ab.y + ab.h, innerHeight * (upright ? 1 : 0)) + (upright ? 0 : W * .25);
+  const pc = i => COLORS[S.players[i].color].bg, base = {W, H:upright ? vb.y + vb.h : H, m, toS, solo:true, table:true, rad:[0, 0], ox:0, oy:0};
+  return {A:Object.assign({}, base, {frame:ac.querySelector('.frame'), cell:ac, life:ac.querySelector('.life'), hubEl:pn, shake:ac, pcol:pc(a),
+      hub:{x:p[0], y:p[1], w:W * .42, h:W * .15}, field:ab, tile:{x:c[0] - W * .15, y:c[1] - W * .07, w:W * .3, h:W * .14}}),
+    V:Object.assign({}, base, {frame:vf, cell:vc, life:vc.querySelector('.life'), hubEl:null, shake:vc, pcol:pc(v),
+      hub:{x:c[0], y:c[1], w:W * .42, h:W * .15}, field:vb, tile:{x:p[0] - W * .14, y:p[1] - W * .05, w:W * .28, h:W * .1}})};
 }
 // trasformazioni aggiunte a quelle dell'app (vita, bottone, scosse), tolte alla fine
 function tf(el, add){
@@ -7202,14 +7201,6 @@ function lightLife(F, S){
   if(m > .03){ const r = clamp(l[0] / m) * 255 | 0, g = clamp(l[1] / m) * 255 | 0, b = clamp(l[2] / m) * 255 | 0, a = clamp(m * .6);
     el.style.textShadow = `0 4px 0 rgba(0,0,0,.25),0 0 ${12 + 26 * a}px rgba(${r},${g},${b},${a})`; S.lit = true }
   else if(S.lit){ el.style.textShadow = ''; S.lit = false }
-}
-// un telefono solo: quello che è pensato per tutto lo schermo (nuvole, lampi, schiuma…) sfuma attorno alla scheda colpita, senza bordi dritti
-function feather(c, S, grow, soft){
-  const fb = S.field, e = Math.min(S.W, S.H) * grow, bl = Math.min(S.W, S.H) * soft, pad = bl * 2.5, k = grow + '/' + soft, M = S.masks || (S.masks = {});
-  let mk = M[k];
-  if(!mk){ const q = .35, w = fb.w + 2 * (e + pad), h = fb.h + 2 * (e + pad); mk = M[k] = document.createElement('canvas'); mk.width = Math.max(2, Math.round(w * q)); mk.height = Math.max(2, Math.round(h * q));
-    const x = mk.getContext('2d'); x.filter = `blur(${Math.max(1, Math.round(bl * q))}px)`; x.fillStyle = '#000'; x.fillRect(pad * q, pad * q, (fb.w + 2 * e) * q, (fb.h + 2 * e) * q) }
-  c.save(); c.globalCompositeOperation = 'destination-in'; c.drawImage(mk, fb.x - e - pad, fb.y - e - pad, fb.w + 2 * (e + pad), fb.h + 2 * (e + pad)); c.restore();
 }
 let raf = 0, ACT = null;
 function kick(){ if(!raf) raf = requestAnimationFrame(frame) }
@@ -7237,13 +7228,10 @@ function frame(now){
     runFX('V', cV, dt); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt);
     if(V && SHOW.V && !FLD.V && !solo) cV.restore();
     // …ma fuori dalla scheda colpita sfumano piano, senza taglio netto: le schede vicine restano pulite
-    if(V && SHOW.V && solo) feather(cV, V, .1, .08);
     const cM = V && SHOW.V ? fitFix(fixedCv('cpM'), V) : dummyCtx;
     runFX('M', cM, dt); drawSprites(FX.sM, cM, dt);
-    if(V && SHOW.V && !NV()) feather(cM, V, .16, .1);
     const cV2 = V && SHOW.V ? fitFix(fixedCv('cpV2'), V) : dummyCtx;
     runFX('V2', cV2, dt); drawSprites(FX.sV2, cV2, dt); drawPts(FX.pV2, cV2, dt);
-    if(V && SHOW.V && !NV()) feather(cV2, V, .16, .1);
     // schizzi che volano sugli altri tappeti (sopra tutto, coordinate del tavolo)
     const cX = FX.sX.length || FX.pX.length ? fitFix(fixedCv('cpX'), {m:[1, 0, 0, 1, 0, 0]}) : dummyCtx;
     drawSprites(FX.sX, cX, dt); drawPts(FX.pX, cX, dt);
@@ -7286,15 +7274,15 @@ function reset(){
   SCR.A = SCR.V = null; SHOW.A = SHOW.V = false; ACT = null;
 }
 // prepara i due schermi del colpo a → v; vedo: 'AV' (un telefono), 'A' (chi attacca in H&O), 'V' (chi è colpito in H&O)
-function setup(a, v, see){
+function setup(a, v, see, upright){
   if(ACT) reset();
-  const net = NV();
-  const A = net ? screenOf(NET.me, see === 'A' ? v : a, 'A') : screenOf(a, v, 'A');
-  const V = net ? screenOf(NET.me, see === 'A' ? v : a, 'V') : screenOf(v, a, 'V');
+  const net = NV(), tb = net ? null : tableScreens(a, v, upright);
+  const A = net ? screenOf(NET.me, see === 'A' ? v : a, 'A') : tb && tb.A;
+  const V = net ? screenOf(NET.me, see === 'A' ? v : a, 'V') : tb && tb.V;
   if(!A || !V) return false;
   if(net && see === 'V'){ const t = $(`.ntile[data-i="${a}"]`); if(t){ const r = t.getBoundingClientRect(); A.tile = V.tile = {x:r.left, y:r.top, w:r.width, h:r.height} } }
   SCR.A = A; SCR.V = V; SHOW.A = see.includes('A'); SHOW.V = see.includes('V');
-  FLD.V = SHOW.V && !V.noGl ? fieldFor('V', V) : null;
+  FLD.V = SHOW.V && net ? fieldFor('V', V) : null;   // il tappeto vivo solo in H&O: sul tavolo comune le sezioni reagiscono da sole
   FLD.A = null;   // chi attacca non ha il tappeto vivo: su un telefono faceva un riquadro sulla sua scheda
   ACT = {a, v, see};
   return true;
@@ -7349,8 +7337,8 @@ function aim(a, x, y, target){
     TK = th; DR = {th, t0:T, p:[SCR.A.hub.x, SCR.A.hub.y]}; AIM = {a, v, th}; SP.aHub.v -= 1.2;
   }
   // il bersaglio può cambiare mentre trascino: aggiorno il quadratino o la scheda di arrivo
-  if(target != null && target !== AIM.v && target !== a){ AIM.v = target; const n = NV() ? screenOf(NET.me, target, 'A') : screenOf(a, target, 'A');
-    if(n){ if(NV()) SCR.A.tile = n.tile; else { SCR.A = n; DR.p = [n.hub.x, n.hub.y]; DR.tip = null } } }
+  if(target != null && target !== AIM.v && target !== a){ AIM.v = target; const n = NV() ? screenOf(NET.me, target, 'A') : null;
+    if(NV()){ if(n) SCR.A.tile = n.tile } else { const tb = tableScreens(a, target); if(tb){ SCR.A = tb.A; SCR.V = tb.V; DR.p = [tb.A.hub.x, tb.A.hub.y]; DR.tip = null } } }
   const Sa = SCR.A, p = NV() ? [x, y] : Sa.toS(x, y);
   DR.p = p; kick(); return true;
 }
@@ -7366,7 +7354,7 @@ function strike(a, v, dmg){
   if(ACT && Q.length) return null;   // un colpo alla volta
   const net = NV();
   const kind = TH[th].big && (dmg >= 10 || R() < 1 / 8) ? (TH[th].big2 && R() < .5 ? 'b2' : 'b') : th === 'forgia' && R() < 1 / 8 ? 'g' : 'n';
-  if(!setup(a, v, net ? 'A' : 'AV')) return null;
+  if(!setup(a, v, net ? 'A' : 'AV', !net && kind === 'g')) return null;   // il goblin corre dritto sul tavolo
   TK = th;
   AIM = null;
   const tr = tileRect(pA), d = {th, t0:T - 1.4, p:[tr.x + tr.w / 2, tr.y + tr.h / 2], auto:true};
@@ -7375,9 +7363,12 @@ function strike(a, v, dmg){
   FX.pA.length = 0; FX.sA.length = 0;
   let w = 0;
   if(kind === 'b') TH[th].big(); else if(kind === 'b2') TH[th].big2(); else if(kind === 'g') TH.forgia.goblin();
-  else { w = TH[th].launch(d) || .4; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
+  // H&O: il colpo esce dal mio telefono (lancio) e arriva sull'altro. Tavolo comune: niente lancio «fuori dal telefono»,
+  // l'arrivo nasce già dalla parte di chi attacca e va sull'avversario
+  else if(net){ w = TH[th].launch(d) || .4; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
+  else { w = .08; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
   // un telefono: gli schizzi del tema arrivano anche sugli altri tappeti
-  if(!net){ if(kind === 'n') after(w + .2, () => splashOut(th, v, false)); else { after(1.3, () => splashOut(th, v, true)); after(2.6, () => splashOut(th, v, false)) } }
+  if(!net){ if(kind === 'n') after(.75, () => splashOut(th, v, false)); else { after(1.3, () => splashOut(th, v, true)); after(2.6, () => splashOut(th, v, false)) } }
   kick();
   return {th, k:kind, w:+w.toFixed(2)};
 }
