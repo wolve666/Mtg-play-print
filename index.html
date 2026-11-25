@@ -5480,7 +5480,7 @@ uniform sampler2D uG; uniform float uT, uPunch;
 uniform vec4 uW[6]; uniform float uWW[6];
 uniform vec4 uRip; uniform vec3 uHeat; uniform vec4 uSh; uniform vec4 uPin; uniform vec4 uSw;
 uniform vec4 uL[4]; uniform vec3 uLC[4];
-uniform vec4 uFl; uniform float uWith, uDark, uChr, uA;
+uniform vec4 uFl; uniform float uWith, uDark, uChr, uA; uniform vec3 uBg;
 float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1., 0.)), f.x), mix(h(i + vec2(0., 1.)), h(i + vec2(1., 1.)), f.x), f.y); }
 float sdRR(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r; }
@@ -5492,7 +5492,7 @@ void main(){
   vec2 fp = p - c;
   float rr0 = (fp.x < 0.) == (fp.y < 0.) ? uRad.x : uRad.y;
   float md = sdRR(fp, uField.zw * .5, rr0);
-  if(md > 1.){ gl_FragColor = vec4(0.); return; }
+  if(md > 1.){ if(uPin.y > 0. && sdRR(vP - c, uField.zw * .5, rr0) < 0.){ gl_FragColor = vec4(uBg, 1.) * uA; return; } gl_FragColor = vec4(0.); return; }
   float edge = clamp(.5 - md, 0., 1.);
   vec2 off = vec2(0.); float shine = 0.;
   if(uSw.z != 0.){ vec2 d = p - uSw.xy; float l = length(d); float a = uSw.z * exp(-l * l / (uSw.w * uSw.w)); float cs = cos(a), sn = sin(a); off += vec2(d.x * cs - d.y * sn, d.x * sn + d.y * cs) - d; shine += abs(a) * .02 * max(0., sin(l * .12 - a * 3.)); }
@@ -5535,7 +5535,7 @@ function renderF(F, punch, t){
   gl.viewport(0, 0, pw, ph);
   gl.bindTexture(gl.TEXTURE_2D, F.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, F.gnd);
   const fb = fieldBox(F.scr);
-  gl.uniform2f(U.uRes, W, H); gl.uniform4f(U.uField, fb.x, fb.y, fb.w, fb.h); gl.uniform2f(U.uRad, F.rad[0], F.rad[1]); gl.uniform1f(U.uA, F.a);
+  gl.uniform2f(U.uRes, W, H); gl.uniform4f(U.uField, fb.x, fb.y, fb.w, fb.h); gl.uniform2f(U.uRad, F.rad[0], F.rad[1]); gl.uniform1f(U.uA, F.a); gl.uniform3fv(U.uBg, F.bg || [.04, .04, .05]);
   gl.uniform3fv(U.uC0, F.col[0]); gl.uniform3fv(U.uC1, F.col[1]); gl.uniform3fv(U.uC2, F.col[2]); gl.uniform1i(U.uG, 0); gl.uniform1f(U.uT, t); gl.uniform1f(U.uPunch, punch);
   const wv = new Float32Array(24), ww = new Float32Array(6).fill(1); F.waves.slice(0, 6).forEach((w, i) => { wv.set(w.slice(0, 4), i * 4); ww[i] = w[4] }); gl.uniform4fv(U.uW, wv); gl.uniform1fv(U.uWW, ww);
   const Ls = F.lights.sort((a, b) => Math.abs(b[3]) - Math.abs(a[3])).slice(0, 4), lv = new Float32Array(16), lc = new Float32Array(12); Ls.forEach((l, i) => { lv.set(l.slice(0, 4), i * 4); lc.set(l[4], i * 3) }); gl.uniform4fv(U.uL, lv); gl.uniform3fv(U.uLC, lc);
@@ -6841,7 +6841,7 @@ function boaStrand(tx){ const W = W_();
 function boaOne(tx){ const B = Object.assign(boaStrand(tx), {boa:true, H:.2, d:0, T1:1.8, y1:.8 + R() * .06, qx:(R() - .5) * .12}); B.pa *= .5; B.f0 = -B.dir * B.turns * TAU + PI * .35 * B.dir; B.side = B.dir; B.qx = R() * .08; return B }
 function boaPath(S, sq, slither){
   const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), cx = fb.x + fb.w / 2, y0 = fb.y + fb.h * S.y0, y1 = fb.y + fb.h * S.y1, pts = [], dep = [];
-  const A = (fb.w / 2 + W * .05) * S.ak * (1 - .24 * sq), N = BOA_N, LONG = fb.h > fb.w * 1.15;
+  const A = (fb.w / 2 + W * .05) * S.ak * (1 - .24 * sq), N = BOA_N, LONG = fb.w > fb.h * 1.15;   // tappeto più largo che alto: le spire vanno in verticale
   const x0 = fb.x + fb.w * S.y0, x1 = fb.x + fb.w * S.y1, cy = fb.y + fb.h / 2, A2 = (fb.h / 2 + W * .05) * S.ak * (1 - .24 * sq);
   // per la lunghezza le spire sono più lunghe: ne servono circa la metà (stessa fine, la testa resta al suo posto)
   const P = LONG ? u => { const uu = u + S.pa * Math.sin(u * TAU * S.pk + S.pp) * Math.sin(PI * u), f = S.f0 + S.dir * S.turns * TAU - S.dir * (1 - uu) * S.turns * .5 * TAU, aa = A2 * (1 + .07 * Math.sin(f * .6 + S.aw));
@@ -6915,8 +6915,9 @@ TH.selva = {
         else vineFlow(c, pts, head, W * S.H, 1, {from:head - body, fin:W * .25, ph:head, shadow:true});
         if(!j) p0 = [pts, head, L0] });
       const s = st('V');
-      if(fb.h > fb.w * 1.15){ s.pin[0] = fb.x + fb.w * .5; s.pin[1] = sq * .3; s.pin[2] = fb.w * .6; s.pin[3] = -(fb.w * .88) / (turns * .5) }   // spire per la lunghezza: stringe in altezza
-      else { s.pin[0] = fb.y + fb.h * .5; s.pin[1] = sq * .36; s.pin[2] = fb.h * .6; s.pin[3] = (fb.h * .88) / turns }
+      // le spire stringono il lato corto del tappeto, una strozzatura per spira lungo il lato lungo
+      if(fb.w > fb.h * 1.15){ s.pin[0] = fb.x + fb.w * .5; s.pin[1] = sq * .5; s.pin[2] = fb.w * .6; s.pin[3] = -(fb.w * .88) / (turns * .5) }
+      else { s.pin[0] = fb.y + fb.h * .5; s.pin[1] = sq * .5; s.pin[2] = fb.h * .6; s.pin[3] = (fb.h * .88) / turns }
       s.dark = Math.max(s.dark, .35 * clamp(sq));
       // ombre delle spire sul campo
       if(p0){ const [pts, head, L0] = p0; for(let i = 0; i < 4; i++){ const p = at(pts, L0 + (head - L0) * (i + .5) / 4); if(pts.dep[p[3]] > 0) lit('V', p[0], p[1] + W * .04, W * .35, [.7, .8, .6], -.5) }
@@ -7094,7 +7095,7 @@ function makeField(scr, pcol, host, ox, oy, rad){
     const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
     [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR)); [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-    const U = {}; ['uRes', 'uField', 'uRad', 'uC0', 'uC1', 'uC2', 'uG', 'uT', 'uPunch', 'uW', 'uWW', 'uRip', 'uHeat', 'uSh', 'uPin', 'uL', 'uLC', 'uFl', 'uWith', 'uDark', 'uChr', 'uSw', 'uA'].forEach(n => U[n] = gl.getUniformLocation(pr, n));
+    const U = {}; ['uRes', 'uField', 'uRad', 'uC0', 'uC1', 'uC2', 'uG', 'uT', 'uPunch', 'uW', 'uWW', 'uRip', 'uHeat', 'uSh', 'uPin', 'uL', 'uLC', 'uFl', 'uWith', 'uDark', 'uChr', 'uSw', 'uA', 'uBg'].forEach(n => U[n] = gl.getUniformLocation(pr, n));
     return {scr, cv, gl, U, tex, gnd:document.createElement('canvas'), col:[0, 0, 0], st:null, lights:[], waves:[], rad:[0, 0], a:0};
   }catch(e){ logErr('colpi: tappeto senza WebGL: ' + e.message); return null }
 }
@@ -7103,7 +7104,8 @@ function fieldFor(k, S){
   if(GLC[k] === undefined) GLC[k] = makeField(k === 'A' ? pA : pV);
   const F = GLC[k]; if(!F) return null;
   const c = hex3(S.pcol); F.col = [lerp3(c, [1, 1, 1], .09), c, lerp3(c, [0, 0, 0], .32)]; F.rad = S.rad; F.a = 0;
-  Object.assign(F.cv.style, {left:S.ox + 'px', top:S.oy + 'px', width:S.W + 'px', height:S.H + 'px'});
+  const bg = (getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g) || [10, 10, 13]).slice(0, 3).map(v => v / 255); F.bg = lerp3(bg, [0, 0, 0], .5);
+  Object.assign(F.cv.style, {left:S.ox + 'px', top:S.oy + 'px', width:S.W + 'px', height:S.H + 'px', transform:S.glRot ? `rotate(${S.glRot}deg)` : ''});
   S.frame.prepend(F.cv); resetF(F);
   return F;
 }
@@ -7143,19 +7145,22 @@ function screenOf(me, other, role){
   const oc = $(`.cell[data-i="${other}"]`), c0 = rectC(cell), op = oc ? rectC(oc) : {x:vw / 2, y:-200}, fw = frame.offsetWidth, fh = frame.offsetHeight;
   if(role === 'A'){
     const pn = cell.querySelector('.pname'), h = pn ? rectC(pn) : c0, dx = op.x - h.x, dy = op.y - h.y, dl = Math.hypot(dx, dy) || 1, d = [dx / dl, dy / dl];
-    const W = Math.max(fw, fh) * .8, Y0 = exitT(h, d) + 60, H = Y0 + W * .9, si = d[0], co = -d[1];
+    const W = cpMode() === 'A' ? Math.max(fw, fh) * .8 : Math.min(fw, fh) * (cpMode() === 'C' ? .75 : 1), Y0 = exitT(h, d) + 60, H = Y0 + W * .9, si = d[0], co = -d[1];
     const m = [co, si, -si, co, h.x - (co * W / 2 - si * Y0), h.y - (si * W / 2 + co * Y0)];
     const toS = (x, y) => { const ex = x - h.x, ey = y - h.y; return [co * ex + si * ey + W / 2, -si * ex + co * ey + Y0] };
     const t = toS(op.x, op.y);
     return {W, H, m, toS, frame, cell, life, hubEl:pn, shake:cell, pcol, rad, ox:0, oy:0, solo:true,
       hub:{x:W / 2, y:Y0, w:W * .42, h:W * .15}, field:{x:0, y:Y0 - W * .35, w:W, h:W * .7}, tile:{x:t[0] - W * .15, y:t[1] - W * .07, w:W * .3, h:W * .14}};
   }
-  const W = fw, H = fh, a = rotDeg(me) * PI / 180, co = Math.cos(a), si = Math.sin(a);
+  // B e C: il colpo vede la scheda come un telefono in piedi (lato corto = larghezza), come in H&O; C anche più piccolo
+  const md = cpMode(), port = md !== 'A' && fw > fh, sh = Math.min(fw, fh), lg = Math.max(fw, fh), k = md === 'C' ? .75 : 1;
+  const W = md === 'A' ? fw : sh * k, H = md === 'A' ? fh : lg, a = (rotDeg(me) + (port ? 90 : 0)) * PI / 180, co = Math.cos(a), si = Math.sin(a);
+  const fld = md === 'A' ? {x:0, y:0, w:W, h:H} : {x:W / 2 - sh / 2, y:0, w:sh, h:lg};
   const toS = (x, y) => { const dx = x - c0.x, dy = y - c0.y; return [dx * co + dy * si + W / 2, -dx * si + dy * co + H / 2] };
   const m = [co, si, -si, co, c0.x - (co * W / 2 - si * H / 2), c0.y - (si * W / 2 + co * H / 2)];
   const dx = op.x - c0.x, dy = op.y - c0.y, dl = Math.hypot(dx, dy) || 1, d = [dx / dl, dy / dl], tt = exitT(c0, d) + 80, P = toS(c0.x + d[0] * tt, c0.y + d[1] * tt);
-  return {W, H, m, toS, frame, cell, life, hubEl:null, shake:cell, pcol, rad, ox:0, oy:0, solo:true,
-    hub:{x:W / 2, y:H / 2, w:W * .42, h:W * .15}, field:{x:0, y:0, w:W, h:H}, tile:{x:P[0] - W * .14, y:P[1] - H * .05, w:W * .28, h:H * .1}};
+  return {W, H, m, toS, frame, cell, life, hubEl:null, shake:cell, pcol, rad, ox:(fw - W) / 2, oy:(fh - H) / 2, glRot:port ? 90 : 0, noGl:k < 1, solo:true,
+    hub:{x:W / 2, y:H / 2, w:W * .42, h:W * .15}, field:fld, tile:{x:P[0] - W * .14, y:P[1] - H * .05, w:W * .28, h:H * .1}};
 }
 // trasformazioni aggiunte a quelle dell'app (vita, bottone, scosse), tolte alla fine
 function tf(el, add){
@@ -7173,6 +7178,9 @@ function lightLife(F, S){
 }
 // un telefono solo: quello che è pensato per tutto lo schermo (nuvole, lampi, schiuma…) sfuma attorno alla scheda colpita, senza bordi dritti
 function feather(c, S, grow, soft){ const fb = S.field, e = S.W * grow; c.save(); c.globalCompositeOperation = 'destination-in'; c.filter = `blur(${Math.round(S.W * soft * DPR)}px)`; c.fillStyle = '#000'; c.fillRect(fb.x - e, fb.y - e, fb.w + e * 2, fb.h + e * 2); c.restore() }
+// misura dei colpi su un telefono: 'B' (scelta) = ogni scheda vista in piedi nel suo verso reale, come un telefono in H&O;
+// 'A' (vecchia) e 'C' (più piccola) restano solo per i confronti (window.CP_MODE)
+const cpMode = () => window.CP_MODE || 'B';
 let raf = 0, ACT = null;
 function kick(){ if(!raf) raf = requestAnimationFrame(frame) }
 const springsBusy = () => Object.values(SP).some(s => Math.abs(s.x - s.t) > .002 || Math.abs(s.v) > .01);
@@ -7254,7 +7262,7 @@ function setup(a, v, see){
   if(!A || !V) return false;
   if(net && see === 'V'){ const t = $(`.ntile[data-i="${a}"]`); if(t){ const r = t.getBoundingClientRect(); A.tile = V.tile = {x:r.left, y:r.top, w:r.width, h:r.height} } }
   SCR.A = A; SCR.V = V; SHOW.A = see.includes('A'); SHOW.V = see.includes('V');
-  FLD.V = SHOW.V ? fieldFor('V', V) : null;
+  FLD.V = SHOW.V && !V.noGl ? fieldFor('V', V) : null;
   FLD.A = null;   // chi attacca non ha il tappeto vivo: su un telefono faceva un riquadro sulla sua scheda
   ACT = {a, v, see};
   return true;
