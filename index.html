@@ -4675,11 +4675,11 @@ const EMB = (()=>{
     cripta:[{every:.6, fn(){ add({amb:true, spr:'smoke', c:pick(['#4B1C78','#6A2AB0','#8A45D6','#2A1040','#5A2496']), x:RR(.03, .97) * W, y:H + 40, vx:RR(-10, 10), vy:-RR(22, 40), wob:RR(2, 3.5), life:RR(7, 10), s:RR(80, 130), sx:RR(.4, .6), grow:.9, al:.85, fin:.2, fout:.45, trail:5, glow:pick(['#8A45D6','#B07CFF','#6A2AB0'])}) }},
       {every:.08, fn(){ add({amb:true, spr:Math.random() < .35 ? 'star' : 'soft', c:pick(['#C9A4FF','#B07CFF','#E2CCFF','#9A5CFF']), add:true, x:RR(0, 1) * W, y:RR(.1, 1) * H, vx:RR(-5, 5), vy:-RR(4, 14), life:RR(2.5, 4.5), s:RR(7, 18), tw:RR(4, 8), al:1, fin:.3, fout:.35}) }}],
     // Mox: lampi azzurrini qua e là e qualche scintilla che cade
-    mox:[{every:.8, fn(){ const x = RR(.08, .92) * W, y = RR(.1, .9) * H, a = Math.random() * 6.283, l = RR(30, 90);
-        if(B.length < 80) B.push({a:0, life:RR(.16, .28), x1:x, y1:y, x2:x + Math.cos(a) * l, y2:y + Math.sin(a) * l, rough:.35, br:1, w:.55, every:.04, t:0});
+    mox:[{every:.5, fn(){ const x = RR(.08, .92) * W, y = RR(.1, .9) * H, a = Math.random() * 6.283, l = RR(50, 130);
+        if(B.length < 80) B.push({a:0, life:RR(.16, .28), x1:x, y1:y, x2:x + Math.cos(a) * l, y2:y + Math.sin(a) * l, rough:.35, br:1, w:.75, every:.04, t:0});
         add({amb:true, spr:'soft', c:'#9BEFFA', add:true, x, y, life:.45, s:RR(90, 150), al:.75, fin:.05, fout:.8}) }},
       {every:.6, fn(){ const x = RR(.05, .95) * W, y = RR(.05, .7) * H, n = 6 + (Math.random() * 7 | 0);
-        for(let i = 0; i < n; i++){ const a = -Math.PI / 2 + RR(-1.3, 1.3), v = RR(90, 220); add({amb:true, x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:520, drag:.8, life:RR(.6, 1), c:pick(['#C9F6FF','#9BEFFA','#E0B060','#FFFFFF']), s:1.8, streak:.035}) } }}],
+        for(let i = 0; i < n; i++){ const a = -Math.PI / 2 + RR(-1.3, 1.3), v = RR(90, 220); add({amb:true, x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, g:520, drag:.8, life:RR(.6, 1), c:pick(['#C9F6FF','#9BEFFA','#E0B060','#FFFFFF']), s:2.4, streak:.045}) } }}],
   };
   // Selva: la stessa particella diventa una foglia che gira e sventola (più grande, niente scia, cade piano)
   const leafy = (o, p) => { if(o.leaf){ p.leaf = true; p.streak = 0; p.flick = false; p.s = (o.size ?? 2.2) * (1 + Math.random() * .9); p.rot = Math.random() * 6.28; p.spin = (Math.random() - .5) * 9; p.fl = 3 + Math.random() * 5; p.g = (p.g || 0) + 60; p.wob = 2.5 } return p };
