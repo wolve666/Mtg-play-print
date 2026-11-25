@@ -2370,9 +2370,9 @@ function lifeSize(lf, p){
 function updateCell(i){
   const p = S.players[i], cell = $(`.cell[data-i="${i}"]`);
   if(!cell){ if(NV()){ netTile(i); checkWinner() } return }
-  const lf = cell.querySelector('.life'); lf.textContent = p.life;
-  const sb = cell.querySelector('.strip b'); if(sb) sb.textContent = p.life;
-  if(lifeSize(lf, p) && NV()) placeNV(cell);
+  const lf = cell.querySelector('.life'), shown = lifeShown(i); lf.textContent = shown;
+  const sb = cell.querySelector('.strip b'); if(sb) sb.textContent = shown;
+  if(lifeSize(lf, {life:shown}) && NV()) placeNV(cell);
   // la linguetta è larga quanto il numero della vita
   const sw = cell.querySelector('.swz'); if(sw && lf.offsetWidth) sw.style.width = lf.offsetWidth + 'px';
   cell.classList.toggle('out', isOut(p));
@@ -2407,8 +2407,38 @@ const deltas = {};
 function changeLife(i, d){
   S.players[i].life += d;
   addHist(i, d); updateCell(i); save();
+  if(LH[i] && !LH[i].run){ LH[i].fx += d; return }   // l'effetto sul numero arriva con il colpo
   lifeFx(i, d);
 }
+// Tavolo comune, colpo del tema: la vita di chi è colpito resta ferma finché il colpo non arriva,
+// poi scende un punto alla volta come il conteggio d'inizio partita. H&O non cambia.
+const LH = {};
+const lifeShown = i => LH[i] ? LH[i].shown : S.players[i].life;
+const holdOn = () => !NV() && fgOn() && window.COLPI && COLPI.on(SET.theme);
+function lifeHold(i){
+  if(!holdOn()) return;
+  const h = LH[i];
+  if(h){ if(h.run){ h.run = 0; h.fx = 0 } clearTimeout(h.safe); h.safe = setTimeout(() => lifeLand(i), 30000); return }
+  LH[i] = {shown:S.players[i].life, fx:0, run:0, safe:setTimeout(() => lifeLand(i), 30000)};
+}
+// il colpo è partito: se per qualche motivo non arriva, la vita scende lo stesso
+function lifeSafe(i){ const h = LH[i]; if(h && !h.run){ clearTimeout(h.safe); h.safe = setTimeout(() => lifeLand(i), 5000) } }
+function lifeLand(i){
+  const h = LH[i]; if(!h || h.run) return;
+  clearTimeout(h.safe);
+  const from = h.shown, to = S.players[i].life, n = Math.abs(to - from), id = h.run = performance.now();
+  if(h.fx) lifeFx(i, h.fx); h.fx = 0;
+  if(!n){ delete LH[i]; updateCell(i); return }
+  const cell = $(`.cell[data-i="${i}"]`), lf = cell && cell.querySelector('.life'), sb = cell && cell.querySelector('.strip b');
+  const dur = Math.min(1500, 350 + n * 70);
+  (function f(t){
+    if(LH[i] !== h || h.run !== id) return;
+    const k = Math.min(1, (t - id) / dur), v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+    if(v !== h.shown){ h.shown = v; if(lf){ lf.textContent = v; if(sb) sb.textContent = v; lifeSize(lf, {life:v}) } }
+    if(k < 1) requestAnimationFrame(f); else { delete LH[i]; updateCell(i) }
+  })(id);
+}
+window.lifeLand = lifeLand;
 function lifeFx(i, d){
   if(NV() && i !== NET.me){ netTileFx(i, d); return }
   const cell = $(`.cell[data-i="${i}"]`); if(!cell) return;
@@ -2525,14 +2555,14 @@ function openCmdQuick(a, v){
     if(k === 'dmg'){
       // danno da combattimento: toglie vita; il numero è quanto ho dato con questa finestrella
       const d = Math.max(-cqp.dmg, +b.dataset.v);
-      if(d){ cqp.dmg += d; changeLife(cqp.v, -d); buzz(); if(d > 0 && fgOn()) fgStrike(cqp.a, cqp.v, d) }
+      if(d){ if(d > 0) lifeHold(cqp.v); cqp.dmg += d; changeLife(cqp.v, -d); buzz(); if(d > 0 && fgOn()) fgStrike(cqp.a, cqp.v, d) }
     } else if(k.startsWith('c:')){
       // veleno e radiazioni: solo segnalini, la vita non cambia
       const c = k.slice(2), before = V.counters[c] || 0, after = Math.max(0, before + +b.dataset.v);
       if(after !== before){ V.counters[c] = after; updateCell(cqp.v); save(); buzz(); if(after > before){ logEv(`${S.players[cqp.a].name} → ${V.name}: +${after - before} ${c === 'poison' ? 'veleno' : 'radiazioni'}`); if(fgOn()) fgStrike(cqp.a, cqp.v) } }
     } else {
       const before = V.cmd[k] || 0, after = Math.max(0, before + +b.dataset.v);
-      if(after !== before){ V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before, cqp.a) }
+      if(after !== before){ if(after > before) lifeHold(cqp.v); V.cmd[k] = after; changeLife(cqp.v, before - after); buzz(); if(after > before) cmdFx(cqp.v, after - before, cqp.a) }
     }
     renderCqPop(); armCqPop();
   });
@@ -2564,8 +2594,8 @@ function armCqPop(){ clearTimeout(cqp.t); cqp.t = setTimeout(closeCqPop, 6000) }
 function closeCqPop(){
   if(!cqp) return; clearTimeout(cqp.t); cqp.el.remove();
   // il colpo del tema parte alla chiusura (OK, tocco fuori o tempo scaduto), con tutto quello che è stato segnato
-  const cp = cqp.cpHit ? {a:cqp.a, v:cqp.v, d:cqp.cpd || 0} : null; cqp = null;
-  if(cp) setTimeout(() => fgStrike(cp.a, cp.v, cp.d, true), 60);
+  const cp = cqp.cpHit ? {a:cqp.a, v:cqp.v, d:cqp.cpd || 0} : null, cv = cqp.v; cqp = null;
+  if(cp) setTimeout(() => fgStrike(cp.a, cp.v, cp.d, true), 60); else lifeLand(cv);
 }
 // un tocco fuori dalla finestrella la chiude senza toccare i punti vita
 document.addEventListener('pointerdown', e=>{
@@ -3090,6 +3120,7 @@ $('#cbBody').addEventListener('click', e=>{
 // si applica tutto in un passo solo: nella partita condivisa parte come un unico messaggio
 function combatApply(){
   const C = CB, me = S.players[C.by], v = S.players[C.to], tot = C.dmg + C.cmd;
+  if(tot) lifeHold(C.to);
   if(tot){ v.life -= tot; addHist(C.to, -tot) }
   if(C.cmd){ const k = C.by + (C.b ? 'b' : ''); v.cmd[k] = (v.cmd[k] || 0) + C.cmd }
   if(C.poison) v.counters.poison = (v.counters.poison || 0) + C.poison;
@@ -3098,7 +3129,7 @@ function combatApply(){
   const parts = [C.dmg && C.dmg + ' da combattimento', C.cmd && C.cmd + ' da comandante', C.poison && C.poison + ' veleno', C.rad && C.rad + ' radiazioni'].filter(Boolean);
   logEv(`${me.name} colpisce ${v.name}: ${parts.join(', ') || 'nessun danno'}${C.heal ? `, recupera ${C.heal}` : ''}`);
   save(); updateCell(C.to); updateCell(C.by);
-  if(tot) lifeFx(C.to, -tot);
+  if(tot){ if(LH[C.to]) LH[C.to].fx -= tot; else lifeFx(C.to, -tot) }
   if(C.heal) lifeFx(C.by, C.heal);
   buzz([30, 50, 30]); sfx('done');
   CB = {by:C.by, to:C.to};
@@ -3106,7 +3137,7 @@ function combatApply(){
   const strike = fgOn() && (tot || C.poison || C.rad);
   if(strike && stack.includes('player')){ history.back(); setTimeout(()=>history.back(), 40) }
   else { history.back(); if(stack.includes('player')) renderPlayer() }
-  if(strike) setTimeout(()=>fgStrike(C.by, C.to, tot), 300);
+  if(strike) setTimeout(()=>fgStrike(C.by, C.to, tot), 300); else lifeLand(C.to);
   toast(`${v.name}: ${parts.join(', ') || 'colpito'}`);
 }
 async function searchArt(){
@@ -4332,6 +4363,7 @@ let winT = null;
 function checkWinner(){
   clearTimeout(winT);
   winT = setTimeout(()=>{
+    if(Object.keys(LH).length){ checkWinner(); return }
     const alive = S.players.map((p,i)=>i).filter(i=>!isOut(S.players[i]));
     if(alive.length === 1 && S.count > 1){ if(!S.over){ S.over = true; save(); showWinner(alive[0]) } }
     else if(alive.length > 1 && S.over){ S.over = false; save() }
@@ -4784,7 +4816,7 @@ function fgStrike(a, v, dmg = 0, now = false){
     // altrove (pagina Combattimento, tocchi veloci di fila) un colpo solo con tutto il danno
     const k = a + '>' + v, q = CPQ[k] || (CPQ[k] = {d:0, t:0});
     q.d += dmg; clearTimeout(q.t);
-    q.t = setTimeout(() => { delete CPQ[k]; const m = COLPI.strike(a, v, q.d); if(m && NV() && v !== NET.me) netZap(a, v, false, m) }, now || q.d >= 10 ? 0 : 450);
+    q.t = setTimeout(() => { delete CPQ[k]; const m = COLPI.strike(a, v, q.d); if(!m) lifeLand(v); else { lifeSafe(v); if(NV() && v !== NET.me) netZap(a, v, false, m) } }, now || q.d >= 8 ? 0 : 450);
     return;
   }
   if(SELVA()) return svStrike(a, v, fgAgain());
@@ -4803,7 +4835,7 @@ function fgStrike(a, v, dmg = 0, now = false){
   const again = fgAgain();
   EMB.bolt({x1:f.x, y1:f.y, x2:t.x, y2:t.y, life:again ? .22 : .4, br:again ? 1 : 3, w:again ? .9 : 1.25, every:.05});
   if(!again) EMB.flash(.16);
-  setTimeout(()=>fgZap(t, again), 40);
+  setTimeout(()=>{ fgZap(t, again); lifeLand(v) }, 40);
 }
 // Selva: la radice parte da me; in H&O attraversa il quadratino ed esce dal bordo, sul telefono colpito le radici si prendono il campo
 function svStrike(a, v, again){
@@ -5573,6 +5605,7 @@ const SP = {vPunch:spr(1, 230, 11), vJx:spr(0, 150, 9), vJy:spr(0, 150, 9), vLif
 let rumble = null;
 // colpo: lo schermo spinto nella direzione, il campo che si schiaccia, un'onda d'urto che lo piega, i colori che si sdoppiano un attimo
 function impact(ang, pow, x, y){
+  landed();
   const W = pV.clientWidth, o = x == null ? fieldO(pV) : {x, y};
   SP.vJx.v += Math.cos(ang) * pow * W * 1.3; SP.vJy.v += Math.sin(ang) * pow * W * 1.3;
   SP.vPunch.v -= pow * 1.3; SP.vLife.v += pow * 3.2; SP.vLifeR.v += sgn() * pow * 45; SP.vHub.v -= pow * 3;
@@ -5670,7 +5703,10 @@ const add = (k, draw, delay = 0) => FX[k].push({a:-delay, draw});
 function runFX(k, c, dt){ const cur = FX[k]; FX[k] = []; const keep = cur.filter(f => f.draw(c, dt)); FX[k] = keep.concat(FX[k]) }
 let wither = null;
 // il numero della vita lo cambia l'app: qui solo la vibrazione di chi è colpito
-function damage(n = 3){ SP.aHub.v += 1.5; if(SHOW.V) vib(n > 5 ? [40, 30, 80, 40, 120] : [20, 40, 30]) }
+// tavolo comune: al primo urto sul campo colpito l'app fa scendere la vita (window.lifeLand)
+let HITV = null;
+function landed(){ if(HITV == null) return; const v = HITV; HITV = null; if(window.lifeLand) window.lifeLand(v) }
+function damage(n = 3){ landed(); SP.aHub.v += 1.5; if(SHOW.V) vib(n > 5 ? [40, 30, 80, 40, 120] : [20, 40, 30]) }
 function rgbOf(col){ if(col[0] === '#'){ const c = hex3(col); return c } const m = col.match(/[\d.]+/g); return [m[0] / 255, m[1] / 255, m[2] / 255] }
 function flash(col, peak, dur, top){
   const env2 = k => peak * (k < .06 ? k / .06 : Math.pow(1 - (k - .06) / .94, 1.6));
@@ -7353,10 +7389,10 @@ function strike(a, v, dmg){
   const th = SET.theme; if(!on(th)) return null;
   if(ACT && Q.length) return null;   // un colpo alla volta
   const net = NV();
-  const kind = TH[th].big && (dmg >= 10 || R() < 1 / 8) ? (TH[th].big2 && R() < .5 ? 'b2' : 'b') : th === 'forgia' && R() < 1 / 8 ? 'g' : 'n';
+  const kind = TH[th].big && (dmg >= 8 || R() < 1 / 8) ? (TH[th].big2 && R() < .5 ? 'b2' : 'b') : th === 'forgia' && R() < 1 / 8 ? 'g' : 'n';
   if(!setup(a, v, net ? 'A' : 'AV', !net && kind === 'g')) return null;   // il goblin corre dritto sul tavolo
   TK = th;
-  AIM = null;
+  AIM = null; HITV = net ? null : v;
   const tr = tileRect(pA), d = {th, t0:T - 1.4, p:[tr.x + tr.w / 2, tr.y + tr.h / 2], auto:true};
   // qualche fotogramma di mira «invisibile» perché la punta e la carica stiano già sul bersaglio, poi via le scintille della mira
   for(let i = 0; i < 24; i++) TH[th].aim(dummyCtx, d, 1 / 60);
