@@ -969,7 +969,7 @@ body .strip b{transform:none}
 /* ================= Temi a colori nuovi: Abisso (Blu), Cripta (Nero), Santuario (Bianco), Mox (Incolore) =================
    Uno schema comune (body.th-gen) ricavato dalla Selva: forme, colori e caratteri arrivano dai token di ciascun tema.
    Classico, Forgia e Selva non cambiano. */
-body.th-gen{--clip:none;--clipS:none;--ttl:var(--tnum);--tcase:none;--ttrack:0;--tw:800}
+body.th-gen{--clip:none;--clipS:none;--ttl:var(--tnum);--tcase:uppercase;--ttrack:0;--tw:800}
 body.th-abisso{--bg:#06121D;--surface:#0D2233;--surface2:#123047;--line:#1C4260;--text:#E8F6FF;--muted:#8DB3C9;--gold:#7FE6FA;--gold-ink:#03202B;--danger:#FF6A5A;--ok:#4BE0B0;
   --bark:#081A28;--pri:linear-gradient(135deg,#27C3E0,#1554B5);--priInk:#F2FBFF;--sel:linear-gradient(135deg,#8DF0F0,#3CC0D6);
   --shL:22px;--shM:16px;--shS:11px;--shR:50%;--tnum:'Barlow Condensed','Arial Narrow',sans-serif;--ttl:'Marcellus SC',Georgia,serif;--tw:400;--ttrack:.03em;
@@ -1202,6 +1202,12 @@ body.full #ov-tokens .sec::after,body.full #ov-menu .sec::after{inset:-2px;borde
 body.full.netv #tokenBtn{background:var(--plI) center/100% 100% no-repeat!important;border-radius:0!important;clip-path:none!important;box-shadow:none!important}
 body.full.netv #tokenBtn::after{display:none}
 body.full.netv #hub::before{display:none}
+/* voci principali in maiuscolo in tutti i temi a colori, come nella Forgia: titoli, scelte della pagina iniziale, tasti, schede delle pagine, nomi.
+   Il resto resta com'è, con il carattere del tema. Il campo H&O non si tocca. */
+:is(.th-selva,.th-gen) :is(.wz h1,.dlg h1,.ovHead h2,.sec h3,.wzOpt b,.wzExtra .wzOpt,.btn,.cqTabs button,.strip span,.ppF,.ppName,.ppCmd,.ppFull,.tkmName,.cbTN,.cbFoe,.wzName input){text-transform:uppercase}
+.th-forgia .sec h3{text-transform:uppercase;letter-spacing:.04em}
+:is(.th-selva,.th-gen) :is(.btn,.cqTabs button,.strip span,.ppF,.ppName,.ppCmd,.ppFull,.cbTN,.wzExtra .wzOpt){letter-spacing:.05em}
+.th-selva :is(.wz h1,.dlg h1,.ovHead h2,.wzOpt b){letter-spacing:.01em}
 </style>
 </head>
 <body>
