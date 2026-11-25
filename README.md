@@ -70,6 +70,10 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.2.3 (prerelease)
+Solo per Federico (APK tra gli allegati della compilazione).
+- **Santuario, pagina iniziale**: le piume che cadono sono quelle dipinte dei colpi del Santuario (al posto di quelle disegnate a codice); le nuvole che passano sono bianche (prima avevano un bordo grigio).
+
 ### v2.2.2 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
 - **Cripta, pagina iniziale**: al posto delle anime viola, candele che fluttuano in alto e in basso (non sopra i tasti) con la fiamma che tremola, e un fuoco fatuo che gira a caso tra le candele. Restano pochi brillii viola.

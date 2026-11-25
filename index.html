@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.2.2', APPN = 8;
+var APPV = '2.2.3', APPN = 8;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -4698,8 +4698,10 @@ const EMB = (()=>{
   const SPRC = {};
   function SPR(kind, col){
     const key = kind + col; if(SPRC[key]) return SPRC[key];
-    const big = kind === 'cloud', w = big ? 192 : kind === 'smoke' ? 128 : kind === 'candle' || kind === 'feather' ? 32 : 64, h = big ? 96 : kind === 'candle' ? 80 : kind === 'feather' ? 96 : w, c = document.createElement('canvas'); c.width = w; c.height = h;
-    const g = c.getContext('2d'), soft = (x, y, r, a, cc = col) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, cc); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = a; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill() };
+    const big = kind === 'cloud', w = big ? 192 : kind === 'smoke' ? 128 : kind === 'candle' ? 32 : 64, h = big ? 96 : kind === 'candle' ? 80 : w, c = document.createElement('canvas'); c.width = w; c.height = h;
+    // il bordo sfuma nello stesso colore trasparente: col nero trasparente le nuvole venivano grigie
+    const clear = cc => { const m = /^#([0-9a-f]{6})$/i.exec(cc); if(!m) return 'rgba(255,255,255,0)'; const n = parseInt(m[1], 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},0)` };
+    const g = c.getContext('2d'), soft = (x, y, r, a, cc = col) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, cc); gr.addColorStop(1, clear(cc)); g.globalAlpha = a; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill() };
     let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
     if(kind === 'soft') soft(32, 32, 32, 1);
     else if(kind === 'lava'){ soft(32, 32, 32, .55); soft(32, 32, 14, 1, '#FFE7A0'); soft(32, 32, 7, 1, '#FFFFFF') }
@@ -4717,15 +4719,8 @@ const EMB = (()=>{
       g.fillStyle = '#FFF6E2'; g.beginPath(); g.ellipse(16, 31, 7, 2.2, 0, 0, 6.2832); g.fill();
       g.fillStyle = '#F8EEDA'; g.beginPath(); g.moveTo(19, 31); g.quadraticCurveTo(21.5, 40, 20, 46); g.quadraticCurveTo(18.5, 49, 17.5, 45); g.quadraticCurveTo(17, 38, 19, 31); g.fill();
       g.strokeStyle = '#2A1E14'; g.lineWidth = 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(16, 31); g.quadraticCurveTo(16.8, 27, 16.2, 23.5); g.stroke() }
-    else if(kind === 'feather'){
-      // piuma bianca: rachide dorato, due bandiere con qualche barba
-      g.fillStyle = 'rgba(255,255,255,.97)'; g.strokeStyle = 'rgba(150,128,88,.55)'; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(16, 6); g.quadraticCurveTo(29, 30, 25, 58); g.quadraticCurveTo(22, 76, 16.5, 84); g.quadraticCurveTo(5, 70, 6, 44); g.quadraticCurveTo(7, 20, 16, 6); g.fill(); g.stroke();
-      g.strokeStyle = 'rgba(170,150,110,.35)'; g.lineWidth = .8;
-      for(let i = 0; i < 7; i++){ const y = 18 + i * 9; g.beginPath(); g.moveTo(16, y + 6); g.lineTo(i % 2 ? 26 : 7, y); g.stroke() }
-      g.strokeStyle = '#C9A75A'; g.lineWidth = 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(16.5, 94); g.quadraticCurveTo(17.5, 50, 16, 6); g.stroke() }
     else if(kind === 'cloud'){ [[60, 58, 34], [96, 46, 42], [134, 58, 34], [80, 66, 30], [116, 66, 32], [40, 68, 22], [154, 68, 22]].forEach(([x, y, r]) => soft(x, y, r * 1.25, .9));
-      g.globalCompositeOperation = 'source-atop'; const sh = g.createLinearGradient(0, 30, 0, 96); sh.addColorStop(0, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(190,170,130,.35)'); g.fillStyle = sh; g.globalAlpha = 1; g.fillRect(0, 0, w, h) }
+      g.globalCompositeOperation = 'source-atop'; const sh = g.createLinearGradient(0, 30, 0, 96); sh.addColorStop(0, 'rgba(255,250,240,0)'); sh.addColorStop(1, 'rgba(235,222,195,.3)'); g.fillStyle = sh; g.globalAlpha = 1; g.fillRect(0, 0, w, h) }
     return SPRC[key] = c;
   }
   // entra e se ne va morbida; tw = scintillio; trail = qualche copia più tenue dietro (anime, gocce)
@@ -4734,7 +4729,7 @@ const EMB = (()=>{
     let al = (p.al ?? 1) * (k < fi ? k / fi : k > 1 - fo ? (1 - k) / fo : 1);
     if(p.tw) al *= .5 + .5 * Math.sin(p.a * p.tw + p.ph);
     if(al <= .003) return;
-    const im = SPR(p.spr, p.c), sc = p.s * (1 + (p.grow || 0) * k) / im.width, w = im.width * sc * (p.sx || 1), h = im.height * sc;
+    const im = p.im || SPR(p.spr, p.c), sc = p.s * (1 + (p.grow || 0) * k) / im.width, w = im.width * sc * (p.sx || 1), h = im.height * sc;
     p.rot = p.rock ? p.r0 + Math.sin(p.a * p.rock + p.ph) * .55 : (p.rot || 0) + (p.spin || 0) * dt;
     ctx.globalCompositeOperation = p.add ? 'lighter' : 'source-over';
     if(p.trail){ (p.hist || (p.hist = [])).unshift([p.x, p.y]); if(p.hist.length > p.trail * 3) p.hist.length = p.trail * 3;
@@ -4788,7 +4783,8 @@ const EMB = (()=>{
     // Santuario: brillii di luce e d'oro e qualche nuvola che passa in alto
     santuario:[{every:.12, fn(){ add({amb:true, spr:'star', c:pick(['#E8B84A','#D7A944','#F4D27A','#C99A2E']), x:RR(0, 1) * W, y:RR(0, 1) * H, vx:RR(-3, 3), vy:RR(3, 10), life:RR(1.8, 3.2), s:RR(7, 14), tw:RR(4, 8), al:1, fin:.25, fout:.4, spin:RR(-.4, .4)}) }},
       {every:3.5, fn(){ const L = Math.random() < .5, v = RR(16, 26), s = RR(220, 340); add({amb:true, spr:'cloud', c:'#FFFFFF', x:L ? -s / 2 : W + s / 2, y:RR(.02, .3) * H, vx:L ? v : -v, vy:0, life:(W + s) / v, s, al:.95, fin:.06, fout:.06}) }},
-      {every:1.5, first:.4, fn(){ const v = RR(20, 34); add({amb:true, spr:'feather', c:'', x:RR(.04, .96) * W, y:-50, vx:RR(-10, 10), vy:v, wob:RR(1.4, 2.4), life:(H + 100) / v, s:RR(14, 22), r0:RR(-.6, .6), rock:RR(1.2, 2.2), al:.95, fin:.04, fout:.08}) }}],
+      {every:1.5, first:.4, fn(){ const im = window.COLPI && COLPI.img && COLPI.img('s_f' + (Math.random() * 6 | 0)); if(!im) return;
+        const v = RR(20, 34); add({amb:true, spr:'feather', im, c:'', x:RR(.04, .96) * W, y:-50, vx:RR(-10, 10), vy:v, wob:RR(1.4, 2.4), life:(H + 100) / v, s:RR(28, 44), r0:RR(-.8, .8), rock:RR(1, 2), al:.95, fin:.04, fout:.08}) }}],
     // Cripta: rivoli di nuvole come anime nere e viola che salgono, e brillii viola
     cripta:[{every:2.6, first:.1, fn(){ const n = P.filter(p => p.candle).length; if(n >= 9) return;
         for(let i = n ? 1 : 5; i > 0; i--){ const s = RR(24, 50); add({amb:true, candle:true, draw:drawCandle, x:RR(.06, .94) * W, y:(Math.random() < .65 ? RR(.035, .12) : RR(.8, .87)) * H, vx:RR(-4, 4), vy:RR(-1, 1), life:RR(16, 26), s, al:Math.min(1, .45 + s / 80), fin:.1, fout:.14, bob:RR(.5, 1.1)}) } }},
@@ -7632,6 +7628,7 @@ function incoming(m){
 }
 function cancelAim(){ if(DR){ DR = null; AIM = null; kick() } }
 window.COLPI = {load, on, aim, aimEnd, cancelAim, strike, incoming, busy:() => !!ACT,
+  img:k => { const im = IM[k]; return im && im.complete && im.naturalWidth ? im : null },
   stato:() => ({act:!!ACT, dr:!!DR, q:Q.length, hand:!!(HAND && HAND.live), wither:!!wither, rumble:!!rumble, fx:Object.fromEntries(Object.entries(FX).map(([k, l]) => [k, l.length])), sp:Object.entries(SP).filter(([k, s]) => Math.abs(s.x - s.t) > .002 || Math.abs(s.v) > .01).map(([k]) => k), raf:!!raf})};
 
 setTimeout(() => window.COLPI.load(), 2500);
