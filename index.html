@@ -2650,7 +2650,7 @@ function renderCqPop(){
   const modes = [['dmg', ICO_CB + 'Combattimento'], ...(S.cmdDamage ? [['cmd', MI('\ue9c6') + 'Comandante']] : []), ['poison', MI('\ue618') + 'Veleno'], ['rad', MI('\uea50') + 'Radiazioni']];
   const tabs = `<div class="cqTabs">${modes.map(([m,l])=>`<button data-mode="${m}" class="${m === cqp.mode ? 'sel' : ''}">${l}</button>`).join('')}</div>`;
   if(cqp.mode === 'dmg'){
-    cqp.el.innerHTML = tabs + `<div class="cqT">Danni da combattimento da ${pchip(A)} a ${pchip(V)} · vita ${V.life}</div>` +
+    cqp.el.innerHTML = tabs + `<div class="cqT">Danni da ${pchip(A)} a ${pchip(V)} · vita ${V.life}</div>` +
       `<div class="cqRow"><button data-k="dmg" data-v="-1">−</button><output>${cqp.dmg}</output><button data-k="dmg" data-v="1">+</button></div>` +
       `<div class="cqQuick">${[2,3,5].map(x=>`<button data-k="dmg" data-v="${x}">+${x}</button>`).join('')}<button class="ok" data-ok>OK</button></div>`;
     return;
