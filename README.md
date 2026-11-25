@@ -70,6 +70,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.2.2 (prerelease)
+Solo per Federico (APK tra gli allegati della compilazione).
+- **Cripta, pagina iniziale**: al posto delle anime viola, candele che fluttuano in alto e in basso (non sopra i tasti) con la fiamma che tremola, e un fuoco fatuo che gira a caso tra le candele. Restano pochi brillii viola.
+- **Santuario, pagina iniziale**: piume bianche che cadono dondolando; brillii d'oro più piccoli e più radi.
+
 ### v2.2.1 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
 - **Vita al momento giusto** (gioco su un telefono, temi con i colpi): la vita di chi è colpito resta ferma finché il colpo non arriva, poi scende un punto alla volta come il conteggio d'inizio partita. Il colpo grosso parte da 8 danni.

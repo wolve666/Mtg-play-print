@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.2.1', APPN = 8;
+var APPV = '2.2.2', APPN = 8;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -4677,6 +4677,7 @@ const EMB = (()=>{
       if(p.wob) p.x += Math.sin(p.a * p.wob + p.ph) * 18 * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
       const al = (1 - k) * (p.flick ? .65 + .35 * Math.sin(p.a * 22 + p.ph) : 1); ctx.globalAlpha = al;
+      if(p.draw){ p.draw(p, k, dt); return true }
       if(p.spr){ drawSpr(p, k, dt); return true }
       if(p.leaf){ p.rot += p.spin * dt; const r = p.s, sq = .3 + .7 * Math.abs(Math.cos(p.a * p.fl + p.ph));
         ctx.globalAlpha = Math.min(1, al * 1.4); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = p.c;
@@ -4697,7 +4698,7 @@ const EMB = (()=>{
   const SPRC = {};
   function SPR(kind, col){
     const key = kind + col; if(SPRC[key]) return SPRC[key];
-    const big = kind === 'cloud', w = big ? 192 : kind === 'smoke' ? 128 : 64, h = big ? 96 : w, c = document.createElement('canvas'); c.width = w; c.height = h;
+    const big = kind === 'cloud', w = big ? 192 : kind === 'smoke' ? 128 : kind === 'candle' || kind === 'feather' ? 32 : 64, h = big ? 96 : kind === 'candle' ? 80 : kind === 'feather' ? 96 : w, c = document.createElement('canvas'); c.width = w; c.height = h;
     const g = c.getContext('2d'), soft = (x, y, r, a, cc = col) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, cc); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = a; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill() };
     let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
     if(kind === 'soft') soft(32, 32, 32, 1);
@@ -4709,6 +4710,20 @@ const EMB = (()=>{
       [[0, 1], [1, 0]].forEach(([a, b]) => { g.beginPath(); g.moveTo(32 - 30 * a, 32 - 30 * b); g.lineTo(32 + 3 * b, 32 + 3 * a); g.lineTo(32 + 30 * a, 32 + 30 * b); g.lineTo(32 - 3 * b, 32 - 3 * a); g.closePath(); g.fill() });
       soft(32, 32, 6, 1, '#FFFFFF') }
     else if(kind === 'smoke'){ for(let i = 0; i < 9; i++){ const a = rnd() * 6.28, d = rnd() * 30; soft(64 + Math.cos(a) * d, 64 + Math.sin(a) * d * .8, 26 + rnd() * 20, .35) } }
+    else if(kind === 'candle'){
+      // candela di cera avorio con una colatura; la fiamma la disegno a parte, viva
+      const bd = g.createLinearGradient(9, 0, 23, 0); bd.addColorStop(0, '#A8977A'); bd.addColorStop(.35, '#F6EBD2'); bd.addColorStop(.6, '#EFE1C2'); bd.addColorStop(1, '#9C8B6E');
+      g.fillStyle = bd; g.beginPath(); g.moveTo(9, 31); g.lineTo(9, 79); g.lineTo(23, 79); g.lineTo(23, 31); g.closePath(); g.fill();
+      g.fillStyle = '#FFF6E2'; g.beginPath(); g.ellipse(16, 31, 7, 2.2, 0, 0, 6.2832); g.fill();
+      g.fillStyle = '#F8EEDA'; g.beginPath(); g.moveTo(19, 31); g.quadraticCurveTo(21.5, 40, 20, 46); g.quadraticCurveTo(18.5, 49, 17.5, 45); g.quadraticCurveTo(17, 38, 19, 31); g.fill();
+      g.strokeStyle = '#2A1E14'; g.lineWidth = 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(16, 31); g.quadraticCurveTo(16.8, 27, 16.2, 23.5); g.stroke() }
+    else if(kind === 'feather'){
+      // piuma bianca: rachide dorato, due bandiere con qualche barba
+      g.fillStyle = 'rgba(255,255,255,.97)'; g.strokeStyle = 'rgba(150,128,88,.55)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(16, 6); g.quadraticCurveTo(29, 30, 25, 58); g.quadraticCurveTo(22, 76, 16.5, 84); g.quadraticCurveTo(5, 70, 6, 44); g.quadraticCurveTo(7, 20, 16, 6); g.fill(); g.stroke();
+      g.strokeStyle = 'rgba(170,150,110,.35)'; g.lineWidth = .8;
+      for(let i = 0; i < 7; i++){ const y = 18 + i * 9; g.beginPath(); g.moveTo(16, y + 6); g.lineTo(i % 2 ? 26 : 7, y); g.stroke() }
+      g.strokeStyle = '#C9A75A'; g.lineWidth = 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(16.5, 94); g.quadraticCurveTo(17.5, 50, 16, 6); g.stroke() }
     else if(kind === 'cloud'){ [[60, 58, 34], [96, 46, 42], [134, 58, 34], [80, 66, 30], [116, 66, 32], [40, 68, 22], [154, 68, 22]].forEach(([x, y, r]) => soft(x, y, r * 1.25, .9));
       g.globalCompositeOperation = 'source-atop'; const sh = g.createLinearGradient(0, 30, 0, 96); sh.addColorStop(0, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(190,170,130,.35)'); g.fillStyle = sh; g.globalAlpha = 1; g.fillRect(0, 0, w, h) }
     return SPRC[key] = c;
@@ -4720,7 +4735,7 @@ const EMB = (()=>{
     if(p.tw) al *= .5 + .5 * Math.sin(p.a * p.tw + p.ph);
     if(al <= .003) return;
     const im = SPR(p.spr, p.c), sc = p.s * (1 + (p.grow || 0) * k) / im.width, w = im.width * sc * (p.sx || 1), h = im.height * sc;
-    p.rot = (p.rot || 0) + (p.spin || 0) * dt;
+    p.rot = p.rock ? p.r0 + Math.sin(p.a * p.rock + p.ph) * .55 : (p.rot || 0) + (p.spin || 0) * dt;
     ctx.globalCompositeOperation = p.add ? 'lighter' : 'source-over';
     if(p.trail){ (p.hist || (p.hist = [])).unshift([p.x, p.y]); if(p.hist.length > p.trail * 3) p.hist.length = p.trail * 3;
       for(let i = p.hist.length - 1; i >= 3; i -= 3){ const q = p.hist[i], f = 1 - i / (p.trail * 3 + 1); ctx.globalAlpha = al * f * .5; ctx.drawImage(im, q[0] - w * f / 2, q[1] - h * f / 2, w * f, h * f) } }
@@ -4730,6 +4745,34 @@ const EMB = (()=>{
     if(p.rot){ ctx.setTransform(D, 0, 0, D, D * p.x, D * p.y); ctx.rotate(p.rot); ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.setTransform(D, 0, 0, D, 0, 0) }
     else ctx.drawImage(im, p.x - w / 2, p.y - h / 2, w, h);
     ctx.globalCompositeOperation = 'lighter';
+  }
+  const fadeOf = p => { const k = p.a / p.life, fi = p.fin ?? .15, fo = p.fout ?? .4; return (p.al ?? 1) * (k < fi ? k / fi : k > 1 - fo ? (1 - k) / fo : 1) };
+  // Cripta: candela che fluttua piano su e giù, con la fiamma che tremola
+  function drawCandle(p){
+    const al = fadeOf(p); if(al <= .003) return;
+    const h = p.s, w = h * .4, x = p.x, y = p.y + Math.sin(p.a * p.bob + p.ph) * h * .14;
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = al; ctx.drawImage(SPR('candle', ''), x - w / 2, y - h / 2, w, h);
+    const fl = .86 + .1 * Math.sin(p.a * 17 + p.ph) + .06 * Math.sin(p.a * 29 + p.ph * 2), fx = x + Math.sin(p.a * 4.3 + p.ph) * h * .02, fb = y - h / 2 + h * .29, fh = h * .24 * fl, fw = h * .075;
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = al * .75 * fl; const gs = h * 1.5; ctx.drawImage(SPR('soft', '#FFA640'), fx - gs / 2, fb - fh * .5 - gs / 2, gs, gs);
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = al;
+    const gr = ctx.createLinearGradient(0, fb, 0, fb - fh); gr.addColorStop(0, '#FF8A1C'); gr.addColorStop(.35, '#FFD36A'); gr.addColorStop(.7, '#FFF6D8'); gr.addColorStop(1, 'rgba(255,255,255,.4)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(fx, fb - fh); ctx.quadraticCurveTo(fx + fw, fb - fh * .3, fx, fb + fh * .06); ctx.quadraticCurveTo(fx - fw, fb - fh * .3, fx, fb - fh); ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+  }
+  // Cripta: fuoco fatuo che gira a caso tra le candele, con una scia
+  function drawWisp(p, k, dt){
+    if(!p.tg || Math.hypot(p.tg.x - p.x, p.tg.y - p.y) < 24 || p.a > p.tt){
+      const cs = P.filter(c => c.candle), c = cs.length && Math.random() < .8 ? pick(cs) : null;
+      p.tg = c ? {x:c.x + RR(-1, 1) * c.s * .7, y:c.y - c.s * .4 + RR(-1, 1) * c.s * .5} : {x:RR(.08, .92) * W, y:RR(.08, .9) * H}; p.tt = p.a + RR(1.8, 4.2) }
+    const dx = p.tg.x - p.x, dy = p.tg.y - p.y, d = Math.hypot(dx, dy) || 1, sp = 70 + 30 * Math.sin(p.a * .9 + p.ph), q = Math.min(1, dt * 1.4);
+    p.vx += (dx / d * sp - p.vx) * q + Math.sin(p.a * 3.3 + p.ph) * 40 * dt; p.vy += (dy / d * sp - p.vy) * q + Math.cos(p.a * 2.7 + p.ph) * 40 * dt;
+    const al = fadeOf(p); if(al <= .003) return;
+    const hs = p.hist || (p.hist = []); hs.unshift([p.x, p.y]); if(hs.length > 18) hs.length = 18;
+    const fl = .8 + .2 * Math.sin(p.a * 11 + p.ph), core = SPR('soft', '#E6FFF6'), halo = SPR('soft', '#5FFFD0');
+    ctx.globalCompositeOperation = 'lighter';
+    for(let i = hs.length - 1; i > 0; i -= 2){ const f = 1 - i / 19, z = 16 * f; ctx.globalAlpha = al * .3 * f; ctx.drawImage(halo, hs[i][0] - z, hs[i][1] - z, z * 2, z * 2) }
+    ctx.globalAlpha = al * .7 * fl; ctx.drawImage(halo, p.x - 40, p.y - 40, 80, 80);
+    ctx.globalAlpha = al * fl; ctx.drawImage(core, p.x - 9, p.y - 9, 18, 18);
   }
   // ---- effetti della pagina iniziale, uno per tema (la Selva ha già lucciole e foglie)
   const RR = (a, b) => a + Math.random() * (b - a);
@@ -4743,11 +4786,14 @@ const EMB = (()=>{
     abisso:[{every:.45, fn(){ const s = RR(7, 22); add({amb:true, spr:'bubble', c:'#BFF4FF', x:RR(.03, .97) * W, y:H + 20, vx:RR(-6, 6), vy:-RR(30, 60) * (1 + s / 30), wob:RR(2, 4), life:RR(8, 12), s, al:.85, fin:.05, fout:.15}) }},
       {every:.09, fn(){ add({amb:true, spr:'soft', c:pick(['#BFF4FF','#FFFFFF','#7FE6FA','#CFFFF0']), add:true, x:RR(0, 1) * W, y:RR(0, 1) * H, vx:RR(-7, 7), vy:RR(-6, 4), life:RR(4, 7), s:RR(4, 10), tw:RR(3, 7), al:1, fin:.3, fout:.3}) }}],
     // Santuario: brillii di luce e d'oro e qualche nuvola che passa in alto
-    santuario:[{every:.08, fn(){ add({amb:true, spr:'star', c:pick(['#E8B84A','#D7A944','#F4D27A','#C99A2E']), x:RR(0, 1) * W, y:RR(0, 1) * H, vx:RR(-3, 3), vy:RR(3, 10), life:RR(1.8, 3.2), s:RR(16, 32), tw:RR(4, 8), al:1, fin:.25, fout:.4, spin:RR(-.4, .4)}) }},
-      {every:3.5, fn(){ const L = Math.random() < .5, v = RR(16, 26), s = RR(220, 340); add({amb:true, spr:'cloud', c:'#FFFFFF', x:L ? -s / 2 : W + s / 2, y:RR(.02, .3) * H, vx:L ? v : -v, vy:0, life:(W + s) / v, s, al:.95, fin:.06, fout:.06}) }}],
+    santuario:[{every:.12, fn(){ add({amb:true, spr:'star', c:pick(['#E8B84A','#D7A944','#F4D27A','#C99A2E']), x:RR(0, 1) * W, y:RR(0, 1) * H, vx:RR(-3, 3), vy:RR(3, 10), life:RR(1.8, 3.2), s:RR(7, 14), tw:RR(4, 8), al:1, fin:.25, fout:.4, spin:RR(-.4, .4)}) }},
+      {every:3.5, fn(){ const L = Math.random() < .5, v = RR(16, 26), s = RR(220, 340); add({amb:true, spr:'cloud', c:'#FFFFFF', x:L ? -s / 2 : W + s / 2, y:RR(.02, .3) * H, vx:L ? v : -v, vy:0, life:(W + s) / v, s, al:.95, fin:.06, fout:.06}) }},
+      {every:1.5, first:.4, fn(){ const v = RR(20, 34); add({amb:true, spr:'feather', c:'', x:RR(.04, .96) * W, y:-50, vx:RR(-10, 10), vy:v, wob:RR(1.4, 2.4), life:(H + 100) / v, s:RR(14, 22), r0:RR(-.6, .6), rock:RR(1.2, 2.2), al:.95, fin:.04, fout:.08}) }}],
     // Cripta: rivoli di nuvole come anime nere e viola che salgono, e brillii viola
-    cripta:[{every:.6, fn(){ add({amb:true, spr:'smoke', c:pick(['#4B1C78','#6A2AB0','#8A45D6','#2A1040','#5A2496']), x:RR(.03, .97) * W, y:H + 40, vx:RR(-10, 10), vy:-RR(22, 40), wob:RR(2, 3.5), life:RR(7, 10), s:RR(80, 130), sx:RR(.4, .6), grow:.9, al:.85, fin:.2, fout:.45, trail:5, glow:pick(['#8A45D6','#B07CFF','#6A2AB0'])}) }},
-      {every:.08, fn(){ add({amb:true, spr:Math.random() < .35 ? 'star' : 'soft', c:pick(['#C9A4FF','#B07CFF','#E2CCFF','#9A5CFF']), add:true, x:RR(0, 1) * W, y:RR(.1, 1) * H, vx:RR(-5, 5), vy:-RR(4, 14), life:RR(2.5, 4.5), s:RR(7, 18), tw:RR(4, 8), al:1, fin:.3, fout:.35}) }}],
+    cripta:[{every:2.6, first:.1, fn(){ const n = P.filter(p => p.candle).length; if(n >= 9) return;
+        for(let i = n ? 1 : 5; i > 0; i--){ const s = RR(24, 50); add({amb:true, candle:true, draw:drawCandle, x:RR(.06, .94) * W, y:(Math.random() < .65 ? RR(.035, .12) : RR(.8, .87)) * H, vx:RR(-4, 4), vy:RR(-1, 1), life:RR(16, 26), s, al:Math.min(1, .45 + s / 80), fin:.1, fout:.14, bob:RR(.5, 1.1)}) } }},
+      {every:20, first:1.2, fn(){ if(P.some(p => p.wisp)) return; add({amb:true, wisp:true, draw:drawWisp, x:RR(.2, .8) * W, y:RR(.05, .2) * H, vx:0, vy:0, life:RR(18, 24), s:1, fin:.05, fout:.08}) }},
+      {every:.4, fn(){ add({amb:true, spr:Math.random() < .35 ? 'star' : 'soft', c:pick(['#C9A4FF','#B07CFF','#E2CCFF','#9A5CFF']), add:true, x:RR(0, 1) * W, y:RR(.1, 1) * H, vx:RR(-5, 5), vy:-RR(4, 14), life:RR(2.5, 4.5), s:RR(4, 9), tw:RR(4, 8), al:.9, fin:.3, fout:.35}) }}],
     // Mox: lampi azzurrini qua e là e qualche scintilla che cade
     mox:[{every:.5, fn(){ const x = RR(.08, .92) * W, y = RR(.1, .9) * H, a = Math.random() * 6.283, l = RR(50, 130);
         if(B.length < 80) B.push({a:0, life:RR(.16, .28), x1:x, y1:y, x2:x + Math.cos(a) * l, y2:y + Math.sin(a) * l, rough:.35, br:1, w:.75, every:.04, t:0});
@@ -4889,8 +4935,8 @@ const EMB = (()=>{
         mox:{y:'a', v:[-6, 6], c:['#9BEFFA','#E0B060','#C9F6FF','#B48A42'], s:[.7, 1.5], l:[4, 6]}}[kind];
       const gn = () => { const r = (a) => a[0] + Math.random() * (a[1] - a[0]);
         add({amb:true, x:Math.random() * W, y:G.y === 'b' ? H + 6 : G.y === 't' ? -6 : Math.random() * H, vx:(Math.random() - .5) * (G.y === 'a' ? 16 : 12), vy:r(G.v), drag:0, life:r(G.l), c:pick(G.c), s:r(G.s), flick:true, wob:2 + Math.random() * 3}) };
-      amb = on && !RMOT ? {kind, every:kind === 'selva' ? .12 : G ? (kind === 'abisso' ? .3 : .16) : .07, spawn:kind === 'selva' ? sv : G ? gn : fg,
-        em:(HOME[kind] || []).map(e => ({every:e.every, fn:e.fn, t:e.every * Math.random()}))} : null;
+      amb = on && !RMOT ? {kind, every:kind === 'selva' ? .12 : G ? (kind === 'abisso' ? .3 : kind === 'cripta' ? .9 : .16) : .07, spawn:kind === 'selva' ? sv : G ? gn : fg,
+        em:(HOME[kind] || []).map(e => ({every:e.every, fn:e.fn, t:e.first ?? e.every * Math.random()}))} : null;
       if(amb) go() },
   };
 })();
