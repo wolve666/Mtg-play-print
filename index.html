@@ -1532,7 +1532,8 @@ if(!S){
   S = {count:4, format:'commander', startLife:40, cmdDamage:true, players:null, turn:freshTurn(false), log:[]};
   S.players = freshPlayers(4, 40);
 }
-let SET = Object.assign({bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false, page:false}, load(SKEY) || {});
+// al primo avvio parte Mana, il tema base
+let SET = Object.assign({theme:'classico', bright:1, chunk:100, holdMode:'repeat', vibrate:true, wake:true, voiceLog:true, sound:true, clips:false, intro:true, prModel:'auto', speed:'bal', heat:0, scale:100, dh:false, page:false}, load(SKEY) || {});
 SET.show = Object.assign({poison:true, energy:false, exp:true, rad:false, tax:true}, SET.show || {});
 // 0.15.7: l'esperienza esce dal pannello personale e si sposta nella Scheda completa, quindi la accendo lì una volta per tutti
 /* ================= Tema ================= */
@@ -1553,12 +1554,12 @@ const GEN = () => GENT.includes(SET.theme);
 const RICH = () => FORGIA() || SELVA() || GEN();
 // tema completo (immagini dipinte) o liscio (tutto a codice): si cambia con il secondo tocco sul seme
 const FULL = () => RICH() && SET.full !== false && typeof TIMG !== 'undefined';
-const TNAME = {classico:'Classico', forgia:'Forgia', selva:'Selva', abisso:'Abisso', cripta:'Cripta', santuario:'Santuario', mox:'Mox'};
+const TNAME = {classico:'Mana', forgia:'Forgia', selva:'Selva', abisso:'Abisso', cripta:'Cripta', santuario:'Santuario', mox:'Mox'};
 const SEEDS = [['rosso','Rosso','forgia'], ['verde','Verde','selva'], ['blu','Blu','abisso'], ['nero','Nero','cripta'], ['bianco','Bianco','santuario'], ['incolore','Incolore','mox']];
 // simboli di mana del font Mana (ritaglio ManaSub già incorporato): bianco e600, blu e601, nero e602, rosso e603, verde e604, incolore e904
 const GLYPH = {rosso:'\ue603', verde:'\ue604', blu:'\ue601', nero:'\ue602', bianco:'\ue600', incolore:'\ue904'};
 const THC = {forgia:['#0B0A0D', COLORS_F], selva:['#0A100B', COLORS_S], abisso:['#06121D', COLORS_A], cripta:['#0C0910', COLORS_K], santuario:['#F1EADB', COLORS_W], mox:['#111316', COLORS_M]};
-const themeLabel = () => 'Tema: ' + (TNAME[SET.theme] || 'Classico') + (RICH() ? (FULL() ? ', completo' : ', liscio') : '');
+const themeLabel = () => 'Tema: ' + (TNAME[SET.theme] || 'Mana') + (RICH() ? (FULL() ? ', completo' : ', liscio') : '');
 const seedBtns = () => SEEDS.map(([k, l, th]) => `<button class="seed${SET.theme === th ? ' on' + (FULL() ? '' : ' mezzo') : ''}" data-seed="${k}" aria-label="${l}">${GLYPH[k]}</button>`).join('');
 function renderSeeds(){
   const el = document.getElementById('wzSeeds'); if(el) el.innerHTML = `<small>${themeLabel()}</small><div>${seedBtns()}</div>`;   // gira anche prima che $ esista
@@ -4198,7 +4199,7 @@ async function themeBg(box, q, url){
 document.addEventListener('click', e => {
   const b = e.target.closest('.seed[data-seed]'); if(!b) return;
   const sd = SEEDS.find(x => x[0] === b.dataset.seed); if(!sd) return; buzz(10);
-  // primo tocco: tema completo; secondo: liscio; terzo: si torna al Classico
+  // primo tocco: tema completo; secondo: liscio; terzo: si torna a Mana (il tema base, «classico» nel codice)
   let th = SET.theme, full = SET.full;
   if(th !== sd[2]){ th = sd[2]; full = true }
   else if(full !== false) full = false;
