@@ -919,41 +919,43 @@ body.th-selva.netv #hub::before{width:190px;height:110px;margin:-55px 0 0 -95px}
 
 /* ================= Passaggio al cambio tema (dalla prova generale) =================
    Un velo breve sopra tutto lo schermo; il tema cambia a metà, quando il velo copre. Solo movimento e trasparenza. */
-#thTx{position:fixed;inset:0;z-index:80;pointer-events:none;opacity:0;visibility:hidden}
+#thTx{position:fixed;inset:0;z-index:80;pointer-events:none;opacity:0;visibility:hidden;will-change:transform,opacity;contain:strict}
 #thTx.go{visibility:visible}
+/* veli tre volte più grandi dello schermo, sfumati davanti e dietro: scorrendo non mostrano mai un bordo dritto.
+   Solo transform e opacity, così li anima la scheda grafica anche mentre l'app cambia tema. */
 #thTx.go-classico{animation:txFade .6s ease both;background:#22252B}
 @keyframes txFade{0%,100%{opacity:0}45%,55%{opacity:1}}
-#thTx.go-forgia{animation:txForgia .75s cubic-bezier(.4,0,.3,1) both;background:radial-gradient(120% 80% at 50% 100%,#FFB13A,#FF4A1C 30%,#5a0d04 60%,#0B0A0D 80%)}
-@keyframes txForgia{0%{opacity:1;transform:translateY(100%)}45%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30%)}}
-#thTx.go-selva{animation:txSelva .8s cubic-bezier(.4,0,.3,1) both;background:linear-gradient(100deg,#0A100B 70%,#2F6A20 85%,transparent)}
-@keyframes txSelva{0%{opacity:1;transform:translateX(-120%)}45%{opacity:1;transform:translateX(0)}100%{opacity:1;transform:translateX(130%)}}
-#thTx.go-abisso{animation:txAbisso .85s cubic-bezier(.4,0,.3,1) both;background:linear-gradient(180deg,rgba(130,230,255,.9),#1A6FB0 6%,#06121D 40%)}
-@keyframes txAbisso{0%{opacity:1;transform:translateY(105%)}45%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(-110%)}}
-#thTx.go-cripta{animation:txCripta .9s ease both;background:radial-gradient(closest-side,#0C0910 40%,rgba(60,20,90,.95) 75%,rgba(12,9,16,0))}
-@keyframes txCripta{0%{opacity:0;transform:scale(2.6)}45%{opacity:1;transform:scale(1.5)}100%{opacity:0;transform:scale(1.2)}}
-#thTx.go-santuario{animation:txSant .8s ease both;background:radial-gradient(60% 45% at 50% 0%,#fff,#FFF6DC 45%,rgba(255,246,220,0) 100%);transform-origin:top}
-@keyframes txSant{0%{opacity:0;transform:scaleY(.2)}40%,55%{opacity:1;transform:scaleY(2.4)}100%{opacity:0;transform:scaleY(2.4)}}
+#thTx.go-forgia,#thTx.go-abisso{inset:auto;left:0;right:0;top:100%;height:300vh;opacity:1}
+#thTx.go-forgia{animation:txUp .78s cubic-bezier(.45,0,.35,1) both;background:linear-gradient(180deg,transparent 0%,rgba(255,200,90,.55) 5%,#FF6A1C 11%,#7a1405 20%,#0B0A0D 30%,#0B0A0D 70%,rgba(11,10,13,.6) 84%,transparent 100%)}
+#thTx.go-abisso{animation:txUp .85s cubic-bezier(.45,0,.35,1) both;background:linear-gradient(180deg,transparent 0%,rgba(190,245,255,.6) 5%,#2A8FD0 12%,#0B3E66 21%,#06121D 30%,#06121D 70%,rgba(6,18,29,.6) 84%,transparent 100%)}
+@keyframes txUp{0%{transform:translateY(0)}45%,55%{transform:translateY(-200vh)}100%{transform:translateY(-400vh)}}
+#thTx.go-selva{inset:auto;top:0;bottom:0;left:-300vw;width:300vw;opacity:1;animation:txRight .85s cubic-bezier(.45,0,.35,1) both;background:linear-gradient(90deg,transparent 0%,rgba(10,16,11,.6) 16%,#0A100B 30%,#0A100B 70%,#1E4A16 78%,#4E8F2E 84%,rgba(140,200,80,.4) 92%,transparent 100%)}
+@keyframes txRight{0%{transform:translateX(0)}45%,55%{transform:translateX(200vw)}100%{transform:translateX(400vw)}}
+#thTx.go-cripta{animation:txCripta .9s ease both;background:radial-gradient(farthest-corner,#0C0910 58%,rgba(60,20,90,.92) 78%,rgba(12,9,16,0))}
+@keyframes txCripta{0%{opacity:0;transform:scale(2.4)}45%,55%{opacity:1;transform:scale(1.25)}100%{opacity:0;transform:scale(1.1)}}
+#thTx.go-santuario{animation:txSant .8s ease both;background:radial-gradient(90% 45% at 50% 0%,#fff,rgba(255,255,255,0) 100%),linear-gradient(180deg,#FFFDF6,#FFF6DC 60%,#F1E6C8);transform-origin:top}
+@keyframes txSant{0%{opacity:0;transform:scaleY(.25)}40%,55%{opacity:1;transform:none}100%{opacity:0;transform:none}}
 #thTx.go-mox{opacity:1}
-#thTx.go-mox::before,#thTx.go-mox::after{content:'';position:absolute;left:0;right:0;height:50%;background-image:radial-gradient(circle,#B48A42 2px,transparent 2.6px),linear-gradient(180deg,#2B2F35,#15171A);background-size:30px 30px,100% 100%}
+#thTx.go-mox::before,#thTx.go-mox::after{content:'';position:absolute;left:0;right:0;height:50.5%;will-change:transform;background-image:radial-gradient(circle,#B48A42 2px,transparent 2.6px),linear-gradient(180deg,#2B2F35,#15171A);background-size:30px 30px,100% 100%}
 #thTx.go-mox::before{top:0;animation:shTop .8s cubic-bezier(.6,0,.3,1) both;border-bottom:2px solid #8EE7F4;box-shadow:0 2px 14px #8EE7F4}
 #thTx.go-mox::after{bottom:0;animation:shBot .8s cubic-bezier(.6,0,.3,1) both}
-@keyframes shTop{0%{transform:translateY(-100%)}38%,55%{transform:none}100%{transform:translateY(-100%)}}
-@keyframes shBot{0%{transform:translateY(100%)}38%,55%{transform:none}100%{transform:translateY(100%)}}
+@keyframes shTop{0%{transform:translateY(-110%)}38%,55%{transform:none}100%{transform:translateY(-110%)}}
+@keyframes shBot{0%{transform:translateY(110%)}38%,55%{transform:none}100%{transform:translateY(110%)}}
 /* ================= Apertura del Menu e della pagina Stampa, una per tema =================
    Una volta sola; le sezioni entrano una dopo l'altra. Le altre pagine salgono dal basso come sempre. */
 @media (prefers-reduced-motion:no-preference){
   body.th-forgia :is(#ov-tokens,#ov-menu).open{animation:opForgia .5s cubic-bezier(.3,0,.4,1) both}
   @keyframes opForgia{0%{transform:translateY(-104%)}62%{transform:translateY(0)}72%{transform:translateY(-10px)}84%{transform:translateY(0)}92%{transform:translateY(-3px)}100%{transform:none}}
-  body.th-selva :is(#ov-tokens,#ov-menu).open{animation:opSelva .5s cubic-bezier(.2,.8,.2,1) both}
-  @keyframes opSelva{from{transform:none;clip-path:ellipse(0% 30% at 50% 55%)}to{transform:none;clip-path:ellipse(120% 120% at 50% 55%)}}
-  body.th-abisso :is(#ov-tokens,#ov-menu).open{animation:opAbisso .6s cubic-bezier(.25,.7,.25,1) both}
-  @keyframes opAbisso{0%{transform:none;clip-path:polygon(0 100%,15% 100%,30% 100%,45% 100%,60% 100%,75% 100%,90% 100%,100% 100%,100% 100%,0 100%)}55%{transform:none;clip-path:polygon(0 30%,15% 22%,30% 30%,45% 38%,60% 30%,75% 22%,90% 30%,100% 34%,100% 100%,0 100%)}100%{transform:none;clip-path:polygon(0 -6%,15% -6%,30% -6%,45% -6%,60% -6%,75% -6%,90% -6%,100% -6%,100% 100%,0 100%)}}
+  body.th-selva :is(#ov-tokens,#ov-menu).open{animation:opSelva .45s cubic-bezier(.2,.8,.2,1) both;transform-origin:50% 55%}
+  @keyframes opSelva{from{transform:scale(.55);opacity:0}60%{opacity:1}to{transform:none;opacity:1}}
+  body.th-abisso :is(#ov-tokens,#ov-menu).open{animation:opAbisso .55s cubic-bezier(.25,.7,.25,1) both}
+  @keyframes opAbisso{0%{transform:translateY(100%) skewY(-4deg)}60%{transform:translateY(-2%) skewY(1.5deg)}80%{transform:translateY(1%) skewY(-.5deg)}100%{transform:none}}
   body.th-cripta :is(#ov-tokens,#ov-menu).open{animation:opCripta .6s ease-out both}
   @keyframes opCripta{0%{opacity:0;transform:scale(1.06)}40%{opacity:.6}100%{opacity:1;transform:none}}
-  body.th-santuario :is(#ov-tokens,#ov-menu).open{animation:opSantuario .55s cubic-bezier(.2,.8,.2,1) both}
-  @keyframes opSantuario{0%{transform:none;clip-path:circle(0% at 50% 0%);filter:brightness(1.6)}70%{filter:brightness(1.15)}100%{transform:none;clip-path:circle(150% at 50% 0%);filter:none}}
-  body.th-mox :is(#ov-tokens,#ov-menu).open{animation:opMox .55s cubic-bezier(.6,0,.3,1) both}
-  @keyframes opMox{0%{transform:none;clip-path:inset(50% 0 50% 0)}35%{transform:none;clip-path:inset(47% 0 47% 0)}100%{transform:none;clip-path:inset(0 0 0 0)}}
+  body.th-santuario :is(#ov-tokens,#ov-menu).open{animation:opSantuario .5s cubic-bezier(.2,.8,.2,1) both;transform-origin:50% 0}
+  @keyframes opSantuario{0%{transform:scaleY(.08);opacity:0}50%{opacity:1}100%{transform:none;opacity:1}}
+  body.th-mox :is(#ov-tokens,#ov-menu).open{animation:opMox .5s cubic-bezier(.6,0,.3,1) both;transform-origin:50% 50%}
+  @keyframes opMox{0%{transform:scaleY(.02)}35%{transform:scaleY(.06)}100%{transform:none}}
   :is(body.th-forgia,body.th-selva,body.th-gen) :is(#ov-tokens,#ov-menu).open .ovBody > .sec,:is(body.th-forgia,body.th-selva,body.th-gen) #ov-tokens.open #tkMenu > .sec{animation:secIn .45s cubic-bezier(.2,.8,.2,1) both}
   :is(#ov-tokens,#ov-menu).open .sec:nth-child(2){animation-delay:.05s}:is(#ov-tokens,#ov-menu).open .sec:nth-child(3){animation-delay:.1s}:is(#ov-tokens,#ov-menu).open .sec:nth-child(4){animation-delay:.15s}:is(#ov-tokens,#ov-menu).open .sec:nth-child(n+5){animation-delay:.2s}
   @keyframes secIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -1153,6 +1155,14 @@ body.th-gen.netv #hub::before{width:190px;height:110px;margin:-55px 0 0 -95px}
 .th-santuario .seed{color:rgba(90,75,50,.35)}
 .th-santuario .seed.on{color:#C99A2E;text-shadow:0 0 12px rgba(220,170,60,.9)}
 .th-santuario .wzSeeds small{color:#7C705A}
+.th-santuario .cqPop{color:#2A2418;box-shadow:0 8px 30px rgba(90,70,30,.25),inset 0 0 0 1px #DCCDAE}
+.th-santuario .cqT{color:#5A4A2A}
+.th-santuario .cqTabs button{background:rgba(120,90,30,.1);color:#5A4A2A}
+.th-santuario .cqTabs button.sel{background:var(--sel);color:var(--gold-ink)}
+.th-santuario .cqRow button,.th-santuario .cqQuick button{background:#EDE3CE;color:#2A2418}
+.th-santuario .cqRow button[data-v="1"]{background:var(--pri);color:var(--priInk)}
+.th-santuario .cqQuick .ok{background:var(--sel);color:var(--gold-ink)}
+.th-santuario .cqRow output{color:#2A2418}
 .th-santuario .wz,.th-santuario .dlg{color:#2A2418}
 .th-santuario .wzBrand .verBtn,.th-santuario .wzBrand .ver,.th-santuario .wzBack{color:#9B7524}
 .th-santuario .wzOpt span,.th-santuario .dlg p{color:#7C705A}
@@ -2551,7 +2561,12 @@ function renderCqPop(){
     `<div class="cqQuick">${[2,3,4,5].map(x=>`<button data-k="${keys[0][0]}" data-v="${x}">+${x}</button>`).join('')}<button class="ok" data-ok>OK</button></div>`;
 }
 function armCqPop(){ clearTimeout(cqp.t); cqp.t = setTimeout(closeCqPop, 6000) }
-function closeCqPop(){ if(!cqp) return; clearTimeout(cqp.t); cqp.el.remove(); cqp = null }
+function closeCqPop(){
+  if(!cqp) return; clearTimeout(cqp.t); cqp.el.remove();
+  // il colpo del tema parte alla chiusura (OK, tocco fuori o tempo scaduto), con tutto quello che è stato segnato
+  const cp = cqp.cpHit ? {a:cqp.a, v:cqp.v, d:cqp.cpd || 0} : null; cqp = null;
+  if(cp) setTimeout(() => fgStrike(cp.a, cp.v, cp.d, true), 60);
+}
 // un tocco fuori dalla finestrella la chiude senza toccare i punti vita
 document.addEventListener('pointerdown', e=>{
   if(cqp && !cqp.el.contains(e.target)){ e.stopPropagation(); e.preventDefault(); closeCqPop() }
@@ -4146,7 +4161,8 @@ document.addEventListener('click', e => {
   themeSwap(th, () => { SET.theme = th; SET.full = full; saveSet(); applyTheme(true) });
 });
 // passaggio al cambio tema: il velo del tema nuovo copre lo schermo, il tema cambia a metà, poi il velo se ne va
-const TX_MID = {classico:270, forgia:340, selva:360, abisso:380, cripta:400, santuario:340, mox:330};
+// il tema cambia a metà del tratto in cui il velo copre tutto lo schermo
+const TX_MID = {classico:300, forgia:390, selva:425, abisso:425, cripta:450, santuario:390, mox:370};
 let txT = null;
 function themeSwap(th, apply){
   const tx = $('#thTx');
@@ -4761,12 +4777,14 @@ function fgTo(v){
 let fgLastStrike = 0;
 const fgAgain = () => { const now = performance.now(), again = now - fgLastStrike < 280; fgLastStrike = now; return again };
 const CPQ = {};
-function fgStrike(a, v, dmg = 0){
-  // colpi dei temi: tocchi veloci di fila (+1 +1 +1…) diventano un colpo solo, con tutto il danno, quando smetto di toccare
+function fgStrike(a, v, dmg = 0, now = false){
   if(window.COLPI && COLPI.on(SET.theme)){
+    // dalla finestrella dei danni il colpo parte con OK: intanto si raccolgono i punti segnati
+    if(cqp && cqp.a === a && cqp.v === v){ cqp.cpHit = true; cqp.cpd = (cqp.cpd || 0) + dmg; return }
+    // altrove (pagina Combattimento, tocchi veloci di fila) un colpo solo con tutto il danno
     const k = a + '>' + v, q = CPQ[k] || (CPQ[k] = {d:0, t:0});
     q.d += dmg; clearTimeout(q.t);
-    q.t = setTimeout(() => { delete CPQ[k]; const m = COLPI.strike(a, v, q.d); if(m && NV() && v !== NET.me) netZap(a, v, false, m) }, q.d >= 10 ? 60 : 450);
+    q.t = setTimeout(() => { delete CPQ[k]; const m = COLPI.strike(a, v, q.d); if(m && NV() && v !== NET.me) netZap(a, v, false, m) }, now || q.d >= 10 ? 0 : 450);
     return;
   }
   if(SELVA()) return svStrike(a, v, fgAgain());
@@ -4853,8 +4871,8 @@ function fgZap(t, small){
   t.el.animate([{translate:'0 0'},{translate:'-6px 4px'},{translate:'5px -3px'},{translate:'-3px 2px'},{translate:'0 0'}], {duration:small ? 180 : 320});
   buzz(small ? 15 : [25, 30, 45]);
 }
-function fgCmd(a, v){
-  fgStrike(a, v);
+function fgCmd(a, v, n = 0){
+  fgStrike(a, v, Math.max(0, +n || 0));   // i danni da comandante contano per il colpo grosso
   $(`.cell[data-i="${v}"] .spia.cmdb[data-o="${a}"]`)?.animate([{scale:1},{scale:1.5},{scale:1}], {duration:300, delay:60});
 }
 // pannello personale: le caselle entrano a cascata, braci dalla striscia
@@ -4981,7 +4999,7 @@ function playIntro(){
 
 /* ================= Danni da comandante: effetto ================= */
 function cmdFx(v, n, a){
-  if(fgOn() && a != null){ fgCmd(a, v); return }
+  if(fgOn() && a != null){ fgCmd(a, v, n); return }
   const fr = $(`.cell[data-i="${v}"] .frame`); if(!fr) return;
   fr.querySelector('.cmdFx')?.remove();
   const el = document.createElement('div'); el.className = 'cmdFx';
@@ -5640,7 +5658,7 @@ function tileRect(s){ return scrOf(s).tile }
 function overTile(p){ const t = tileRect(pA); return p[0] > t.x - 6 && p[0] < t.x + t.w + 6 && p[1] > t.y - 6 && p[1] < t.y + t.h + 14 }
 const FLD = {A:null, V:null};
 // V = a terra (dentro il campo), M = sopra l'elemento centrale, V2 = sopra tutto
-const FX = {A:[], V:[], M:[], V2:[], sA:[], sV:[], sM:[], sV2:[], pA:[], pV:[], pV2:[]};
+const FX = {A:[], V:[], M:[], V2:[], sA:[], sV:[], sM:[], sV2:[], pA:[], pV:[], pV2:[], sX:[], pX:[]};
 function srcX(){ const t = tileRect(pV); return t.x + t.w / 2 }
 function fromTile(fn, n, t0 = 0, dur = 0, spread = .7){
   const tr = tileRect(pA), fb = fieldBox(pA), WA = pA.clientWidth;
@@ -7106,7 +7124,7 @@ function fieldFor(k, S){
   const c = hex3(S.pcol); F.col = [lerp3(c, [1, 1, 1], .09), c, lerp3(c, [0, 0, 0], .32)]; F.rad = S.rad; F.a = 0;
   const bg = (getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g) || [10, 10, 13]).slice(0, 3).map(v => v / 255); F.bg = lerp3(bg, [0, 0, 0], .5);
   Object.assign(F.cv.style, {left:S.ox + 'px', top:S.oy + 'px', width:S.W + 'px', height:S.H + 'px', transform:S.glRot ? `rotate(${S.glRot}deg)` : ''});
-  S.frame.prepend(F.cv); resetF(F);
+  S.frame.prepend(F.cv); resetF(F); F.solo = !!S.solo; if(F.solo){ F.gnd.width = F.gnd.height = 1 }
   return F;
 }
 const fixedCv = id => { let c = document.getElementById(id); if(!c){ c = document.createElement('canvas'); c.id = id; c.className = 'cpFix'; document.body.appendChild(c) } return c };
@@ -7138,29 +7156,38 @@ function screenOf(me, other, role){
     return {W, H, m:[1, 0, 0, 1, 0, 0], frame, cell, life, hubEl:$('#tokenBtn'), shake:document.body, pcol, rad, ox:-fr.left, oy:-fr.top,
       hub:{x:hb.x, y:hb.y, w:Math.max(hb.w, W * .3), h:Math.max(hb.h, W * .12)}, field:{x:cr.left, y:cr.top, w:cr.width, h:cr.height}, tile:{x:tr.left, y:tr.top, w:tr.width, h:tr.height}};
   }
-  // un telefono solo. Le estremità dei colpi (dove escono e dove entrano) devono stare fuori dallo schermo, come in H&O:
-  // - chi attacca: uno schermo grande quanto la scheda, girato con l'«alto» verso chi è colpito e lungo fino al bordo del telefono;
-  // - chi è colpito: la sua scheda, nel suo verso (lì sta il tappeto vivo), con il «quadratino» di chi attacca fuori dallo schermo, dalla sua parte.
-  const vw = innerWidth, vh = innerHeight, exitT = (o, d) => { let t = 1e9; if(d[0] > 1e-6) t = Math.min(t, (vw - o.x) / d[0]); if(d[0] < -1e-6) t = Math.min(t, -o.x / d[0]); if(d[1] > 1e-6) t = Math.min(t, (vh - o.y) / d[1]); if(d[1] < -1e-6) t = Math.min(t, -o.y / d[1]); return t };
-  const oc = $(`.cell[data-i="${other}"]`), c0 = rectC(cell), op = oc ? rectC(oc) : {x:vw / 2, y:-200}, fw = frame.offsetWidth, fh = frame.offsetHeight;
+  // ---- un telefono solo (schermata segnata da Federico, grafica/segnalazioni/2026-11-25-direzione-colpi-un-telefono.jpg):
+  // il colpo nasce dal nome di chi attacca e va dritto al centro del tappeto colpito; entra dal lato del tappeto
+  // da cui arriva quella retta (lato lungo per chi sta di fronte, lato corto per i vicini); sul tappeto colpito
+  // tutto è nel verso di quel tappeto, cioè com'è visto dal suo giocatore.
   if(role === 'A'){
-    const pn = cell.querySelector('.pname'), h = pn ? rectC(pn) : c0, dx = op.x - h.x, dy = op.y - h.y, dl = Math.hypot(dx, dy) || 1, d = [dx / dl, dy / dl];
-    const W = cpMode() === 'A' ? Math.max(fw, fh) * .8 : Math.min(fw, fh) * (cpMode() === 'C' ? .75 : 1), Y0 = exitT(h, d) + 60, H = Y0 + W * .9, si = d[0], co = -d[1];
-    const m = [co, si, -si, co, h.x - (co * W / 2 - si * Y0), h.y - (si * W / 2 + co * Y0)];
-    const toS = (x, y) => { const ex = x - h.x, ey = y - h.y; return [co * ex + si * ey + W / 2, -si * ex + co * ey + Y0] };
-    const t = toS(op.x, op.y);
+    const pn = cell.querySelector('.pname'), P = pn ? rectC(pn) : rectC(cell), en = entryOf(other, P); if(!en) return null;
+    const dx = en.E[0] - P.x, dy = en.E[1] - P.y, dl = Math.hypot(dx, dy) || 1, si = dx / dl, co = -dy / dl;
+    const fw = frame.offsetWidth, fh = frame.offsetHeight, W = Math.max(fw, fh) * .8, Y0 = Math.max(dl, W * .25), H = Y0 + W * .9;
+    const m = [co, si, -si, co, P.x - (co * W / 2 - si * Y0), P.y - (si * W / 2 + co * Y0)];
+    const toS = (x, y) => { const ex = x - P.x, ey = y - P.y; return [co * ex + si * ey + W / 2, -si * ex + co * ey + Y0] };
     return {W, H, m, toS, frame, cell, life, hubEl:pn, shake:cell, pcol, rad, ox:0, oy:0, solo:true,
-      hub:{x:W / 2, y:Y0, w:W * .42, h:W * .15}, field:{x:0, y:Y0 - W * .35, w:W, h:W * .7}, tile:{x:t[0] - W * .15, y:t[1] - W * .07, w:W * .3, h:W * .14}};
+      hub:{x:W / 2, y:Y0, w:W * .42, h:W * .15}, field:{x:0, y:Y0 - W * .35, w:W, h:W * .7}, tile:{x:W / 2 - W * .15, y:-W * .07, w:W * .3, h:W * .14}};
   }
-  // B e C: il colpo vede la scheda come un telefono in piedi (lato corto = larghezza), come in H&O; C anche più piccolo
-  const md = cpMode(), port = md !== 'A' && fw > fh, sh = Math.min(fw, fh), lg = Math.max(fw, fh), k = md === 'C' ? .75 : 1;
-  const W = md === 'A' ? fw : sh * k, H = md === 'A' ? fh : lg, a = (rotDeg(me) + (port ? 90 : 0)) * PI / 180, co = Math.cos(a), si = Math.sin(a);
-  const fld = md === 'A' ? {x:0, y:0, w:W, h:H} : {x:W / 2 - sh / 2, y:0, w:sh, h:lg};
-  const toS = (x, y) => { const dx = x - c0.x, dy = y - c0.y; return [dx * co + dy * si + W / 2, -dx * si + dy * co + H / 2] };
+  const oc = $(`.cell[data-i="${other}"]`), opn = oc && oc.querySelector('.pname'), P = opn ? rectC(opn) : oc ? rectC(oc) : {x:innerWidth / 2, y:-100};
+  const en = entryOf(me, P); if(!en) return null;
+  const {fw, fh, b, c0, r0} = en, W = b === 0 || b === PI ? fw : fh, H = b === 0 || b === PI ? fh : fw, a = r0 + b, co = Math.cos(a), si = Math.sin(a);
   const m = [co, si, -si, co, c0.x - (co * W / 2 - si * H / 2), c0.y - (si * W / 2 + co * H / 2)];
-  const dx = op.x - c0.x, dy = op.y - c0.y, dl = Math.hypot(dx, dy) || 1, d = [dx / dl, dy / dl], tt = exitT(c0, d) + 80, P = toS(c0.x + d[0] * tt, c0.y + d[1] * tt);
-  return {W, H, m, toS, frame, cell, life, hubEl:null, shake:cell, pcol, rad, ox:(fw - W) / 2, oy:(fh - H) / 2, glRot:port ? 90 : 0, noGl:k < 1, solo:true,
-    hub:{x:W / 2, y:H / 2, w:W * .42, h:W * .15}, field:fld, tile:{x:P[0] - W * .14, y:P[1] - H * .05, w:W * .28, h:H * .1}};
+  const toS = (x, y) => { const dx = x - c0.x, dy = y - c0.y; return [dx * co + dy * si + W / 2, -dx * si + dy * co + H / 2] };
+  const es = toS(en.E[0], en.E[1]), th = Math.max(H * .1, 22);
+  return {W, H, m, toS, frame, cell, life, hubEl:null, shake:cell, pcol, rad, ox:(fw - W) / 2, oy:(fh - H) / 2, glRot:Math.round(b * 180 / PI), solo:true, c0,
+    hub:{x:W / 2, y:H / 2, w:W * .42, h:W * .15}, field:{x:0, y:0, w:W, h:H}, tile:{x:clamp(es[0], W * .1, W * .9) - W * .14, y:-th * .8, w:W * .28, h:th}};
+}
+// dove la retta dal mirino P (sul tavolo) al centro del tappeto i entra nel tappeto: lato, punto d'ingresso, verso dello schermo del colpo
+// b = rotazione dello schermo del colpo rispetto alla scheda, perché il lato d'ingresso sia il suo «alto»
+function entryOf(i, P){
+  const cell = $(`.cell[data-i="${i}"]`), frame = cell && cell.querySelector('.frame'); if(!frame) return null;
+  const fw = frame.offsetWidth, fh = frame.offsetHeight, c0 = rectC(cell), r0 = rotDeg(i) * PI / 180, co = Math.cos(r0), si = Math.sin(r0);
+  const ex = P.x - c0.x, ey = P.y - c0.y, dx = co * ex + si * ey, dy = -si * ex + co * ey;   // il mirino nel verso della scheda
+  let b, e;
+  if(Math.abs(dy) / (fh / 2) >= Math.abs(dx) / (fw / 2)){ const k = (fh / 2) / (Math.abs(dy) || 1e-6); e = [dx * k, dy < 0 ? -fh / 2 : fh / 2]; b = dy < 0 ? 0 : PI }
+  else { const k = (fw / 2) / (Math.abs(dx) || 1e-6); e = [dx > 0 ? fw / 2 : -fw / 2, dy * k]; b = dx > 0 ? PI / 2 : -PI / 2 }
+  return {fw, fh, b, c0, r0, E:[c0.x + co * e[0] - si * e[1], c0.y + si * e[0] + co * e[1]]};
 }
 // trasformazioni aggiunte a quelle dell'app (vita, bottone, scosse), tolte alla fine
 function tf(el, add){
@@ -7170,17 +7197,20 @@ function tf(el, add){
 }
 function tfOff(el){ if(el && el._cpLast !== undefined){ if(el.style.transform === el._cpLast) el.style.transform = el._cpBase || ''; delete el._cpLast; delete el._cpBase } }
 function lightLife(F, S){
-  const el = S.life; if(!el || !F) return; const r0 = el.getBoundingClientRect();
-  const W = S.W, l = lightAt(F, S.field.x + S.field.w / 2, S.field.y + S.field.h * .73), m = Math.max(l[0], l[1], l[2]);
+  const el = S.life; if(!el || !F) return;
+  const l = lightAt(F, S.field.x + S.field.w / 2, S.field.y + S.field.h * .73), m = Math.max(l[0], l[1], l[2]);
   if(m > .03){ const r = clamp(l[0] / m) * 255 | 0, g = clamp(l[1] / m) * 255 | 0, b = clamp(l[2] / m) * 255 | 0, a = clamp(m * .6);
     el.style.textShadow = `0 4px 0 rgba(0,0,0,.25),0 0 ${12 + 26 * a}px rgba(${r},${g},${b},${a})`; S.lit = true }
   else if(S.lit){ el.style.textShadow = ''; S.lit = false }
 }
 // un telefono solo: quello che è pensato per tutto lo schermo (nuvole, lampi, schiuma…) sfuma attorno alla scheda colpita, senza bordi dritti
-function feather(c, S, grow, soft){ const fb = S.field, e = S.W * grow; c.save(); c.globalCompositeOperation = 'destination-in'; c.filter = `blur(${Math.round(S.W * soft * DPR)}px)`; c.fillStyle = '#000'; c.fillRect(fb.x - e, fb.y - e, fb.w + e * 2, fb.h + e * 2); c.restore() }
-// misura dei colpi su un telefono: 'B' (scelta) = ogni scheda vista in piedi nel suo verso reale, come un telefono in H&O;
-// 'A' (vecchia) e 'C' (più piccola) restano solo per i confronti (window.CP_MODE)
-const cpMode = () => window.CP_MODE || 'B';
+function feather(c, S, grow, soft){
+  const fb = S.field, e = Math.min(S.W, S.H) * grow, bl = Math.min(S.W, S.H) * soft, pad = bl * 2.5, k = grow + '/' + soft, M = S.masks || (S.masks = {});
+  let mk = M[k];
+  if(!mk){ const q = .35, w = fb.w + 2 * (e + pad), h = fb.h + 2 * (e + pad); mk = M[k] = document.createElement('canvas'); mk.width = Math.max(2, Math.round(w * q)); mk.height = Math.max(2, Math.round(h * q));
+    const x = mk.getContext('2d'); x.filter = `blur(${Math.max(1, Math.round(bl * q))}px)`; x.fillStyle = '#000'; x.fillRect(pad * q, pad * q, (fb.w + 2 * e) * q, (fb.h + 2 * e) * q) }
+  c.save(); c.globalCompositeOperation = 'destination-in'; c.drawImage(mk, fb.x - e - pad, fb.y - e - pad, fb.w + 2 * (e + pad), fb.h + 2 * (e + pad)); c.restore();
+}
 let raf = 0, ACT = null;
 function kick(){ if(!raf) raf = requestAnimationFrame(frame) }
 const springsBusy = () => Object.values(SP).some(s => Math.abs(s.x - s.t) > .002 || Math.abs(s.v) > .01);
@@ -7202,7 +7232,6 @@ function frame(now){
     // un telefono solo: gli effetti a terra possono uscire dalla scheda colpita (il raggio della Cripta, le schegge…),
     // quindi vanno su una tela grande quanto il tavolo, nel verso della scheda; il tappeto vivo tiene solo luci e onde
     const solo = !NV();
-    if(solo && FLD.V && SHOW.V) gndCtx(FLD.V);
     const cV = V && SHOW.V ? (solo ? fitFix(fixedCv('cpG'), V) : FLD.V ? gndCtx(FLD.V) : fitGround(V)) : dummyCtx;
     if(V && SHOW.V && !FLD.V && !solo){ const fb = V.field; cV.save(); cV.beginPath(); cV.rect(fb.x, fb.y, fb.w, fb.h); cV.clip() }
     runFX('V', cV, dt); drawPts(FX.pV, cV, dt); drawSprites(FX.sV, cV, dt);
@@ -7211,10 +7240,13 @@ function frame(now){
     if(V && SHOW.V && solo) feather(cV, V, .1, .08);
     const cM = V && SHOW.V ? fitFix(fixedCv('cpM'), V) : dummyCtx;
     runFX('M', cM, dt); drawSprites(FX.sM, cM, dt);
-    if(V && SHOW.V && !NV()) feather(cM, V, .3, .14);
+    if(V && SHOW.V && !NV()) feather(cM, V, .16, .1);
     const cV2 = V && SHOW.V ? fitFix(fixedCv('cpV2'), V) : dummyCtx;
     runFX('V2', cV2, dt); drawSprites(FX.sV2, cV2, dt); drawPts(FX.pV2, cV2, dt);
-    if(V && SHOW.V && !NV()) feather(cV2, V, .3, .14);
+    if(V && SHOW.V && !NV()) feather(cV2, V, .16, .1);
+    // schizzi che volano sugli altri tappeti (sopra tutto, coordinate del tavolo)
+    const cX = FX.sX.length || FX.pX.length ? fitFix(fixedCv('cpX'), {m:[1, 0, 0, 1, 0, 0]}) : dummyCtx;
+    drawSprites(FX.sX, cX, dt); drawPts(FX.pX, cX, dt);
     // scosse, vita e bottone
     if(V && SHOW.V){
       let rx = 0, ry = 0; if(rumble){ rumble.a += dt; const k = rumble.a / rumble.dur; if(k >= 1) rumble = null; else { const m = rumble.amt * (1 - k) * V.W * .02; rx = (R() - .5) * m; ry = (R() - .5) * m } }
@@ -7236,7 +7268,7 @@ function frame(now){
 // il tappeto vivo svanisce piano e lascia tornare la scheda dell'app
 function fadeOut(dt){
   let more = false;
-  ['A', 'V'].forEach(k => { const F = FLD[k]; if(!F || F.a <= 0) return; F.a = Math.max(0, F.a - dt * 4); resetF(F); gndCtx(F); renderF(F, 1, T); more = more || F.a > 0 });
+  ['A', 'V'].forEach(k => { const F = FLD[k]; if(!F || F.a <= 0) return; F.a = Math.max(0, F.a - dt * 4); resetF(F); if(!F.solo) gndCtx(F); renderF(F, 1, T); more = more || F.a > 0 });
   return more;
 }
 // fine del colpo: via le tele, le trasformazioni e i contesti tornano a riposo
@@ -7244,7 +7276,7 @@ function reset(){
   DR = null; Q.length = 0; HAND = null; wither = null; rumble = null;
   for(const k in FX) FX[k].length = 0;
   for(const k in SP){ SP[k].x = SP[k].t; SP[k].v = 0 }
-  ['cpA', 'cpG', 'cpM', 'cpV2'].forEach(id => { const c = document.getElementById(id); if(c){ c.width = c.height = 0 } });
+  ['cpA', 'cpG', 'cpM', 'cpV2', 'cpX'].forEach(id => { const c = document.getElementById(id); if(c){ c.width = c.height = 0 } });
   for(const k of ['A', 'V']){ const S = SCR[k]; if(!S) continue;
     if(S.gcv){ S.gcv.remove(); S.gcv = null }
     S.shake.style.translate = ''; S.cell.style.filter = ''; S.cell.style.scale = '';
@@ -7266,6 +7298,32 @@ function setup(a, v, see){
   FLD.A = null;   // chi attacca non ha il tappeto vivo: su un telefono faceva un riquadro sulla sua scheda
   ACT = {a, v, see};
   return true;
+}
+
+// schizzi sugli altri tappeti (un telefono), scelti da Federico: Santuario piume, Mox schegge di vetro e pezzi,
+// Abisso goccioline, Forgia lava, scintille e pezzi di bomba, Selva foglie e polvere, Cripta anime e fumo
+const SPL = {
+  santuario:[{im:['feath', 'down'], n:7, w:[16, 30], flut:.9, float:true}],
+  mox:[{im:['shard'], n:7, w:[10, 20], spin:true}, {im:['parts'], n:4, w:[12, 22], spin:true}],
+  abisso:[{pt:'drop', n:14, r:[2, 4.5], col:'190,235,255'}],
+  forgia:[{pt:'spark', n:16, r:[1.2, 2.2], col:'255,190,90'}, {im:['ember'], n:5, w:[8, 16]}, {im:['frag'], n:3, w:[12, 22], spin:true}],
+  selva:[{im:['leaf'], n:7, w:[12, 22], flut:.8}, {pt:'crumb', n:8, r:[2, 4], col:'110,80,50'}],
+  cripta:[{im:['souls'], n:4, w:[22, 36], rise:true}, {pt:'smoke', n:6, r:[10, 18], col:'90,40,140'}],
+};
+function splashOut(th, v, big){
+  if(NV() || !SPL[th]) return;
+  const vc = $(`.cell[data-i="${v}"]`); if(!vc) return; const c = rectC(vc);
+  const others = [...document.querySelectorAll('#board .cell')].filter(el => +el.dataset.i !== v).map(rectC); if(!others.length) return;
+  const mult = big ? 1.8 : 1;
+  SPL[th].forEach(g => { for(let i = 0, n = Math.round(g.n * mult); i < n; i++){
+    const o = pick(others), tx = o.x + (R() - .5) * o.w * .7, ty = o.y + (R() - .5) * o.h * .7, sx = c.x + (R() - .5) * c.w * .3, sy = c.y + (R() - .5) * c.h * .3;
+    const tf = .55 + R() * .5, gz = 1100, z0 = 8, vz = (.5 * gz * tf * tf - z0) / tf, delay = R() * .25, smoke = g.pt === 'smoke';
+    if(g.pt){ pt(FX.pX, {k:g.pt, x:sx, y:sy, z:smoke ? 0 : z0, vx:(tx - sx) / tf, vy:(ty - sy) / tf, vz:smoke ? 0 : vz, gz:smoke ? 0 : gz, rest:.25, r:g.r[0] + R() * (g.r[1] - g.r[0]), col:g.col, life:tf + .9 + R() * .6, fout:.5, delay, drag:smoke ? 1.2 : 0, grow:smoke ? 1.5 : 0}); continue }
+    const im = I(th, pick(g.im)), fl = g.float || g.rise; if(!im) continue;
+    FX.sX.push(sp({im, x:sx, y:sy, z:fl ? 0 : z0, vx:(tx - sx) / tf * (g.float ? .8 : 1), vy:(ty - sy) / tf * (g.float ? .8 : 1) - (g.rise ? 30 : 0), vz:fl ? 0 : vz, gz:fl ? 0 : gz,
+      drag:g.float ? .6 : g.rise ? .9 : 0, w:g.w[0] + R() * (g.w[1] - g.w[0]), rot:R() * TAU, spin:g.spin ? (R() - .5) * 14 : (R() - .5) * 2, flut:g.flut || 0,
+      life:tf + 1 + R() * .7, fin:.05, fout:.45, delay, alpha:g.rise ? .75 : 1, sh:!fl})) } });
+  kick();
 }
 
 // ================= ingressi per l'app =================
@@ -7303,7 +7361,6 @@ function aimEnd(over){
   AIM.d = d; AIM.t = performance.now(); DR = null; kick();
 }
 // il colpo: a attacca v con dmg punti. Torna il messaggio da mandare all'altro telefono (H&O)
-const kindIsN = th => true;
 function strike(a, v, dmg){
   const th = SET.theme; if(!on(th)) return null;
   if(ACT && Q.length) return null;   // un colpo alla volta
@@ -7314,10 +7371,13 @@ function strike(a, v, dmg){
   AIM = null;
   const tr = tileRect(pA), d = {th, t0:T - 1.4, p:[tr.x + tr.w / 2, tr.y + tr.h / 2], auto:true};
   // qualche fotogramma di mira «invisibile» perché la punta e la carica stiano già sul bersaglio, poi via le scintille della mira
-  if(kindIsN(th)){ for(let i = 0; i < 24; i++) TH[th].aim(dummyCtx, d, 1 / 60); FX.pA.length = 0; FX.sA.length = 0 }
+  for(let i = 0; i < 24; i++) TH[th].aim(dummyCtx, d, 1 / 60);
+  FX.pA.length = 0; FX.sA.length = 0;
   let w = 0;
   if(kind === 'b') TH[th].big(); else if(kind === 'b2') TH[th].big2(); else if(kind === 'g') TH.forgia.goblin();
   else { w = TH[th].launch(d) || .4; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
+  // un telefono: gli schizzi del tema arrivano anche sugli altri tappeti
+  if(!net){ if(kind === 'n') after(w + .2, () => splashOut(th, v, false)); else { after(1.3, () => splashOut(th, v, true)); after(2.6, () => splashOut(th, v, false)) } }
   kick();
   return {th, k:kind, w:+w.toFixed(2)};
 }

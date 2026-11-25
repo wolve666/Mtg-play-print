@@ -83,3 +83,8 @@ Da fare / aperto:
 - Ganci nell'app: `dragMove`/`dragEnd` (mira), `fgStrike(a, v, dmg)` (colpo, con raffiche raccolte), `netZap`/`netZapIn` (messaggio con `k` e `w`).
 - Prova: `node prove/colpi.js` (colpo normale e grosso per ogni tema, su un telefono e in H&O, foto in `prove/out/colpi/`).
 - Per rifare i pacchetti di immagini: dalla pagina costruita `prova-colpi.html` si leggono `A` e `MAN` e si divide per tema (script nella chat del 24 novembre; da mettere in `grafica/prove/strumenti/` se serve di nuovo).
+
+## 25 novembre (notte): colpi su un telefono rifatti sulle posizioni vere
+- Vedi `V2.md`, «Segnalazioni di Federico sull'APK 2.2.0» (punti 1-6) e le schermate in `grafica/segnalazioni/`.
+- Prove nuove usate in questa sessione (nel cestino della sessione, non nel repository): Commander a 4 con le frecce gialle (Giocatore 3 colpisce 1, 2 e 4), 6 e 2 giocatori, veli dei passaggi fermati a 20/35/50/65/80%, aperture dei menu fermate a 30/60%, colpo con OK.
+- Domani Federico prova l'APK: aspettare le sue osservazioni prima di toccare altro.
