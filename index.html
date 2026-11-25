@@ -2554,9 +2554,14 @@ function openCmdQuick(a, v){
   el.style.width = Math.min(340, (side ? r.height : r.width) * .94) + 'px';
   // H&O: c'è anche il danno da combattimento, che nella partita Standard è la scelta di partenza
   document.body.appendChild(el); cqp = {a, v, el, dmg:0, mode:S.cmdDamage ? 'cmd' : 'dmg'};
+  // stessa grandezza per tutte le schede (Combattimento, Comandante, Veleno...): misuro la più alta e la tengo,
+  // così cambiando scheda o segnando i danni la finestrella non cresce e non si sposta
+  const m0 = cqp.mode; let hh = 0;
+  ['dmg', ...(S.cmdDamage ? ['cmd'] : []), 'poison', 'rad'].forEach(m => { cqp.mode = m; renderCqPop(); hh = Math.max(hh, el.offsetHeight) });
+  cqp.mode = m0; el.style.minHeight = hh + 'px';
   renderCqPop(); armCqPop(); buzz(20);
   // se la finestrella è più alta dello spazio, la rimpicciolisco quanto basta
-  const room = (side ? r.width : r.height) * .96, hh = el.offsetHeight;
+  const room = (side ? r.width : r.height) * .96;
   if(hh > room) el.style.transform = `translate(-50%,-50%) rotate(var(--rot)) scale(${(room / hh).toFixed(3)})`;
   el.addEventListener('pointerdown', e=>e.stopPropagation());
   el.addEventListener('click', e=>{
