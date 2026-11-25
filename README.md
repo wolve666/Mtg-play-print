@@ -70,6 +70,17 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.2.1 (prerelease)
+Solo per Federico (APK tra gli allegati della compilazione).
+- **Vita al momento giusto** (gioco su un telefono, temi con i colpi): la vita di chi è colpito resta ferma finché il colpo non arriva, poi scende un punto alla volta come il conteggio d'inizio partita. Il colpo grosso parte da 8 danni.
+- **Caratteri**: nei temi a colori le voci principali (titoli, scelte della pagina iniziale, tasti, schede, nomi) sono in maiuscolo come nella Forgia, con il carattere del tema; il resto non cambia.
+- **Santuario**: il passaggio al tema è una tenda di luce dorata che scende dall'alto (prima era uno stacco netto).
+- **Passaggi dei temi più leggeri**: il tavolo coperto dalla pagina iniziale o dal Menu si ridisegna quando torna visibile, immagini e caratteri del tema nuovo si preparano mentre il velo entra, il velo della Cripta non ingrandisce più un'immagine enorme.
+- **Pagina iniziale**: effetti propri per ogni tema. Forgia schizzi di lava e rivoli di fumo; Abisso bolle d'aria e pulviscolo che luccica; Santuario brillii d'oro e nuvole che passano; Cripta anime viola che salgono e brillii viola; Mox lampi azzurri e scintille. Selva come prima.
+- **Mana**: il tema base (prima «Classico») si chiama Mana ed è quello del primo avvio.
+- **Mini menù dei danni**: stessa grandezza su tutte le schede; passando a Combattimento non cresce più.
+- **Stampa indipendente da chi ospita** (H&O): chi chiede la pedina ed è collegato a una stampante la stampa da sé; altrimenti la stampa il principale; se nemmeno il principale ha la stampante, la stampa il telefono collegato con il numero di giocatore più basso. Gli ospiti possono collegare la stampante dal Menu delle pedine.
+
 ### v2.2.0 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
 - **Sei temi a colori**: oltre a Forgia (Rosso) e Selva (Verde) arrivano **Abisso** (Blu: acqua profonda, Marcellus SC), **Cripta** (Nero: pietra e viola, Pirata One), **Santuario** (Bianco: marmo e oro, Cinzel, l'unico tema chiaro) e **Mox** (Incolore: ottone e cristallo, Chakra Petch). Ognuno veste pagina iniziale, Menu, tavolo, pannello personale, scheda, finestre e H&O, con particelle e colori degli effetti propri. I colpi da un telefono all'altro dei quattro temi nuovi per ora sono il fulmine: quelli veri arrivano dalla prova dei colpi.
