@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.2.4', APPN = 8;
+var APPV = '2.2.5', APPN = 8;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -4640,6 +4640,7 @@ function fxRun(){
       if(p.ring){ p.r += (p.max - p.r) * (1 - Math.pow(.85, k)); c.strokeStyle = p.col; c.lineWidth = 7 * f; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.stroke() }
       else { p.x += p.vx * k; p.y += p.vy * k; p.vx *= dk; p.vy *= dk; c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.s * (.4 + f * .6), 0, 6.283); c.fill() }
       return p.l > 0 });
+    lifeHoles(c, 1);
     c.globalAlpha = 1;
     if(FX.P.length) requestAnimationFrame(loop); else { c.clearRect(0, 0, innerWidth, innerHeight); FX.on = false }
   })();
@@ -4650,6 +4651,41 @@ function fxBurstAt(el, n, cols){ if(!el) return; const r = el.getBoundingClientR
 window.addEventListener('resize', ()=>{ if(FX.on) fxSize() });
 
 /* ================= Forgia: particelle ================= */
+// I numeri della vita e i + e − non vengono mai coperti dalle animazioni (richiesta di Federico, 25 novembre):
+// sulle tele degli effetti, sopra di loro, gli effetti diventano quasi trasparenti (se ne vede poco più di un decimo).
+// Solo con il tavolo scoperto: sulla pagina iniziale e nei pannelli non c'è niente da proteggere.
+let holesT = 0, holesR = [];
+function lifeRects(){
+  const now = performance.now(); if(now - holesT < 200) return holesR;
+  holesT = now; holesR = [];
+  if(stack.length) return holesR;
+  const add = r => { if(r.width > 2 && r.height > 2) holesR.push(r) };
+  document.querySelectorAll('#board .cell').forEach(c => {
+    const l = c.querySelector('.life'); if(l) add(l.getBoundingClientRect());
+    c.querySelectorAll('.half').forEach(h => { const rg = document.createRange(); rg.selectNodeContents(h); add(rg.getBoundingClientRect()) });
+  });
+  document.querySelectorAll('.ntile .ntL').forEach(l => add(l.getBoundingClientRect()));
+  return holesR;
+}
+// una maschera morbida a mezza risoluzione, rifatta solo quando i numeri si spostano; ogni tela la «toglie» con un disegno solo
+const HM = document.createElement('canvas'); let hmKey = '';
+function holesMask(){
+  const rs = lifeRects(); if(!rs.length) return null;
+  const key = innerWidth + 'x' + innerHeight + ':' + rs.map(r => [r.left, r.top, r.width, r.height].map(v => Math.round(v / 3)).join(',')).join(';');
+  if(key === hmKey) return HM;
+  hmKey = key; const k = .5, w = Math.ceil(innerWidth * k), h = Math.ceil(innerHeight * k); HM.width = w; HM.height = h;
+  const g = HM.getContext('2d'); g.clearRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.88)';
+  for(const r of rs){ const p = Math.min(r.width, r.height) * .16; g.filter = `blur(${Math.max(2, p * k * .6).toFixed(1)}px)`;
+    g.fillRect((r.left - p * .4) * k, (r.top - p * .4) * k, (r.width + p * .8) * k, (r.height + p * .8) * k) }
+  g.filter = 'none';
+  return HM;
+}
+function lifeHoles(ctx, D){
+  const m = holesMask(); if(!m) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'destination-out'; ctx.globalAlpha = 1;
+  ctx.drawImage(m, 0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore();
+}
+window.lifeHoles = lifeHoles;
 const EMB = (()=>{
   const cv = document.createElement('canvas'); cv.id = 'fx2'; document.body.appendChild(cv);
   const ctx = cv.getContext('2d'); let W = 0, H = 0, D = 1, P = [], run = false, last = 0, amb = null, ambT = 0;
@@ -4690,6 +4726,7 @@ const EMB = (()=>{
     });
     ctx.globalAlpha = 1;
     const nb = []; B = B.filter(b => drawB(b, dt, nb)).concat(nb);
+    lifeHoles(ctx, D);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
     if(!P.length && !B.length && !amb){ ctx.clearRect(0, 0, W, H); run = false; cv.classList.remove('on') }
   }
@@ -4792,7 +4829,7 @@ const EMB = (()=>{
         const v = RR(20, 34); add({amb:true, spr:'feather', im, c:'', x:RR(.04, .96) * W, y:-50, vx:RR(-10, 10), vy:v, wob:RR(1.4, 2.4), life:(H + 100) / v, s:RR(28, 44), r0:RR(-.8, .8), rock:RR(1, 2), al:.95, fin:.04, fout:.08}) }}],
     // Cripta: rivoli di nuvole come anime nere e viola che salgono, e brillii viola
     cripta:[{every:2.6, first:.1, fn(){ const n = P.filter(p => p.candle).length; if(n >= 9) return;
-        for(let i = n ? 1 : 5; i > 0; i--){ const s = RR(46, 84); add({amb:true, candle:true, draw:drawCandle, ci:Math.random() * CANDLES.length | 0, x:RR(.06, .94) * W, y:(Math.random() < .65 ? RR(.035, .12) : RR(.8, .87)) * H, vx:RR(-4, 4), vy:RR(-1, 1), life:RR(16, 26), s, al:Math.min(1, .5 + s / 140), fin:.1, fout:.14, bob:RR(.5, 1.1)}) } }},
+        for(let i = n ? 1 : 5; i > 0; i--){ const s = RR(20, 36); add({amb:true, candle:true, draw:drawCandle, ci:Math.random() * CANDLES.length | 0, x:RR(.06, .94) * W, y:(Math.random() < .65 ? RR(.035, .12) : RR(.8, .87)) * H, vx:RR(-4, 4), vy:RR(-1, 1), life:RR(16, 26), s, al:Math.min(1, .6 + s / 90), fin:.1, fout:.14, bob:RR(.5, 1.1)}) } }},
       {every:20, first:1.2, fn(){ if(P.some(p => p.wisp)) return; add({amb:true, wisp:true, draw:drawWisp, x:RR(.2, .8) * W, y:RR(.05, .2) * H, vx:0, vy:0, life:RR(18, 24), s:1, fin:.05, fout:.08}) }},
       {every:.4, fn(){ add({amb:true, spr:Math.random() < .35 ? 'star' : 'soft', c:pick(['#C9A4FF','#B07CFF','#E2CCFF','#9A5CFF']), add:true, x:RR(0, 1) * W, y:RR(.1, 1) * H, vx:RR(-5, 5), vy:-RR(4, 14), life:RR(2.5, 4.5), s:RR(4, 9), tw:RR(4, 8), al:.9, fin:.3, fout:.35}) }}],
     // Mox: lampi azzurrini qua e là e qualche scintilla che cade
@@ -7484,6 +7521,8 @@ function frame(now){
     // schizzi che volano sugli altri tappeti (sopra tutto, coordinate del tavolo)
     const cX = FX.sX.length || FX.pX.length ? fitFix(fixedCv('cpX'), {m:[1, 0, 0, 1, 0, 0]}) : dummyCtx;
     drawSprites(FX.sX, cX, dt); drawPts(FX.pX, cX, dt);
+    // i numeri della vita e i + e − restano leggibili: sopra di loro gli effetti diventano quasi trasparenti
+    if(window.lifeHoles) [cA, solo ? cV : null, cM, cV2, cX].forEach(c => { if(c && c !== dummyCtx) lifeHoles(c, DPR) });
     // scosse, vita e bottone
     if(V && SHOW.V){
       let rx = 0, ry = 0; if(rumble){ rumble.a += dt; const k = rumble.a / rumble.dur; if(k >= 1) rumble = null; else { const m = rumble.amt * (1 - k) * V.W * .02; rx = (R() - .5) * m; ry = (R() - .5) * m } }

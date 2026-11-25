@@ -70,6 +70,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.2.5 (prerelease)
+Solo per Federico (APK tra gli allegati della compilazione).
+- **Numeri della vita sempre leggibili**: nessuna animazione copre più il numero della vita e i + e −. Sopra di loro gli effetti diventano quasi trasparenti (se ne vede poco più di un decimo), con il bordo sfumato. Vale per i colpi dei temi, per gli effetti della Forgia e della Selva e per le scintille di Mana, sul tavolo e in H&O.
+- **Cripta**: candele della pagina iniziale molto più piccole.
+
 ### v2.2.4 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
 - **Cripta, pagina iniziale**: le candele sono quelle nere dipinte (cinque, di altezze diverse), con la fiamma accesa sullo stoppino.
