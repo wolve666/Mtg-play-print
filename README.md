@@ -70,6 +70,11 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.2.4 (prerelease)
+Solo per Federico (APK tra gli allegati della compilazione).
+- **Cripta, pagina iniziale**: le candele sono quelle nere dipinte (cinque, di altezze diverse), con la fiamma accesa sullo stoppino.
+- **Finestrella dei danni**: il titolo è «Danni da X a Y», così sta su una riga e la finestrella non si rimpicciolisce.
+
 ### v2.2.3 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
 - **Santuario, pagina iniziale**: le piume che cadono sono quelle dipinte dei colpi del Santuario (al posto di quelle disegnate a codice); le nuvole che passano sono bianche (prima avevano un bordo grigio).
