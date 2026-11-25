@@ -932,7 +932,7 @@ body.th-selva.netv #hub::before{width:190px;height:110px;margin:-55px 0 0 -95px}
 #thTx.go-selva{inset:auto;top:0;bottom:0;left:-300vw;width:300vw;opacity:1;animation:txRight .85s cubic-bezier(.45,0,.35,1) both;background:linear-gradient(90deg,transparent 0%,rgba(10,16,11,.6) 16%,#0A100B 30%,#0A100B 70%,#1E4A16 78%,#4E8F2E 84%,rgba(140,200,80,.4) 92%,transparent 100%)}
 @keyframes txRight{0%{transform:translateX(0)}45%,55%{transform:translateX(200vw)}100%{transform:translateX(400vw)}}
 #thTx.go-cripta{animation:txCripta .9s ease both;background:radial-gradient(farthest-corner,#0C0910 58%,rgba(60,20,90,.92) 78%,rgba(12,9,16,0))}
-@keyframes txCripta{0%{opacity:0;transform:scale(2.4)}45%,55%{opacity:1;transform:scale(1.25)}100%{opacity:0;transform:scale(1.1)}}
+@keyframes txCripta{0%{opacity:0;transform:scale(1.15)}45%,55%{opacity:1;transform:none}100%{opacity:0;transform:none}}
 /* Santuario: una tenda di luce scende dall'alto (orlo dorato davanti e dietro), così si vede passare anche sulla pagina chiara */
 #thTx.go-santuario{inset:auto;left:0;right:0;bottom:100%;height:300vh;opacity:1;animation:txDown .85s cubic-bezier(.45,0,.35,1) both;background:linear-gradient(0deg,transparent 0%,rgba(255,236,170,.55) 4%,#FFD978 9%,#FFF3D2 15%,#FFFDF6 30%,#FFFDF6 68%,#FFF1C8 76%,rgba(240,196,92,.9) 83%,rgba(255,236,170,.45) 91%,transparent 100%)}
 @keyframes txDown{0%{transform:translateY(0)}45%,55%{transform:translateY(200vh)}100%{transform:translateY(400vh)}}
@@ -1578,7 +1578,9 @@ function applyTheme(render){
   COLORS.forEach((c, k) => Object.assign(c, th ? THC[th][1][k] : COLORS_C[k]));
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', th ? THC[th][0] : '#22252B');
   if(!render) return;
-  renderBoard();
+  // con la pagina iniziale o il Menu davanti il tavolo non si vede: si ridisegna quando torna visibile
+  // (ridisegnarlo a metà passaggio fermava il velo per un attimo)
+  if(stack.some(id => id === 'wizard' || id === 'tokens')) boardDirty = true; else renderBoard();
   // cambio di tema con la pagina iniziale aperta: stessa pagina, senza rifare l'ingresso (i semi non si muovono)
   if($('#ov-wizard').classList.contains('open')){ wzStep.now = true; wzStep.quiet = true; wzStep(WZ.step || 1) }
   fgAmbient();
@@ -2338,7 +2340,9 @@ const hubDrag = {
   }
 };
 window.addEventListener('resize', ()=>{ placeHub(); placeAll() });
+let boardDirty = false;
 function renderBoard(){
+  boardDirty = false;
   const b = $('#board');
   const nv = NV();
   b.className = nv ? 'n1' : 'n' + S.count;
@@ -2801,8 +2805,12 @@ function closeTop(){
     // cambiati colore, nome, sfondo o partner, e mentre la scheda copre ancora lo schermo: poi parte lo scorrimento.
     // (Ridisegnarlo durante lo scorrimento bloccava il primo fotogramma e la scheda partiva a scatto.)
     const el = $('#ov-player');
-    if(plDirty){ plDirty = false; renderBoard(); requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(!stack.includes('player')) el.classList.remove('open') })) }
+    if(plDirty || boardDirty){ plDirty = false; renderBoard(); requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(!stack.includes('player')) el.classList.remove('open') })) }
     else el.classList.remove('open');
+  } else if(boardDirty && !stack.some(s => s === 'wizard' || s === 'tokens')){
+    // tema cambiato mentre il tavolo era coperto: lo ridisegno finché la pagina lo copre ancora, poi si chiude
+    const el = $('#ov-' + id); renderBoard();
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(!stack.includes(id)) el.classList.remove('open') }));
   } else $('#ov-' + id).classList.remove('open');
   if(id === 'modal') tmCleanup();
   if(id === 'bt') btStop();
@@ -4202,11 +4210,23 @@ document.addEventListener('click', e => {
 // il tema cambia a metà del tratto in cui il velo copre tutto lo schermo
 const TX_MID = {classico:300, forgia:390, selva:425, abisso:425, cripta:450, santuario:425, mox:370};
 let txT = null;
+// mentre il velo entra preparo il tema nuovo: le immagini dipinte si decodificano fuori dal filo principale
+// e i caratteri sono già pronti quando il tema cambia (prima arrivavano a metà passaggio: lo scatto della Cripta)
+const TH_FONTS = {forgia:['900 1em "Big Shoulders Display"'], selva:['800 1em "Barlow Condensed"'], abisso:['1em "Marcellus SC"'], cripta:['1em "Pirata One"'], santuario:['700 1em Cinzel'], mox:['700 1em "Chakra Petch"']};
+function thWarm(th){
+  try{ (TH_FONTS[th] || []).concat('700 1em Oswald', '800 1em "Barlow Condensed"').forEach(f => document.fonts.load(f)) }catch(e){}
+  const im = SET.full !== false && typeof TIMG !== 'undefined' && TIMG[th]; if(!im) return;
+  Object.values(im).forEach(v => { const m = typeof v === 'string' && v.match(/url\(["']?(data:image[^"')]+)/); if(!m) return;
+    try{ const i = new Image(); i.src = m[1]; i.decode && i.decode().catch(() => {}) }catch(e){} });
+}
+// all'avvio, con calma, si caricano i caratteri di tutti i temi (sono piccoli e già dentro l'app)
+setTimeout(() => { try{ Object.values(TH_FONTS).flat().forEach(f => document.fonts.load(f)) }catch(e){} }, 3000);
 function themeSwap(th, apply){
   const tx = $('#thTx');
   if(txT){ clearTimeout(txT.mid); clearTimeout(txT.end); txT.apply() }   // tocchi veloci: il cambio di prima si chiude subito
   if(RMOT || !tx){ txT = null; apply(); return }
   tx.className = ''; void tx.offsetWidth; tx.className = 'go go-' + (TX_MID[th] ? th : 'classico');
+  thWarm(th);
   const t = txT = {apply:() => { if(t.done) return; t.done = true; apply() }};
   t.mid = setTimeout(t.apply, TX_MID[th] || 300);
   t.end = setTimeout(() => { tx.className = ''; if(txT === t) txT = null }, 950);
