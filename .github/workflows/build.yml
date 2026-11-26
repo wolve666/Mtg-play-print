@@ -1,10 +1,25 @@
 name: Compila APK
+# Tre uscite:
+# - push su main: versione definitiva, release nella vetrina (repository pubblico con sole APK, niente codice)
+# - a mano con «beta» o «prova-generale»: pre-release nella vetrina che scade dopo N giorni; chi ha la definitiva non la riceve
+# - a mano con «solo-allegato»: nessuna release, l'APK resta tra gli allegati della compilazione
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      uscita:
+        description: Cosa fare dell'APK
+        type: choice
+        options: [solo-allegato, beta, prova-generale]
+        default: solo-allegato
+      giorni:
+        description: "Beta o prova generale: giorni prima della scadenza"
+        default: "30"
 permissions:
   contents: write
+env:
+  VETRINA: ${{ vars.VETRINA || 'wolve666/MagicPlayPrint-app' }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,6 +35,29 @@ jobs:
       - name: Leggo la versione da index.html
         id: v
         run: echo "ver=$(grep -oP "var APPV = '\K[\d.]+" index.html)" >> $GITHUB_OUTPUT
+      - name: Scelgo l'uscita
+        id: c
+        env:
+          USCITA: ${{ inputs.uscita }}
+          GIORNI: ${{ inputs.giorni }}
+        run: |
+          VER=${{ steps.v.outputs.ver }}
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then KIND=definitiva; TAG="v$VER"
+          elif [ "$USCITA" = "beta" ]; then KIND=prova; LABEL=beta; TAG="v$VER-beta"
+          elif [ "$USCITA" = "prova-generale" ]; then KIND=prova; LABEL=prova; TAG="v$VER-prova"
+          else KIND=allegato; TAG=""; fi
+          DAYS=$(echo "${GIORNI:-30}" | tr -cd '0-9'); DAYS=${DAYS:-30}
+          EXP=0; [ "$KIND" = prova ] && EXP=$(( ($(date +%s) + DAYS * 86400) * 1000 ))
+          echo "kind=$KIND" >> $GITHUB_OUTPUT; echo "tag=$TAG" >> $GITHUB_OUTPUT; echo "exp=$EXP" >> $GITHUB_OUTPUT; echo "label=${LABEL:-}" >> $GITHUB_OUTPUT
+          [ "$LABEL" = beta ] && echo "nome=beta" >> $GITHUB_OUTPUT || echo "nome=prova generale" >> $GITHUB_OUTPUT
+          [ "$KIND" = prova ] && echo "scade=$(date -u -d "@$((EXP / 1000))" +%d/%m/%Y)" >> $GITHUB_OUTPUT
+          echo "Uscita: $KIND $TAG (scadenza: $EXP)"
+      - name: Serve il segreto della vetrina
+        if: steps.c.outputs.kind != 'allegato'
+        env:
+          TOKEN: ${{ secrets.VETRINA_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then echo "::error::Manca il segreto VETRINA_TOKEN (token con accesso in scrittura a $VETRINA)"; exit 1; fi
       - name: Preparo i file dell'app (gli stessi della web app)
         run: |
           mkdir -p www
@@ -28,15 +66,27 @@ jobs:
             case "$f" in package*.json|capacitor.config.json) ;; *) [ -f "$f" ] && cp "$f" www/ ;; esac
           done
           [ -d assets ] && cp -r assets www/ || true
-      - name: Collego gli aggiornamenti a questo repository
-        run: echo "window.APP_REPO='${{ github.repository }}';" > www/app-config.js
+          [ -d colpi ] && cp -r colpi www/ || true
+      - name: Collego gli aggiornamenti alla vetrina (e scadenza della prova generale)
+        run: |
+          CH=stable; [ "${{ steps.c.outputs.kind }}" = prova ] && CH=test
+          echo "window.APP_REPO='$VETRINA';window.APP_CHANNEL='$CH';window.APP_EXPIRES=${{ steps.c.outputs.exp }};window.APP_LABEL='${{ steps.c.outputs.label }}';" > www/app-config.js
       - run: npm install
       - run: npx cap add android
+      - name: Android 12 come minimo (deciso il 20 novembre 2026)
+        run: |
+          sed -i 's/minSdkVersion = [0-9]*/minSdkVersion = 31/' android/variables.gradle
+          grep -q "minSdkVersion = 31" android/variables.gradle || { echo "::error::minSdkVersion non trovato in variables.gradle"; exit 1; }
       - name: Modulo Bluetooth classico (cartella native)
         run: cp native/*.java android/app/src/main/java/it/educk/magicplayprint/
       - name: Permessi Bluetooth classico nel manifest (ricerca senza posizione da Android 12)
         run: |
-          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>\n</manifest>#' android/app/src/main/AndroidManifest.xml
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="32"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>\n</manifest>#' android/app/src/main/AndroidManifest.xml
+      - name: V2, telefoni collegati (Nearby Connections)
+        run: |
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>\n    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>\n    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>\n    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation"/>\n</manifest>#' android/app/src/main/AndroidManifest.xml
+          sed -i '0,/^dependencies {/s##dependencies {\n    implementation "com.google.android.gms:play-services-nearby:19.3.0"#' android/app/build.gradle
+          grep -n "play-services-nearby" android/app/build.gradle
       - name: Permesso microfono e servizio vocale nel manifest
         run: |
           sed -i 's#</manifest>#    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <queries><intent><action android:name="android.speech.RecognitionService"/></intent></queries>\n</manifest>#' android/app/src/main/AndroidManifest.xml
@@ -55,10 +105,54 @@ jobs:
           BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
           $BT/zipalign -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
           $BT/apksigner sign --ks ks.jks --ks-pass "pass:${{ secrets.KEYSTORE_PASS }}" --out MagicPlayPrint.apk aligned.apk
-      - name: Pubblico la release
+      - name: APK con la versione nel nome (solo allegato)
+        if: steps.c.outputs.kind == 'allegato'
+        run: cp MagicPlayPrint.apk MagicPlayPrint-${{ steps.v.outputs.ver }}.apk
+      - name: Allego l'APK
+        if: steps.c.outputs.kind == 'allegato'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MagicPlayPrint-${{ steps.v.outputs.ver }}
+          path: MagicPlayPrint-${{ steps.v.outputs.ver }}.apk
+      # la pagina dell'app va nella vetrina con l'etichetta della versione: l'app la scarica per aggiornarsi senza APK
+      - name: Pagina dell'app nella vetrina
+        if: steps.c.outputs.kind != 'allegato'
+        env:
+          TOKEN: ${{ secrets.VETRINA_TOKEN }}
+          TAG: ${{ steps.c.outputs.tag }}
+        run: |
+          git clone "https://git:$TOKEN@github.com/$VETRINA.git" vetrina
+          cd vetrina
+          git config user.name "Magic Play&Print"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp ../index.html index.html
+          cp ../vetrina-README.md README.md
+          git add index.html README.md
+          git commit -q -m "$TAG" || echo "Nessun cambiamento"
+          git tag -f "$TAG"
+          git push origin HEAD
+          git push -f origin "refs/tags/$TAG"
+      - name: Pubblico la versione definitiva nella vetrina
+        if: steps.c.outputs.kind == 'definitiva'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.v.outputs.ver }}
+          repository: ${{ env.VETRINA }}
+          token: ${{ secrets.VETRINA_TOKEN }}
+          tag_name: ${{ steps.c.outputs.tag }}
           name: Magic Play&Print v${{ steps.v.outputs.ver }}
           files: MagicPlayPrint.apk
           make_latest: true
+      - name: Pubblico la beta o la prova generale nella vetrina
+        if: steps.c.outputs.kind == 'prova'
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ env.VETRINA }}
+          token: ${{ secrets.VETRINA_TOKEN }}
+          tag_name: ${{ steps.c.outputs.tag }}
+          name: Magic Play&Print v${{ steps.v.outputs.ver }} · ${{ steps.c.outputs.nome }}
+          body: |
+            Versione ${{ steps.c.outputs.nome }} riservata ai tester. Scade il ${{ steps.c.outputs.scade }}: dopo quella data si ferma e porta alla versione definitiva.
+            Si installa sopra la versione normale, partite e impostazioni restano.
+          files: MagicPlayPrint.apk
+          prerelease: true
+          make_latest: false

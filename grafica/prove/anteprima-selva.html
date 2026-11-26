@@ -1,0 +1,474 @@
+<title>Anteprima Selva</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,700;0,800;1,800&family=Teko:wght@500;600&family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Layout: una colonna di prove da toccare; ogni sezione ha i suoi telefoni finti che reagiscono subito alle scelte */
+:root{
+  color-scheme:dark;
+  --bg:#0A100B; --panel:#121C14; --panel2:#18261B; --line:#2A3B2D;
+  --text:#EAF1E2; --muted:#93A596; --moss:#7CC84A; --amber:#E7BE5C; --ink:#1A1406;
+  --ui:'Barlow', system-ui, sans-serif;
+  --tf:'Barlow Condensed', system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:16px/1.45 var(--ui);margin:0;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+main{max-width:980px;margin:0 auto;display:grid;gap:28px}
+h1,h2{font-family:var(--tf);margin:0;line-height:1.05;text-wrap:balance}
+h1{font-size:clamp(30px,6vw,46px);font-weight:800}
+h2{font-size:clamp(22px,4vw,30px);font-weight:800}
+p{margin:0;max-width:65ch;color:var(--muted)}
+.intro{display:grid;gap:8px}
+.intro b{color:var(--text)}
+section{display:grid;gap:14px;padding:18px;border-radius:24px 6px 24px 6px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line)}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--moss)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.opt{display:grid;gap:6px;text-align:left;padding:12px 14px;border-radius:16px 4px 16px 4px;background:var(--panel2);color:var(--text);border:0;box-shadow:inset 0 0 0 1px var(--line);font:inherit;cursor:pointer}
+.opt:focus-visible,.btn:focus-visible{outline:2px solid var(--moss);outline-offset:2px}
+.opt.sel{box-shadow:inset 0 0 0 2px var(--moss);background:#1E3020}
+.opt small{color:var(--muted);font-size:13px}
+.opt .spec{display:flex;align-items:baseline;gap:12px;white-space:nowrap;overflow:hidden}
+.opt .spec b{font-size:44px;line-height:1}
+.opt .spec span{font-size:20px}
+.hubs{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.hubPrev{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 0}
+.hubPrev canvas{display:block}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{padding:12px 18px;border-radius:16px 4px 16px 4px;border:0;font:700 15px var(--ui);background:linear-gradient(135deg,#86CC4E,#3B7A2A);color:#fff;cursor:pointer}
+.btn.alt{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.phones{display:grid;grid-template-columns:repeat(2,minmax(0,290px));gap:14px;justify-content:center}
+.phones.one{grid-template-columns:minmax(0,300px)}
+.pcol{display:grid;gap:6px;justify-items:center;min-width:0}
+.pcol small{color:var(--muted);font-size:13px;text-align:center}
+.phone{width:100%;aspect-ratio:9/19;max-width:100%;border-radius:26px;padding:7px;background:#050806;box-shadow:0 0 0 1px #2A3B2D,0 12px 30px rgba(0,0,0,.5)}
+.scr{position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;background:#0A100B;container-type:inline-size}
+.scr canvas.full{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+/* telefono in H&O */
+.bar{position:absolute;left:0;right:0;top:0;height:15%;padding:7cqw 3cqw 2cqw;display:flex;gap:2cqw;z-index:1}
+.bar i{position:absolute;left:0;right:0;top:0;height:1.2cqw;background:#6CC24A;box-shadow:0 0 3cqw #6CC24A}
+.tile{flex:1;border-radius:6cqw 1.6cqw 6cqw 1.6cqw;background:var(--pc);color:#fff;display:grid;place-items:center;align-content:center;font-family:var(--tf);line-height:1}
+.tile small{font:700 3.4cqw var(--ui);opacity:.9}
+.tile b{font-size:11cqw;font-weight:800}
+.field{position:absolute;left:2.5cqw;right:2.5cqw;top:16%;bottom:1.5%;border-radius:9cqw 2.4cqw 9cqw 2.4cqw;overflow:hidden;
+  background:radial-gradient(120% 95% at 50% 40%,transparent 52%,rgba(4,22,4,.45)),repeating-linear-gradient(93deg,rgba(255,255,255,.04) 0 1px,transparent 1px 7px,rgba(0,0,0,.035) 7px 8px,transparent 8px 13px),linear-gradient(170deg,color-mix(in srgb,var(--pc),#fff 9%),var(--pc) 50%,color-mix(in srgb,var(--pc) 68%,#0b240b))}
+.scr .fxu{z-index:2}
+.hubc{position:absolute;left:50%;top:50%;translate:-50% -50%;z-index:3;pointer-events:none}
+.life{position:absolute;left:50%;top:72%;translate:-50% -50%;z-index:3;font-family:var(--tf);font-weight:800;font-size:46cqw;line-height:1;color:#fff;text-shadow:0 1cqw 0 rgba(0,0,0,.25),0 0 6cqw rgba(200,255,150,.3);font-variant-numeric:tabular-nums}
+.delta{position:absolute;right:9cqw;top:24%;z-index:3;font:800 11cqw var(--tf);color:#fff;opacity:0}
+.delta.on{animation:dl 1.6s ease-out}
+@keyframes dl{10%{opacity:1}75%{opacity:1}100%{opacity:0}}
+.scr .fxo{z-index:6}
+/* pagina iniziale */
+.home{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;gap:3.4cqw;padding:10cqw 6cqw 6cqw}
+.brand{display:flex;align-items:center;gap:2cqw;font:800 3.2cqw var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.brand::before{content:'';width:6cqw;height:2.6cqw;border-radius:3cqw .6cqw 3cqw .6cqw;background:linear-gradient(135deg,#86CC4E,#3B7A2A)}
+.home h3{margin:0;font-family:var(--tf);font-weight:800;font-size:12cqw;line-height:.95;color:#fff}
+.home h3 em{font-style:normal;background:linear-gradient(180deg,#F2F9C8,#A6DC62 42%,#5AA43A 72%,#2D6224);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hopt{padding:3.2cqw 4cqw;border-radius:6cqw 1.5cqw 6cqw 1.5cqw;background:rgba(14,26,16,.62);box-shadow:inset 0 0 0 1px rgba(200,255,170,.14);position:relative;overflow:hidden}
+.hopt::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1.2cqw;background:var(--ac)}
+.hopt b{display:block;font-family:var(--tf);font-weight:800;font-size:6.4cqw;line-height:1.1;color:#fff}
+.hopt span{font-size:3.4cqw;color:rgba(255,255,255,.65)}
+.seeds{margin-top:auto;display:flex;justify-content:center;gap:4cqw}
+.seeds i{width:5cqw;height:5cqw;border-radius:50%;background:rgba(255,255,255,.22)}
+.seeds i.on{background:#3FD16A;box-shadow:0 0 4cqw #3FD16A}
+.note{font-size:14px}
+@media (prefers-reduced-motion:reduce){.delta.on{animation:none;opacity:1}}
+</style>
+<main>
+  <div class="intro">
+    <span class="lbl">Magic Play&amp;Print · tema del Verde</span>
+    <h1>Anteprima Selva, terza prova</h1>
+    <p>Già selezionate le tue scelte: <b>Barlow Condensed</b> e <b>intreccio di rami</b>, ora con più foglioline. La pagina iniziale torna quella di prima, con lucciole e foglie. Il colpo è nuovo: le radici escono dal terreno al centro del campo.</p>
+  </div>
+
+  <section aria-labelledby="t1">
+    <span class="lbl">1 · Carattere</span>
+    <h2 id="t1">Numeri e titoli</h2>
+    <p>Tre caratteri moderni, da videogioco e non da libro. Valgono per vita, titoli e quadratini.</p>
+    <div class="opts" id="fonts">
+      <button class="opt" data-font="exo"><span class="spec" style="font-family:'Exo 2',sans-serif;font-weight:800"><b>40</b><span>−5 · Commander</span></span><small>Exo 2: curve morbide, da videogioco fantasy-tech</small></button>
+      <button class="opt" data-font="teko"><span class="spec" style="font-family:'Teko',sans-serif;font-weight:600"><b>40</b><span>−5 · Commander</span></span><small>Teko: stretto e deciso, da interfaccia di gioco</small></button>
+      <button class="opt sel" data-font="barlow"><span class="spec" style="font-family:'Barlow Condensed',sans-serif;font-weight:800"><b>40</b><span>−5 · Commander</span></span><small>Barlow Condensed: sobrio, della stessa famiglia dei testi dell'app</small></button>
+    </div>
+  </section>
+
+  <section aria-labelledby="t2">
+    <span class="lbl">2 · Elemento centrale</span>
+    <h2 id="t2">Al centro, qualcosa di vivo e rotondo</h2>
+    <p>Tre idee, ognuna nella versione tonda (un telefono) e larga (H&amp;O). Si muovono piano, come fa l'alone in Forgia.</p>
+    <div class="opts hubs" id="hubs">
+      <button class="opt" data-hub="tronco"><div class="hubPrev"><canvas data-k="tronco" data-w="82" data-h="82"></canvas><canvas data-k="tronco" data-w="150" data-h="56"></canvas></div><b>Sezione di tronco</b><small>Gli anelli del legno, la corteccia col muschio, il simbolo che brilla nel cuore.</small></button>
+      <button class="opt" data-hub="corona"><div class="hubPrev"><canvas data-k="corona" data-w="82" data-h="82"></canvas><canvas data-k="corona" data-w="150" data-h="56"></canvas></div><b>Corona di foglie</b><small>Foglie in cerchio che respirano, come un sigillo druidico.</small></button>
+      <button class="opt sel" data-hub="intreccio"><div class="hubPrev"><canvas data-k="intreccio" data-w="82" data-h="82"></canvas><canvas data-k="intreccio" data-w="150" data-h="56"></canvas></div><b>Intreccio di rami</b><small>Due rami che girano intorno e si intrecciano, stile elfico.</small></button>
+    </div>
+  </section>
+
+  <section aria-labelledby="t3">
+    <span class="lbl">3 · Pagina iniziale</span>
+    <h2 id="t3">Lucciole e foglie</h2>
+    <p>Come nella prima versione: lucciole che vagano e qualche foglia che scende, sopra la luce verde tra le chiome.</p>
+    <div class="phones one"><div class="pcol"><div class="phone"><div class="scr" id="pHome">
+      <canvas class="full" id="cvHome"></canvas>
+      <div class="home">
+        <div class="brand">Magic Play&amp;Print</div>
+        <h3>A cosa vuoi <em>giocare?</em></h3>
+        <div class="hopt" style="--ac:#A6DC62"><b>Standard</b><span>20 punti vita, testa a testa</span></div>
+        <div class="hopt" style="--ac:#4FA83A"><b>Commander</b><span>40 punti vita, danni da comandante</span></div>
+        <div class="hopt" style="--ac:#E7BE5C"><b>Brawl</b><span>25 punti vita in due, 30 in più</span></div>
+        <div class="seeds"><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div></div><small>Gira da sola</small></div></div>
+  </section>
+
+  <section aria-labelledby="t4">
+    <span class="lbl">4 · Il colpo</span>
+    <h2 id="t4">Sciame e rampicanti</h2>
+    <p>Il campo è il terreno visto dall'alto. Bea colpisce Federico: dal suo elemento centrale parte uno sciame che esce dal bordo. Sul telefono di Federico lo sciame scende al centro del campo e il terreno si spacca. Dal buco escono radici spinose, liane intrecciate e viticci con le foglie: si allungano verso i bordi, poi si chiudono come le dita di una mano e stringono. Alla fine rientrano nel terreno. Il numero della vita resta sopra, sempre leggibile.</p>
+    <div class="row"><button class="btn" id="goHit">Colpisci (5 danni)</button><button class="btn alt" id="goClaw">Artigli della bestia</button></div>
+    <p class="note">«Artigli della bestia» è il colpo grosso, quando un giocatore perde 5 punti di fila sul proprio telefono: quattro squarci che strappano il campo.</p>
+    <div class="phones">
+      <div class="pcol"><div class="phone"><div class="scr" id="pA">
+        <div class="bar"><i></i><div class="tile" style="--pc:#2D6FA3"><small>Federico</small><b id="aTile">40</b></div></div>
+        <div class="field" style="--pc:#C2402B"></div>
+        <canvas class="hubc" id="hubA"></canvas>
+        <div class="life">40</div>
+        <canvas class="full fxo" id="cvA"></canvas>
+      </div></div><small>Bea, chi attacca</small></div>
+      <div class="pcol"><div class="phone"><div class="scr" id="pV">
+        <div class="bar"><i></i><div class="tile" style="--pc:#C2402B"><small>Bea</small><b>40</b></div></div>
+        <div class="field" id="fV" style="--pc:#2D6FA3"></div>
+        <canvas class="full fxu" id="cvV"></canvas>
+        <canvas class="hubc" id="hubV"></canvas>
+        <div class="life" id="lifeV">40</div>
+        <div class="delta" id="dV">−5</div>
+      </div></div><small>Federico, chi è colpito</small></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t5">
+    <span class="lbl">Cosa resta come prima</span>
+    <h2 id="t5">Caselle, foglie, colori</h2>
+    <p>Restano la forma a foglia delle caselle, i colori del bosco dei giocatori, le foglie al posto delle braci e il graffio, che diventa «Artigli della bestia». Quando approvi, sostituisco carattere, elemento centrale, pagina iniziale e colpo nell'app e ti mando l'APK.</p>
+  </section>
+</main>
+<script>
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DPR = Math.min(2, devicePixelRatio || 1);
+const EMB = new Image(); EMB.src = 'data:image/png;base64,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';
+const ST = {font:'barlow', hub:'intreccio'};
+const FONTS = {exo:"'Exo 2', 'Barlow Condensed', sans-serif", teko:"'Teko', 'Barlow Condensed', sans-serif", barlow:"'Barlow Condensed', sans-serif"};
+const R = Math.random, TAU = Math.PI * 2;
+const pick = a => a[R() * a.length | 0];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---------- scelte
+document.getElementById('fonts').addEventListener('click', e => { const b = e.target.closest('[data-font]'); if(!b) return;
+  ST.font = b.dataset.font; document.documentElement.style.setProperty('--tf', FONTS[ST.font]);
+  document.querySelectorAll('[data-font]').forEach(x => x.classList.toggle('sel', x === b)) });
+document.getElementById('hubs').addEventListener('click', e => { const b = e.target.closest('[data-hub]'); if(!b) return;
+  ST.hub = b.dataset.hub; document.querySelectorAll('[data-hub]').forEach(x => x.classList.toggle('sel', x === b)) });
+
+// ---------- canvas a misura
+function fit(cv, w, h){ w = w ?? cv.clientWidth; h = h ?? cv.clientHeight; if(cv._w !== w || cv._h !== h){ cv._w = w; cv._h = h; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR); if(cv.style && cv.classList.contains('hubc') || cv.dataset.w){ cv.style.width = w + 'px'; cv.style.height = h + 'px' } } const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); return c }
+
+// ---------- elemento centrale
+const wob = (a, s) => Math.sin(a * 3 + s) * .035 + Math.sin(a * 7 + s * 2) * .02 + Math.sin(a * 13 + s * 3) * .012;
+function ell(c, cx, cy, rx, ry, seed, amt){ c.beginPath(); for(let i = 0; i <= 64; i++){ const a = i / 64 * TAU, k = 1 + (seed == null ? 0 : wob(a, seed) * amt); c.lineTo(cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k) } c.closePath() }
+function leafPath(c, x, y, len, wid, ang){ c.save(); c.translate(x, y); c.rotate(ang); c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(len * .5, -wid, len, 0); c.quadraticCurveTo(len * .5, wid, 0, 0); c.restore() }
+function emblem(c, cx, cy, s, t){
+  const g = c.createRadialGradient(cx, cy, 0, cx, cy, s * .9); const a = .32 + .14 * Math.sin(t * 2.2);
+  g.addColorStop(0, `rgba(170,240,110,${a})`); g.addColorStop(1, 'rgba(170,240,110,0)'); c.fillStyle = g; c.fillRect(cx - s, cy - s, s * 2, s * 2);
+  if(EMB.complete) c.drawImage(EMB, cx - s / 2, cy - s / 2, s, s);
+}
+function paintHub(cv, kind, w, h, t){
+  const c = fit(cv, w, h); c.clearRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2, rx = w / 2 - 3, ry = h / 2 - 3, m = Math.min(rx, ry);
+  if(kind === 'tronco'){
+    ell(c, cx, cy, rx, ry, 1.3, 1.4); c.fillStyle = '#3A2614'; c.fill(); c.lineWidth = 2; c.strokeStyle = '#140D06'; c.stroke();
+    // muschio sulla corteccia
+    for(let i = 0; i < 9; i++){ const a = i / 9 * TAU + .3, k = .96; c.fillStyle = i % 2 ? '#4E8A2E' : '#6FAE3A'; c.beginPath(); c.ellipse(cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k, m * .13, m * .07, a, 0, TAU); c.fill() }
+    const wg = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry) * .84); wg.addColorStop(0, '#B98D57'); wg.addColorStop(1, '#8A5F33');
+    ell(c, cx, cy, rx * .84, ry * .84, 2.1, 1); c.fillStyle = wg; c.fill();
+    c.strokeStyle = 'rgba(70,38,14,.5)'; c.lineWidth = 1.1;
+    for(let k = 1; k <= 6; k++){ ell(c, cx, cy, rx * .84 * k / 7, ry * .84 * k / 7, 2.1 + k * .7, 1.4); c.stroke() }
+    c.strokeStyle = 'rgba(40,20,6,.7)'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(cx + rx * .2, cy - ry * .15); c.lineTo(cx + rx * .5, cy - ry * .42); c.lineTo(cx + rx * .62, cy - ry * .5); c.stroke();
+    const hg = c.createRadialGradient(cx, cy, 0, cx, cy, m * .52); hg.addColorStop(0, '#20160B'); hg.addColorStop(1, 'rgba(32,22,11,0)'); c.fillStyle = hg; ell(c, cx, cy, rx * .5, ry * .55); c.fill();
+    emblem(c, cx, cy, m * .78, t);
+  }
+  if(kind === 'corona'){
+    const n = w > h * 1.3 ? 24 : 15;
+    const cg = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry) * .75); cg.addColorStop(0, '#20301A'); cg.addColorStop(1, '#0C130A');
+    ell(c, cx, cy, rx * .74, ry * .7); c.fillStyle = cg; c.fill();
+    for(let layer = 0; layer < 2; layer++) for(let i = 0; i < n; i++){
+      const a = (i + layer * .5) / n * TAU + t * .05, br = 1 + .09 * Math.sin(t * 1.6 + i * .9), x = cx + Math.cos(a) * rx * .78, y = cy + Math.sin(a) * ry * .78;
+      const L = m * (layer ? .36 : .44) * br, ang = Math.atan2(Math.sin(a) * ry, Math.cos(a) * rx) + Math.PI / 2 + (layer ? -.35 : -.55);
+      leafPath(c, x, y, L, L * .34, ang); c.fillStyle = layer ? ['#2F5E22', '#3E7A2A'][i % 2] : ['#5FAE3A', '#86CC4E', '#4E9A35'][i % 3]; c.fill();
+      c.save(); c.translate(x, y); c.rotate(ang); c.strokeStyle = 'rgba(230,255,190,.35)'; c.lineWidth = .8; c.beginPath(); c.moveTo(0, 0); c.lineTo(L * .85, 0); c.stroke(); c.restore();
+    }
+    emblem(c, cx, cy, m * .72, t);
+  }
+  if(kind === 'intreccio'){
+    const cg = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry) * .8); cg.addColorStop(0, '#22301C'); cg.addColorStop(1, '#0C120A');
+    ell(c, cx, cy, rx * .8, ry * .78); c.fillStyle = cg; c.fill();
+    const N = 120, K = w > h * 1.3 ? 9 : 6, pts = [[], []];
+    for(let i = 0; i <= N; i++){ const a = i / N * TAU; for(let s = 0; s < 2; s++){ const o = .085 * Math.sin(K * a + t * .7 + s * Math.PI); pts[s].push([cx + Math.cos(a) * rx * (.86 + o), cy + Math.sin(a) * ry * (.86 + o), Math.cos(K * a + t * .7 + s * Math.PI)]) } }
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    // prima i tratti dietro, poi quelli davanti: i due rami si incrociano puliti
+    const runs = [[], []];
+    for(let sI = 0; sI < 2; sI++){ let cur = null, sd = null;
+      for(let i = 0; i <= N; i++){ const p = pts[sI][i], d = p[2] >= 0 ? 1 : 0; if(d !== sd){ if(cur){ cur.p.push(p); runs[sd].push(cur) } cur = {s:sI, p:[p]}; sd = d } else cur.p.push(p) }
+      runs[sd].push(cur) }
+    [0, 1].forEach(d => runs[d].forEach(r => { [['#140D06', m * .15], [r.s ? (d ? '#7A5532' : '#4E3520') : (d ? '#5FA83A' : '#3B6A26'), m * .095]].forEach(([col, lw]) => {
+      c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); r.p.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() }) }));
+    for(let i = 0; i < 4 * K; i++){ const a = (i + .25) / (4 * K) * TAU + t * .02, out = i % 2 ? 1.02 : .7, x = cx + Math.cos(a) * rx * (i % 2 ? .97 : .76), y = cy + Math.sin(a) * ry * (i % 2 ? .97 : .76);
+      const br = 1 + .12 * Math.sin(t * 1.8 + i), L = m * (i % 2 ? .24 : .16) * br, ang = Math.atan2(Math.sin(a) * ry, Math.cos(a) * rx) + (i % 2 ? 2.2 : -2.4) + (i % 4 > 1 ? Math.PI : 0) * 0;
+      leafPath(c, x, y, L, L * .38, ang); c.fillStyle = ['#86CC4E', '#5FAE3A', '#A6DC62', '#4E9A35'][i % 4]; c.fill(); c.strokeStyle = 'rgba(20,40,12,.6)'; c.lineWidth = .7; c.stroke() }
+    emblem(c, cx, cy, m * .74, t);
+  }
+}
+
+// ---------- sprite luminoso (lucciole, sciame)
+function glowSprite(col, r){ const s = document.createElement('canvas'); s.width = s.height = r * 2 * DPR; const c = s.getContext('2d'); c.scale(DPR, DPR); const g = c.createRadialGradient(r, r, 0, r, r, r); g.addColorStop(0, col); g.addColorStop(.25, col.replace(/[\d.]+\)$/, '.45)')); g.addColorStop(1, col.replace(/[\d.]+\)$/, '0)')); c.fillStyle = g; c.fillRect(0, 0, r * 2, r * 2); return s }
+const GLOW = [glowSprite('rgba(220,250,140,1)', 12), glowSprite('rgba(160,230,100,1)', 12), glowSprite('rgba(240,220,120,1)', 12)];
+
+// ---------- rampicanti intrecciati: spina a curva, 2 o 3 fili che girano intorno e si incrociano
+function bez(P, t){ const u = 1 - t; return [u*u*u*P[0][0] + 3*u*u*t*P[1][0] + 3*u*t*t*P[2][0] + t*t*t*P[3][0], u*u*u*P[0][1] + 3*u*u*t*P[1][1] + 3*u*t*t*P[2][1] + t*t*t*P[3][1]] }
+const VCOL = [['#2F5E22', '#7CC84A'], ['#4E8A2E', '#A6DC62'], ['#5E4026', '#9C7A4E'], ['#3E7A2A', '#8FD15A']];
+function mkVine(P, width, o = {}){
+  const K = o.K ?? (width > 9 ? 3 : 2);
+  return {P, width, K, f:o.f ?? (2.2 + R() * 2), ph:R() * TAU, cols:o.cols ?? Array.from({length:K}, (_, k) => VCOL[(k + (R() * 4 | 0)) % 4]), delay:o.delay || 0, grow:o.grow ?? .6, hold:o.hold ?? 1.4, ret:o.ret ?? .5, leaves:o.leaves ?? true, sway:o.sway || 0, ampK:o.ampK ?? (K > 1 ? .8 : .3), thorns:o.thorns ?? true, shadow:!!o.shadow, open:o.open, curl:o.curl};
+}
+// un filo è disegnato come una striscia piena che si assottiglia; i tratti dietro prima, quelli davanti dopo: così si intrecciano
+function ribbon(c, pts, col, hi){
+  if(pts.length < 2) return;
+  const L = [], Rr = [];
+  for(let i = 0; i < pts.length; i++){ const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, h = pts[i][2] / 2;
+    L.push([pts[i][0] - dy / l * h, pts[i][1] + dx / l * h]); Rr.push([pts[i][0] + dy / l * h, pts[i][1] - dx / l * h]) }
+  c.beginPath(); c.moveTo(L[0][0], L[0][1]); L.forEach(p => c.lineTo(p[0], p[1])); for(let i = Rr.length - 1; i >= 0; i--) c.lineTo(Rr[i][0], Rr[i][1]); c.closePath();
+  c.lineJoin = 'round'; c.lineWidth = 2.2; c.strokeStyle = '#0E150B'; c.stroke(); c.fillStyle = col; c.fill();
+  c.globalAlpha = .5; c.strokeStyle = hi; c.lineWidth = Math.max(.8, pts[pts.length >> 1][2] * .22); c.lineCap = 'round';
+  c.beginPath(); L.forEach((p, i) => { const q = [(p[0] * 2 + pts[i][0]) / 3, (p[1] * 2 + pts[i][1]) / 3]; i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]) }); c.stroke(); c.globalAlpha = 1;
+}
+function drawVine(c, v, g, squeeze, t){
+  if(g <= 0) return;
+  if(v.open){ const k = v.curlAmt || 0; v.P = v.open.map((p, i) => [p[0] + (v.curl[i][0] - p[0]) * k, p[1] + (v.curl[i][1] - p[1]) * k]) }
+  const M = 70, n = Math.max(2, Math.ceil(M * g)), S = [];
+  for(let i = 0; i <= n; i++){ const tt = Math.min(g, i / M); let p = bez(v.P, tt), q = bez(v.P, Math.min(1, tt + .01));
+    if(v.sway){ const sw = Math.sin(t * .8 + tt * 4) * v.sway * tt; p = [p[0] + sw, p[1]]; q = [q[0] + sw, q[1]] }
+    const dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1; S.push({x:p[0], y:p[1], nx:-dy / l, ny:dx / l, t:tt}) }
+  const tip = i => Math.min(1, (g - S[i].t) * 14);   // la punta che cresce si assottiglia
+  const amp = i => v.width * v.ampK * (1 - .45 * S[i].t) * (1 - .4 * squeeze);
+  // ombra sul terreno: visto dall'alto, la radice sta sopra il campo
+  if(v.shadow){ c.save(); c.globalAlpha = .28; c.strokeStyle = '#000'; c.lineCap = 'round'; c.lineJoin = 'round';
+    for(let i = 0; i < S.length - 1; i++){ c.lineWidth = v.width * 1.7 * (1 - .65 * S[i].t) + 2; c.beginPath(); c.moveTo(S[i].x + 4, S[i].y + 6); c.lineTo(S[i + 1].x + 4, S[i + 1].y + 6); c.stroke() } c.restore() }
+  const wid = i => Math.max(1, v.width * (1 - .65 * S[i].t) / (v.K > 2 ? 1.45 : 1.2) * (.25 + .75 * tip(i)));
+  const P = (k, i) => { const ph = TAU * v.f * S[i].t + v.ph + k * TAU / v.K, o = Math.sin(ph) * amp(i); return [S[i].x + S[i].nx * o, S[i].y + S[i].ny * o, wid(i), Math.cos(ph)] };
+  // tratti: sequenze di punti dove il filo sta dietro (cos<0) o davanti (cos>=0)
+  const runs = [[], []];
+  for(let k = 0; k < v.K; k++){ let cur = null, side = null;
+    for(let i = 0; i < S.length; i++){ const p = P(k, i), sd = p[3] >= 0 ? 1 : 0;
+      if(sd !== side){ if(cur) { cur.pts.push(p); runs[side].push(cur) } cur = {k, pts:cur ? [cur.pts[cur.pts.length - 2] || p] : []}; side = sd }
+      cur.pts.push(p) }
+    if(cur) runs[side].push(cur) }
+  [0, 1].forEach(sd => runs[sd].forEach(r => ribbon(c, r.pts, sd ? v.cols[r.k][0] : shade(v.cols[r.k][0]), v.cols[r.k][1])));
+  // spine e foglie sul filo davanti
+  for(let i = 3; i < S.length - 2; i += 3){ const k = (i / 3 | 0) % v.K, p = P(k, i); if(p[3] < 0 && v.K > 1) continue;
+    const s = (i / 3 | 0) % 2 ? 1 : -1, w = p[2], tl = 2 + w * .6;
+    if(v.thorns){ c.fillStyle = '#0E150B'; c.beginPath(); c.moveTo(p[0] + S[i].nx * s * w * .4, p[1] + S[i].ny * s * w * .4); c.lineTo(p[0] + S[i].nx * s * (w * .4 + tl) + (S[i].ny) * tl * .5, p[1] + S[i].ny * s * (w * .4 + tl) - S[i].nx * tl * .5); c.lineTo(p[0] + S[i].nx * s * w * .4 - S[i].ny * tl * .8, p[1] + S[i].ny * s * w * .4 + S[i].nx * tl * .8); c.fill() }
+    if(v.leaves && i % (v.leaves === 'many' ? 6 : 12) === (v.leaves === 'many' ? 3 : 6)){ const L = v.width * 1.3 + 4; leafPath(c, p[0], p[1], L, L * .36, Math.atan2(S[i].ny * s, S[i].nx * s) + .6 * s); c.fillStyle = i % 24 === 6 ? '#7CC84A' : '#4E9A35'; c.fill();
+      c.strokeStyle = '#1E3A14'; c.lineWidth = .8; c.stroke() } }
+}
+function shade(hex){ const n = parseInt(hex.slice(1), 16), f = .62; return `rgb(${(n >> 16) * f | 0},${(n >> 8 & 255) * f | 0},${(n & 255) * f | 0})` }
+function vineG(v, a){ const x = a - v.delay; if(x <= 0) return 0; if(x < v.grow) return 1 - Math.pow(1 - x / v.grow, 2.2); if(x < v.grow + v.hold) return 1; return Math.max(0, 1 - (x - v.grow - v.hold) / v.ret) }
+
+// ---------- particelle semplici
+function parts(list, c, dt){
+  for(let i = list.length - 1; i >= 0; i--){ const p = list[i]; p.a += dt; if(p.a > p.life){ list.splice(i, 1); continue }
+    p.vy += (p.g || 0) * dt; const f = Math.exp(-(p.drag || 0) * dt); p.vx *= f; p.vy *= f; p.x += p.vx * dt + (p.wob ? Math.sin(p.a * 3 + p.ph) * p.wob * dt : 0); p.y += p.vy * dt;
+    const k = p.a / p.life; c.globalAlpha = Math.min(1, (1 - k) * 1.4);
+    if(p.leaf){ p.rot += p.spin * dt; c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.scale(1, .3 + .7 * Math.abs(Math.cos(p.a * 4 + p.ph))); c.fillStyle = p.c; c.beginPath(); c.moveTo(-p.s * 1.7, 0); c.quadraticCurveTo(0, -p.s * 1.1, p.s * 1.7, 0); c.quadraticCurveTo(0, p.s * 1.1, -p.s * 1.7, 0); c.fill(); c.restore() }
+    else { const z = p.pop ? 1 + 1.6 * Math.sin(Math.PI * k) : 1 - k * .5; c.fillStyle = p.c; c.beginPath(); c.arc(p.x, p.y, p.s * z, 0, TAU); c.fill() }
+  }
+  c.globalAlpha = 1;
+}
+const leafP = (x, y, vx, vy, o = {}) => ({x, y, vx, vy, a:0, life:o.life ?? 2, g:o.g ?? 60, drag:o.drag ?? 1.5, leaf:true, s:o.s ?? 3, rot:R() * TAU, spin:(R() - .5) * 8, ph:R() * TAU, wob:o.wob ?? 30, c:o.c ?? pick(['#5FAE3A', '#86CC4E', '#A0642A', '#C9A13A'])});
+
+// ---------- sciame: tanti insetti luminosi che seguono un capofila lungo una curva
+function mkSwarm(path, n, dur, delay = 0){
+  return {path, dur, delay, a:0, bugs:Array.from({length:n}, (_, i) => ({x:null, y:null, vx:0, vy:0, ox:(R() - .5) * 2, oy:(R() - .5) * 2, ph:R() * TAU, d:R() * .22, g:GLOW[i % 3], s:.7 + R() * .6}))};
+}
+function drawSwarm(c, sw, dt, W){
+  sw.a += dt; const x = sw.a - sw.delay; if(x < 0) return true;
+  const rad = W * .07;
+  c.globalCompositeOperation = 'lighter';
+  let alive = false;
+  for(const b of sw.bugs){
+    const u = clamp((x - b.d) / sw.dur, 0, 1); if(x - b.d < 0) continue;
+    const e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, L = sw.path(e);
+    if(b.x == null){ b.x = L[0]; b.y = L[1] }
+    const tx = L[0] + (b.ox * rad + Math.sin(sw.a * 6 + b.ph) * rad * .5), ty = L[1] + (b.oy * rad + Math.cos(sw.a * 5 + b.ph) * rad * .5);
+    b.vx += ((tx - b.x) * 60 - b.vx * 9) * dt; b.vy += ((ty - b.y) * 60 - b.vy * 9) * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+    const fade = u >= 1 ? Math.max(0, 1 - (x - b.d - sw.dur) / .25) : 1; if(fade <= 0) continue; alive = true;
+    const s = W * .045 * b.s; c.globalAlpha = fade * (.75 + .25 * Math.sin(sw.a * 30 + b.ph)); c.drawImage(b.g, b.x - s, b.y - s, s * 2, s * 2);
+    // ali che vibrano
+    c.globalAlpha = fade * .5; c.fillStyle = '#E8FFC8'; const wv = Math.abs(Math.sin(sw.a * 55 + b.ph)), ws = W * .012 * b.s;
+    c.beginPath(); c.ellipse(b.x - ws, b.y - ws * .4, ws * 1.2, ws * .5 * wv + .3, -.5, 0, TAU); c.ellipse(b.x + ws, b.y - ws * .4, ws * 1.2, ws * .5 * wv + .3, .5, 0, TAU); c.fill();
+  }
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  return alive || x < sw.dur;
+}
+
+// ---------- squarci degli artigli
+function drawClaw(c, cl, dt){
+  cl.a += dt; let alive = false;
+  cl.cuts.forEach((k, i) => { const x = cl.a - i * .06; if(x < 0){ alive = true; return } const g = Math.min(1, x / .16), fade = x < .9 ? 1 : Math.max(0, 1 - (x - .9) / .5); if(fade > 0) alive = true; else return;
+    const N = 30, L = [], Rr = [];
+    for(let j = 0; j <= N * g; j++){ const t0 = j / N, p = bez(k, t0), q = bez(k, Math.min(1, t0 + .02)), dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1;
+      const w = Math.pow(Math.sin(Math.PI * t0), .7) * cl.w * (1 + (k.j[j] || 0)) / 2; L.push([p[0] - dy / l * w, p[1] + dx / l * w]); Rr.push([p[0] + dy / l * w * .7, p[1] - dx / l * w * .7]) }
+    if(L.length < 2) return;
+    c.globalAlpha = fade; c.beginPath(); c.moveTo(L[0][0], L[0][1]); L.forEach(p => c.lineTo(p[0], p[1])); for(let j = Rr.length - 1; j >= 0; j--) c.lineTo(Rr[j][0], Rr[j][1]); c.closePath();
+    c.lineJoin = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(232,247,192,.8)'; c.stroke();
+    const gr = c.createLinearGradient(L[0][0], L[0][1], Rr[0][0], Rr[0][1]); gr.addColorStop(0, '#2A0E06'); gr.addColorStop(.5, '#0E0503'); gr.addColorStop(1, '#3A1408'); c.fillStyle = '#100604'; c.fill();
+    c.globalAlpha = fade * .8; c.strokeStyle = '#7A2A12'; c.lineWidth = 1.2; c.beginPath(); L.forEach((p, j) => j ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke() });
+  c.globalAlpha = 1; return alive;
+}
+
+// ---------- telefoni del colpo
+const pA = document.getElementById('pA'), pV = document.getElementById('pV'), cvA = document.getElementById('cvA'), cvV = document.getElementById('cvV');
+const fV = document.getElementById('fV'), lifeV = document.getElementById('lifeV'), dV = document.getElementById('dV'), aTile = document.getElementById('aTile');
+const FX = {A:{sw:[], p:[]}, V:{sw:[], vines:[], p:[], claws:[], a:0, sq:null}};
+let life = 40;
+function hubBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x:W / 2, y:H * .5, w:W * .52, h:W * .19} }
+function fieldBox(scr){ const W = scr.clientWidth, H = scr.clientHeight; return {x:W * .025, y:H * .16, w:W * .95, h:H * .825} }
+function fieldO(scr){ const fb = fieldBox(scr); return {x:fb.x + fb.w / 2, y:fb.y + fb.h * .55} }
+function hit(){
+  const WA = pA.clientWidth, HA = pA.clientHeight, hb = hubBox(pA), tx = WA * .5;
+  FX.A.sw.push(mkSwarm(u => { const v = 1 - u; return [v * v * hb.x + 2 * v * u * (hb.x + WA * .32) + u * u * tx, v * v * hb.y + 2 * v * u * (HA * .3) + u * u * -40] }, RM ? 10 : 46, .75));
+  const WV = pV.clientWidth, o = fieldO(pV);
+  FX.V.sw.push(mkSwarm(u => { const v = 1 - u; return [v * v * tx + 2 * v * u * (WV * .1) + u * u * o.x, v * v * -40 + 2 * v * u * (o.y * .4) + u * u * o.y] }, RM ? 10 : 46, .7, .55));
+  setTimeout(() => erupt(), 1300);
+}
+// il terreno si apre al centro; da sotto escono radici spinose, liane intrecciate e viticci con le foglie,
+// si allungano verso i bordi e si chiudono come le dita di una mano, stringono, poi rientrano nel buco
+const ROOTC = [['#5E4026', '#A07A4A'], ['#4A3220', '#8C6A40']], VINEC = [['#3E7A2A', '#9BD65A'], ['#2F5E22', '#7CC84A']], TENDC = [['#5FAE3A', '#C9EE8A']];
+function erupt(){
+  const V = FX.V, fb = fieldBox(pV), o = fieldO(pV), Rm = Math.hypot(fb.w, fb.h) * .5, n = RM ? 5 : 13;
+  V.hole = {x:o.x, y:o.y, a:0, life:3.4, r:fb.w * .16, cracks:Array.from({length:9}, (_, i) => { const a = i / 9 * TAU + R() * .4, L = fb.w * (.22 + R() * .2), pts = [[0, 0]];
+    for(let k = 1; k <= 5; k++){ const d = L * k / 5; pts.push([Math.cos(a) * d + (R() - .5) * 8, Math.sin(a) * d + (R() - .5) * 8]) } return pts })};
+  for(let k = 0; k < n; k++){
+    const type = k % 3, a = k / n * TAU + (R() - .5) * .35, s = R() < .5 ? -1 : 1, L = Rm * (type === 2 ? .45 + R() * .3 : .6 + R() * .4);
+    const d = [Math.cos(a), Math.sin(a)], q = [-d[1], d[0]], at = (r, side) => [o.x + d[0] * r + q[0] * side, o.y + d[1] * r + q[1] * side];
+    const open = [at(4, 0), at(L * .35, L * .12 * s), at(L * .72, L * .2 * s), at(L, L * .08 * s)];
+    // chiusa: la punta gira di lato e torna un po' verso il centro, come un dito che si piega
+    const ca = a + s * 1.1, open2 = [o.x + Math.cos(ca) * L * .78, o.y + Math.sin(ca) * L * .78];
+    const curl = [open[0], at(L * .4, L * .2 * s), at(L * .78, L * .42 * s), open2];
+    const w = type === 0 ? fb.w * (.045 + R() * .03) : type === 1 ? fb.w * (.035 + R() * .025) : fb.w * (.014 + R() * .01);
+    V.vines.push(mkVine(open.map(p => p.slice()), w, {open, curl, shadow:true, delay:R() * .25, grow:.5 + R() * .3, hold:1.6, ret:.45,
+      K:type === 1 ? 2 : 1, cols:type === 0 ? [pick(ROOTC)] : type === 1 ? VINEC : TENDC, thorns:type !== 2, leaves:type === 2 ? 'many' : type === 1, f:type === 2 ? 4 + R() * 3 : 2 + R() * 1.5, ampK:type === 2 ? .9 : undefined}));
+  }
+  // zolle che saltano verso chi guarda (crescono e ricadono) e foglie
+  for(let i = 0; i < (RM ? 6 : 30); i++){ const a = R() * TAU, sp = 60 + R() * 220; V.p.push({x:o.x, y:o.y, vx:Math.cos(a) * sp, vy:Math.sin(a) * sp, a:0, life:.7 + R() * .5, g:0, drag:2.5, s:2 + R() * 3, pop:true, c:pick(['#3A2614', '#5E4026', '#7A5A3A', '#2A1C0F']), ph:0}) }
+  for(let i = 0; i < (RM ? 3 : 12); i++){ const a = R() * TAU, sp = 80 + R() * 200; V.p.push(leafP(o.x, o.y, Math.cos(a) * sp, Math.sin(a) * sp, {life:1.8, g:0, drag:1.8, s:3})) }
+  V.sq = {a:0, dur:.6 + .25 + 1.6};
+  life -= 5; lifeV.textContent = life; aTile.textContent = life; dV.classList.remove('on'); void dV.offsetWidth; dV.classList.add('on');
+  if(navigator.vibrate) try{ navigator.vibrate([20, 40, 30, 40]) }catch(e){}
+}
+function drawHole(c, h, dt){
+  h.a += dt; if(h.a > h.life) return false; const k = h.a / h.life, open = Math.min(1, h.a / .25) * (k > .85 ? (1 - k) / .15 : 1);
+  c.save(); c.translate(h.x, h.y);
+  c.strokeStyle = 'rgba(20,12,6,.85)'; c.lineWidth = 2.4; c.lineCap = 'round';
+  h.cracks.forEach(p => { const m = Math.max(1, Math.round(p.length * open)); c.beginPath(); for(let i = 0; i < m; i++) i ? c.lineTo(p[i][0], p[i][1]) : c.moveTo(p[i][0], p[i][1]); c.stroke() });
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, h.r * open); g.addColorStop(0, '#0B0603'); g.addColorStop(.6, 'rgba(40,24,10,.9)'); g.addColorStop(1, 'rgba(60,38,18,0)');
+  c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, h.r * open, h.r * open * .85, 0, 0, TAU); c.fill(); c.restore(); return true;
+}
+function claw(){
+  const fb = fieldBox(pV), cuts = [];
+  for(let k = 0; k < 4; k++){ const o = (k - 1.5) * fb.w * .14, x0 = fb.x + fb.w * .82 + o, y0 = fb.y + fb.h * .08, x1 = fb.x + fb.w * .12 + o, y1 = fb.y + fb.h * .86;
+    const cut = [[x0, y0], [x0 - fb.w * .1, y0 + fb.h * .3], [x1 + fb.w * .15, y1 - fb.h * .3], [x1, y1]]; cut.j = Array.from({length:31}, () => (R() - .5) * .5); cuts.push(cut) }
+  FX.V.claws.push({a:0, cuts, w:fb.w * .055});
+  for(let i = 0; i < (RM ? 4 : 22); i++) FX.V.p.push(leafP(fb.x + fb.w * .5 + (R() - .5) * fb.w * .6, fb.y + fb.h * .5 + (R() - .5) * fb.h * .4, (R() - .5) * 300, -R() * 200, {life:1.6, g:200, c:pick(['#A0642A', '#7A5A2A', '#6B8A3A', '#C98A3A'])}));
+  FX.V.shake = {a:0, dur:.45, amt:7};
+  life -= 5; lifeV.textContent = life; aTile.textContent = life; dV.classList.remove('on'); void dV.offsetWidth; dV.classList.add('on');
+}
+document.getElementById('goHit').addEventListener('click', hit);
+document.getElementById('goClaw').addEventListener('click', claw);
+
+// ---------- pagina iniziale
+const pHome = document.getElementById('pHome'), cvHome = document.getElementById('cvHome');
+const HOME = {flies:[], leaves:[], eyes:[], eyeT:1.2, vines:null, t:0};
+function homeInit(){
+  const W = pHome.clientWidth, H = pHome.clientHeight; HOME.W = W; HOME.H = H;
+  HOME.flies = Array.from({length:RM ? 8 : 26}, () => ({x:R() * W, y:H * (.15 + R() * .85), ph:R() * TAU, sp:.3 + R() * .6, g:pick(GLOW), s:.5 + R() * .7}));
+  HOME.vines = [mkVine([[-8, H + 10], [W * .12, H * .8], [-W * .05, H * .62], [W * .1, H * .45]], W * .03, {delay:.2, grow:2, hold:1e9, sway:5, K:2}),
+                mkVine([[W + 8, H + 10], [W * .9, H * .82], [W * 1.04, H * .7], [W * .88, H * .55]], W * .026, {delay:.6, grow:2, hold:1e9, sway:5, K:2})];
+  HOME.t = 0;
+}
+function drawEye(c, e, W){
+  const k = e.a / e.life; let open = k < .15 ? k / .15 : k > .82 ? (1 - k) / .18 : 1; const bl = Math.abs(k - .5) < .035 ? .1 : 1; open *= bl;
+  const s = W * .028 * e.s;
+  [-1, 1].forEach(side => { const x = e.x + side * s * 1.6, y = e.y;
+    c.save(); c.translate(x, y); c.rotate(side * .18); c.scale(1, Math.max(.04, open));
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, s * 2.4); g.addColorStop(0, e.c.replace('1)', '.5)')); g.addColorStop(1, e.c.replace('1)', '0)')); c.fillStyle = g; c.fillRect(-s * 2.4, -s * 2.4, s * 4.8, s * 4.8);
+    c.fillStyle = e.c; c.beginPath(); c.moveTo(-s, 0); c.quadraticCurveTo(0, -s * .75, s, 0); c.quadraticCurveTo(0, s * .75, -s, 0); c.fill();
+    c.fillStyle = '#120A02'; c.beginPath(); c.ellipse(0, 0, s * .16, s * .55, 0, 0, TAU); c.fill(); c.restore() });
+}
+function homeFrame(dt){
+  if(!HOME.vines || HOME.W !== pHome.clientWidth) homeInit();
+  const W = HOME.W, H = HOME.H, c = fit(cvHome, W, H); HOME.t += dt; const t = HOME.t;
+  const bg = c.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#13261A'); bg.addColorStop(.55, '#0C160E'); bg.addColorStop(1, '#070C08'); c.fillStyle = bg; c.fillRect(0, 0, W, H);
+  if(false){
+  for(let i = 0; i < 4; i++){ const a = .55 + i * .16 + Math.sin(t * .25 + i * 1.7) * .05, ox = W * (-.1 + i * .08), oy = -H * .05;
+    const g = c.createLinearGradient(ox, oy, ox + Math.cos(a) * H, oy + Math.sin(a) * H); g.addColorStop(0, `rgba(190,240,140,${.13 - i * .02})`); g.addColorStop(1, 'rgba(190,240,140,0)');
+    c.fillStyle = g; c.beginPath(); c.moveTo(ox, oy); c.lineTo(ox + Math.cos(a - .05) * H * 1.3, oy + Math.sin(a - .05) * H * 1.3); c.lineTo(ox + Math.cos(a + .05) * H * 1.3, oy + Math.sin(a + .05) * H * 1.3); c.closePath(); c.fill() }
+  }
+  // luce verde tra le chiome, come nella prima versione
+  const lg = c.createRadialGradient(W * .28, H * .18, 0, W * .28, H * .18, W * .9); lg.addColorStop(0, 'rgba(150,220,90,.22)'); lg.addColorStop(1, 'rgba(150,220,90,0)'); c.fillStyle = lg; c.fillRect(0, 0, W, H);
+  const ag = c.createRadialGradient(W * .82, H * .72, 0, W * .82, H * .72, W * .7); ag.addColorStop(0, 'rgba(230,190,90,.1)'); ag.addColorStop(1, 'rgba(230,190,90,0)'); c.fillStyle = ag; c.fillRect(0, 0, W, H);
+  // occhi nel buio
+  if(false){ HOME.eyeT = 2.4 + R() * 2.5; const left = R() < .5;
+    HOME.eyes.push({x:left ? W * (.1 + R() * .2) : W * (.7 + R() * .2), y:H * (.62 + R() * .3), a:0, life:2.6, s:.8 + R() * .5, c:R() < .6 ? 'rgba(231,190,92,1)' : 'rgba(170,240,90,1)'}) }
+  HOME.eyes = HOME.eyes.filter(e => { e.a += dt; if(e.a > e.life) return false; drawEye(c, e, W); return true });
+  // rampicanti dagli angoli
+
+  // lucciole
+  c.globalCompositeOperation = 'lighter';
+  HOME.flies.forEach(f => { f.x += Math.cos(t * f.sp + f.ph) * 12 * dt + Math.sin(t * .7 + f.ph * 2) * 6 * dt; f.y += Math.sin(t * f.sp * 1.3 + f.ph) * 10 * dt - 3 * dt;
+    if(f.y < -10) f.y = H + 10; const s = W * .03 * f.s; c.globalAlpha = .35 + .65 * Math.max(0, Math.sin(t * 1.7 + f.ph * 3)); c.drawImage(f.g, f.x - s, f.y - s, s * 2, s * 2) });
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  // foglie che scendono
+  if(R() < dt * (RM ? .2 : .9)) HOME.leaves.push(leafP(R() * W, -10, (R() - .5) * 20, 25 + R() * 20, {life:9, g:4, drag:.2, s:2.6, wob:24}));
+  parts(HOME.leaves, c, dt);
+}
+
+// ---------- ciclo
+let last = performance.now(), T = 0, homeVis = true;
+new IntersectionObserver(es => es.forEach(e => homeVis = e.isIntersecting)).observe(pHome);
+function frame(now){
+  const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now; T += dt;
+  document.querySelectorAll('.hubPrev canvas').forEach(cv => paintHub(cv, cv.dataset.k, +cv.dataset.w, +cv.dataset.h, T));
+  const hA = document.getElementById('hubA'), hV = document.getElementById('hubV'), hb = hubBox(pA);
+  paintHub(hA, ST.hub, hb.w, hb.h, T); paintHub(hV, ST.hub, hb.w, hb.h, T + 1);
+  if(homeVis) homeFrame(dt);
+  // chi attacca
+  const cA = fit(cvA); cA.clearRect(0, 0, pA.clientWidth, pA.clientHeight);
+  FX.A.sw = FX.A.sw.filter(s => drawSwarm(cA, s, dt, pA.clientWidth));
+  // chi è colpito
+  const V = FX.V, cV = fit(cvV); cV.clearRect(0, 0, pV.clientWidth, pV.clientHeight); V.a += dt;
+  let sq = 0; if(V.sq){ V.sq.a += dt; const x = V.sq.a - .5; if(x > 0 && x < 1.6) sq = (.5 + .5 * Math.sin(x * 9)) * Math.min(1, x * 3) * Math.min(1, (1.6 - x) * 3); if(V.sq.a > V.sq.dur + .6) V.sq = null }
+  const fbV = fieldBox(pV); cV.save(); cV.beginPath(); cV.roundRect ? cV.roundRect(fbV.x, fbV.y, fbV.w, fbV.h, [fbV.w * .1, fbV.w * .025, fbV.w * .1, fbV.w * .025]) : cV.rect(fbV.x, fbV.y, fbV.w, fbV.h); cV.clip();
+  if(V.hole && !drawHole(cV, V.hole, dt)) V.hole = null;
+  V.vines = V.vines.filter(v => { v.a = (v.a || 0) + dt; const g = vineG(v, v.a);
+    if(v.open){ const x = v.a - v.delay - v.grow; v.curlAmt = x <= 0 ? 0 : Math.min(1, x / .5) * (.85 + .15 * Math.sin(x * 9)) }
+    if(v.a > v.delay + v.grow && g <= 0) return false; drawVine(cV, v, g, v.open ? 0 : sq, T); return true });
+  cV.restore();
+  V.claws = V.claws.filter(cl => drawClaw(cV, cl, dt));
+  parts(V.p, cV, dt);
+  V.sw = V.sw.filter(s => drawSwarm(cV, s, dt, pV.clientWidth));
+  let tr = sq ? `scale(${1 - .035 * sq}) rotate(${Math.sin(T * 40) * .4 * sq}deg)` : '';
+  if(V.shake){ V.shake.a += dt; const k = 1 - V.shake.a / V.shake.dur; if(k <= 0) V.shake = null; else tr += ` translate(${Math.sin(T * 70) * V.shake.amt * k}px,${Math.cos(T * 60) * V.shake.amt * .6 * k}px)` }
+  fV.style.transform = tr;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+setTimeout(hit, 900);
+</script>

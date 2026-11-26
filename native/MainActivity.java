@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(BtSerialPlugin.class); // stampa via Bluetooth classico (SPP)
         registerPlugin(SpeechPlugin.class); // dettatura con il riconoscimento vocale di Android
         registerPlugin(GesturesPlugin.class); // zone escluse dai gesti di sistema (linguette dello swipe)
+        registerPlugin(NearbyPlugin.class); // V2: telefoni collegati tra loro (Nearby Connections)
         super.onCreate(savedInstanceState);
         maxRefresh();
     }
