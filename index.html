@@ -7117,12 +7117,12 @@ function criptaTableBig(a, v){
       if(R() < dt * 10 * k) pt(P, {k:'mote', x:tx, y:ty, vx:(R() - .5) * 30, vy:-30 - R() * 40, r:1 + R(), life:.6, col:'255,170,120', al:.8}) });
     return true });
   // 3. sul tappeto colpito: pentacolo piccolo, nebbia nera che si chiude, il teschio dritto per chi è colpito
-  const BL = Array.from({length:18}, (_, i) => ({a:R() * TAU, r:.25 + R() * .55, s:SMALL * (.5 + R() * .5), col:i % 4 ? pick(['12,5,20', '22,10,34', '8,3,14']) : pick(CDARK), sp:(R() - .5) * .3}));
+  const BL = Array.from({length:30}, (_, i) => ({a:R() * TAU, r:.2 + R() * .9, s:SMALL * (.8 + R() * .8), col:i % 4 ? pick(['12,5,20', '22,10,34', '8,3,14']) : pick(CDARK), sp:(R() - .5) * .25, ph:R() * TAU}));
   add(function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
     const pp = ph(x, PEN), f = ph(x, FOG), f2 = f * f * (3 - 2 * f), sv = ph(x, SKULL);
     c.save(); c.translate(tc[0], tc[1]); c.rotate(ang);
     if(pp > 0) pentacle(c, 0, 0, SMALL, WP * .7, pp, GL, 0);
-    if(f > 0) BL.forEach(b => { const rr = b.r * (1.9 - .9 * f2), aa = b.a + b.sp * x; c.globalAlpha = Math.min(1, f2 * 1.4); c.drawImage(smk(b.col), Math.cos(aa) * SMALL * rr * 1.4 - b.s, Math.sin(aa) * SMALL * rr - b.s, b.s * 2, b.s * 2) });
+    if(f > 0) BL.forEach(b => { const rr = b.r * (1.6 - .6 * f2), aa = b.a + b.sp * x, s2 = b.s * (1 + .06 * Math.sin(x * .7 + b.ph)); c.globalAlpha = Math.min(1, f2 * 1.1) * .9; c.drawImage(smk(b.col), Math.cos(aa) * SMALL * rr * 1.7 - s2, Math.sin(aa) * SMALL * rr * 1.2 - s2, s2 * 2, s2 * 2) });
     c.globalAlpha = 1;
     if(sv > 0 && ok(sk)){ const grow = x < HIT ? eo((x - SKULL[0]) / (HIT - SKULL[0])) : 1 + .08 * eo((x - HIT) / .3), sz = SMALL * (1.1 + .5 * grow), y = -SMALL * .1, skh = sz * ih(sk) / iw(sk);
       img(c, sk, 0, y, sz, Math.sin(x * 1.7) * .03, sv * .95);
@@ -7131,14 +7131,12 @@ function criptaTableBig(a, v){
   // 4. il colpo: scossone secco, lampo viola, avvizzimento del tappeto (venature, colori spenti), anime e fumo
   later(HIT, () => {
     F.sh.push({t0:t, A:U * .03, dx:-Math.sin(ang), dy:Math.cos(ang)}); vib([80, 30, 120]);
-    if(!landed){ landed = true; if(window.lifeLand) window.lifeLand(v); splashOut('cripta', v, true); later(1.2, () => splashOut('cripta', v, false)) }
+    if(!landed){ landed = true; if(window.lifeLand) window.lifeLand(v) }
     EMB.ring(tc[0], tc[1], Pc.hubRing, Math.max(rc.width, rc.height) * .9, .7, 8);
     const vi = I('cripta', R() < .5 ? 'vein' : 'vein2', 0), vr = R() * TAU, sd = R() * 9;
     add(function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false; const al = x < 2.2 ? 1 : 1 - (x - 2.2), g = eo(x / 1.2);
       reveal(c, vi, tc[0], tc[1], Math.max(fw, fh) * 1.3, vr, al * .75, g, sd);
       vc.style.filter = `saturate(${(1 - .75 * al * g).toFixed(3)}) brightness(${(1 - .35 * al * g).toFixed(3)})`; return true });
-    for(let i = 0; i < 6; i++){ const q = R() * TAU, s = 60 + R() * 80; Sx.push(sp({im:I('cripta', 'souls'), x:tc[0] + Math.cos(q) * SMALL * .4, y:tc[1] + Math.sin(q) * SMALL * .4, vx:Math.cos(q) * s, vy:Math.sin(q) * s - 30, drag:1, w:U * (.05 + R() * .03), rot:q, life:1.4, fin:.2, fout:.5, alpha:.8})) }
-    for(let i = 0; i < 40; i++){ const q = R() * TAU, s = 80 + R() * 260; pt(P, {k:'mote', x:tc[0], y:tc[1], vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:2, r:1.2 + R() * 2, life:.9 + R() * .5, col:pick(CMOTE), al:.9}) }
   });
   later(END, () => { done = true });
   const end = () => { SANT.on = false; cv.width = cv.height = 0; vc.style.translate = ''; vc.style.filter = ''; hubEl.style.filter = ''; if(!landed && window.lifeLand) window.lifeLand(v) };
