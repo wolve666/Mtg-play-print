@@ -7195,6 +7195,60 @@ function forgiaTableBig(){
       if(R() < dt * 3 * hot) pt(FX.pX, {k:'smoke', x:x + (R() - .5) * w * .4, y, vx:(R() - .5) * 10, vy:-15 - R() * 15, r:U * .028, grow:2, life:1.5, col:'40,32,28', al:.45});
       return true }) }
 }
+// Bottone centrale prima del colpo grosso sul tavolo comune (Forgia e Selva, come il Santuario; Federico, 26 novembre):
+// il bottone si carica (si accende e risucchia braci o foglie che gli girano attorno), poi esplode:
+// Forgia una sfiammata ad anello con lingue di fuoco, braci e scintille; Selva un'esplosione di foglie, zolle e terra.
+// Motore a parte con la sua tela sopra il bottone; torna dopo quanto parte il colpo.
+const HUB_T = 1.15;
+function hubEvoke(th){
+  const hubEl = $('#tokenBtn'); if(!hubEl) return 0;
+  const cv = fixedCv('cpHB'), hb = rectC(hubEl), hx = hb.x, hy = hb.y, r = Math.max(hb.w, hb.h) / 2, diag = Math.hypot(innerWidth, innerHeight), hs = spr(1, 260, 10), P = [], Sx = [];
+  const fo = th === 'forgia', col = fo ? '255,150,50' : '170,230,110', fire = I('forgia', 'fire', 0), ftx = flameTex();
+  let t = 0, last = 0, rg = 0, boom = false;
+  const end = () => { cv.width = cv.height = 0; hubEl.style.scale = ''; hubEl.style.filter = '' };
+  function frame(now){
+    try{
+      const dt = last ? Math.min(.05, (now - last) / 1000) : .016; last = now; t += dt; const x = t;
+      const w = innerWidth, h = innerHeight, pw = Math.round(w * DPR), ph = Math.round(h * DPR); if(cv.width !== pw || cv.height !== ph){ cv.width = pw; cv.height = ph }
+      const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, w, h);
+      stepS(hs, dt); hubEl.style.scale = hs.x.toFixed(3);
+      hubEl.style.filter = x < 1.4 ? `brightness(${(1 + .3 * eo(x)).toFixed(3)}) drop-shadow(0 0 ${(14 * eo(x)).toFixed(1)}px rgba(${col},.95))` : '';
+      const ch = eo(x / 1.05);
+      if(x < HUB_T){
+        glow(c, hx, hy, r * (1.3 + 2.4 * ch), col, .45 + .45 * ch);
+        // la carica: braci o foglie girano attorno al bottone e ci cadono dentro
+        if(R() < dt * (25 + 60 * ch)){ const q = R() * TAU, d = r * (2.4 + R() * 1.8), o = {x:hx + Math.cos(q) * d, y:hy + Math.sin(q) * d, vx:-Math.cos(q) * d * 1.9 - Math.sin(q) * d * 1.5, vy:-Math.sin(q) * d * 1.9 + Math.cos(q) * d * 1.5, drag:2.2, life:.5};
+          if(fo) pt(P, Object.assign(o, {k:'mote', r:2.5 + R() * 3.5, col:'255,190,90', fout:.25}));
+          else Sx.push(sp(Object.assign(o, {im:I('selva', 'leaf'), w:r * (.3 + R() * .3), rot:R() * TAU, spin:(R() - .5) * 8, fin:.05, fout:.3}))) }
+        // Forgia: lingue di fuoco che salgono dal bordo del bottone
+        if(fo && R() < dt * (10 + 30 * ch)){ const q = R() * TAU; Sx.push(sp({im:fire, x:hx + Math.cos(q) * r * .9, y:hy + Math.sin(q) * r * .9, vx:Math.cos(q) * 30, vy:-60 - R() * 60, rot:-PI / 2 + (R() - .5) * .5, w:r * (.6 + .6 * ch), life:.45, grow:.4, fin:.03, fout:.6, alpha:.85})) }
+        if(x - rg > .3){ rg = x; pt(P, {k:'ripple', x:hx, y:hy, r:r * .9, grow:r * (1.2 + ch), life:.5, col:fo ? '255,170,80' : '190,240,140', lw:2}) }
+      }
+      if(x >= HUB_T && !boom){ boom = true; hs.v += 4; vib([30, 30, 50]);
+        pt(P, {k:'ripple', x:hx, y:hy, r:r * 1.2, grow:diag * .6, life:.75, col:fo ? '255,200,120' : '210,255,170', lw:5});
+        if(fo){
+          for(let i = 0; i < 26; i++){ const q = R() * TAU, s = 260 + R() * 420; Sx.push(sp({im:fire, x:hx + Math.cos(q) * r, y:hy + Math.sin(q) * r, vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:2.4, rot:q, spin:(R() - .5) * 2, w:r * (.8 + R() * .8), life:.55 + R() * .35, grow:.8, fin:.02, fout:.6, alpha:.9})) }
+          for(let i = 0; i < 14; i++){ const q = R() * TAU, s = 120 + R() * 260; Sx.push(sp({im:I('forgia', 'ember'), x:hx, y:hy, vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:1.4, w:r * (.25 + R() * .25), life:1 + R() * .6, blend:'lighter', flick:1, fout:.5})) }
+          for(let i = 0; i < 46; i++){ const q = R() * TAU, s = 260 + R() * 480; pt(P, {k:'spark', x:hx + Math.cos(q) * r, y:hy + Math.sin(q) * r, vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:2, life:.5 + R() * .4, r:1.3 + R(), col:R() < .7 ? '255,190,90' : '255,240,200'}) }
+          for(let i = 0; i < 8; i++){ const q = R() * TAU; pt(P, {k:'smoke', x:hx + Math.cos(q) * r, y:hy + Math.sin(q) * r, vx:Math.cos(q) * 90, vy:Math.sin(q) * 90 - 30, drag:1.4, r:r * .7, grow:2.2, life:1.3, col:'40,30,26', al:.55}) }
+        } else {
+          for(let i = 0; i < 40; i++){ const q = R() * TAU, s = 180 + R() * 380; Sx.push(sp({im:I('selva', 'leaf'), x:hx + Math.cos(q) * r * .6, y:hy + Math.sin(q) * r * .6, vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:1.6, g:30, w:r * (.35 + R() * .4), rot:R() * TAU, spin:(R() - .5) * 9, life:1.2 + R() * .8, flut:.6, sway:25, fin:.02, fout:.4})) }
+          for(let i = 0; i < 8; i++){ const q = R() * TAU, s = 60 + R() * 120; Sx.push(sp({im:I('selva', 'caps'), x:hx, y:hy, vx:Math.cos(q) * s, vy:Math.sin(q) * s - 15, drag:2, w:r * (1.1 + R() * .6), rot:q, life:.9 + R() * .5, grow:.5, fin:.05, fout:.6, alpha:.85})) }
+          for(let i = 0; i < 22; i++){ const q = R() * TAU, s = 120 + R() * 260; pt(P, {k:'crumb', x:hx, y:hy, vx:Math.cos(q) * s, vy:Math.sin(q) * s, vz:120 + R() * 220, gz:1100, rest:.3, life:1.1 + R() * .5, r:2 + R() * 2.5, col:pick(['74,50,28', '58,40,22', '96,70,40', '90,120,50'])}) }
+        } }
+      // la sfiammata: un anello di fuoco (o di luce verde) che si allarga e svanisce
+      if(boom && x < HUB_T + .8){ const k = (x - HUB_T) / .8, g = eo(k);
+        glow(c, hx, hy, r * (3 + 6 * g), fo ? '255,200,120' : '200,250,160', (1 - g) * .8);
+        if(fo){ c.save(); c.globalCompositeOperation = 'lighter'; const R0 = lerp(r * 1.2, diag * .45, g); for(let i = 0; i < 28; i++){ const q = i / 28 * TAU + k, s = r * (1.2 + .6 * Math.sin(i * 2.3)) * (1 - g * .4); c.globalAlpha = (1 - g) * .7; c.drawImage(ftx, hx + Math.cos(q) * R0 - s, hy + Math.sin(q) * R0 - s, s * 2, s * 2) } c.restore() } }
+      drawSprites(Sx, c, dt); drawPts(P, c, dt);
+      if(window.lifeHoles) lifeHoles(c, DPR);
+      if(x > HUB_T + .3 && !P.length && !Sx.length){ end(); return }
+      requestAnimationFrame(frame);
+    }catch(e){ logErr('colpi: bottone: ' + (e && e.message)); end() }
+  }
+  requestAnimationFrame(frame);
+  return HUB_T;
+}
 TH.forgia.bigName = 'Colpo grosso: il drago';
 TH.forgia.big = function(){
   if(TAV()) return forgiaTableBig();   // tavolo comune: il drago gira su tutto il tappeto condiviso
@@ -7632,17 +7686,35 @@ function screenOf(me, other, role){
 function tableScreens(a, v, upright){
   const ac = $(`.cell[data-i="${a}"]`), vc = $(`.cell[data-i="${v}"]`), vf = vc && vc.querySelector('.frame'); if(!ac || !vf) return null;
   const pn = ac.querySelector('.pname'), P = pn ? rectC(pn) : rectC(ac), C = rectC(vc), W = Math.min(innerWidth, Math.min(vf.offsetWidth, vf.offsetHeight) * 1.7);
-  let m;
-  if(upright) m = [1, 0, 0, 1, C.x - W / 2, 0];
-  else { const D = Math.hypot(C.x - P.x, C.y - P.y) || 1, dx = (C.x - P.x) / D, dy = (C.y - P.y) / D, ya = W * .12;   // l'asse «in giù» va da chi attacca a chi è colpito
-    m = [dy, -dx, dx, dy, 0, 0]; m[4] = P.x - m[0] * W / 2 - m[2] * ya; m[5] = P.y - m[1] * W / 2 - m[3] * ya }
-  const toS = (x, y) => { const ex = x - m[4], ey = y - m[5]; return [m[0] * ex + m[1] * ey, m[2] * ex + m[3] * ey] };
-  const p = toS(P.x, P.y), c = toS(C.x, C.y), vs = Math.min(vf.offsetWidth, vf.offsetHeight), af = ac.querySelector('.frame'), as = Math.min(af.offsetWidth, af.offsetHeight), vb = {x:c[0] - vs / 2, y:c[1] - vs / 2, w:vs, h:vs}, ab = {x:p[0] - as / 2, y:p[1] - as / 2, w:as, h:as}, H = Math.max(vb.y + vb.h, ab.y + ab.h, innerHeight * (upright ? 1 : 0)) + (upright ? 0 : W * .25);
-  const pc = i => COLORS[S.players[i].color].bg, base = {W, H:upright ? vb.y + vb.h : H, m, toS, solo:true, table:true, rad:[0, 0], ox:0, oy:0};
-  return {A:Object.assign({}, base, {frame:ac.querySelector('.frame'), cell:ac, life:ac.querySelector('.life'), hubEl:pn, shake:ac, pcol:pc(a),
-      hub:{x:p[0], y:p[1], w:W * .42, h:W * .15}, field:ab, tile:{x:c[0] - W * .15, y:c[1] - W * .07, w:W * .3, h:W * .14}}),
-    V:Object.assign({}, base, {frame:vf, cell:vc, life:vc.querySelector('.life'), hubEl:null, shake:vc, pcol:pc(v),
-      hub:{x:c[0], y:c[1], w:W * .42, h:W * .15}, field:vb, tile:{x:p[0] - W * .14, y:p[1] - W * .05, w:W * .28, h:W * .1}})};
+  const pc = i => COLORS[S.players[i].color].bg;
+  if(upright){
+    const m = [1, 0, 0, 1, C.x - W / 2, 0], toS = (x, y) => [x - m[4], y - m[5]], p = toS(P.x, P.y), c = toS(C.x, C.y), vs = Math.min(vf.offsetWidth, vf.offsetHeight), af = ac.querySelector('.frame'), as = Math.min(af.offsetWidth, af.offsetHeight);
+    const vb = {x:c[0] - vs / 2, y:c[1] - vs / 2, w:vs, h:vs}, ab = {x:p[0] - as / 2, y:p[1] - as / 2, w:as, h:as}, base = {W, H:vb.y + vb.h, m, toS, solo:true, table:true, rad:[0, 0], ox:0, oy:0};
+    return {A:Object.assign({}, base, {frame:af, cell:ac, life:ac.querySelector('.life'), hubEl:pn, shake:ac, pcol:pc(a), hub:{x:p[0], y:p[1], w:W * .42, h:W * .15}, field:ab, tile:{x:c[0] - W * .15, y:c[1] - W * .07, w:W * .3, h:W * .14}}),
+      V:Object.assign({}, base, {frame:vf, cell:vc, life:vc.querySelector('.life'), hubEl:null, shake:vc, pcol:pc(v), hub:{x:c[0], y:c[1], w:W * .42, h:W * .15}, field:vb, tile:{x:p[0] - W * .14, y:p[1] - W * .05, w:W * .28, h:W * .1}})};
+  }
+  // Ogni schermo del colpo ha il verso del suo tappeto (dritto per chi ci gioca, a multipli di 90°), non la retta tra chi attacca e chi è colpito:
+  // così con i tappeti in diagonale niente spazi storti a 45° (segnalato da Federico sulla Selva, 26 novembre).
+  // Lo spazio parte dal bordo dello schermo dalla parte «di sopra» del tappeto: da lì arrivano i colpi (il tappeto di fronte, come nel Santuario).
+  const space = cell => { const ang = rotDeg(+cell.dataset.i) * PI / 180, cs = Math.cos(ang), sn = Math.sin(ang), Q = rectC(cell), f = cell.querySelector('.frame');
+    const far = (u, q, M) => u > .01 ? (M - q) / u : u < -.01 ? q / -u : 1e9, dist = Math.min(far(sn, Q.x, innerWidth), far(-cs, Q.y, innerHeight));
+    const m = [cs, sn, -sn, cs, 0, 0]; m[4] = Q.x - (m[0] * W / 2 + m[2] * dist); m[5] = Q.y - (m[1] * W / 2 + m[3] * dist);
+    const toS = (x, y) => { const ex = x - m[4], ey = y - m[5]; return [m[0] * ex + m[1] * ey, m[2] * ex + m[3] * ey] };
+    const fw = f ? f.offsetWidth : Q.w, fh = f ? f.offsetHeight : Q.h, field = {x:W / 2 - fw / 2, y:dist - fh / 2, w:fw, h:fh};
+    return {m, toS, c:[W / 2, dist], field, H:field.y + field.h + W * .25} };
+  // il tappeto di fronte a quello colpito (se è di chi attacca, è lui): da lì, in alto nello spazio, nascono i colpi
+  const cells = [...document.querySelectorAll('#board .cell')], rv = vc.getBoundingClientRect(), ang = rotDeg(v) * PI / 180, ux = Math.sin(ang), uy = -Math.cos(ang);
+  const ahead = cells.filter(el => el !== vc).filter(el => { const r = el.getBoundingClientRect(), g = 10; let t0 = 0, t1 = 1e9;
+    for(const [q, u, lo, hi] of [[C.x, ux, r.left - g, r.right + g], [C.y, uy, r.top - g, r.bottom + g]]){
+      if(Math.abs(u) < 1e-6){ if(q < lo || q > hi) return false; continue } let ta = (lo - q) / u, tb = (hi - q) / u; if(ta > tb) [ta, tb] = [tb, ta]; t0 = Math.max(t0, ta); t1 = Math.min(t1, tb) }
+    return t0 <= t1 });
+  const src = ahead.includes(ac) ? ac : ahead.length ? pick(ahead) : ac, SV = space(vc), SA = space(ac), rs = rectC(src), sp0 = SV.toS(rs.x, rs.y);
+  const sx = clamp(sp0[0], W * .1, W * .9), sy = clamp(sp0[1], 0, Math.max(0, SV.field.y - W * .12));
+  const hA = SA.toS(P.x, P.y), cA = SA.toS(C.x, C.y), base = {W, solo:true, table:true, rad:[0, 0], ox:0, oy:0};
+  return {A:Object.assign({}, base, {m:SA.m, toS:SA.toS, H:Math.max(SA.H, cA[1] + W * .3), frame:ac.querySelector('.frame'), cell:ac, life:ac.querySelector('.life'), hubEl:pn, shake:ac, pcol:pc(a),
+      hub:{x:hA[0], y:hA[1], w:W * .42, h:W * .15}, field:SA.field, tile:{x:cA[0] - W * .15, y:cA[1] - W * .07, w:W * .3, h:W * .14}}),
+    V:Object.assign({}, base, {m:SV.m, toS:SV.toS, H:SV.H, frame:vf, cell:vc, life:vc.querySelector('.life'), hubEl:null, shake:vc, pcol:pc(v),
+      hub:{x:SV.c[0], y:SV.c[1], w:W * .42, h:W * .15}, field:SV.field, tile:{x:sx - W * .14, y:sy - W * .05, w:W * .28, h:W * .1}})};
 }
 // trasformazioni aggiunte a quelle dell'app (vita, bottone, scosse), tolte alla fine
 function tf(el, add){
@@ -8038,14 +8110,17 @@ function strike(a, v, dmg){
   for(let i = 0; i < 24; i++) TH[th].aim(dummyCtx, d, 1 / 60);
   FX.pA.length = 0; FX.sA.length = 0;
   let w = 0;
-  if(kind === 'b') TH[th].big(); else if(kind === 'b2') TH[th].big2(); else if(kind === 'g') TH.forgia.goblin();
+  // tavolo comune, Forgia e Selva: prima il bottone centrale si carica ed esplode, poi parte il colpo grosso
+  const hubD = !net && (kind === 'b' || kind === 'b2') && (th === 'forgia' || th === 'selva') ? hubEvoke(th) : 0;
+  const go = f => hubD ? after(hubD, f) : f();   // H&O e gli altri temi: subito, come prima
+  if(kind === 'b') go(() => TH[th].big()); else if(kind === 'b2') go(() => TH[th].big2()); else if(kind === 'g') TH.forgia.goblin();
   // H&O: il colpo esce dal mio telefono (lancio) e arriva sull'altro. Tavolo comune: niente lancio «fuori dal telefono»,
   // l'arrivo nasce già dalla parte di chi attacca e va sull'avversario
   else if(net){ w = TH[th].launch(d) || .4; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
   else { w = .08; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
   // un telefono: gli schizzi del tema arrivano anche sugli altri tappeti
   // (il drago della Forgia li lancia da sé quando il fuoco tocca il tappeto)
-  if(!net && !(th === 'forgia' && kind === 'b')){ if(kind === 'n') after(.75, () => splashOut(th, v, false)); else { after(1.3, () => splashOut(th, v, true)); after(2.6, () => splashOut(th, v, false)) } }
+  if(!net && !(th === 'forgia' && kind === 'b')){ if(kind === 'n') after(.75, () => splashOut(th, v, false)); else { after(1.3 + hubD, () => splashOut(th, v, true)); after(2.6 + hubD, () => splashOut(th, v, false)) } }
   kick();
   return {th, k:kind, w:+w.toFixed(2)};
 }
