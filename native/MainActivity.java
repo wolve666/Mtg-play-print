@@ -5,6 +5,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.Plugin;
@@ -22,6 +24,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SpeechPlugin.class); // dettatura con il riconoscimento vocale di Android
         registerPlugin(GesturesPlugin.class); // zone escluse dai gesti di sistema (linguette dello swipe)
         registerPlugin(NearbyPlugin.class); // V2: telefoni collegati tra loro (Nearby Connections)
+        registerPlugin(BarsPlugin.class); // icone delle barre di sistema scure sui temi chiari (Santuario)
         super.onCreate(savedInstanceState);
         maxRefresh();
     }
@@ -66,6 +69,24 @@ public class MainActivity extends BridgeActivity {
             }
             getActivity().runOnUiThread(() -> {
                 if (Build.VERSION.SDK_INT >= 29) getBridge().getWebView().setSystemGestureExclusionRects(list);
+            });
+            call.resolve();
+        }
+    }
+
+    // Tema chiaro (Santuario): le icone della barra in alto e dei tasti di Android in basso diventano scure,
+    // altrimenti bianche sul fondo chiaro non si vedono. Sui temi scuri tornano chiare.
+    @CapacitorPlugin(name = "Bars")
+    public static class BarsPlugin extends Plugin {
+        @PluginMethod
+        public void light(PluginCall call) {
+            boolean light = Boolean.TRUE.equals(call.getBoolean("light", false));
+            getActivity().runOnUiThread(() -> {
+                try {
+                    WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getActivity().getWindow(), getActivity().getWindow().getDecorView());
+                    c.setAppearanceLightStatusBars(light);
+                    c.setAppearanceLightNavigationBars(light);
+                } catch (Exception ignored) {}
             });
             call.resolve();
         }

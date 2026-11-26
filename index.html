@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.2.7', APPN = 8;
+var APPV = '2.2.7', APPN = 9;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -369,7 +369,7 @@ body.preintro #board .cell,body.preintro #hub{opacity:0}
 .cqRow button,.cqQuick button{min-width:44px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);font-weight:700;font-size:18px;color:#fff}
 .cqRow output{font-family:var(--num);font-size:40px;font-weight:900;min-width:56px;text-align:center}
 .cqL{color:#bbb;font-size:13px}
-.cqQuick{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.cqQuick{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
 .cqQuick .ok{background:var(--gold);color:var(--gold-ink);padding:0 14px}
 .cqTabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:6px}
 .cqTabs svg{width:15px;height:15px}
@@ -1601,6 +1601,8 @@ function applyTheme(render){
   renderSeeds();
   COLORS.forEach((c, k) => Object.assign(c, th ? THC[th][1][k] : COLORS_C[k]));
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', th ? THC[th][0] : '#22252B');
+  // tema chiaro: icone delle barre di Android scure, se no i tasti in basso spariscono sul fondo chiaro
+  if(NATIVE && Capacitor.Plugins.Bars) Capacitor.Plugins.Bars.light({light:th === 'santuario'}).catch(()=>{});
   if(!render) return;
   // con la pagina iniziale o il Menu davanti il tavolo non si vede: si ridisegna quando torna visibile
   // (ridisegnarlo a metà passaggio fermava il velo per un attimo)
@@ -4711,28 +4713,41 @@ window.addEventListener('resize', ()=>{ if(FX.on) fxSize() });
 // sulle tele degli effetti, sopra di loro, gli effetti diventano quasi trasparenti (se ne vede poco più di un decimo).
 // Solo con il tavolo scoperto: sulla pagina iniziale e nei pannelli non c'è niente da proteggere.
 let holesT = 0, holesR = [];
+// Si toglie la forma vera delle cifre e dei + e − (con un filo di alone), non un rettangolo: prima, sopra i numeri,
+// gli effetti sparivano in un riquadro sfumato che si vedeva come una macchia (segnalato da Federico, 26 novembre).
 function lifeRects(){
   const now = performance.now(); if(now - holesT < 200) return holesR;
   holesT = now; holesR = [];
   if(stack.length) return holesR;
-  const add = r => { if(r.width > 2 && r.height > 2) holesR.push(r) };
+  const add = (el, r, deg) => { if(r.width > 2 && r.height > 2 && el.textContent.trim()) holesR.push({el, r, deg, txt:el.textContent.trim()}) };
   document.querySelectorAll('#board .cell').forEach(c => {
-    const l = c.querySelector('.life'); if(l) add(l.getBoundingClientRect());
-    c.querySelectorAll('.half').forEach(h => { const rg = document.createRange(); rg.selectNodeContents(h); add(rg.getBoundingClientRect()) });
+    const deg = ({r90:90, r180:180, r270:-90})[rotOf(+c.dataset.i)] || 0;
+    const l = c.querySelector('.life'); if(l) add(l, l.getBoundingClientRect(), deg);
+    c.querySelectorAll('.half').forEach(h => { const rg = document.createRange(); rg.selectNodeContents(h); add(h, rg.getBoundingClientRect(), deg) });
   });
-  document.querySelectorAll('.ntile .ntL').forEach(l => add(l.getBoundingClientRect()));
+  document.querySelectorAll('.ntile .ntL').forEach(l => add(l, l.getBoundingClientRect(), 0));
   return holesR;
 }
-// una maschera morbida a mezza risoluzione, rifatta solo quando i numeri si spostano; ogni tela la «toglie» con un disegno solo
+// una maschera a mezza risoluzione con le cifre disegnate, rifatta solo quando i numeri cambiano o si spostano
 const HM = document.createElement('canvas'); let hmKey = '';
 function holesMask(){
   const rs = lifeRects(); if(!rs.length) return null;
-  const key = innerWidth + 'x' + innerHeight + ':' + rs.map(r => [r.left, r.top, r.width, r.height].map(v => Math.round(v / 3)).join(',')).join(';');
+  const key = innerWidth + 'x' + innerHeight + ':' + rs.map(q => [q.r.left, q.r.top, q.r.width, q.r.height].map(v => Math.round(v / 3)).join(',') + q.txt).join(';');
   if(key === hmKey) return HM;
   hmKey = key; const k = .5, w = Math.ceil(innerWidth * k), h = Math.ceil(innerHeight * k); HM.width = w; HM.height = h;
-  const g = HM.getContext('2d'); g.clearRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.88)';
-  for(const r of rs){ const p = Math.min(r.width, r.height) * .16; g.filter = `blur(${Math.max(2, p * k * .6).toFixed(1)}px)`;
-    g.fillRect((r.left - p * .4) * k, (r.top - p * .4) * k, (r.width + p * .8) * k, (r.height + p * .8) * k) }
+  const g = HM.getContext('2d'); g.clearRect(0, 0, w, h);
+  for(const q of rs){
+    const cs = getComputedStyle(q.el), fs = parseFloat(cs.fontSize) || 16, side = q.deg === 90 || q.deg === -90;
+    g.save(); g.translate((q.r.left + q.r.width / 2) * k, (q.r.top + q.r.height / 2) * k); g.rotate(q.deg * Math.PI / 180); g.scale(k, k);
+    g.font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${cs.fontFamily}`; try{ g.letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing }catch(e){}
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    // come nel browser: riga alta quanto il carattere, linea di base messa in mezzo tra la parte alta e quella bassa del carattere
+    const m = g.measureText(q.txt), tx = 0, ty = ((m.fontBoundingBoxAscent || fs * .8) - (m.fontBoundingBoxDescent || fs * .2)) / 2;
+    g.filter = `blur(${Math.max(1, fs * k * .03).toFixed(1)}px)`;
+    g.lineJoin = 'round'; g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = fs * .045; g.strokeText(q.txt, tx, ty);
+    g.fillStyle = 'rgba(0,0,0,.9)'; g.fillText(q.txt, tx, ty);
+    g.restore();
+  }
   g.filter = 'none';
   return HM;
 }
@@ -6091,14 +6106,39 @@ const PUFF = [0, 1].map(v => { const s = document.createElement('canvas'); s.wid
 // copre anche i quadratini, non scende nel campo; il raggio esce dal suo fondo; poi si dissolve sul posto. Restituisce dove nasce il raggio.
 // la nuvola d'arrivo: un solo disegno, fatto apposta per stare attaccato al bordo alto dello schermo (la parte sopra resta fuori).
 // scende fino a farsi vedere per 4/5, respira piano, poi si dissolve salendo un poco. Restituisce l'altezza del sole, da cui parte il raggio.
-function cloudsArrive(cx, dur){
+function cloudsArrive(cx, dur, blow){
   const W = W_(), cl = soft(I('santuario', 'cloud', 0)), w = W * 1.65, h = ok(cl) ? w * ih(cl) / iw(cl) : W * .5, yEnd = h * .5 - h * .2, yStart = -h * .5;
-  add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > dur) return false;
-    const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .25) * (1 - fade), y = lerp(yStart, yEnd, eo(x / .6)) - fade * h * .1, sun = y - h * .5 + h * .31;
-    glow(c, cx, sun, W * (.2 + .2 * eo((x - .4) / .5)), '255,230,160', al * .8); lit('V', cx, Math.max(0, sun + h * .3), W * .9, [1, .85, .5], al * 1.2);
-    img(c, cl, cx + Math.sin(x * .9) * W * .01, y, w * (1 + fade * .08), 0, al, null, .5, .5, 1, 1 + .015 * Math.sin(T * 1.3));
+  add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > (blow ? blow + .9 : dur)) return false;
+    // le nuvole non ondeggiano: arrivano, restano ferme, poi si dissolvono (o le spazza via lo spostamento d'aria del colpo)
+    const b = blow && x >= blow ? eo((x - blow) / .8) : 0, fade = blow ? 0 : clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .25) * (1 - fade) * (1 - b), y0 = lerp(yStart, yEnd, eo(x / .6)), sun = y0 - h * .5 + h * .31;
+    if(al <= 0) return true;
+    glow(c, cx, sun, W * (.2 + .2 * eo((x - .4) / .5)) * (1 + b), '255,230,160', al * .8); lit('V', cx, Math.max(0, sun + h * .3), W * .9, [1, .85, .5], al * 1.2);
+    if(!b){ img(c, cl, cx, y0, w, 0, al); return true }
+    if(!ok(cl)) return true; const sw = iw(cl), sh = ih(cl), y = y0 - h * .35 * b, sc = 1 + .15 * b, ww = w * sc, hh = h * sc;
+    c.save(); c.globalAlpha = al; c.drawImage(cl, 0, 0, sw / 2, sh, cx - ww / 2 - w * .22 * b, y - hh / 2, ww / 2, hh); c.drawImage(cl, sw / 2, 0, sw / 2, sh, cx + w * .22 * b, y - hh / 2, ww / 2, hh); c.restore();
     return true });
+  if(blow) after(blow, () => { for(let i = 0; i < 14; i++){ const u = R() - .5; pt(FX.pV2, {k:'smoke', x:cx + u * w * .8, y:yEnd + (R() - .3) * h * .4, vx:u * 260 + (R() - .5) * 40, vy:-60 - R() * 120, drag:1.4, r:W * (.08 + R() * .06), grow:1.4, life:.9 + R() * .4, col:'255,250,240', al:.75}) } });
   return yEnd - h * .5 + h * .31;
+}
+// colpo base del Santuario sul tavolo comune (Federico, 26 novembre): le nuvole stanno sempre dritte, scendono normali dal bordo
+// in alto dello schermo (un po' spostate verso chi manda il colpo) e restano ferme; si inclina solo il raggio, che va fino al tappeto colpito.
+// Si disegna con le coordinate dello schermo, non con quelle girate verso la scheda colpita.
+function santTableBeam(o){
+  const S = SCR.V, m = S.m, SWd = innerWidth, ox = m[0] * o.x + m[2] * o.y + m[4], oy = m[1] * o.x + m[3] * o.y + m[5];
+  const ac = SCR.A && SCR.A.cell ? rectC(SCR.A.cell) : {x:SWd / 2}, cx = lerp(SWd / 2, ac.x, .45);
+  const cl = soft(I('santuario', 'cloud', 0)), cw = SWd * 1.3, ch = ok(cl) ? cw * ih(cl) / iw(cl) : SWd * .45, yEnd = ch * .3, yStart = -ch * .5, dur = 3.2, sunY = yEnd - ch * .19 + SWd * .03;
+  const scr = c => c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > dur) return false;
+    const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .25) * (1 - fade), y = lerp(yStart, yEnd, eo(x / .6));
+    c.save(); scr(c); glow(c, cx, y - ch * .19, SWd * (.2 + .2 * eo((x - .4) / .5)), '255,230,160', al * .8); img(c, cl, cx, y, cw, 0, al); c.restore(); return true });
+  const bw = spr(0, 280, 8); bw.t = 1;
+  add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.5) return false; if(x < 0) return true; stepS(bw, dt);
+    const al = x < .65 ? 1 : Math.max(0, 1 - (x - .65) / .85), k = eo(x / .12), x1 = lerp(cx, ox, k), y1 = lerp(sunY, oy, k), w = Math.max(0, bw.x) * SWd * .11;
+    c.save(); scr(c);
+    stretch(c, I('santuario', 'beam', 0), cx, sunY, x1, y1, w * 2.2, al * .45, 'lighter');
+    energyBeam(c, cx, sunY, x1, y1, w, T, al); beamFX(FX.pX, cx, sunY, x1, y1, w, dt, 1.6 * al);
+    starFlare(c, cx, sunY + SWd * .01, SWd * .12, T, al * .9);
+    c.restore(); return true }, .45);
 }
 TH.santuario = {
   name:'Santuario', sub:'Bianco · luce e angeli', col:'#F2D27A',
@@ -6139,16 +6179,19 @@ TH.santuario = {
   hit(tx){
     const W = W_(), fb = fieldBox(pV), o = fieldO(pV), cx = clamp(tx, W * .14, W * .86);
     if(RM){ flash('#FFF8E8', .9, 1.2); damage(); return }
-    const yC = cloudsArrive(cx, 3.4) - W * .04;
-    // il raggio esce dal centro delle nuvole quando sono arrivate
-    const bw = spr(0, 280, 8); bw.t = 1;
-    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.5) return false; if(x < 0) return true; stepS(bw, dt);
-      const al = x < .65 ? 1 : Math.max(0, 1 - (x - .65) / .85), y1 = lerp(yC + W * .04, o.y, eo(x / .12)), w = Math.max(0, bw.x) * W * .13;
-      stretch(c, I('santuario', 'beam', 0), cx, yC + W * .04, o.x, y1, w * 2.2, al * .45, 'lighter');
-      energyBeam(c, cx, yC + W * .04, o.x, y1, w, T, al); beamFX(FX.pV2, cx, yC + W * .04, o.x, y1, w, dt, 1.6 * al);
-      starFlare(c, cx, yC + W * .05, W * .12, T, al * .9);
-      for(let i = 0; i < 3; i++) lit('V', lerp(cx, o.x, i / 2), lerp(yC, y1, i / 2), W * .55, [1, .88, .55], 1.3 * al * Math.min(1, bw.x));
-      return true }, .45);
+    if(TAV()) santTableBeam(o);   // tavolo comune: nuvole dritte in alto sullo schermo, si inclina solo il raggio
+    else {
+      const yC = cloudsArrive(cx, 3.4) - W * .04;
+      // il raggio esce dal centro delle nuvole quando sono arrivate
+      const bw = spr(0, 280, 8); bw.t = 1;
+      add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.5) return false; if(x < 0) return true; stepS(bw, dt);
+        const al = x < .65 ? 1 : Math.max(0, 1 - (x - .65) / .85), y1 = lerp(yC + W * .04, o.y, eo(x / .12)), w = Math.max(0, bw.x) * W * .13;
+        stretch(c, I('santuario', 'beam', 0), cx, yC + W * .04, o.x, y1, w * 2.2, al * .45, 'lighter');
+        energyBeam(c, cx, yC + W * .04, o.x, y1, w, T, al); beamFX(FX.pV2, cx, yC + W * .04, o.x, y1, w, dt, 1.6 * al);
+        starFlare(c, cx, yC + W * .05, W * .12, T, al * .9);
+        for(let i = 0; i < 3; i++) lit('V', lerp(cx, o.x, i / 2), lerp(yC, y1, i / 2), W * .55, [1, .88, .55], 1.3 * al * Math.min(1, bw.x));
+        return true }, .45);
+    }
     FX.V2.unshift(FX.V2.pop());   // il raggio sta dietro la nuvola: sembra uscire da lei
     after(.57, () => {
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 2.2) return false; const k = env(x, .05, .5, 1.6);
@@ -6174,7 +6217,7 @@ TH.santuario = {
     const D0 = .85, D = .2, HOLD = 3.1, END = 3.9;
     add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .3) return false; st('V').dark = Math.max(st('V').dark, .6 * env(x, .5, .5, .5)); lit('V', o.x, o.y, W * (.25 + .3 * eo(x / .95)), [1, .85, .5], x < .95 ? 1.4 * eo(x / .95) : 0); return true });
     for(let i = 0; i < 60; i++){ const x = fb.x + R() * fb.w, y = fb.y + R() * fb.h, d = .5 + R() * .4; pt(FX.pV, {k:'mote', x, y, vx:(o.x - x) / d, vy:(o.y - y) / d, life:d, r:W * (.01 + R() * .014), col:'255,236,180', tw:1, fout:.1, delay:R() * .35}) }
-    const cxS = clamp(srcX(), W * .14, W * .86), sunY = cloudsArrive(cxS, END + .2);
+    const cxS = clamp(srcX(), W * .14, W * .86), sunY = cloudsArrive(cxS, END + .2, D0 + .2);
     // la spada arriva dalle nubi, quindi dal lato di Bea: cade inclinata e resta piantata inclinata (dritta solo se Bea è al centro)
     const tS = clamp(Math.atan2(o.x - cxS, o.y - sunY), -.55, .55), sS = Math.sin(tS), cS = Math.cos(tS), aS = PI / 2 - tS;
     // una luce leggera scende dalle nubi verso il punto dove cadrà la spada, e si dissolve quando la spada arriva
@@ -6216,19 +6259,16 @@ TH.santuario = {
       [.12, .3].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const k = this.a / 1.1; if(k > 1) return false; if(k < 0) return true; wave('V', o.x, o.y, W * (.05 + 1.2 * eo(k)), 16 * (1 - k) / (i + 1), W * .07); return true }, dl));
       // altri due colpetti mentre affonda: la spada «morde» il terreno (senza altre oscillazioni: un movimento e basta)
       after(.35, () => impact(PI / 2, .35)); after(.7, () => impact(PI / 2, .2));
-      const cracks = Array.from({length:10}, (_, i) => { let a = i / 10 * TAU + R() * .4, x = 0, y = 0; const pts = [[0, 0]], n = 6 + (R() * 5 | 0), stp = W * (.045 + R() * .03);
-        for(let j = 0; j < n; j++){ a += (R() - .5) * .8; x += Math.cos(a) * stp; y += Math.sin(a) * stp * .85; pts.push([x, y]) } return pts });
-      const life = END - D0 - D;
-      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > life) return false; const g = x < life - .8 ? eo(x / .3) : 1 - ei((x - life + .8) / .8), pul = .75 + .25 * Math.sin(x * 9);
-        lit('V', o.x, o.y, W * (.7 + .3 * g), [1, .86, .5], 3 * g * pul);
-        // cratere a terra
-        const cg = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, W * .2); cg.addColorStop(0, `rgba(30,18,4,${.6 * g})`); cg.addColorStop(1, 'rgba(30,18,4,0)'); c.fillStyle = cg; c.beginPath(); c.ellipse(o.x, o.y, W * .22, W * .12, 0, 0, TAU); c.fill();
-        c.save(); c.translate(o.x, o.y); c.lineCap = 'round'; c.lineJoin = 'round';
-        cracks.forEach(pts => { const m = Math.max(2, Math.round(pts.length * g)); const path = () => { c.beginPath(); for(let i = 0; i < m; i++) i ? c.lineTo(pts[i][0], pts[i][1]) : c.moveTo(0, 0) };
-          c.globalCompositeOperation = 'source-over'; c.strokeStyle = 'rgba(40,24,0,.55)'; c.lineWidth = W * .022; path(); c.stroke();
-          c.globalCompositeOperation = 'lighter'; [[W * .04, `rgba(255,210,120,${.25 * pul})`], [W * .014, `rgba(255,235,170,${.9 * pul})`], [W * .005, 'rgba(255,255,255,1)']].forEach(([lw, s]) => { c.strokeStyle = s; c.lineWidth = lw; path(); c.stroke() });
-          if(R() < dt * 8 && g > .5){ const p = pts[1 + (R() * (m - 1) | 0)]; pt(FX.pV, {k:'mote', x:o.x + p[0], y:o.y + p[1], vx:(R() - .5) * 20, vy:-40 - R() * 40, life:1, r:W * .015, col:'255,236,180', tw:1}) } });
-        c.restore(); return true });
+      // crepe come sul tavolo comune: raggiera e anelli, poco estese, con la luce che esce dalle fessure
+      const cracks = santCracks(W), life = END - D0 - D;
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > life) return false;
+        const out = x < life - 1 ? 1 : 1 - (x - life + 1), gD = x < life - .8 ? 1 : 1 - ei((x - life + .8) / .8), pul = .8 + .2 * Math.sin(x * 7);
+        const gL = (x < .12 ? x / .12 : .55 + .45 * Math.exp(-(x - .12) * 3)) * out * pul, g = eo(x / .3);
+        lit('V', o.x, o.y, W * (.7 + .3 * g), [1, .86, .5], 3 * g * gL);
+        const cg = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, W * .2); cg.addColorStop(0, `rgba(30,18,4,${.55 * g * gD})`); cg.addColorStop(1, 'rgba(30,18,4,0)'); c.fillStyle = cg; c.beginPath(); c.ellipse(o.x, o.y, W * .22, W * .12, 0, 0, TAU); c.fill();
+        c.save(); c.translate(o.x, o.y); santDrawCracks(c, cracks, x, gD, gL); c.restore();
+        if(R() < dt * 10 && gL > .3){ const k = pick(cracks), p = pick(k.pts); if(p.t < x) pt(FX.pV, {k:'mote', x:o.x + p.x, y:o.y + p.y, vx:(R() - .5) * 16, vy:-35 - R() * 40, life:1, r:W * .014, col:'255,236,180', tw:1}) }
+        return true });
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; img(c, I('santuario', 'burst', 0), o.x, o.y, W * 1.5 * eb(x / .35), x * .3, x < .35 ? 1 : 1 - (x - .35) / .95, 'lighter'); return true });
       // schegge di marmo e polvere che saltano dal punto d'ingresso
       for(let i = 0; i < 40; i++){ const a = R() * TAU, v = 80 + R() * 260; pt(FX.pV2, {k:'crumb', x:o.x, y:o.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * .6, vz:150 + R() * 350, gz:1300, rest:.3, life:1.2 + R() * .8, r:W * (.006 + R() * .011), col:pick(['226,218,202', '196,186,168', '246,240,228', '214,180,110'])}) }

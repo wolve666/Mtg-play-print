@@ -75,7 +75,12 @@ Solo per Federico. Codice pronto, APK non ancora compilata: si compila quando lo
 - **Santuario, colpo grosso sul tavolo comune (un telefono)**: parte dal bottone centrale. Il bottone si accende di luce, l'aureola si allarga dal centro ed esplode svanendo; poi la spada viene evocata. Arriva dal tappeto di fronte a quello colpito (con 4 giocatori 1↔2 e 4↔3; con 3 i due tappeti in alto si guardano, e se è colpito il tappeto intero la spada arriva da uno dei due a caso; con 2 l'uno di fronte all'altro).
 - **Nuvole**: ferme, sul bordo dello schermo dalla parte di sopra di chi è colpito. Con 2 giocatori e sul tappeto intero del 3 sono grandi e larghe come lo schermo, un po' spostate verso il tappeto da cui arriva il colpo; con 4 e nei mezzi campi del 3 stanno sopra il tappeto di fronte. Al colpo lo spostamento d'aria le apre in due e le spazza via.
 - **La spada** è quella di H&O: scende dalle nuvole e si pianta inclinata nel tappeto colpito, senza rimbalzi. L'urto lo danno uno scossone secco del tappeto colpito, il lampo, la luce e le crepe nuove: poco estese, a raggiera dal foro e ad anelli, con la luce che esce dalle fessure. Gli effetti sono centrati sul tappeto colpito e sbordano sfumando, senza tagli. La vita scende quando la spada arriva.
-- H&O e gli altri temi non cambiano. Prova: `node prove/santuario-tavolo.js`.
+- **Santuario, colpo base sul tavolo comune**: le nuvole stanno sempre dritte, scendono dal bordo in alto dello schermo (un po' spostate verso chi manda il colpo) e restano ferme; si inclina solo il raggio, fino al tappeto colpito.
+- **Santuario in H&O, colpo grosso**: le crepe nuove (raggiera e anelli) e le nuvole spazzate via dallo spostamento d'aria, come sul tavolo comune. Le nuvole del Santuario non ondeggiano più in nessun colpo.
+- **Numeri della vita sopra le animazioni**: gli effetti si tolgono solo dove ci sono le cifre e i + e −, con un filo di alone. Prima sparivano in un riquadro sfumato che si vedeva come una macchia.
+- **Menù rapido dei danni**: quando la finestrella è stretta (per esempio con 3 giocatori) i tasti veloci vanno a capo invece di uscire dal bordo.
+- **Tema chiaro (Santuario)**: le icone della barra in alto e i tasti di Android in basso diventano scuri, così si vedono sul fondo chiaro. È una modifica alla parte Java: `APPN` passa a 9.
+- Prove: `node prove/santuario-tavolo.js`, `THEMES=santuario node prove/colpi.js`.
 
 ### v2.2.6 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
