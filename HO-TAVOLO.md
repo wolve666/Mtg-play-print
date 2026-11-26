@@ -45,6 +45,13 @@ Il messaggio del colpo tra i telefoni non cambia: ognuno sa già chi attacca chi
 | Qualcuno cambia posto o si collega dopo | il principale lo sposta nel disegno del tavolo; i telefoni ricalcolano |
 | Seduti non in ordine di turno | si mettono i posti come sono davvero: la direzione segue i posti, non il turno |
 
+## Idea di Federico: si mira con il bottone, si esce verso il telefono vero
+- **La mira non cambia**: dal bottone centrale si trascina sul quadratino di chi si vuole colpire, come oggi. Niente da imparare di nuovo.
+- **L'uscita segue il posto vero**: al rilascio il colpo parte dal bottone e piega verso il bordo rivolto al telefono colpito (di lato per i vicini, in alto per chi sta di fronte, dall'angolo per chi è in diagonale).
+- Così il disegno dello schermo (i quadratini in alto) e il tavolo vero restano separati: i quadratini servono per scegliere, il posto serve per la direzione.
+- Per sapere i posti serve comunque l'ordine in cui si è seduti e la forma del tavolo (vedi sopra): con il tavolo due per lato il «precedente nel turno» può essere di fronte e non di lato.
+- Consigliato anche mettere i quadratini nell'ordine dei posti, così la linea della mira e la direzione del colpo vanno dalla stessa parte; non è obbligatorio.
+
 ## Continuità del colpo da un telefono all'altro
 - **Direzione**: uscita ed entrata nascono dalla stessa retta sul tavolo (da chi attacca a chi è colpito). Il colpo lascia il telefono di chi attacca dal bordo rivolto verso l'avversario ed entra in quello colpito dal bordo rivolto verso chi attacca: a occhio è un colpo che attraversa il tavolo.
 - **Tempi**: già oggi il messaggio del colpo porta il tempo di lancio (`w`) e il telefono colpito fa arrivare il colpo quando sull'altro è uscito. Si aggiunge un piccolo **tempo di volo** in base alla distanza tra i posti (un vicino subito, chi sta di fronte un attimo dopo).
