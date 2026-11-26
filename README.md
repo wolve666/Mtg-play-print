@@ -84,7 +84,7 @@ Solo per Federico. Codice pronto, APK non ancora compilata: si compila quando lo
 - **Tavolo comune, tutti i temi (2–6 giocatori)**: lo spazio di ogni colpo ha il verso del tappeto colpito (dritto, a multipli di 90°) e la sua parte di sopra guarda il tappeto di fronte, da dove arrivano i colpi. Prima era steso lungo la retta tra chi attacca e chi è colpito e con i tappeti in diagonale veniva storto di 45° (si vedeva sulla Selva).
 - **Bottone centrale prima del colpo grosso** sul tavolo comune: la Forgia fa una sfiammata, la Selva un'esplosione di foglie e terra (come l'aureola del Santuario).
 - **Forgia, il drago sul tavolo comune**: torna il volo dell'inizio, un passaggio ampio, lento e minaccioso dell'ombra, in una zona a caso del tavolo; il fuoco scende di striscio dal cielo, da fuori dallo schermo, quando l'ombra se ne sta andando.
-- **Abisso, colpo grosso sul tavolo comune**: il bottone diventa un vortice d'acqua e ne escono 3 o 4 tentacoli di grandezze diverse che picchiano sul tappeto colpito. Con 5 e 6 giocatori il bottone si scioglie in bolle e il vortice si apre vicino al tappeto colpito, poi il bottone torna.
+- **Abisso, colpo grosso sul tavolo comune**: il bottone diventa un vortice d'acqua e ne escono 3 o 4 tentacoli di grandezze diverse che picchiano sul tappeto colpito. Con 5 e 6 giocatori il bottone si scioglie in bolle che scendono o salgono lungo la linea centrale tra le colonne, e il vortice si apre nell'incrocio tra i campi più vicino al tappeto colpito; poi il bottone torna.
 - **Abisso, colpo normale sul tavolo comune**: più piccolo, parte dal nome di chi lancia.
 - Prove: `node prove/santuario-tavolo.js`, `THEMES=santuario,forgia,abisso node prove/colpi.js`.
 

@@ -6747,10 +6747,12 @@ TH.abisso = {
 function abissoTableBig(a, v){
   const cells = [...document.querySelectorAll('#board .cell')], vc = cells.find(c => +c.dataset.i === v), hubEl = $('#tokenBtn'); if(!vc || !hubEl) return false;
   const SWd = innerWidth, SHd = innerHeight, U = Math.min(SWd, SHd), rc = vc.getBoundingClientRect(), tc = [rc.left + rc.width / 2, rc.top + rc.height / 2], hb = rectC(hubEl), far5 = cells.length >= 5;
-  // dove si apre il vortice: sul bottone; con 5 e 6 giocatori appena fuori dal tappeto colpito, verso il centro del tavolo
+  // dove si apre il vortice: sul bottone; con 5 e 6 giocatori nell'incrocio tra i campi più vicino al tappeto colpito,
+  // sulla linea centrale tra le due colonne (il bottone ci arriva scendendo o salendo lungo quella linea)
   let V0 = [hb.x, hb.y];
-  if(far5){ const dx = hb.x - tc[0], dy = hb.y - tc[1], l = Math.hypot(dx, dy) || 1, hw = rc.width / 2, hh = rc.height / 2, k = Math.min(hw / (Math.abs(dx / l) || 1e-6), hh / (Math.abs(dy / l) || 1e-6));
-    V0 = [tc[0] + dx / l * Math.min(l * .8, k + U * .02), tc[1] + dy / l * Math.min(l * .8, k + U * .02)] }
+  if(far5){ const rs = cells.map(c => c.getBoundingClientRect()), tops = [...new Set(rs.map(r => Math.round(r.top)))].sort((p, q) => p - q), ys = [];
+    for(let i = 1; i < tops.length; i++){ const above = rs.filter(r => Math.round(r.top) === tops[i - 1]), bot = Math.max(...above.map(r => r.bottom)); ys.push((bot + tops[i]) / 2) }
+    if(ys.length) V0 = [hb.x, ys.reduce((b, y) => Math.abs(y - tc[1]) < Math.abs(b - tc[1]) ? y : b)] }
   const cv = fixedCv('cpAB'), P = [], Sx = [], L = [], Qs = [], F = {sh:[]};
   let t = 0, last = 0, done = false, landed = false;
   const add = (draw, delay = 0) => L.push({a:-delay, draw}), later = (d, f) => Qs.push({t:t + d, f});
