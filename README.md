@@ -80,7 +80,8 @@ Solo per Federico. Codice pronto, APK non ancora compilata: si compila quando lo
 - **Numeri della vita durante i colpi**: sopra le cifre e i + e − gli effetti si schiariscono a metà, con la forma esatta delle cifre e senza contorno: i numeri si vedono ma non sovrastano la scena. Prima sparivano in un riquadro sfumato che si vedeva come una macchia.
 - **Menù rapido dei danni**: quando la finestrella è stretta (per esempio con 3 giocatori) i tasti veloci vanno a capo invece di uscire dal bordo.
 - **Tema chiaro (Santuario)**: le icone della barra in alto e i tasti di Android in basso diventano scuri, così si vedono sul fondo chiaro. È una modifica alla parte Java: `APPN` passa a 9.
-- Prove: `node prove/santuario-tavolo.js`, `THEMES=santuario node prove/colpi.js`.
+- **Forgia, colpo grosso sul tavolo comune**: il drago fa un giro a caso su tutto il tappeto condiviso (entra ed esce da lati qualunque, passa sopra gli altri tappeti, gira attorno a quello colpito mentre sputa fuoco). Il getto parte dalla sua testa, che si muove: arriva da direzioni sempre diverse e spazza il tappeto colpito lungo una curva a caso. Gli schizzi sugli altri tappeti partono solo quando il fuoco tocca il tappeto colpito (prima arrivavano in anticipo). H&O invariato.
+- Prove: `node prove/santuario-tavolo.js`, `THEMES=santuario,forgia node prove/colpi.js`.
 
 ### v2.2.6 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).

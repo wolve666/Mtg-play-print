@@ -7134,8 +7134,70 @@ function shadowPass(ph, scr, t0, dur, dir){
     c.filter = 'brightness(0.15)'; img(c, drag, p[0], p[1], size, rot, al * .85, null, .5, .5, fl, 1, rot); c.filter = 'none'; c.restore();
     lit(ph === 'A' ? 'A' : 'V', p[0], p[1], W * .9, [.8, .8, .8], -1.3 * al); return true }, t0);
 }
+// Forgia, colpo grosso sul tavolo comune (Federico, 26 novembre): il drago fa un giro a caso su tutto il tappeto condiviso
+// (entra da un lato qualunque, passa sopra i tappeti, gira attorno a quello colpito mentre sputa fuoco, poi esce da un lato qualunque).
+// Il getto parte dalla testa del drago, che si muove: arriva ogni volta da una direzione diversa e spazza il tappeto colpito lungo una curva a caso.
+// Gli schizzi sugli altri tappeti partono solo quando il fuoco tocca il tappeto colpito. Tutto con le coordinate dello schermo.
+function forgiaTableBig(){
+  const SWd = innerWidth, SHd = innerHeight, U = Math.min(SWd, SHd), V = SCR.V, v = ACT ? ACT.v : null, rc = V.cell.getBoundingClientRect(), tc = [rc.left + rc.width / 2, rc.top + rc.height / 2];
+  const drag = I('forgia', 'dragon', 0), fire = I('forgia', 'fire', 0), ftx = flameTex(), size = U * (1.05 + R() * .4), flap = 2 + R() * 1.5;
+  const scr = c => c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const edge = () => { const s = R() * 4 | 0, m = size * .7; return s === 0 ? [R() * SWd, -m] : s === 1 ? [SWd + m, R() * SHd] : s === 2 ? [R() * SWd, SHd + m] : [-m, R() * SHd] };
+  const rnd = () => [SWd * (.15 + R() * .7), SHd * (.12 + R() * .76)];
+  // mentre sputa fuoco gira attorno al tappeto colpito, a una certa distanza, partendo da una direzione a caso
+  const a0 = R() * TAU, dist = U * (.3 + R() * .14), turn = sgn() * (.9 + R() * 1.1), near = a => [clamp(tc[0] + Math.cos(a) * dist, U * .08, SWd - U * .08), clamp(tc[1] + Math.sin(a) * dist, U * .08, SHd - U * .08)];
+  const F0 = 2.3 + R() * .9, SWt = 1.8 + R() * .8, F1 = F0 + .35 + SWt, OUT = F1 + 1.4, END = F1 + 4.5;
+  const pts = [edge(), rnd(), rnd(), near(a0), near(a0 + turn * .5), near(a0 + turn), edge()], kt = [0, F0 * .36, F0 * .7, F0, F0 + .35 + SWt * .5, F1, OUT];
+  const cr = (p0, p1, p2, p3, u) => { const u2 = u * u, u3 = u2 * u; return [0, 1].map(i => .5 * (2 * p1[i] + (-p0[i] + p2[i]) * u + (2 * p0[i] - 5 * p1[i] + 4 * p2[i] - p3[i]) * u2 + (-p0[i] + 3 * p1[i] - 3 * p2[i] + p3[i]) * u3)) };
+  const pos = t => { t = clamp(t, 0, OUT); let i = 0; while(i < kt.length - 2 && t > kt[i + 1]) i++; const u = (t - kt[i]) / (kt[i + 1] - kt[i]), P = j => pts[clamp(j, 0, pts.length - 1)]; return cr(P(i - 1), P(i), P(i + 1), P(i + 2), u) };
+  // dove spazza il fuoco: una curva a caso dentro il tappeto colpito, in una direzione qualunque
+  const inC = () => [rc.left + rc.width * (.18 + R() * .64), rc.top + rc.height * (.18 + R() * .64)], fp = [inC(), inC(), inC(), inC()];
+  const tgt = u => { const s = u * 3, i = Math.min(2, s | 0), P = j => fp[clamp(j, 0, 3)]; return cr(P(i - 1), P(i), P(i + 1), P(i + 2), s - i) };
+  const D = {p:pos(0), rot:0, head:pos(0)};
+  if(RM){ flash('#FFB060', .8, 1); damage(8); return }
+  // 1. il drago: la sua ombra fa il giro del tavolo; mentre sputa fuoco si gira verso il tappeto colpito
+  add('V', function(c, dt){ this.a += dt; const t = this.a; if(t > OUT) return false;
+    const p = pos(t), q = pos(t + .04), mv = Math.atan2(q[1] - p[1], q[0] - p[0]), fk = env(t - F0 + .3, .4, SWt + .2, .5), T0 = tgt(.5), tw = Math.atan2(T0[1] - p[1], T0[0] - p[0]);
+    let da = tw - mv; da = Math.atan2(Math.sin(da), Math.cos(da)); const hd = mv + da * fk * .8, rot = hd + PI / 2, al = Math.min(1, t / .4, (OUT - t) / .4), fl = 1 + .07 * Math.sin(t * flap * TAU);
+    D.p = p; D.head = [p[0] + Math.cos(hd) * size * .32, p[1] + Math.sin(hd) * size * .32];
+    c.save(); scr(c); c.filter = 'brightness(0.15)'; img(c, drag, p[0], p[1], size, rot, al * .8, null, .5, .5, fl, 1, rot); c.filter = 'none'; c.restore();
+    if(t > .6 && !this.r1){ this.r1 = 1; rumble = {a:0, dur:.8, amt:.25}; vib([30, 40, 60]) } return true });
+  // il tappeto colpito si scurisce mentre il drago gli gira attorno
+  add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const dk = env(x - F0 + .8, .8, F1 - F0 + .2, 1.4), rr = Math.max(rc.width, rc.height) * .85;
+    c.save(); scr(c); const g = c.createRadialGradient(tc[0], tc[1], 0, tc[0], tc[1], rr); g.addColorStop(0, `rgba(10,6,4,${.35 * dk})`); g.addColorStop(.7, `rgba(10,6,4,${.25 * dk})`); g.addColorStop(1, 'rgba(10,6,4,0)'); c.fillStyle = g; c.fillRect(tc[0] - rr, tc[1] - rr, rr * 2, rr * 2); c.restore(); return true });
+  // 2. il fuoco: la testa del getto scende fino al tappeto, poi il punto colpito spazza il tappeto lungo la curva
+  let lastBurn = -1, dmg = false;
+  add('M', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > F1 - F0 + .5) return false; if(x < 0) return true;
+    const DOWN = .35, sw = clamp((x - DOWN) / SWt), u = sw * sw * (3 - 2 * sw), T0 = tgt(u), S = D.head, on = x > F1 - F0 ? 1 - (x - (F1 - F0)) / .5 : 1, head = eo(x / DOWN), hx = lerp(S[0], T0[0], head), hy = lerp(S[1], T0[1], head);
+    const a = Math.atan2(T0[1] - S[1], T0[0] - S[0]), Ld = Math.hypot(hx - S[0], hy - S[1]);
+    for(let i = 0; i < 2; i++) if(R() < dt * 45 * on){ const sp2 = 900 + R() * 400, sa = a + (R() - .5) * .1, life = Ld / sp2, fi = R() < .75;
+      FX.sX.push(sp({im:fi ? fire : ftx, x:S[0], y:S[1], vx:Math.cos(sa) * sp2, vy:Math.sin(sa) * sp2, rot:sa, w:U * (fi ? .22 + R() * .16 : .07 + R() * .07), life, grow:.6, fin:.02, fout:.4, alpha:fi ? .8 : .45, blend:fi ? null : 'lighter'})) }
+    c.save(); scr(c); c.globalCompositeOperation = 'lighter'; for(let i = 0; i < 14; i++){ const t = ((i / 14) + T * 2.2) % 1, px = lerp(S[0], hx, t), py = lerp(S[1], hy, t), r = U * (.04 + .06 * t);
+      c.globalAlpha = .22 * on * Math.sin(PI * t) + .05 * on; c.drawImage(ftx, px - r, py - r, r * 2, r * 2) } c.restore();
+    if(head < .98) return true;
+    // dove tocca: fiamme che schizzano ovunque, scintille, braci, fumo, bruciature
+    c.save(); scr(c); glow(c, T0[0], T0[1], U * .22, '255,150,50', .4 * on); c.restore();
+    if(R() < dt * 45 * on){ const sa = R() * TAU, vv = 150 + R() * 350; FX.sX.push(sp({im:fire, x:T0[0], y:T0[1], vx:Math.cos(sa) * vv, vy:Math.sin(sa) * vv * .75 - 40, drag:2.6, rot:sa + (R() - .5) * .6, spin:(R() - .5) * 3, w:U * (.05 + R() * .07), life:.3 + R() * .3, grow:.9, fin:.02, fout:.6, alpha:.85})) }
+    if(R() < dt * 90 * on){ const sa = R() * TAU, vv = 150 + R() * 450; pt(FX.pX, {k:'spark', x:T0[0], y:T0[1], vx:Math.cos(sa) * vv, vy:Math.sin(sa) * vv * .8, vz:80 + R() * 300, gz:1400, rest:.3, drag:1.6, life:.4 + R() * .7, r:1 + R() * 1.6, col:R() < .7 ? '255,190,90' : '255,240,200'}) }
+    if(R() < dt * 8 * on) FX.sX.push(sp({im:I('forgia', 'ember'), x:T0[0] + (R() - .5) * U * .2, y:T0[1] + (R() - .5) * U * .1, vx:(R() - .5) * 50, vy:-40 - R() * 60, w:U * (.03 + R() * .03), life:1.2 + R(), blend:'lighter', sway:20, flick:1}));
+    if(R() < dt * 16 * on) pt(FX.pX, {k:'smoke', x:T0[0] + (R() - .5) * U * .12, y:T0[1], vx:(R() - .5) * 20, vy:-25 - R() * 30, r:U * (.035 + R() * .045), grow:2.2, life:1.5 + R() * .7, col:'34,27,24', al:.6});
+    if(x - lastBurn > .14 && on > .6){ lastBurn = x; scorchS(T0[0] + (R() - .5) * U * .03, T0[1] + (R() - .5) * U * .03, U * (.28 + R() * .12), END - F0 - x) }
+    // il fuoco ha toccato il tappeto: ora la vita scende e partono gli schizzi sugli altri tappeti
+    if(!dmg && sw > .05){ dmg = true; SP.vPunch.v -= .9; SP.vLife.v += 2.4; SP.vLifeR.v += sgn() * 20; flash('#FFB070', .18, .5); damage(8);
+      if(v != null){ splashOut('forgia', v, true); after(SWt * .6, () => splashOut('forgia', v, false)) } }
+    return true });
+  function scorchS(x, y, w, life){ const lv = I('forgia', R() < .5 ? 'lava' : 'crater', 0), bi = I('forgia', pick(['burn', 'burn2', 'burn3']), 0), rot = R() * TAU, seed = R() * 9;
+    add('V', function(c, dt){ this.a += dt; const t = this.a; if(t > life) return false; const al = t < life - 1.4 ? 1 : (life - t) / 1.4, g = eo(t / .45), hot = Math.exp(-t * .8);
+      c.save(); scr(c);
+      const gr = c.createRadialGradient(x, y, 0, x, y, w * .55 * g); gr.addColorStop(0, `rgba(12,7,5,${.75 * al})`); gr.addColorStop(.7, `rgba(20,12,8,${.4 * al})`); gr.addColorStop(1, 'rgba(20,12,8,0)'); c.fillStyle = gr; c.beginPath(); c.ellipse(x, y, w * .55 * g, w * .45 * g, rot, 0, TAU); c.fill();
+      reveal(c, lv, x, y, w * .9, rot, al * .95, eo(t / .7), seed); reveal(c, lv, x, y, w * .9, rot, al * hot * 1.1, eo(t / .7), seed, 'lighter'); reveal(c, bi, x, y, w * .7, rot + 1, al * hot * .8, g, seed + 3, 'lighter');
+      c.restore();
+      if(R() < dt * 3 * hot) pt(FX.pX, {k:'smoke', x:x + (R() - .5) * w * .4, y, vx:(R() - .5) * 10, vy:-15 - R() * 15, r:U * .028, grow:2, life:1.5, col:'40,32,28', al:.45});
+      return true }) }
+}
 TH.forgia.bigName = 'Colpo grosso: il drago';
 TH.forgia.big = function(){
+  if(TAV()) return forgiaTableBig();   // tavolo comune: il drago gira su tutto il tappeto condiviso
   const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), fire = I('forgia', 'fire', 0), ftx = flameTex();
   if(RM){ flash('#FFB060', .8, 1); damage(8); return }
   // 1. le due ombre: lente e a caso
@@ -7982,7 +8044,8 @@ function strike(a, v, dmg){
   else if(net){ w = TH[th].launch(d) || .4; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
   else { w = .08; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
   // un telefono: gli schizzi del tema arrivano anche sugli altri tappeti
-  if(!net){ if(kind === 'n') after(.75, () => splashOut(th, v, false)); else { after(1.3, () => splashOut(th, v, true)); after(2.6, () => splashOut(th, v, false)) } }
+  // (il drago della Forgia li lancia da sé quando il fuoco tocca il tappeto)
+  if(!net && !(th === 'forgia' && kind === 'b')){ if(kind === 'n') after(.75, () => splashOut(th, v, false)); else { after(1.3, () => splashOut(th, v, true)); after(2.6, () => splashOut(th, v, false)) } }
   kick();
   return {th, k:kind, w:+w.toFixed(2)};
 }
