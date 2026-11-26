@@ -7136,7 +7136,8 @@ function shadowPass(ph, scr, t0, dur, dir){
 }
 // Forgia, colpo grosso sul tavolo comune (Federico, 26 novembre): il drago fa un giro a caso su tutto il tappeto condiviso
 // (entra da un lato qualunque, passa sopra i tappeti, gira attorno a quello colpito mentre sputa fuoco, poi esce da un lato qualunque).
-// Il getto parte dalla testa del drago, che si muove: arriva ogni volta da una direzione diversa e spazza il tappeto colpito lungo una curva a caso.
+// Il drago non si vede mai, a terra c'è solo la sua ombra: il getto scende dal cielo, da fuori dallo schermo, dalla parte dove sta girando l'ombra,
+// quindi arriva ogni volta da una direzione diversa (e cambia mentre gira) e spazza il tappeto colpito lungo una curva a caso.
 // Gli schizzi sugli altri tappeti partono solo quando il fuoco tocca il tappeto colpito. Tutto con le coordinate dello schermo.
 function forgiaTableBig(){
   const SWd = innerWidth, SHd = innerHeight, U = Math.min(SWd, SHd), V = SCR.V, v = ACT ? ACT.v : null, rc = V.cell.getBoundingClientRect(), tc = [rc.left + rc.width / 2, rc.top + rc.height / 2];
@@ -7168,7 +7169,9 @@ function forgiaTableBig(){
   // 2. il fuoco: la testa del getto scende fino al tappeto, poi il punto colpito spazza il tappeto lungo la curva
   let lastBurn = -1, dmg = false;
   add('M', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > F1 - F0 + .5) return false; if(x < 0) return true;
-    const DOWN = .35, sw = clamp((x - DOWN) / SWt), u = sw * sw * (3 - 2 * sw), T0 = tgt(u), S = D.head, on = x > F1 - F0 ? 1 - (x - (F1 - F0)) / .5 : 1, head = eo(x / DOWN), hx = lerp(S[0], T0[0], head), hy = lerp(S[1], T0[1], head);
+    // il getto scende dal cielo, da fuori dallo schermo: il drago vola alto e non si vede (a terra c'è solo la sua ombra).
+    // Arriva dalla parte dove sta girando l'ombra: la retta dal punto colpito passa per l'ombra e continua oltre il bordo dello schermo.
+    const DOWN = .35, sw = clamp((x - DOWN) / SWt), u = sw * sw * (3 - 2 * sw), T0 = tgt(u), S = skyFrom(T0, D.p), on = x > F1 - F0 ? 1 - (x - (F1 - F0)) / .5 : 1, head = eo(x / DOWN), hx = lerp(S[0], T0[0], head), hy = lerp(S[1], T0[1], head);
     const a = Math.atan2(T0[1] - S[1], T0[0] - S[0]), Ld = Math.hypot(hx - S[0], hy - S[1]);
     for(let i = 0; i < 2; i++) if(R() < dt * 45 * on){ const sp2 = 900 + R() * 400, sa = a + (R() - .5) * .1, life = Ld / sp2, fi = R() < .75;
       FX.sX.push(sp({im:fi ? fire : ftx, x:S[0], y:S[1], vx:Math.cos(sa) * sp2, vy:Math.sin(sa) * sp2, rot:sa, w:U * (fi ? .22 + R() * .16 : .07 + R() * .07), life, grow:.6, fin:.02, fout:.4, alpha:fi ? .8 : .45, blend:fi ? null : 'lighter'})) }
@@ -7186,6 +7189,9 @@ function forgiaTableBig(){
     if(!dmg && sw > .05){ dmg = true; SP.vPunch.v -= .9; SP.vLife.v += 2.4; SP.vLifeR.v += sgn() * 20; flash('#FFB070', .18, .5); damage(8);
       if(v != null){ splashOut('forgia', v, true); after(SWt * .6, () => splashOut('forgia', v, false)) } }
     return true });
+  function skyFrom(T0, p){ let dx = p[0] - T0[0], dy = p[1] - T0[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const far = (u, q, M) => u > .01 ? (M - q) / u : u < -.01 ? q / -u : 1e9, d = Math.min(far(dx, T0[0], SWd), far(dy, T0[1], SHd)) + U * .45;
+    return [T0[0] + dx * d, T0[1] + dy * d] }
   function scorchS(x, y, w, life){ const lv = I('forgia', R() < .5 ? 'lava' : 'crater', 0), bi = I('forgia', pick(['burn', 'burn2', 'burn3']), 0), rot = R() * TAU, seed = R() * 9;
     add('V', function(c, dt){ this.a += dt; const t = this.a; if(t > life) return false; const al = t < life - 1.4 ? 1 : (life - t) / 1.4, g = eo(t / .45), hot = Math.exp(-t * .8);
       c.save(); scr(c);
