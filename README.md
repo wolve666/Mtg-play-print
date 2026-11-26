@@ -86,7 +86,7 @@ Solo per Federico. Codice pronto, APK non ancora compilata: si compila quando lo
 - **Forgia, il drago sul tavolo comune**: torna il volo dell'inizio, un passaggio ampio, lento e minaccioso dell'ombra, in una zona a caso del tavolo; il fuoco scende di striscio dal cielo, da fuori dallo schermo, quando l'ombra se ne sta andando.
 - **Abisso, colpo grosso sul tavolo comune**: il bottone diventa un vortice d'acqua e ne escono 3 o 4 tentacoli di grandezze diverse che picchiano sul tappeto colpito. Con 5 e 6 giocatori il bottone si scioglie in bolle che scendono o salgono lungo la linea centrale tra le colonne, e il vortice si apre nell'incrocio tra i campi più vicino al tappeto colpito; poi il bottone torna.
 - **Abisso, colpo normale sul tavolo comune**: più piccolo, parte dal nome di chi lancia.
-- **Cripta sul tavolo comune**: colpo grosso nuovo dal bottone (fumo nero, braci viola, pentacolo grande, raggio di anime, pentacolo piccolo, nebbia e teschio sul tappeto colpito). Colpo normale più piccolo, con la mano girata verso il bersaglio e il raggio di anime che va dritto dal tappeto colpito alla mano; l'avvizzimento resta esteso.
+- **Cripta sul tavolo comune**: colpo grosso con il doppio pentacolo, uno sul bottone (che diventa fumo nero con braci viola) e uno sul tappeto colpito, dove arrivano nebbia e teschio; al colpo il pentacolo del bottone lampeggia e resta bruciato. Colpo normale più piccolo, con la mano girata verso il bersaglio e il raggio di anime che va dritto dal tappeto colpito alla mano; l'avvizzimento resta esteso.
 - Prove: `node prove/santuario-tavolo.js`, `THEMES=santuario,forgia,abisso node prove/colpi.js`.
 
 ### v2.2.6 (prerelease)

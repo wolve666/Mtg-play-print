@@ -7082,10 +7082,9 @@ TH.cripta = {
   }
 };
 
-// Cripta, colpo grosso sul tavolo comune (Federico, 25–26 novembre): il bottone diventa fumo nero con braci viola che pulsano e girano
-// sempre più forte (come il vortice del bottone), al centro si disegna un pentacolo grande che lampeggia; ne parte un raggio di anime
-// fino al tappeto colpito, dove compare un pentacolo più piccolo, la nebbia nera si chiude e dentro appare il teschio che colpisce;
-// il tappeto avvizzisce, poi tutto svanisce. Motore a parte con la sua tela, coordinate dello schermo; il teschio è dritto per chi è colpito.
+// Cripta, colpo grosso sul tavolo comune: l'idea iniziale del doppio pentacolo (Federico, 27 novembre). Due pentacoli si disegnano insieme,
+// uno sul bottone (che diventa fumo nero con braci viola che pulsano) e uno sul tappeto colpito, dove la nebbia si chiude e appare il teschio;
+// quando colpisce il pentacolo del bottone lampeggia e resta bruciato; il tappeto avvizzisce, poi tutto a ritroso. Motore a parte con la sua tela, coordinate dello schermo; il teschio è dritto per chi è colpito.
 function criptaTableBig(a, v){
   const cells = [...document.querySelectorAll('#board .cell')], vc = cells.find(c => +c.dataset.i === v), hubEl = $('#tokenBtn'); if(!vc || !hubEl) return false;
   const SWd = innerWidth, SHd = innerHeight, U = Math.min(SWd, SHd), rc = vc.getBoundingClientRect(), tc = [rc.left + rc.width / 2, rc.top + rc.height / 2], hb = rectC(hubEl), r = Math.max(hb.w, hb.h) / 2;
@@ -7095,33 +7094,34 @@ function criptaTableBig(a, v){
   const cv = fixedCv('cpCR'), P = [], Sx = [], L = [], Qs = [], F = {sh:[]};
   let t = 0, last = 0, done = false, landed = false;
   const add = (draw, delay = 0) => L.push({a:-delay, draw}), later = (d, f) => Qs.push({t:t + d, f});
-  const CH = 1.35, JET = [CH + .1, CH + .75, 3.2, 3.6], PEN2 = CH + .6, FOG = [CH + .7, CH + 1.5, 4.4, 5.3], SKULL = [CH + 1.2, CH + 1.9, 3.9, 4.7], HIT = CH + 1.9, END = 5.6;
+  // i tempi del colpo grosso di H&O: i due pentacoli si disegnano insieme (rito), la nebbia, il teschio che colpisce, poi tutto a ritroso
+  const PEN = [0, 1.3, 5.2, 6.2], FOG = [.9, 2.2, 4.3, 5.4], SKULL = [2.2, 3.1, 3.7, 4.5], HIT = 3.1, END = 6.3;
   const ph = (x, q) => x < q[0] ? 0 : x < q[1] ? (x - q[0]) / (q[1] - q[0]) : x < q[2] ? 1 : x < q[3] ? 1 - (x - q[2]) / (q[3] - q[2]) : 0;
   const BIG = U * .42, SMALL = Math.min(fw, fh) * .42, WP = U;
   SANT.on = true;
-  // 1. il bottone: fumo nero e braci viola che girano sempre più fitte; il pentacolo grande si disegna intorno
-  add(function(c, dt){ this.a += dt; const x = this.a; if(x > JET[3] + .6) return false;
-    const ch = eo(x / CH), out = 1 - clamp((x - JET[2]) / (JET[3] + .6 - JET[2])), boost = x < CH ? 0 : Math.exp(-(x - CH) * 5);
-    hubEl.style.filter = `brightness(${(1 - .55 * ch * out).toFixed(3)}) drop-shadow(0 0 ${(16 * ch * out).toFixed(1)}px rgba(150,70,240,.95))`;
-    if(x < CH){ const nE = dt * (50 + 380 * ch * ch); for(let k = 0; k < nE || R() < nE - k; k++){ const q = R() * TAU, rr = r * (1 + R() * (.3 + .6 * ch));
-        EMB.embers(hb.x + Math.cos(q) * rr, hb.y + Math.sin(q) * rr, {n:1, speed:150 + 240 * ch, dir:q + 1.75, spread:.35, life:.7 + .3 * ch, cols:Pc.hub, drag:1.4, g:-60, size:1.4 + R() * (1.2 + 1.2 * ch)}); if(k > 40) break }
-      if(R() < dt * (20 + 40 * ch)){ const q = R() * TAU, d = r * (.6 + R() * .8); pt(P, {k:'smoke', x:hb.x + Math.cos(q) * d, y:hb.y + Math.sin(q) * d, vx:-Math.sin(q) * 40, vy:Math.cos(q) * 40 - 10, drag:1.2, r:r * (.5 + R() * .4) * (1 + ch), grow:1.4, life:.8 + R() * .4, col:pick(CDARK), al:.65}) } }
-    glow(c, hb.x, hb.y, r * (1.4 + 2.2 * ch), '140,60,230', (.35 + .4 * ch) * out);
-    c.save(); c.globalAlpha = out; pentacle(c, hb.x, hb.y, BIG, WP, ch, GL, boost); c.restore();
-    if(x >= CH && !this.boom){ this.boom = 1; vib([30, 30, 60]); EMB.ring(hb.x, hb.y, Pc.hubRing, BIG * 1.3, .6, 10); EMB.burst(hb.x, hb.y, {n:90, speed:560, life:.9, cols:Pc.hub, drag:2.4, g:-40, size:2});
-      for(let i = 0; i < 10; i++){ const q = R() * TAU; pt(P, {k:'smoke', x:hb.x + Math.cos(q) * r, y:hb.y + Math.sin(q) * r, vx:Math.cos(q) * 90, vy:Math.sin(q) * 90 - 20, drag:1.5, r:r * .8, grow:2, life:1.3, col:pick(CDARK), al:.6}) } }
+  // 1. il pentacolo del bottone: si disegna insieme a quello del tappeto colpito; il bottone diventa fumo nero con braci viola che pulsano.
+  // Quando il teschio colpisce lampeggia, poi resta l'impronta bruciata con due fumetti di nebbia dalle punte della stella e svanisce.
+  const tips = sgn() > 0 ? [2, 4] : [1, 3];
+  add(function(c, dt){ this.a += dt; const x = this.a; if(x > HIT + 2.8) return false;
+    const p = ph(Math.min(x, PEN[1]), PEN), ch = clamp(x / HIT), fl = x < HIT ? 0 : Math.exp(-(x - HIT) * 5), out = x < HIT + .35 ? 1 : 1 - clamp((x - HIT - .35) / .8), bm = x < HIT ? 0 : Math.min(1, (x - HIT) / .2) * (1 - clamp((x - HIT - .9) / 1.8));
+    hubEl.style.filter = x < HIT + .5 ? `brightness(${(1 - .5 * ch).toFixed(3)}) drop-shadow(0 0 ${(16 * ch).toFixed(1)}px rgba(150,70,240,.95))` : '';
+    if(x < HIT){ const pul = .6 + .4 * Math.sin(x * 7), nE = dt * (30 + 160 * ch * pul); for(let k = 0; k < nE || R() < nE - k; k++){ const q = R() * TAU, rr = r * (1 + R() * .5);
+        EMB.embers(hb.x + Math.cos(q) * rr, hb.y + Math.sin(q) * rr, {n:1, speed:120 + 160 * ch, dir:q + 1.75, spread:.35, life:.8, cols:Pc.hub, drag:1.4, g:-60, size:1.4 + R() * 1.6}); if(k > 30) break }
+      if(R() < dt * (14 + 26 * ch)){ const q = R() * TAU, d = r * (.6 + R() * .8); pt(P, {k:'smoke', x:hb.x + Math.cos(q) * d, y:hb.y + Math.sin(q) * d, vx:-Math.sin(q) * 30, vy:Math.cos(q) * 30 - 10, drag:1.2, r:r * (.5 + R() * .4), grow:1.4, life:.9 + R() * .4, col:pick(CDARK), al:.6}) } }
+    if(bm > 0){ c.save(); c.globalAlpha = bm; pentacle(c, hb.x, hb.y, BIG, WP, 1, GL, 0, true); c.restore() }
+    if(out > 0){ c.save(); c.globalAlpha = out; pentacle(c, hb.x, hb.y, BIG, WP, p, GL, fl); c.restore() }
+    if(fl > .02) glow(c, hb.x, hb.y, BIG * 1.2, '170,80,255', .8 * fl); glow(c, hb.x, hb.y, r * 2.5, '140,60,230', .4 * p * out);
+    if(x >= HIT && !this.boom){ this.boom = 1; EMB.ring(hb.x, hb.y, Pc.hubRing, BIG * 1.3, .6, 10); EMB.burst(hb.x, hb.y, {n:70, speed:480, life:.9, cols:Pc.hub, drag:2.4, g:-40, size:2}) }
+    if(x > HIT && x < HIT + 1.8) tips.forEach((tp, j) => { const aa = PI / 2 + tp * TAU / 5, tx = hb.x + Math.cos(aa) * BIG * .86, ty = hb.y + Math.sin(aa) * BIG * .86 * .82, k = 1 - (x - HIT) / 1.8;
+      if(R() < dt * 20 * k) pt(P, {k:'smoke', x:tx + (R() - .5) * U * .012, y:ty, vx:(j ? 1 : -1) * (5 + R() * 8) + Math.sin(x * 4 + j * 2) * 14, vy:-35 - R() * 25, drag:.3, r:U * (.012 + R() * .01), grow:2.6, life:1.3 + R() * .5, col:pick(['70,62,72', '48,40,52', '96,86,100']), al:.45 * k});
+      if(R() < dt * 10 * k) pt(P, {k:'mote', x:tx, y:ty, vx:(R() - .5) * 30, vy:-30 - R() * 40, r:1 + R(), life:.6, col:'255,170,120', al:.8}) });
     return true });
-  // 2. il raggio di anime dal bottone al tappeto colpito
-  add(function(c, dt){ this.a += dt; const x = this.a; if(x > JET[3]) return false; if(x < JET[0]) return true;
-    const head = eo((x - JET[0]) / (JET[1] - JET[0])), wk = x < JET[2] ? 1 : 1 - ei((x - JET[2]) / (JET[3] - JET[2])), w = U * .12 * wk, hx = lerp(hb.x, tc[0], head), hy = lerp(hb.y, tc[1], head);
-    const tail = x < JET[2] ? 0 : ei((x - JET[2]) / (JET[3] - JET[2])), sx = lerp(hb.x, tc[0], tail), sy = lerp(hb.y, tc[1], tail);
-    soulJet(c, sx, sy, hx, hy, w, T, Math.min(1, wk * 2)); soulMotes(P, sx, sy, hx, hy, w, dt, wk); return true });
   // 3. sul tappeto colpito: pentacolo piccolo, nebbia nera che si chiude, il teschio dritto per chi è colpito
   const BL = Array.from({length:18}, (_, i) => ({a:R() * TAU, r:.25 + R() * .55, s:SMALL * (.5 + R() * .5), col:i % 4 ? pick(['12,5,20', '22,10,34', '8,3,14']) : pick(CDARK), sp:(R() - .5) * .3}));
   add(function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
-    const pp = clamp((x - PEN2) / .5) * (1 - clamp((x - 4.6) / .8)), f = ph(x, FOG), f2 = f * f * (3 - 2 * f), sv = ph(x, SKULL);
+    const pp = ph(x, PEN), f = ph(x, FOG), f2 = f * f * (3 - 2 * f), sv = ph(x, SKULL);
     c.save(); c.translate(tc[0], tc[1]); c.rotate(ang);
-    if(pp > 0) pentacle(c, 0, 0, SMALL, WP * .7, pp, GL, x > HIT ? Math.exp(-(x - HIT) * 5) : 0);
+    if(pp > 0) pentacle(c, 0, 0, SMALL, WP * .7, pp, GL, 0);
     if(f > 0) BL.forEach(b => { const rr = b.r * (1.9 - .9 * f2), aa = b.a + b.sp * x; c.globalAlpha = Math.min(1, f2 * 1.4); c.drawImage(smk(b.col), Math.cos(aa) * SMALL * rr * 1.4 - b.s, Math.sin(aa) * SMALL * rr - b.s, b.s * 2, b.s * 2) });
     c.globalAlpha = 1;
     if(sv > 0 && ok(sk)){ const grow = x < HIT ? eo((x - SKULL[0]) / (HIT - SKULL[0])) : 1 + .08 * eo((x - HIT) / .3), sz = SMALL * (1.1 + .5 * grow), y = -SMALL * .1, skh = sz * ih(sk) / iw(sk);
