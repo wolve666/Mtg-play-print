@@ -4743,9 +4743,9 @@ function holesMask(){
     g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     // come nel browser: riga alta quanto il carattere, linea di base messa in mezzo tra la parte alta e quella bassa del carattere
     const m = g.measureText(q.txt), tx = 0, ty = ((m.fontBoundingBoxAscent || fs * .8) - (m.fontBoundingBoxDescent || fs * .2)) / 2;
-    g.filter = `blur(${Math.max(1, fs * k * .03).toFixed(1)}px)`;
-    g.lineJoin = 'round'; g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = fs * .045; g.strokeText(q.txt, tx, ty);
-    g.fillStyle = 'rgba(0,0,0,.9)'; g.fillText(q.txt, tx, ty);
+    g.filter = `blur(${Math.max(.6, fs * k * .012).toFixed(1)}px)`;
+    // niente contorno: solo la forma delle cifre, e gli effetti sopra si schiariscono a metà (i numeri si vedono ma non sovrastano la scena)
+    g.fillStyle = 'rgba(0,0,0,.5)'; g.fillText(q.txt, tx, ty);
     g.restore();
   }
   g.filter = 'none';
@@ -6124,20 +6124,20 @@ function cloudsArrive(cx, dur, blow){
 // in alto dello schermo (un po' spostate verso chi manda il colpo) e restano ferme; si inclina solo il raggio, che va fino al tappeto colpito.
 // Si disegna con le coordinate dello schermo, non con quelle girate verso la scheda colpita.
 function santTableBeam(o){
-  const S = SCR.V, m = S.m, SWd = innerWidth, ox = m[0] * o.x + m[2] * o.y + m[4], oy = m[1] * o.x + m[3] * o.y + m[5];
-  const ac = SCR.A && SCR.A.cell ? rectC(SCR.A.cell) : {x:SWd / 2}, cx = lerp(SWd / 2, ac.x, .45);
-  const cl = soft(I('santuario', 'cloud', 0)), cw = SWd * 1.3, ch = ok(cl) ? cw * ih(cl) / iw(cl) : SWd * .45, yEnd = ch * .3, yStart = -ch * .5, dur = 3.2, sunY = yEnd - ch * .19 + SWd * .03;
-  const scr = c => c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const S = SCR.V, m = S.m, vc = S.cell, G = vc ? santFrame(vc, ACT ? ACT.a : -1, 1.3) : null; if(!G) return;
+  const C = G.C, ox = m[0] * o.x + m[2] * o.y + m[4], oy = m[1] * o.x + m[3] * o.y + m[5], lo = G.toLocal(ox, oy), U = Math.min(innerWidth, innerHeight);
+  const {cl, cw, cx0, cy0, cyS, sunY} = G, dur = 3.2, by = sunY + U * .03;
+  const loc = c => { c.setTransform(DPR, 0, 0, DPR, 0, 0); c.translate(C.cx, C.cy); c.rotate(C.a) };
   add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > dur) return false;
-    const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .25) * (1 - fade), y = lerp(yStart, yEnd, eo(x / .6));
-    c.save(); scr(c); glow(c, cx, y - ch * .19, SWd * (.2 + .2 * eo((x - .4) / .5)), '255,230,160', al * .8); img(c, cl, cx, y, cw, 0, al); c.restore(); return true });
+    const fade = clamp((x - (dur - 1.1)) / 1.1), al = clamp(x / .25) * (1 - fade), y = lerp(cyS, cy0, eo(x / .6));
+    c.save(); loc(c); glow(c, cx0, sunY + (y - cy0), U * (.2 + .2 * eo((x - .4) / .5)), '255,230,160', al * .8); img(c, cl, cx0, y, cw, 0, al); c.restore(); return true });
   const bw = spr(0, 280, 8); bw.t = 1;
   add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.5) return false; if(x < 0) return true; stepS(bw, dt);
-    const al = x < .65 ? 1 : Math.max(0, 1 - (x - .65) / .85), k = eo(x / .12), x1 = lerp(cx, ox, k), y1 = lerp(sunY, oy, k), w = Math.max(0, bw.x) * SWd * .11;
-    c.save(); scr(c);
-    stretch(c, I('santuario', 'beam', 0), cx, sunY, x1, y1, w * 2.2, al * .45, 'lighter');
-    energyBeam(c, cx, sunY, x1, y1, w, T, al); beamFX(FX.pX, cx, sunY, x1, y1, w, dt, 1.6 * al);
-    starFlare(c, cx, sunY + SWd * .01, SWd * .12, T, al * .9);
+    const al = x < .65 ? 1 : Math.max(0, 1 - (x - .65) / .85), k = eo(x / .12), x1 = lerp(cx0, lo.x, k), y1 = lerp(by, lo.y, k), w = Math.max(0, bw.x) * U * .11;
+    c.save(); loc(c);
+    stretch(c, I('santuario', 'beam', 0), cx0, by, x1, y1, w * 2.2, al * .45, 'lighter');
+    energyBeam(c, cx0, by, x1, y1, w, T, al);
+    starFlare(c, cx0, by + U * .01, U * .12, T, al * .9);
     c.restore(); return true }, .45);
 }
 TH.santuario = {
@@ -7726,27 +7726,44 @@ function splashOut(th, v, big){
 // le crepe (raggiera e anelli, con la luce dentro) e la luce; lo spostamento d'aria apre le nuvole e le spazza via.
 // Gli effetti sono centrati sul tappeto colpito e sbordano sfumando, senza tagli. Motore a parte, con le sue due tele.
 const SANT = {on:false};
-function santTableBig(a, v){
-  const cells = [...document.querySelectorAll('#board .cell')], vc = cells.find(c => +c.dataset.i === v), hubEl = $('#tokenBtn');
-  if(!vc || !hubEl) return false;
+// Santuario sul tavolo unificato: dove stanno le nuvole. Regola di Federico (26 novembre), uguale per colpo grosso e colpo base:
+// le nuvole nascono dalla parte «di sopra» di chi è colpito (dritte per lui, sul bordo dello schermo da quella parte),
+// cioè dal tappeto di fronte; se di fronte c'è il tappeto di chi lancia il colpo, è quello; se sono due e nessuno lancia, uno a caso.
+// Con 2 giocatori e sul tappeto intero del 3 le nuvole sono larghe come lo schermo, un po' spostate verso il tappeto da cui arriva il colpo;
+// con 4 e nei mezzi campi del 3 stanno sopra il tappeto di fronte. Coordinate «locali»: centro del tappeto colpito, y negativa verso le nuvole.
+let SOFTC = null;
+function santFrame(vc, a, k){
+  const cells = [...document.querySelectorAll('#board .cell')];
   const geo = el => { const r = el.getBoundingClientRect(), i = +el.dataset.i, f = el.querySelector('.frame'), rot = rotDeg(i), side = rot === 90 || rot === 270;
     const fw = f ? f.offsetWidth : (side ? r.height : r.width), fh = f ? f.offsetHeight : (side ? r.width : r.height);
     return {el, i, x:r.left, y:r.top, w:r.width, h:r.height, cx:r.left + r.width / 2, cy:r.top + r.height / 2, a:rot * PI / 180, rot, fw, fh} };
   const C = geo(vc), SW = innerWidth, SH = innerHeight, ux = Math.sin(C.a), uy = -Math.cos(C.a);
-  // il tappeto di fronte: quello che si incontra andando verso la parte alta della vista di chi è colpito (se sono due, uno a caso)
   const ahead = cells.filter(el => el !== vc).map(geo).filter(G => { const g = 10; let t0 = 0, t1 = 1e9;
     for(const [p, u, lo, hi] of [[C.cx, ux, G.x - g, G.x + G.w + g], [C.cy, uy, G.y - g, G.y + G.h + g]]){
       if(Math.abs(u) < 1e-6){ if(p < lo || p > hi) return false; continue } let ta = (lo - p) / u, tb = (hi - p) / u; if(ta > tb) [ta, tb] = [tb, ta]; t0 = Math.max(t0, ta); t1 = Math.min(t1, tb) }
     return t0 <= t1 });
-  const Sc = ahead.length ? pick(ahead) : geo(cells.find(c => +c.dataset.i === a) || vc);
+  const Sc = ahead.find(G => G.i === a) || (ahead.length ? pick(ahead) : geo(cells.find(c => +c.dataset.i === a) || vc));
+  const toLocal = (x, y) => { const dx = x - C.cx, dy = y - C.cy, c = Math.cos(C.a), s = Math.sin(C.a); return {x:dx * c + dy * s, y:-dx * s + dy * c} };
+  if(!SOFTC){ const im = I('santuario', 'cloud', 0); if(ok(im)){ const w = iw(im), h = ih(im), o = document.createElement('canvas'); o.width = w; o.height = h; const x = o.getContext('2d'); x.drawImage(im, 0, 0);
+    x.globalCompositeOperation = 'destination-in'; for(const [x0, y0, x1, y1] of [[0, 0, w * .22, 0], [w, 0, w * .78, 0], [0, 0, 0, h * .22], [0, h, 0, h * .78]]){ const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)'); x.fillStyle = g; x.fillRect(0, 0, w, h) } SOFTC = o } }
+  const cl = SOFTC || I('santuario', 'cloud', 0), rat = ok(cl) ? ih(cl) / iw(cl) : .375;
+  const ax = Math.cos(C.a), ay = Math.sin(C.a), ext = Math.abs(ax) * Sc.w + Math.abs(ay) * Sc.h, off = (R() - .5) * ext * .55, big = C.rot === 0 || C.rot === 180;
+  const far = (u, p, M) => u > .01 ? (M - p) / u : u < -.01 ? p / -u : 1e9, dist = Math.min(far(ux, C.cx, SW), far(uy, C.cy, SH)), span = Math.abs(ax) * SW + Math.abs(ay) * SH;
+  const cw = big ? span * k : ext * 1.2, chh = cw * rat;
+  const cx0 = big ? toLocal(Sc.cx, Sc.cy).x * .45 + (ahead.length > 1 ? 0 : (R() - .5) * span * .12) : toLocal(Sc.cx + ax * off, Sc.cy + ay * off).x;
+  const cy0 = -dist + chh * .3;
+  return {C, Sc, ahead, toLocal, cl, cw, chh, cx0, cy0, cyS:-dist - chh * .5, sunY:cy0 - chh * .19};
+}
+function santTableBig(a, v){
+  const cells = [...document.querySelectorAll('#board .cell')], vc = cells.find(c => +c.dataset.i === v), hubEl = $('#tokenBtn');
+  if(!vc || !hubEl) return false;
+  const G = santFrame(vc, a, 1.55), C = G.C, Sc = G.Sc, SW = innerWidth, SH = innerHeight;
   const low = fixedCv('cpSL'), top = fixedCv('cpST'); low.style.zIndex = 4;   // la terra sotto il bottone, l'aureola sopra
   const F = {ox:C.cx, oy:C.cy, a:C.a, sx:0, sy:0, sh:[], pV:[], pV2:[], sV2:[]}, L = {V:[], M:[], V2:[], TOP:[]}, Qs = [], P = [];
   let t = 0, last = 0, raf = 0, done = false;
   const add = (k, draw, delay = 0) => L[k].push({a:-delay, draw}), later = (d, f) => Qs.push({t:t + d, f});
   const lt = (c, x, y, r, rgb, i) => glow(c, x, y, r, rgb.map(q => q * 255 | 0).join(','), i * .22);
-  const softC = (() => { const im = I('santuario', 'cloud', 0); if(!ok(im)) return im; const w = iw(im), h = ih(im), o = document.createElement('canvas'); o.width = w; o.height = h; const x = o.getContext('2d'); x.drawImage(im, 0, 0);
-    x.globalCompositeOperation = 'destination-in'; for(const [x0, y0, x1, y1] of [[0, 0, w * .22, 0], [w, 0, w * .78, 0], [0, 0, 0, h * .22], [0, h, 0, h * .78]]){ const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)'); x.fillStyle = g; x.fillRect(0, 0, w, h) } return o })();
-  const toLocal = (x, y) => { const dx = x - F.ox, dy = y - F.oy, c = Math.cos(F.a), s = Math.sin(F.a); return {x:dx * c + dy * s, y:-dx * s + dy * c} };
+  const softC = G.cl;
   SANT.on = true; vib([20, 40, 30]);
 
   // ---- il bottone: si accende, l'aureola si allarga ed esplode
@@ -7775,12 +7792,7 @@ function santTableBig(a, v){
   // ---- la spada evocata (parte 1,25 s dopo)
   later(1.25, () => {
     const W = Math.max(C.fw, C.fh) * .9, o = {x:0, y:C.fh * .04};
-    const ax = Math.cos(C.a), ay = Math.sin(C.a), ext = Math.abs(ax) * Sc.w + Math.abs(ay) * Sc.h, off = (R() - .5) * ext * .55;
-    const big = C.rot === 0 || C.rot === 180, rat = ok(softC) ? ih(softC) / iw(softC) : .375;
-    const far = (u, p, M) => u > .01 ? (M - p) / u : u < -.01 ? p / -u : 1e9, dist = Math.min(far(ux, C.cx, SW), far(uy, C.cy, SH)), span = Math.abs(ax) * SW + Math.abs(ay) * SH;
-    const cw = big ? span * 1.55 : ext * 1.2, chh = cw * rat;
-    const cx0 = big ? toLocal(Sc.cx, Sc.cy).x * .45 + (ahead.length > 1 ? 0 : (R() - .5) * span * .12) : toLocal(Sc.cx + ax * off, Sc.cy + ay * off).x;
-    const cy0 = -dist + chh * .3, cyS = -dist - chh * .5, sunY = cy0 - chh * .19;
+    const {cw, chh, cx0, cy0, cyS, sunY} = G;
     const tS = clamp(Math.atan2(o.x - cx0, o.y - sunY), -.5, .5), cxS = o.x - Math.tan(tS) * (o.y - sunY), sS = Math.sin(tS), cS = Math.cos(tS), aS = PI / 2 - tS, swd = I('santuario', 'sword', 0);
     const D0 = .85, D = .2 * clamp(Math.hypot(o.x - cxS, o.y - sunY) / (W * 1.2), 1, 1.6), HOLD = 3.1, END = 3.9, HIT = D0 + D;
     const impact = pow => F.sh.push({t0:t, A:W * .022 * pow, dx:sS, dy:cS});
