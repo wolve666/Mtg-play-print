@@ -81,7 +81,12 @@ Solo per Federico. Codice pronto, APK non ancora compilata: si compila quando lo
 - **Menù rapido dei danni**: quando la finestrella è stretta (per esempio con 3 giocatori) i tasti veloci vanno a capo invece di uscire dal bordo.
 - **Tema chiaro (Santuario)**: le icone della barra in alto e i tasti di Android in basso diventano scuri, così si vedono sul fondo chiaro. È una modifica alla parte Java: `APPN` passa a 9.
 - **Forgia, colpo grosso sul tavolo comune**: il drago fa un giro a caso su tutto il tappeto condiviso (entra ed esce da lati qualunque, passa sopra gli altri tappeti, gira attorno a quello colpito mentre sputa fuoco). Il getto parte dalla sua testa, che si muove: arriva da direzioni sempre diverse e spazza il tappeto colpito lungo una curva a caso. Gli schizzi sugli altri tappeti partono solo quando il fuoco tocca il tappeto colpito (prima arrivavano in anticipo). H&O invariato.
-- Prove: `node prove/santuario-tavolo.js`, `THEMES=santuario,forgia node prove/colpi.js`.
+- **Tavolo comune, tutti i temi (2–6 giocatori)**: lo spazio di ogni colpo ha il verso del tappeto colpito (dritto, a multipli di 90°) e la sua parte di sopra guarda il tappeto di fronte, da dove arrivano i colpi. Prima era steso lungo la retta tra chi attacca e chi è colpito e con i tappeti in diagonale veniva storto di 45° (si vedeva sulla Selva).
+- **Bottone centrale prima del colpo grosso** sul tavolo comune: la Forgia fa una sfiammata, la Selva un'esplosione di foglie e terra (come l'aureola del Santuario).
+- **Forgia, il drago sul tavolo comune**: torna il volo dell'inizio, un passaggio ampio, lento e minaccioso dell'ombra, in una zona a caso del tavolo; il fuoco scende di striscio dal cielo, da fuori dallo schermo, quando l'ombra se ne sta andando.
+- **Abisso, colpo grosso sul tavolo comune**: il bottone diventa un vortice d'acqua e ne escono 3 o 4 tentacoli di grandezze diverse che picchiano sul tappeto colpito. Con 5 e 6 giocatori il bottone si scioglie in bolle e il vortice si apre vicino al tappeto colpito, poi il bottone torna.
+- **Abisso, colpo normale sul tavolo comune**: più piccolo, parte dal nome di chi lancia.
+- Prove: `node prove/santuario-tavolo.js`, `THEMES=santuario,forgia,abisso node prove/colpi.js`.
 
 ### v2.2.6 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).

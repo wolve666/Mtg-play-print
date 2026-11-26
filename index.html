@@ -6615,7 +6615,9 @@ TH.abisso = {
     return OUT + .2;
   },
   hit(tx){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), x0 = clamp(tx, W * .12, W * .88), y0 = -W * .3, jw = W * .2;
+    // tavolo comune (Federico, 26 novembre): il colpo è più piccolo e parte dal nome di chi lancia (il selettore del colpo), così si capisce da dove arriva
+    const tav = TAV(), W0 = W_(), sc = tav ? .55 : 1, W = W0 * sc, H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), nm = tav && SCR.A && SCR.A.hubEl ? rectC(SCR.A.hubEl) : null, ns = nm && SCR.V.toS(nm.x, nm.y);
+    const x0 = ns ? ns[0] : clamp(tx, W0 * .12, W0 * .88), y0 = ns ? ns[1] : -W0 * .3, jw = W * .2;
     if(RM){ flash('#6CC8FF', .6, .9); damage(); return }
     const D = .16, END = .85;
     // il getto entra dall'alto, trivella il tappeto per un attimo, poi la coda ci cade dentro
@@ -6649,10 +6651,10 @@ TH.abisso = {
       // la schiuma gira intorno al gorgo mentre si allontana
       for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 50 + R() * 90; FX.sV.push(sp({im:I('abisso', 'foam'), x:o.x + Math.cos(a) * W * .1, y:o.y + Math.sin(a) * W * .1, vx:Math.cos(a) * v - Math.sin(a) * 90, vy:Math.sin(a) * v + Math.cos(a) * 90, drag:1.1, w:W * (.2 + R() * .12), life:3.2 + R(), pop:.3, fout:.55, alpha:.9, rot:R() * TAU, spin:1.5 + R(), grow:.5, delay:.05 + R() * .2})) }
       add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 3.2) return false;
-        const y = fb.y + fb.h * ei(x / 3.2) * 1.1, g = c.createLinearGradient(0, y - fb.h * .6, 0, y); g.addColorStop(0, 'rgba(40,140,220,0)'); g.addColorStop(1, `rgba(40,140,220,${.38 * (1 - x / 3.2)})`); c.fillStyle = g; c.fillRect(0, y - fb.h * .6, W, fb.h * .6); return true });
+        const y = fb.y + fb.h * ei(x / 3.2) * 1.1, g = c.createLinearGradient(0, y - fb.h * .6, 0, y); g.addColorStop(0, 'rgba(40,140,220,0)'); g.addColorStop(1, `rgba(40,140,220,${.38 * (1 - x / 3.2)})`); c.fillStyle = g; c.fillRect(fb.x, y - fb.h * .6, fb.w, fb.h * .6); return true });
       flash('rgba(90,190,255,1)', .3, .9);
-      for(let i = 0; i < 14; i++) pt(FX.pV2, {k:'glass', x:W * (.06 + R() * .88), y:H * (.12 + R() * .62), r:W * (.012 + R() * .022), life:2.8 + R() * 1.4, fout:.25, delay:.05 + R() * .3});
-      for(let i = 0; i < 4; i++) FX.sV2.push(sp({im:I('abisso', 'drop'), x:W * (.1 + R() * .8), y:H * (.2 + R() * .5), vy:6, g:10 + R() * 14, w:W * (.06 + R() * .04), life:3 + R(), fout:.3, alpha:.9, delay:.1 + R() * .3}));
+      for(let i = 0; i < 14; i++) pt(FX.pV2, {k:'glass', x:tav ? fb.x + fb.w * (.08 + R() * .84) : W * (.06 + R() * .88), y:tav ? fb.y + fb.h * (.1 + R() * .8) : H * (.12 + R() * .62), r:W * (.012 + R() * .022), life:2.8 + R() * 1.4, fout:.25, delay:.05 + R() * .3});
+      for(let i = 0; i < 4; i++) FX.sV2.push(sp({im:I('abisso', 'drop'), x:tav ? fb.x + fb.w * (.1 + R() * .8) : W * (.1 + R() * .8), y:tav ? fb.y + fb.h * (.2 + R() * .6) : H * (.2 + R() * .5), vy:6, g:10 + R() * 14, w:W * (.06 + R() * .04), life:3 + R(), fout:.3, alpha:.9, delay:.1 + R() * .3}));
       damage();
     });
     // il getto si spegne: ultimo spruzzo
@@ -6733,6 +6735,101 @@ TH.abisso = {
   }
 };
 
+// Abisso, colpo grosso sul tavolo comune (Federico, 26 novembre): il bottone centrale diventa un vortice d'acqua e ne escono 3 o 4 tentacoli
+// di grandezze diverse che si alzano, si caricano e picchiano sul tappeto colpito, uno dopo l'altro.
+// Con 5 e 6 giocatori il bottone è troppo lontano: si scioglie in bolle e il vortice si apre vicino al tappeto colpito; alla fine il bottone torna.
+// Motore a parte con la sua tela, coordinate dello schermo.
+function abissoTableBig(a, v){
+  const cells = [...document.querySelectorAll('#board .cell')], vc = cells.find(c => +c.dataset.i === v), hubEl = $('#tokenBtn'); if(!vc || !hubEl) return false;
+  const SWd = innerWidth, SHd = innerHeight, U = Math.min(SWd, SHd), rc = vc.getBoundingClientRect(), tc = [rc.left + rc.width / 2, rc.top + rc.height / 2], hb = rectC(hubEl), far5 = cells.length >= 5;
+  // dove si apre il vortice: sul bottone; con 5 e 6 giocatori appena fuori dal tappeto colpito, verso il centro del tavolo
+  let V0 = [hb.x, hb.y];
+  if(far5){ const dx = SWd / 2 - tc[0], dy = SHd / 2 - tc[1], l = Math.hypot(dx, dy) || 1, hw = rc.width / 2, hh = rc.height / 2, k = Math.min(hw / (Math.abs(dx / l) || 1e-6), hh / (Math.abs(dy / l) || 1e-6));
+    V0 = [tc[0] + dx / l * Math.min(l * .8, k + U * .02), tc[1] + dy / l * Math.min(l * .8, k + U * .02)] }
+  const cv = fixedCv('cpAB'), P = [], Sx = [], L = [], Qs = [], F = {sh:[]};
+  let t = 0, last = 0, done = false, landed = false;
+  const add = (draw, delay = 0) => L.push({a:-delay, draw}), later = (d, f) => Qs.push({t:t + d, f});
+  SANT.on = true;
+  // i tentacoli: 3 o 4, grandezze diverse, ognuno picchia in un punto a caso del tappeto colpito
+  const n = 3 + (R() < .5 ? 1 : 0), OPEN = far5 ? 1.1 : .8, TS = [];
+  for(let i = 0; i < n; i++){
+    const hit = [rc.left + rc.width * (.2 + R() * .6), rc.top + rc.height * (.2 + R() * .6)], sz = [1, .8, .65, .9][i] * (.9 + R() * .2), blue = R() < .6, im = blue ? I('abisso', 'tent', 0) : I('abisso', 'tent2', 0);
+    const ba = R() * TAU, br = U * .03 * R(), bx = V0[0] + Math.cos(ba) * br, by = V0[1] + Math.sin(ba) * br * .78, Lt = Math.hypot(hit[0] - bx, hit[1] - by) * 1.04;
+    const aS = Math.atan2(hit[1] - by, hit[0] - bx), s = sgn(), up = aS - s * (.9 + R() * .7), ts = OPEN + .55 + i * (.28 + R() * .12), e0 = OPEN + i * .12, e1 = e0 + .45;
+    TS.push({im, bx, by, Lt, s, up, aS, ph:R() * 9, Ht:Lt * .2 * sz * (ok(im) ? ih(im) / iw(im) / .3 : 1), e0, e1, tc:e1 - .1, ts, r0:ts + .6, r1:ts + 1.05, flip:s, hit, sz});
+  }
+  const END = Math.max(...TS.map(q => q.r1)) + (far5 ? .9 : .5);
+  const ks = (q, vv, x) => eb((x - q.ts - vv * .11) / .13);
+  function ang(q, vv, x){ const s = q.s, kc = eo((x - q.tc) / .3), k = ks(q, vv, x), tl = x - q.ts - .24;
+    const rise = q.up + s * (.1 + 1.2 * vv * vv) + .35 * vv * Math.sin(vv * 5 - x * 5 + q.ph);
+    const cock = q.up - s * (.15 + .35 * vv + 1.3 * vv * vv * vv) + .06 * vv * Math.sin(x * 40 + q.ph);
+    const slam = q.aS + s * (-.05 + .1 * vv + .5 * Math.pow(vv, 7)) + (tl > 0 ? .2 * vv * Math.sin(tl * 22 - vv * 6) * Math.exp(-tl * 4) : 0);
+    return lerp(lerp(rise, cock, kc), slam, k) }
+  function body(q, x){ const vis = x < q.r0 ? eo((x - q.e0) / (q.e1 - q.e0)) : 1 - ei((x - q.r0) / (q.r1 - q.r0)), v0 = 1 - vis; if(vis <= .01) return null;
+    const N = 30, l = q.Lt * vis / N, pts = [[q.bx, q.by]]; let px = q.bx, py = q.by;
+    for(let j = 0; j < N; j++){ const aa = ang(q, v0 + vis * (j + .5) / N, x); px += Math.cos(aa) * l; py += Math.sin(aa) * l; pts.push([px, py]) }
+    const h = (1 - ks(q, .5, x)) * (1 + .3 * eo((x - q.tc) / .3)) + (x > q.r0 ? .3 * vis : 0);
+    return {pts:prep(pts), v0, vis, h} }
+  const drawT = (c, q, b, al) => { const Hh = q.Ht * (1 + .22 * b.h);
+    c.save(); c.translate(b.h * U * .05, b.h * U * .1); along(c, q.im, b.pts, -b.v0 * q.Lt, b.vis * q.Lt, Hh, q.flip, al * .5 * (1 - .5 * Math.min(1, b.h)), true, 0); c.restore();
+    along(c, q.im, b.pts, -b.v0 * q.Lt, b.vis * q.Lt, Hh, q.flip, al, false, 0) };
+  // 1. il bottone diventa vortice (con 5 e 6 giocatori: il bottone si scioglie in bolle e il vortice si apre vicino al tappeto colpito)
+  const RV = U * (far5 ? .14 : .17);
+  add(function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
+    const op = eo(x / OPEN), cl = clamp((x - (END - .7)) / .7), al = op * (1 - cl), rad = RV * (.2 + .8 * op) * (1 - .5 * cl);
+    if(far5){ const hk = clamp(x / .4) * (1 - clamp((x - (END - .4)) / .4)); hubEl.style.opacity = (1 - hk).toFixed(3); hubEl.style.scale = (1 - .6 * hk).toFixed(3) }
+    else { hubEl.style.scale = (1 - .25 * op * (1 - cl) + .04 * Math.sin(x * 9) * op).toFixed(3); hubEl.style.filter = `brightness(${(1 + .25 * al).toFixed(3)}) drop-shadow(0 0 ${(14 * al).toFixed(1)}px rgba(90,190,255,.95))` }
+    whirl(c, V0[0], V0[1], rad, T, op, al);
+    glow(c, V0[0], V0[1], rad * 1.6, '120,200,255', .35 * al);
+    // bolle e piccoli vortici che girano attorno e vengono risucchiati
+    if(R() < dt * 50 * al){ const q = R() * TAU, r = rad * (1.1 + R() * .5); Sx.push(sp({im:I('abisso', 'bubble'), x:V0[0] + Math.cos(q) * r, y:V0[1] + Math.sin(q) * r * .78, vx:-Math.sin(q) * r * 3 - Math.cos(q) * r * 1.4, vy:(Math.cos(q) * r * 3 - Math.sin(q) * r * 1.4) * .78, drag:2.5, w:U * (.012 + R() * .022), life:.5, fout:.4, grow:-.5})) }
+    if(R() < dt * 3 * al){ const q = R() * TAU, r = rad * (1.4 + R() * .8), sx = V0[0] + Math.cos(q) * r, sy = V0[1] + Math.sin(q) * r * .78, rr = U * (.03 + R() * .03);
+      add(function(c, dt){ this.a += dt; const y = this.a; if(y > 1.1) return false; whirl(c, sx, sy, rr * eo(y / .3), T * 1.6, 1, .7 * (1 - clamp((y - .6) / .5))); return true }) }
+    if(R() < dt * 14 * al) pt(P, {k:'smoke', x:V0[0] + (R() - .5) * rad, y:V0[1] + (R() - .5) * rad * .7, vx:(R() - .5) * 20, vy:-15 - R() * 20, r:U * .035, grow:2, life:1, col:'228,242,252', al:.25});
+    if(far5 && x < .5 && R() < dt * 60){ const q = R() * TAU; Sx.push(sp({im:I('abisso', 'bubble'), x:hb.x + Math.cos(q) * hb.w * .4, y:hb.y + Math.sin(q) * hb.h * .4, vx:Math.cos(q) * 40, vy:-30 - R() * 50, w:U * (.012 + R() * .02), life:.7, pop:.12, fout:.3, sway:15})) }
+    return true });
+  // 2. i tentacoli: escono dal vortice, si alzano ondeggiando, si caricano e picchiano; poi rientrano nel vortice
+  add(function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
+    TS.slice().sort((p, q) => p.sz - q.sz).forEach(q => { const b = body(q, x); if(!b) return;
+      if(x > q.ts && x < q.ts + .3) [.05, .025].forEach((d, i) => { const g = body(q, x - d); if(g) along(c, q.im, g.pts, -g.v0 * q.Lt, g.vis * q.Lt, q.Ht * (1 + .22 * g.h), q.flip, .16 * (i + 1), false, 0) });
+      drawT(c, q, b, 1);
+      if(b.h > .3 && R() < dt * 18){ const p = at(b.pts, plen(b.pts) * (.25 + .75 * R())); pt(P, {k:'drop', x:p[0], y:p[1], vx:(R() - .5) * 30, vy:20, vz:0, gz:700, rest:.1, life:.7, r:U * (.004 + R() * .006), col:'190,235,255'}) } });
+    return true });
+  // 3. lo schianto di ogni tentacolo: scossone secco del tappeto colpito, esplosione d'acqua, gocce e spruzzi
+  TS.forEach((q, i) => later(q.ts + .19, () => {
+    const b = body(q, q.ts + .19); if(!b) return; const pts = b.pts, Lp = plen(pts), tip = at(pts, Lp), pw = .7 + .5 * q.sz;
+    F.sh.push({t0:t, A:U * .02 * pw, dx:Math.cos(q.aS), dy:Math.sin(q.aS)}); vib(i ? [50] : [80, 30, 120]);
+    if(!landed){ landed = true; if(window.lifeLand) window.lifeLand(v); splashOut('abisso', v, true); later(1, () => splashOut('abisso', v, false)) }
+    add(function(c, dt){ this.a += dt; const x = this.a; if(x > .6) return false; img(c, I('abisso', 'burst', 0), tip[0], tip[1], U * .6 * pw * eb(x / .18), x * 3, x < .2 ? 1 : 1 - (x - .2) / .4); glow(c, tip[0], tip[1], U * .22 * pw, '225,245,255', .9 * (1 - x / .6)); return true });
+    { const bo = I('abisso', 'boom'), r0 = R() * TAU; add(function(c, dt){ this.a += dt; const x = this.a; if(x > .75) return false; img(c, bo, tip[0], tip[1], U * (.25 + .4 * eo(x / .35)) * pw, r0 + x, x < .2 ? 1 : 1 - (x - .2) / .55); return true }) }
+    for(let j = 0; j < 30; j++){ const p = at(pts, Lp * (.3 + .7 * R())), aa = p[2] + sgn() * PI / 2 + (R() - .5) * .8, vv = 120 + R() * 300; pt(P, {k:'drop', x:p[0], y:p[1], vx:Math.cos(aa) * vv, vy:Math.sin(aa) * vv * .8, vz:150 + R() * 300, gz:1150, rest:.2, life:1 + R() * .5, r:U * (.005 + R() * .011), col:'185,232,255',
+      land:d => pt(P, {k:'ripple', x:d.x, y:d.y, r:2, grow:U * (.03 + R() * .04), life:.5, col:'225,248,255', lw:1.1, sq:.85})}) }
+    for(let j = 0; j < 6; j++){ const p = at(pts, Lp * (.3 + .7 * j / 5)), aa = p[2] + sgn() * PI / 2, vv = 120 + R() * 140; Sx.push(sp({im:I('abisso', 'spray'), x:p[0], y:p[1], vx:Math.cos(aa) * vv, vy:Math.sin(aa) * vv, drag:2.6, rot:aa, w:U * (.18 + R() * .1) * pw, life:.55, grow:.5, fin:.03, fout:.6})) }
+    for(let j = 0; j < 3; j++) Sx.push(sp({im:I('abisso', 'splash'), x:tip[0] + (R() - .5) * U * .08, y:tip[1] + (R() - .5) * U * .08, w:U * (.15 + R() * .08) * pw, life:.9, pop:.2, fout:.5, rot:R() * TAU}));
+    for(let j = 0; j < 3; j++){ const aa = R() * TAU; Sx.push(sp({im:I('abisso', 'foam'), x:tip[0] + Math.cos(aa) * U * .06, y:tip[1] + Math.sin(aa) * U * .05, vx:Math.cos(aa) * 50, vy:Math.sin(aa) * 50, drag:1.2, w:U * (.16 + R() * .1), life:2.2, pop:.3, fout:.5, alpha:.85, rot:R() * TAU, spin:1, grow:.4})) }
+    if(i === TS.length - 1) for(let j = 0; j < 10; j++) pt(P, {k:'glass', x:rc.left + rc.width * (.08 + R() * .84), y:rc.top + rc.height * (.1 + R() * .8), r:U * (.01 + R() * .02), life:2.4 + R(), fout:.25, delay:.05 + R() * .3});
+  }));
+  later(END, () => { done = true });
+  const end = () => { SANT.on = false; cv.width = cv.height = 0; vc.style.translate = ''; hubEl.style.scale = ''; hubEl.style.filter = ''; hubEl.style.opacity = ''; if(!landed && window.lifeLand) window.lifeLand(v) };
+  function frame(now){
+    try{
+      const dt = last ? Math.min(.05, (now - last) / 1000) : .016; last = now; t += dt;
+      for(let i = Qs.length - 1; i >= 0; i--) if(Qs[i].t <= t){ const f = Qs[i].f; Qs.splice(i, 1); f() }
+      let x = 0, y = 0; F.sh = F.sh.filter(q => { const s = t - q.t0, Dd = .42; if(s > Dd) return false; const k = 1 - s / Dd, A = q.A * k * k, push = Math.exp(-s * 30), j = 1 - push;
+        x += q.dx * A * push + A * j * .55 * Math.sin(s * 71 + 1); y += q.dy * A * push + A * j * .7 * Math.sin(s * 59); return true });
+      vc.style.translate = x || y ? `${x.toFixed(1)}px ${y.toFixed(1)}px` : '';
+      const pw = Math.round(SWd * DPR), ph = Math.round(SHd * DPR); if(cv.width !== pw || cv.height !== ph){ cv.width = pw; cv.height = ph }
+      const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, SWd, SHd);
+      const cur = L.splice(0); const keep = cur.filter(e => e.draw(c, dt)); L.unshift(...keep);
+      drawSprites(Sx, c, dt); drawPts(P, c, dt);
+      if(window.lifeHoles) lifeHoles(c, DPR);
+      if(done && !L.length && !Sx.length && !P.length){ end(); return }
+      requestAnimationFrame(frame);
+    }catch(e){ logErr('colpi: abisso sul tavolo: ' + (e && e.message)); end() }
+  }
+  requestAnimationFrame(frame);
+  return true;
+}
 // ---------- CRIPTA: la mano che prosciuga
 // Mentre si mira: un filo sottilissimo di particelle, bollicine nere e nuvole che si diramano. Al rilascio la mano scheletrica nasce dal bottone.
 // Sul tappeto colpito non cade nulla: avvizzisce, ne esce un gruppetto di fumo, luci e anime che viene risucchiato verso chi attacca,
@@ -7134,35 +7231,36 @@ function shadowPass(ph, scr, t0, dur, dir){
     c.filter = 'brightness(0.15)'; img(c, drag, p[0], p[1], size, rot, al * .85, null, .5, .5, fl, 1, rot); c.filter = 'none'; c.restore();
     lit(ph === 'A' ? 'A' : 'V', p[0], p[1], W * .9, [.8, .8, .8], -1.3 * al); return true }, t0);
 }
-// Forgia, colpo grosso sul tavolo comune (Federico, 26 novembre): il drago fa un giro a caso su tutto il tappeto condiviso
-// (entra da un lato qualunque, passa sopra i tappeti, gira attorno a quello colpito mentre sputa fuoco, poi esce da un lato qualunque).
+// Forgia, colpo grosso sul tavolo comune (Federico, 26 novembre): come il volo dell'inizio, ampio e minaccioso, ma in una zona a caso del tavolo
+// (entra da un bordo qualunque, curva, esce da un altro). Il getto arriva di striscio sul tappeto colpito quando l'ombra se ne sta andando.
 // Il drago non si vede mai, a terra c'è solo la sua ombra: il getto scende dal cielo, da fuori dallo schermo, dalla parte dove sta girando l'ombra,
 // quindi arriva ogni volta da una direzione diversa (e cambia mentre gira) e spazza il tappeto colpito lungo una curva a caso.
 // Gli schizzi sugli altri tappeti partono solo quando il fuoco tocca il tappeto colpito. Tutto con le coordinate dello schermo.
 function forgiaTableBig(){
   const SWd = innerWidth, SHd = innerHeight, U = Math.min(SWd, SHd), V = SCR.V, v = ACT ? ACT.v : null, rc = V.cell.getBoundingClientRect(), tc = [rc.left + rc.width / 2, rc.top + rc.height / 2];
-  const drag = I('forgia', 'dragon', 0), fire = I('forgia', 'fire', 0), ftx = flameTex(), size = U * (1.05 + R() * .4), flap = 2 + R() * 1.5;
+  const drag = I('forgia', 'dragon', 0), fire = I('forgia', 'fire', 0), ftx = flameTex(), size = U * (1.5 + R() * .8), flap = 1.6 + R() * 1.2;
   const scr = c => c.setTransform(DPR, 0, 0, DPR, 0, 0);
   const edge = () => { const s = R() * 4 | 0, m = size * .7; return s === 0 ? [R() * SWd, -m] : s === 1 ? [SWd + m, R() * SHd] : s === 2 ? [R() * SWd, SHd + m] : [-m, R() * SHd] };
   const rnd = () => [SWd * (.15 + R() * .7), SHd * (.12 + R() * .76)];
-  // mentre sputa fuoco gira attorno al tappeto colpito, a una certa distanza, partendo da una direzione a caso
-  const a0 = R() * TAU, dist = U * (.3 + R() * .14), turn = sgn() * (.9 + R() * 1.1), near = a => [clamp(tc[0] + Math.cos(a) * dist, U * .08, SWd - U * .08), clamp(tc[1] + Math.sin(a) * dist, U * .08, SHd - U * .08)];
-  const F0 = 2.3 + R() * .9, SWt = 1.8 + R() * .8, F1 = F0 + .35 + SWt, OUT = F1 + 1.4, END = F1 + 4.5;
-  const pts = [edge(), rnd(), rnd(), near(a0), near(a0 + turn * .5), near(a0 + turn), edge()], kt = [0, F0 * .36, F0 * .7, F0, F0 + .35 + SWt * .5, F1, OUT];
+  // il volo dell'inizio: un passaggio lungo, lento e ampio, da un bordo a un altro, curvo, in una zona a caso del tavolo.
+  // Il fuoco arriva quando l'ombra se ne sta andando: il drago non si vede, lo si sente arrivare dal cielo.
+  const side = () => R() * 4 | 0, ePt = (k, m) => k === 0 ? [R() * SWd, -m] : k === 1 ? [SWd + m, R() * SHd] : k === 2 ? [R() * SWd, SHd + m] : [-m, R() * SHd];
+  const k0 = side(), k1 = (k0 + 1 + (R() * 3 | 0)) % 4, mg = size * .55, P0 = ePt(k0, mg), P2 = ePt(k1, mg), P1 = [SWd * (.1 + R() * .8), SHd * (.1 + R() * .8)];
+  const OUT = 2.5 + R() * 1, F0 = OUT * (.78 + R() * .1), SWt = 1.8 + R() * .8, F1 = F0 + .35 + SWt, END = F1 + 4.5;
+  const pos = t => { const u = clamp(t / OUT), w = 1 - u; return [w * w * P0[0] + 2 * w * u * P1[0] + u * u * P2[0], w * w * P0[1] + 2 * w * u * P1[1] + u * u * P2[1]] };
   const cr = (p0, p1, p2, p3, u) => { const u2 = u * u, u3 = u2 * u; return [0, 1].map(i => .5 * (2 * p1[i] + (-p0[i] + p2[i]) * u + (2 * p0[i] - 5 * p1[i] + 4 * p2[i] - p3[i]) * u2 + (-p0[i] + 3 * p1[i] - 3 * p2[i] + p3[i]) * u3)) };
-  const pos = t => { t = clamp(t, 0, OUT); let i = 0; while(i < kt.length - 2 && t > kt[i + 1]) i++; const u = (t - kt[i]) / (kt[i + 1] - kt[i]), P = j => pts[clamp(j, 0, pts.length - 1)]; return cr(P(i - 1), P(i), P(i + 1), P(i + 2), u) };
   // dove spazza il fuoco: una curva a caso dentro il tappeto colpito, in una direzione qualunque
   const inC = () => [rc.left + rc.width * (.18 + R() * .64), rc.top + rc.height * (.18 + R() * .64)], fp = [inC(), inC(), inC(), inC()];
   const tgt = u => { const s = u * 3, i = Math.min(2, s | 0), P = j => fp[clamp(j, 0, 3)]; return cr(P(i - 1), P(i), P(i + 1), P(i + 2), s - i) };
-  const D = {p:pos(0), rot:0, head:pos(0)};
+  const D = {p:pos(0)};
   if(RM){ flash('#FFB060', .8, 1); damage(8); return }
-  // 1. il drago: la sua ombra fa il giro del tavolo; mentre sputa fuoco si gira verso il tappeto colpito
+  // 1. il drago: solo la sua ombra, grande, che passa lenta con le ali che battono piano
   add('V', function(c, dt){ this.a += dt; const t = this.a; if(t > OUT) return false;
-    const p = pos(t), q = pos(t + .04), mv = Math.atan2(q[1] - p[1], q[0] - p[0]), fk = env(t - F0 + .3, .4, SWt + .2, .5), T0 = tgt(.5), tw = Math.atan2(T0[1] - p[1], T0[0] - p[0]);
-    let da = tw - mv; da = Math.atan2(Math.sin(da), Math.cos(da)); const hd = mv + da * fk * .8, rot = hd + PI / 2, al = Math.min(1, t / .4, (OUT - t) / .4), fl = 1 + .07 * Math.sin(t * flap * TAU);
-    D.p = p; D.head = [p[0] + Math.cos(hd) * size * .32, p[1] + Math.sin(hd) * size * .32];
-    c.save(); scr(c); c.filter = 'brightness(0.15)'; img(c, drag, p[0], p[1], size, rot, al * .8, null, .5, .5, fl, 1, rot); c.filter = 'none'; c.restore();
-    if(t > .6 && !this.r1){ this.r1 = 1; rumble = {a:0, dur:.8, amt:.25}; vib([30, 40, 60]) } return true });
+    const p = pos(t), q = pos(t + .02), rot = Math.atan2(q[1] - p[1], q[0] - p[0]) + PI / 2, al = Math.min(1, Math.sin(PI * t / OUT) * 1.6), fl = 1 + .07 * Math.sin(t * flap * TAU);
+    D.p = p; c.save(); scr(c); c.filter = 'brightness(0.15)'; img(c, drag, p[0], p[1], size, rot, al * .85, null, .5, .5, fl, 1, rot); c.filter = 'none'; c.restore();
+    if(t > OUT * .3 && !this.r1){ this.r1 = 1; rumble = {a:0, dur:.9, amt:.3}; vib([30, 40, 60]) } return true });
+  // dopo il passaggio il fuoco viene dalla parte dove l'ombra è sparita
+  after(OUT, () => { D.p = P2 });
   // il tappeto colpito si scurisce mentre il drago gli gira attorno
   add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false; const dk = env(x - F0 + .8, .8, F1 - F0 + .2, 1.4), rr = Math.max(rc.width, rc.height) * .85;
     c.save(); scr(c); const g = c.createRadialGradient(tc[0], tc[1], 0, tc[0], tc[1], rr); g.addColorStop(0, `rgba(10,6,4,${.35 * dk})`); g.addColorStop(.7, `rgba(10,6,4,${.25 * dk})`); g.addColorStop(1, 'rgba(10,6,4,0)'); c.fillStyle = g; c.fillRect(tc[0] - rr, tc[1] - rr, rr * 2, rr * 2); c.restore(); return true });
@@ -8107,6 +8205,8 @@ function strike(a, v, dmg){
   const kind = TH[th].big && (dmg >= 8 || R() < 1 / 8) ? (TH[th].big2 && R() < .5 ? 'b2' : 'b') : th === 'forgia' && R() < 1 / 8 ? 'g' : 'n';
   // Santuario, colpo grosso sul tavolo comune: parte dal bottone centrale e la spada arriva dal tappeto di fronte (motore a parte)
   if(!net && th === 'santuario' && kind === 'b'){ if(ACT) reset(); return santTableBig(a, v) ? {th, k:'b', w:0} : null }
+  // Abisso, colpo grosso sul tavolo comune: il vortice nel bottone e i tentacoli (motore a parte)
+  if(!net && th === 'abisso' && kind === 'b'){ if(ACT) reset(); return abissoTableBig(a, v) ? {th, k:'b', w:0} : null }
   if(!setup(a, v, net ? 'A' : 'AV', !net && kind === 'g')) return null;   // il goblin corre dritto sul tavolo
   if(net) SCR.A.tile = port(NET.me, v, SCR.A.tile);
   TK = th;
