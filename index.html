@@ -6293,11 +6293,13 @@ function arcF(a, b, lift){ const cx = (a[0] + b[0]) / 2, cy = Math.min(a[1], b[1
 // il cannoncino di ottone che spunta dal centro del bottone: base d'acciaio, canna con le fasce, nucleo di cristallo ciano
 // la torretta disegnata: base girevole e canna con il perno a sinistra; pw da 0 a 1 scambia la canna classica con quella potenziata
 const MOXPIV = .075, MOXL = .37;
+// tavolo comune (Federico, 27 novembre): la torretta era troppo grande per la scheda di un giocatore; lì è grande la metà
+const MOXK = () => TAV() ? .5 : 1;
 // misura della torretta dalla sua molla: quando rientra la molla va sotto zero e torna su un pochino (ricompariva un cannoncino); chiusa una volta, resta chiusa
 function csz(q){ if(q.t === 0 && q.x < .03) q.shut = true; return q.shut ? 0 : Math.max(0, q.x) }
 function cannon(c, x, y, s, ang, recoil, gk, pw = 0){
   if(s <= .02) return; const base = I('mox', 'base', 0), b1 = I('mox', 'barrel', 0), b2 = I('mox', 'barrel2', 0);
-  if(ok(base) && ok(b1)){ const W = pA.clientWidth, BW = W * .29 * s, BL = W * .4 * s, sw = clamp(pw), q = Math.sin(PI * sw), sq = 1 - .45 * q, ex = 1 + .25 * q;
+  if(ok(base) && ok(b1)){ const W = pA.clientWidth * MOXK(), BW = W * .29 * s, BL = W * .4 * s, sw = clamp(pw), q = Math.sin(PI * sw), sq = 1 - .45 * q, ex = 1 + .25 * q;
     c.save(); c.globalAlpha = .35; c.fillStyle = '#000'; c.beginPath(); c.ellipse(x + BW * .06, y + BW * .1, BW * .52, BW * .48, 0, 0, TAU); c.fill(); c.restore();
     img(c, base, x, y, BW, ang);
     const rx = x - Math.cos(ang) * recoil * BL * .18, ry = y - Math.sin(ang) * recoil * BL * .18;
@@ -6375,7 +6377,7 @@ TH.mox = {
     d.cs = d.cs || spr(0, 240, 9); d.cs.t = 1; stepS(d.cs, dt);
     if(d.ca == null){ d.ca = -PI / 2; SP.aHub.v -= 2 }
     let df = Math.atan2(e[1] - hb.y, e[0] - hb.x) - d.ca; df = Math.atan2(Math.sin(df), Math.cos(df)); d.ca += df * Math.min(1, dt * 14);
-    const mz = [hb.x + Math.cos(d.ca) * W * MOXL, hb.y + Math.sin(d.ca) * W * MOXL], f = arcF(mz, e, W * .28);
+    const mz = [hb.x + Math.cos(d.ca) * W * MOXL * MOXK(), hb.y + Math.sin(d.ca) * W * MOXL * MOXK()], f = arcF(mz, e, W * .28);
     c.save(); for(let i = 0; i < 24; i++){ const u = ((i + T * 3) % 24) / 24, p = f(u), r = W * .011 * (1.2 - .7 * u) * (.6 + .6 * Math.sin(PI * u)); c.globalAlpha = (.35 + .65 * Math.sin(PI * u)) * Math.min(1, d.cs.x); c.fillStyle = i % 2 ? '#C9A45A' : '#9FF3FF'; c.beginPath(); c.arc(p[0], p[1], r, 0, TAU); c.fill() } c.restore();
     d.rr = d.rr || spr(tr.h * 1.6, 260, 10); if(on && !d.locked){ d.locked = 1; d.rr.x = tr.h * 1.6; SP.aHub.v += 1.5; if(navigator.vibrate) try{ navigator.vibrate(12) }catch(_){} } if(!on) d.locked = 0; d.rr.t = on ? tr.h * .72 : tr.h * 1.6; stepS(d.rr, dt);
     if(on){ const r = d.rr.x; c.save(); c.translate(e[0], e[1]); c.rotate(T * 2); c.strokeStyle = 'rgba(159,243,255,.95)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r, 0, TAU); c.stroke();
@@ -6384,7 +6386,7 @@ TH.mox = {
     cannon(c, hb.x, hb.y, Math.max(0, d.cs.x), d.ca, 0, .3 + .3 * bl); lit('A', hb.x, hb.y, W * .4, [.5, 1, 1.1], .5 + .5 * bl);
   },
   launch(d){
-    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ang = d.ca ?? -PI / 2, mz = [hb.x + Math.cos(ang) * W * MOXL, hb.y + Math.sin(ang) * W * MOXL], tg = [tr.x + tr.w / 2, tr.y + tr.h / 2], f = arcF(mz, tg, W * .28);
+    const W = pA.clientWidth, hb = hubBox(pA), tr = tileRect(pA), ang = d.ca ?? -PI / 2, mz = [hb.x + Math.cos(ang) * W * MOXL * MOXK(), hb.y + Math.sin(ang) * W * MOXL * MOXK()], tg = [tr.x + tr.w / 2, tr.y + tr.h / 2], f = arcF(mz, tg, W * .28);
     const rc = spr(0, 260, 9), cs = spr(Math.max(.2, d.cs ? d.cs.x : 1), 220, 10), spin = sgn() * (6 + R() * 6); rc.v = 9;
     SP.aHub.v -= 3; SP.aPunch.v -= .7; if(navigator.vibrate) try{ navigator.vibrate([30, 20, 15]) }catch(e){}
     for(let i = 0; i < 10; i++) pt(FX.pA, {k:'smoke', x:mz[0], y:mz[1], vx:Math.cos(ang) * (40 + R() * 90) + (R() - .5) * 50, vy:Math.sin(ang) * (40 + R() * 90) + (R() - .5) * 50, drag:2, r:W * (.035 + R() * .03), grow:2.2, life:.9 + R() * .5, col:'150,150,155', al:.7});
@@ -6440,7 +6442,7 @@ TH.mox = {
   big(){
     const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), Wa = pA.clientWidth, Ha = pA.clientHeight, hb = hubBox(pA);
     if(RM){ flash('#DFF8FF', .95, 1); damage(8); return }
-    const trA = tileRect(pA), UP = Math.atan2(trA.y + trA.h / 2 - hb.y, trA.x + trA.w / 2 - hb.x), POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x + Math.cos(UP) * Wa * MOXL, hb.y + Math.sin(UP) * Wa * MOXL];
+    const trA = tileRect(pA), UP = Math.atan2(trA.y + trA.h / 2 - hb.y, trA.x + trA.w / 2 - hb.x), POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x + Math.cos(UP) * Wa * MOXL * MOXK(), hb.y + Math.sin(UP) * Wa * MOXL * MOXK()];
     // 1. sul mio tappeto: la torretta sbuca, cambia testa, si carica e spara verso l'alto
     const cs = spr(0, 240, 10), rc = spr(0, 300, 8); let pw = 0, steamed = 0, fired = 0;
     // delle due sfere di carica disegnate ne prendo una a caso per ogni colpo
@@ -6453,20 +6455,20 @@ TH.mox = {
         for(let i = 0; i < 14; i++){ const a = R() * TAU, v = 120 + R() * 220; pt(FX.pA, {k:'spark', x:hb.x, y:hb.y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:3, life:.35, r:1.2, col:R() < .5 ? '255,210,120' : '170,250,255'}) } }
       const mz = mzA(), ck = clamp((x - SW1) / (CH - SW1)), on = x > CH && x < OFF ? 1 : 0;
       // la carica: particelle risucchiate nella bocca, la sfera di energia cresce e trema
-      if(x > SW1 && x < CH){ if(R() < dt * (40 + 120 * ck)){ const a = R() * TAU, r = Wa * (.25 + R() * .35), v = 260 + R() * 260 + 500 * ck; pt(FX.pA, {k:'mote', x:mz[0] + Math.cos(a) * r, y:mz[1] + Math.sin(a) * r, vx:-Math.cos(a) * v, vy:-Math.sin(a) * v, life:r / v, r:Wa * (.008 + R() * .012), col:R() < .7 ? '150,230,255' : '255,255,255', fout:.2}) }
+      if(x > SW1 && x < CH){ if(R() < dt * (40 + 120 * ck)){ const a = R() * TAU, r = Wa * MOXK() * (.25 + R() * .35), v = 260 + R() * 260 + 500 * ck; pt(FX.pA, {k:'mote', x:mz[0] + Math.cos(a) * r, y:mz[1] + Math.sin(a) * r, vx:-Math.cos(a) * v, vy:-Math.sin(a) * v, life:r / v, r:Wa * (.008 + R() * .012), col:R() < .7 ? '150,230,255' : '255,255,255', fout:.2}) }
         if(R() < dt * 10 * ck){ const a = R() * TAU, l = Wa * (.05 + R() * .07), pts = [[mz[0], mz[1]]]; for(let j = 1; j <= 4; j++) pts.push([mz[0] + Math.cos(a) * l * j / 4 + (R() - .5) * l * .4, mz[1] + Math.sin(a) * l * j / 4 + (R() - .5) * l * .4]); pt(FX.pA, {k:'arc', pts, life:.08, fout:1}) }
       }
       // a terra la sua luce e l'ombra della torretta
       lit('A', hb.x, hb.y, Wa * .9, [.5, .95, 1.3], .25 + 1.1 * ck * ck + 1.4 * on * (.8 + .2 * Math.sin(x * 50)));
       if(x > CH && !fired){ fired = 1; rc.v = 7; SP.aHub.v -= 3; SP.aPunch.v -= 1.2; flash('#E0FAFF', .55, .2); if(navigator.vibrate) try{ navigator.vibrate([60, 20, 200]) }catch(e){} }
       // il laser verso il campo avversario (in alto)
-      if(on){ const k = Math.min(1, (x - CH) / .08) * Math.min(1, (OFF - x) / .15), wb = Wa * (.11 + .015 * Math.sin(x * 47));
+      if(on){ const k = Math.min(1, (x - CH) / .08) * Math.min(1, (OFF - x) / .15), wb = Wa * MOXK() * (.11 + .015 * Math.sin(x * 47));
         laserBeam(c, mz[0], mz[1], mz[0] + Math.cos(UP) * Ha * 1.5, mz[1] + Math.sin(UP) * Ha * 1.5, wb * k, x, k);
-        img(c, I('mox', 'lmouth', 0), mz[0], mz[1], Wa * .62 * (1 + .05 * Math.sin(x * 60)), UP, k, 'lighter', .2, .5);
+        img(c, I('mox', 'lmouth', 0), mz[0], mz[1], Wa * MOXK() * .62 * (1 + .05 * Math.sin(x * 60)), UP, k, 'lighter', .2, .5);
         if(R() < dt * 50){ const a = UP + PI + (R() - .5) * 2.4, v = 150 + R() * 300; pt(FX.pA, {k:'spark', x:mz[0], y:mz[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:60 + R() * 100, gz:1000, drag:2.5, life:.3 + R() * .3, r:1.2, col:R() < .6 ? '170,240,255' : '255,255,255'}) }
         if(R() < dt * 30) SP.aPunch.v -= .05 }
       cannon(c, hb.x, hb.y, csz(cs), UP, Math.max(0, rc.x), .3 + .7 * ck + on, pw);
-      if(x > SW1 && x < OFF){ const r = Wa * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, chI, mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
+      if(x > SW1 && x < OFF){ const r = Wa * MOXK() * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, chI, mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
       // dopo lo sparo la canna sfiata vapore
       if(x > OFF && x < OFF + .6 && R() < dt * 14) FX.sA.push(sp({im:I('mox', 'steam'), x:mz[0] + (R() - .5) * Wa * .05, y:mz[1], vx:(R() - .5) * 40, vy:-40 - R() * 40, drag:1, w:Wa * (.1 + R() * .06), rot:R() * TAU, spin:(R() - .5), life:1, grow:1, fin:.05, fout:.6, alpha:.7}));
       return true });
