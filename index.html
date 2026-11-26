@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.2.6', APPN = 8;
+var APPV = '2.2.7', APPN = 8;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -7678,6 +7678,201 @@ function splashOut(th, v, big){
   kick();
 }
 
+// ================= SANTUARIO, COLPO GROSSO SUL TAVOLO COMUNE (idea di Federico, 26 novembre) =================
+// Il bottone centrale si accende di luce, l'aureola si allarga dal centro ed esplode svanendo; poi la spada viene evocata:
+// le nuvole arrivano sul bordo dello schermo dalla parte «di sopra» di chi è colpito (con 2 giocatori e sul tappeto intero del 3:
+// grandi e larghe come lo schermo, un po' spostate verso il tappeto di fronte; con 4 e nei mezzi campi del 3: sopra il tappeto di fronte),
+// la spada di H&O scende e si pianta inclinata nel tappeto colpito. Tutto fermo: l'urto lo danno uno scossone secco del tappeto,
+// le crepe (raggiera e anelli, con la luce dentro) e la luce; lo spostamento d'aria apre le nuvole e le spazza via.
+// Gli effetti sono centrati sul tappeto colpito e sbordano sfumando, senza tagli. Motore a parte, con le sue due tele.
+const SANT = {on:false};
+function santTableBig(a, v){
+  const cells = [...document.querySelectorAll('#board .cell')], vc = cells.find(c => +c.dataset.i === v), hubEl = $('#tokenBtn');
+  if(!vc || !hubEl) return false;
+  const geo = el => { const r = el.getBoundingClientRect(), i = +el.dataset.i, f = el.querySelector('.frame'), rot = rotDeg(i), side = rot === 90 || rot === 270;
+    const fw = f ? f.offsetWidth : (side ? r.height : r.width), fh = f ? f.offsetHeight : (side ? r.width : r.height);
+    return {el, i, x:r.left, y:r.top, w:r.width, h:r.height, cx:r.left + r.width / 2, cy:r.top + r.height / 2, a:rot * PI / 180, rot, fw, fh} };
+  const C = geo(vc), SW = innerWidth, SH = innerHeight, ux = Math.sin(C.a), uy = -Math.cos(C.a);
+  // il tappeto di fronte: quello che si incontra andando verso la parte alta della vista di chi è colpito (se sono due, uno a caso)
+  const ahead = cells.filter(el => el !== vc).map(geo).filter(G => { const g = 10; let t0 = 0, t1 = 1e9;
+    for(const [p, u, lo, hi] of [[C.cx, ux, G.x - g, G.x + G.w + g], [C.cy, uy, G.y - g, G.y + G.h + g]]){
+      if(Math.abs(u) < 1e-6){ if(p < lo || p > hi) return false; continue } let ta = (lo - p) / u, tb = (hi - p) / u; if(ta > tb) [ta, tb] = [tb, ta]; t0 = Math.max(t0, ta); t1 = Math.min(t1, tb) }
+    return t0 <= t1 });
+  const Sc = ahead.length ? pick(ahead) : geo(cells.find(c => +c.dataset.i === a) || vc);
+  const low = fixedCv('cpSL'), top = fixedCv('cpST'); low.style.zIndex = 4;   // la terra sotto il bottone, l'aureola sopra
+  const F = {ox:C.cx, oy:C.cy, a:C.a, sx:0, sy:0, sh:[], pV:[], pV2:[], sV2:[]}, L = {V:[], M:[], V2:[], TOP:[]}, Qs = [], P = [];
+  let t = 0, last = 0, raf = 0, done = false;
+  const add = (k, draw, delay = 0) => L[k].push({a:-delay, draw}), later = (d, f) => Qs.push({t:t + d, f});
+  const lt = (c, x, y, r, rgb, i) => glow(c, x, y, r, rgb.map(q => q * 255 | 0).join(','), i * .22);
+  const softC = (() => { const im = I('santuario', 'cloud', 0); if(!ok(im)) return im; const w = iw(im), h = ih(im), o = document.createElement('canvas'); o.width = w; o.height = h; const x = o.getContext('2d'); x.drawImage(im, 0, 0);
+    x.globalCompositeOperation = 'destination-in'; for(const [x0, y0, x1, y1] of [[0, 0, w * .22, 0], [w, 0, w * .78, 0], [0, 0, 0, h * .22], [0, h, 0, h * .78]]){ const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)'); x.fillStyle = g; x.fillRect(0, 0, w, h) } return o })();
+  const toLocal = (x, y) => { const dx = x - F.ox, dy = y - F.oy, c = Math.cos(F.a), s = Math.sin(F.a); return {x:dx * c + dy * s, y:-dx * s + dy * c} };
+  SANT.on = true; vib([20, 40, 30]);
+
+  // ---- il bottone: si accende, l'aureola si allarga ed esplode
+  const hb = rectC(hubEl), hx = hb.x, hy = hb.y, r = Math.max(hb.w, hb.h) / 2, diag = Math.hypot(SW, SH), hs = spr(1, 260, 10);
+  add('TOP', function(c, dt){ this.a += dt; const x = this.a; stepS(hs, dt); hubEl.style.scale = hs.x.toFixed(3);
+    hubEl.style.filter = x < 1.6 ? `brightness(${(1 + .3 * eo(x / 1)).toFixed(3)}) drop-shadow(0 0 ${(14 * eo(x)).toFixed(1)}px rgba(255,214,120,.95))` : '';
+    if(x > 2.4 && !P.length){ hubEl.style.scale = ''; hubEl.style.filter = ''; return false }
+    const ch = eo(x / 1.05);
+    if(x < 1.2){
+      glow(c, hx, hy, r * (1.3 + 2.4 * ch), '255,230,160', .45 + .45 * ch);
+      img(c, I('santuario', 'charge', 0), hx, hy, r * 2 * (.8 + 1.1 * ch) * (1 + .07 * Math.sin(x * 9)), x * .7, .35 + .55 * ch, 'lighter');
+      if(R() < dt * (30 + 70 * ch)){ const q = R() * TAU, d = r * (2.4 + R() * 1.6); pt(P, {k:'mote', x:hx + Math.cos(q) * d, y:hy + Math.sin(q) * d, vx:-Math.cos(q) * d * 1.9 - Math.sin(q) * d * 1.5, vy:-Math.sin(q) * d * 1.9 + Math.cos(q) * d * 1.5, drag:2.2, life:.5, r:2.5 + R() * 3.5, col:'255,236,180', fout:.25}) }
+      if(x - (this.rg || 0) > .3){ this.rg = x; pt(P, {k:'ripple', x:hx, y:hy, r:r * .9, grow:r * (1.2 + ch), life:.5, col:'255,225,150', lw:2}) }
+    }
+    if(x > .55 && x < 1.15){ const k = eo((x - .55) / .6); img(c, I('santuario', 'halo', 0), hx, hy, r * 2 * (1.3 + 1.5 * k), x * .5, .4 + .6 * k, 'lighter') }
+    if(x >= 1.15 && x < 2.1){ const k = (x - 1.15) / .95, g = eo(k);
+      img(c, I('santuario', 'halo', 0), hx, hy, lerp(r * 5.6, diag * 1.25, g), x * .5, (1 - g) * 1.1, 'lighter');
+      if(k > .08) img(c, I('santuario', 'halo', 0), hx, hy, lerp(r * 4, diag * .8, eo(k - .08)), -x * .4, (1 - eo(k - .08)) * .7, 'lighter');
+      glow(c, hx, hy, r * (3 + 6 * g), '255,245,215', (1 - g) * .9) }
+    if(x >= 1.15 && !this.boom){ this.boom = 1; hs.v += 4;
+      for(let i = 0; i < 40; i++){ const q = R() * TAU, s = 260 + R() * 420; pt(P, {k:'spark', x:hx + Math.cos(q) * r, y:hy + Math.sin(q) * r, vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:2, life:.55 + R() * .35, r:1.4 + R(), col:'255,235,170'}) }
+      for(let i = 0; i < 24; i++){ const q = R() * TAU, s = 120 + R() * 220; pt(P, {k:'mote', x:hx, y:hy, vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:1.6, life:.9 + R() * .6, r:3 + R() * 4, col:'255,240,200', tw:1}) }
+      pt(P, {k:'ripple', x:hx, y:hy, r:r * 1.2, grow:diag * .7, life:.8, col:'255,250,230', lw:5}) }
+    drawPts(P, c, dt); return true });
+
+  // ---- la spada evocata (parte 1,25 s dopo)
+  later(1.25, () => {
+    const W = Math.max(C.fw, C.fh) * .9, o = {x:0, y:C.fh * .04};
+    const ax = Math.cos(C.a), ay = Math.sin(C.a), ext = Math.abs(ax) * Sc.w + Math.abs(ay) * Sc.h, off = (R() - .5) * ext * .55;
+    const big = C.rot === 0 || C.rot === 180, rat = ok(softC) ? ih(softC) / iw(softC) : .375;
+    const far = (u, p, M) => u > .01 ? (M - p) / u : u < -.01 ? p / -u : 1e9, dist = Math.min(far(ux, C.cx, SW), far(uy, C.cy, SH)), span = Math.abs(ax) * SW + Math.abs(ay) * SH;
+    const cw = big ? span * 1.55 : ext * 1.2, chh = cw * rat;
+    const cx0 = big ? toLocal(Sc.cx, Sc.cy).x * .45 + (ahead.length > 1 ? 0 : (R() - .5) * span * .12) : toLocal(Sc.cx + ax * off, Sc.cy + ay * off).x;
+    const cy0 = -dist + chh * .3, cyS = -dist - chh * .5, sunY = cy0 - chh * .19;
+    const tS = clamp(Math.atan2(o.x - cx0, o.y - sunY), -.5, .5), cxS = o.x - Math.tan(tS) * (o.y - sunY), sS = Math.sin(tS), cS = Math.cos(tS), aS = PI / 2 - tS, swd = I('santuario', 'sword', 0);
+    const D0 = .85, D = .2 * clamp(Math.hypot(o.x - cxS, o.y - sunY) / (W * 1.2), 1, 1.6), HOLD = 3.1, END = 3.9, HIT = D0 + D;
+    const impact = pow => F.sh.push({t0:t, A:W * .022 * pow, dx:sS, dy:cS});
+    add('V', function(c, dt){ drawPts(F.pV, c, dt); return !done || F.pV.length > 0 });
+    add('V2', function(c, dt){ drawSprites(F.sV2, c, dt); drawPts(F.pV2, c, dt); return !done || F.pV2.length + F.sV2.length > 0 });
+    // il tappeto colpito: un alone scuro morbido e la luce al centro
+    add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .3) return false; const dk = .55 * env(x, .5, .5, .5), RR = Math.max(C.fw, C.fh) * .95;
+      const g = c.createRadialGradient(o.x, o.y, Math.min(C.fw, C.fh) * .15, o.x, o.y, RR); g.addColorStop(0, 'rgba(20,12,0,0)'); g.addColorStop(.5, `rgba(20,12,0,${dk * .8})`); g.addColorStop(.75, `rgba(20,12,0,${dk * .5})`); g.addColorStop(1, 'rgba(20,12,0,0)');
+      c.fillStyle = g; c.fillRect(o.x - RR, o.y - RR, RR * 2, RR * 2); lt(c, o.x, o.y, W * (.25 + .3 * eo(x / .95)), [1, .85, .5], x < .95 ? 1.4 * eo(x / .95) : 0); return true });
+    for(let i = 0; i < 50; i++){ const x = (R() - .5) * C.fw, y = (R() - .5) * C.fh, d = .5 + R() * .4; pt(F.pV, {k:'mote', x, y, vx:(o.x - x) / d, vy:(o.y - y) / d, life:d, r:W * (.01 + R() * .014), col:'255,236,180', tw:1, fout:.1, delay:R() * .35}) }
+    // le nuvole: arrivano, restano ferme; al colpo lo spostamento d'aria le apre in due e le spazza via
+    add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > HIT + .9) return false;
+      const y0 = lerp(cyS, cy0, eo(x / .6)), b = x < HIT ? 0 : eo((x - HIT) / .8), al = clamp(x / .25) * (1 - b); if(al <= 0) return true;
+      glow(c, cxS, sunY + (y0 - cy0), W * (.2 + .2 * eo((x - .4) / .5)) * (1 + b), '255,230,160', al * .8); lt(c, cxS, sunY + (y0 - cy0) + chh * .3, W * .7, [1, .85, .5], al * 1.2);
+      if(!ok(softC)) return true; const sw = iw(softC), sh = ih(softC), y = y0 - chh * .35 * b, sc = 1 + .15 * b, w = cw * sc, h = chh * sc;
+      c.save(); c.globalAlpha = al; c.drawImage(softC, 0, 0, sw / 2, sh, cx0 - w / 2 - cw * .22 * b, y - h / 2, w / 2, h); c.drawImage(softC, sw / 2, 0, sw / 2, sh, cx0 + cw * .22 * b, y - h / 2, w / 2, h); c.restore(); return true });
+    later(HIT, () => { for(let i = 0; i < 14; i++){ const u = R() - .5; pt(F.pV2, {k:'smoke', x:cx0 + u * cw * .8, y:cy0 + (R() - .3) * chh * .4, vx:u * 260 + (R() - .5) * 40, vy:-60 - R() * 120, drag:1.4, r:W * (.08 + R() * .06), grow:1.4, life:.9 + R() * .4, col:'255,250,240', al:.75}) } });
+    // una luce leggera scende dalle nubi verso il punto dove cadrà la spada (dietro le nuvole)
+    L.V2.unshift({a:0, draw:function(c, dt){ this.a += dt; const x = this.a; if(x > D0 + D + .45) return false; const k = x < D0 + D ? eo((x - .3) / .5) * (.85 + .15 * Math.sin(x * 7)) : 1 - (x - D0 - D) / .45; if(k <= 0) return true;
+      const q = Math.atan2(o.y - sunY, o.x - cxS), l = Math.hypot(o.x - cxS, o.y - sunY);
+      c.save(); c.globalCompositeOperation = 'lighter'; c.translate(cxS, sunY); c.rotate(q - PI / 2);
+      for(let i = 0; i < 3; i++){ const w0 = W * (.05 + .04 * i), w1 = W * (.12 + .09 * i), g = c.createLinearGradient(0, 0, 0, l); g.addColorStop(0, `rgba(255,240,200,${.3 * k / (i + 1)})`); g.addColorStop(.85, `rgba(255,236,185,${.18 * k / (i + 1)})`); g.addColorStop(1, 'rgba(255,236,185,0)');
+        c.fillStyle = g; c.beginPath(); c.moveTo(-w0, 0); c.lineTo(w0, 0); c.lineTo(w1, l); c.lineTo(-w1, l); c.fill() } c.restore();
+      glow(c, o.x, o.y, W * .2, '255,236,185', .4 * k);
+      if(R() < dt * 25 * k){ const u = R(); pt(F.pV2, {k:'mote', x:lerp(cxS, o.x, u) + (R() - .5) * W * .08, y:lerp(sunY, o.y, u), vx:(R() - .5) * 10, vy:30 + R() * 30, life:.8, r:W * (.006 + R() * .01), col:'255,240,200', tw:1}) }
+      return true }});
+    // la spada: cade dalle nubi, entra nel tappeto, affonda senza rimbalzo, resta piantata inclinata
+    const Sk = spr(0, 420, 42), len = W * 1.15, depth = len * .42, dd0 = (o.y - sunY) / cS;
+    const hole = (c, al, front) => { c.save(); c.globalAlpha = al; const rx = W * .1, ry = W * .035;
+      if(!front){ const g = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, rx); g.addColorStop(0, 'rgba(20,12,4,.95)'); g.addColorStop(1, 'rgba(60,40,15,0)'); c.fillStyle = g; c.beginPath(); c.ellipse(o.x, o.y, rx * 1.3, ry * 1.4, 0, 0, TAU); c.fill() }
+      else { c.fillStyle = 'rgba(214,204,186,1)'; c.beginPath(); c.ellipse(o.x, o.y, rx, ry, 0, 0, PI); c.ellipse(o.x, o.y + ry * .35, rx * .92, ry * .7, 0, PI, 0, true); c.fill();
+        c.strokeStyle = 'rgba(90,70,40,.8)'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(o.x, o.y, rx, ry, 0, 0, PI); c.stroke();
+        c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(255,220,140,${.6 * al})`; c.lineWidth = 2; c.beginPath(); c.ellipse(o.x, o.y, rx * .7, ry * .6, 0, 0, TAU); c.stroke() }
+      c.restore() };
+    add('M', function(c, dt){ this.a += dt; const x = this.a - D0; if(x > END - D0) return false; if(x < 0) return true; stepS(Sk, dt);
+      const k = Math.min(1, x / D), al = x < HOLD - D0 ? 1 : 1 - (x - HOLD + D0) / (END - HOLD);
+      if(x < D){ const dd = dd0 * (1 - ei(k)), tx = o.x - sS * dd, ty = o.y - cS * dd, sc = lerp(1.7, 1, ei(k));
+        for(let i = 0; i < 4; i++){ const b = (i + 1) * W * .16 * sc; img(c, swd, tx - sS * b, ty - cS * b, len * sc, aS, .14 * (4 - i), 'lighter', 1, .5) }
+        img(c, swd, tx, ty, len * sc, aS, 1, null, 1, .5); glow(c, tx - sS * len * sc * .45, ty - cS * len * sc * .45, W * .45 * sc, '255,240,200', .35); return true }
+      hole(c, al, false); glow(c, o.x - sS * len * .4, o.y - cS * len * .4, W * .4, '255,240,200', .25 * al);
+      c.save(); c.beginPath(); c.rect(-5000, -5000, 10000, 5000 + o.y); c.clip(); c.translate(o.x, o.y); c.rotate(-tS);
+      img(c, swd, 0, Math.max(0, Sk.x), len, PI / 2, al, null, 1, .5);
+      if(x > HOLD - D0 - .5) img(c, swd, 0, Math.max(0, Sk.x), len, PI / 2, clamp((x - HOLD + D0 + .5) / .6) * al * 1.6, 'lighter', 1, .5);
+      c.restore(); hole(c, al, true); lt(c, o.x - sS * len * .35, o.y - cS * len * .35, W * .7, [1, .9, .65], .9 * al); return true });
+    later(HIT, () => {
+      Sk.t = depth; Sk.v = depth * 9; impact(1.9); vib([40, 30, 80, 40, 120]); if(window.lifeLand) window.lifeLand(v);
+      [['255,255,255', .95, .3], ['255,242,208', .55, 1.8]].forEach(([col, peak, dur]) => add('V', function(c, dt){ this.a += dt; const k = this.a / dur; if(k >= 1) return false; const e = peak * (k < .06 ? k / .06 : Math.pow(1 - (k - .06) / .94, 1.6));
+        const rr = Math.max(C.fw, C.fh) * .85, g = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, rr); g.addColorStop(0, `rgba(${col},${e})`); g.addColorStop(.55, `rgba(${col},${e * .6})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(o.x - rr, o.y - rr, rr * 2, rr * 2); return true }));
+      later(.35, () => impact(.35)); later(.7, () => impact(.2));
+      const cracks = santCracks(W), life = END - HIT;
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > life) return false;
+        const out = x < life - 1 ? 1 : 1 - (x - life + 1), gD = x < life - .8 ? 1 : 1 - ei((x - life + .8) / .8), pul = .8 + .2 * Math.sin(x * 7);
+        const gL = (x < .12 ? x / .12 : .55 + .45 * Math.exp(-(x - .12) * 3)) * out * pul, g = eo(x / .3);
+        c.save(); lt(c, o.x, o.y, W * (.7 + .3 * g), [1, .86, .5], 3 * g * gL);
+        const cg = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, W * .2); cg.addColorStop(0, `rgba(30,18,4,${.55 * g * gD})`); cg.addColorStop(1, 'rgba(30,18,4,0)'); c.fillStyle = cg; c.beginPath(); c.ellipse(o.x, o.y, W * .22, W * .12, 0, 0, TAU); c.fill();
+        c.translate(o.x, o.y); santDrawCracks(c, cracks, x, gD, gL);
+        if(R() < dt * 10 && gL > .3){ const k = pick(cracks), p = pick(k.pts); if(p.t < x) pt(F.pV, {k:'mote', x:o.x + p.x, y:o.y + p.y, vx:(R() - .5) * 16, vy:-35 - R() * 40, life:1, r:W * .014, col:'255,236,180', tw:1}) }
+        c.restore(); return true });
+      add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; img(c, I('santuario', 'burst', 0), o.x, o.y, W * 1.5 * eb(x / .35), x * .3, x < .35 ? 1 : 1 - (x - .35) / .95, 'lighter'); return true });
+      [0, .2, .45].forEach((dl, i) => add('V', function(c, dt){ this.a += dt; const x = this.a; if(x > 1.3) return false; if(x < 0) return true; const k = eo(x / 1.3); img(c, I('santuario', 'halo', 0), o.x, o.y, W * (.2 + (1.4 - i * .3) * k), 0, (1 - k) * (1 - i * .25), 'lighter'); return true }, dl));
+      for(let i = 0; i < 40; i++){ const q = R() * TAU, s = 80 + R() * 260; pt(F.pV2, {k:'crumb', x:o.x, y:o.y, vx:Math.cos(q) * s, vy:Math.sin(q) * s * .6, vz:150 + R() * 350, gz:1300, rest:.3, life:1.2 + R() * .8, r:W * (.006 + R() * .011), col:pick(['226,218,202', '196,186,168', '246,240,228', '214,180,110'])}) }
+      for(let i = 0; i < 10; i++){ const q = R() * TAU; pt(F.pV, {k:'smoke', x:o.x + Math.cos(q) * W * .06, y:o.y + Math.sin(q) * W * .03, vx:Math.cos(q) * 70, vy:Math.sin(q) * 30 - 15, drag:1.6, r:W * .07, grow:2.2, life:1.5, col:'230,220,200', al:.6}) }
+      for(let i = 0; i < 22; i++){ const q = R() * TAU, s = 120 + R() * 280; F.sV2.push(sp({im:I('santuario', 'feath'), x:o.x, y:o.y, vx:Math.cos(q) * s, vy:Math.sin(q) * s, drag:1.8, g:14, w:W * (.06 + R() * .06), life:2.4 + R(), flut:.6, sway:40, fout:.3})) }
+      for(let i = 0; i < 40; i++){ const q = R() * TAU, s = 200 + R() * 500; pt(F.pV2, {k:'spark', x:o.x, y:o.y, vx:Math.cos(q) * s, vy:Math.sin(q) * s * .8, vz:100 + R() * 250, gz:1200, drag:2, life:.6 + R() * .5, r:1.2 + R(), col:'255,235,170'}) }
+      [.12, .3].forEach((dl, i) => later(dl, () => pt(F.pV, {k:'ripple', x:o.x, y:o.y, r:W * .05, grow:W * 1.1, life:1.1, col:'255,236,190', lw:4 / (i + 1), sq:.55})));
+    });
+    // si scioglie in luce e piume che salgono
+    later(HOLD + .1, () => { for(let i = 0; i < 18; i++){ const u = R(); F.sV2.push(sp({im:I('santuario', R() < .5 ? 'feath' : 'down'), x:o.x - sS * len * .7 * u + (R() - .5) * W * .08, y:o.y - cS * len * .7 * u, vx:(R() - .5) * 60, vy:-30 - R() * 50, w:W * (.04 + R() * .05), life:1.8 + R(), flut:.6, sway:40, blend:'lighter'})) }
+      for(let i = 0; i < 40; i++){ const u = R(); pt(F.pV2, {k:'mote', x:o.x - sS * len * .7 * u + (R() - .5) * W * .06, y:o.y - cS * len * .7 * u, vx:(R() - .5) * 40, vy:-40 - R() * 80, life:1.2 + R(), r:W * (.01 + R() * .015), col:'255,240,200', tw:1}) } });
+    later(END + .3, () => { done = true });
+  });
+
+  const fit = cv => { const pw = Math.round(SW * DPR), ph = Math.round(SH * DPR); if(cv.width !== pw || cv.height !== ph){ cv.width = pw; cv.height = ph } const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, SW, SH); return c };
+  const run = (k, c, dt, local) => { const cur = L[k]; L[k] = []; const keep = cur.filter(e => { if(!local) return e.draw(c, dt);
+    c.save(); c.translate(F.ox, F.oy); c.rotate(F.a); if(k !== 'V2') c.translate(F.sx, F.sy); const r = e.draw(c, dt); c.restore(); return r }); L[k] = keep.concat(L[k]) };
+  const end = () => { cancelAnimationFrame(raf); SANT.on = false; [low, top].forEach(cv => { cv.width = cv.height = 0 }); vc.style.translate = ''; hubEl.style.scale = ''; hubEl.style.filter = '';
+    if(window.lifeLand) window.lifeLand(v) };
+  function frame(now){
+    try{
+      const dt = last ? Math.min(.05, (now - last) / 1000) : .016; last = now; t += dt;
+      for(let i = Qs.length - 1; i >= 0; i--) if(Qs[i].t <= t){ const f = Qs[i].f; Qs.splice(i, 1); f() }
+      // scossone secco: una spinta nella direzione della spada e qualche vibrazione fitta che si spegne subito
+      let x = 0, y = 0; F.sh = F.sh.filter(q => { const s = t - q.t0, Dd = .42; if(s > Dd) return false; const k = 1 - s / Dd, A = q.A * k * k, push = Math.exp(-s * 30), j = 1 - push;
+        x += q.dx * A * push + A * j * .55 * Math.sin(s * 71 + 1); y += q.dy * A * push + A * j * .7 * Math.sin(s * 59); return true });
+      F.sx = x; F.sy = y; const cs = Math.cos(F.a), sn = Math.sin(F.a); vc.style.translate = x || y ? `${(x * cs - y * sn).toFixed(1)}px ${(x * sn + y * cs).toFixed(1)}px` : '';
+      const cl = fit(low), ct = fit(top);
+      run('V', cl, dt, true); run('M', cl, dt, true); run('V2', cl, dt, true); run('TOP', ct, dt, false);
+      if(window.lifeHoles){ lifeHoles(cl, DPR); lifeHoles(ct, DPR) }
+      if(L.V.length + L.M.length + L.V2.length + L.TOP.length + Qs.length) raf = requestAnimationFrame(frame); else end();
+    }catch(e){ logErr('colpi: santuario sul tavolo: ' + (e && e.message)); end() }
+  }
+  raf = requestAnimationFrame(frame);
+  return true;
+}
+// crepe della spada: la pietra colpita dall'alto si spacca a raggiera (crepe quasi dritte dal foro) e ad anelli
+// (tratti che uniscono le crepe vicine e staccano le lastre). Poco estese, si aprono di colpo dal foro verso fuori; dentro esce luce.
+function santCracks(W){
+  const out = [], v = W * 3.4, Q = .62, nR = 7 + (R() * 3 | 0), a0 = R() * TAU, rad = [];
+  const line = (pts, w0) => { let s = 0; pts.forEach((p, i) => { if(i) s += Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y); p.s = s }); const k = {pts, L:s, w0, chips:[]}; out.push(k); return k };
+  for(let i = 0; i < nR; i++){
+    let th = a0 + (i + (R() - .5) * .55) / nR * TAU, r = W * .02, t = R() * .03; const Lr = W * (.17 + R() * .22), pts = [{x:Math.cos(th) * r, y:Math.sin(th) * r * Q, t, r}];
+    while(r < Lr){ const st = W * (.022 + R() * .022); r += st; th += R() < .14 ? (R() - .5) * .3 : (R() - .5) * .05; t += st / v * (R() < .15 ? 4 : 1); pts.push({x:Math.cos(th) * r, y:Math.sin(th) * r * Q, t, r}) }
+    const k = line(pts, W * (.0042 + R() * .002)); rad.push(k);
+    for(let j = 0; j < 3; j++){ const p = pts[1 + (R() * Math.min(4, pts.length - 1) | 0)]; k.chips.push({x:p.x + (R() - .5) * W * .02, y:p.y + (R() - .5) * W * .014, r:W * (.004 + R() * .006), a:R() * TAU, t:p.t}) }
+  }
+  const near = (k, r) => { const P = k.pts; if(P[P.length - 1].r < r * .95) return null; return P.reduce((b, p) => Math.abs(p.r - r) < Math.abs(b.r - r) ? p : b) };
+  [[.055, .075, .08], [.1, .13, .2], [.16, .2, .4]].forEach(([lo, hi, skip]) => { const rr = W * (lo + R() * (hi - lo));
+    for(let i = 0; i < nR; i++){ if(R() < skip) continue; const pa = near(rad[i], rr), pb = near(rad[(i + 1) % nR], rr); if(!pa || !pb) continue;
+      const bow = 1.03 + R() * .07, t0 = Math.max(pa.t, pb.t) + .02 + R() * .1, fw = R() < .5, A = fw ? pa : pb, B = fw ? pb : pa;
+      line([{x:A.x, y:A.y, t:t0}, {x:(pa.x + pb.x) / 2 * bow + (R() - .5) * W * .012, y:(pa.y + pb.y) / 2 * bow + (R() - .5) * W * .008, t:t0 + .04}, {x:B.x, y:B.y, t:t0 + .08}], W * (.0034 + R() * .0015)) } });
+  return out;
+}
+function santCrackPoly(c, k, x, f){
+  const P = k.pts; let m = 0; while(m + 1 < P.length && P[m + 1].t <= x) m++;
+  const pts = P.slice(0, m + 1); if(m + 1 < P.length && P[m].t < x){ const A = P[m], B = P[m + 1], u = clamp((x - A.t) / (B.t - A.t || 1)); pts.push({x:lerp(A.x, B.x, u), y:lerp(A.y, B.y, u), s:lerp(A.s, B.s, u)}) }
+  if(pts.length < 2) return null;
+  const wd = s => k.w0 * (1 - .35 * s / k.L) * Math.min(1, (k.L - s) / (k.L * .12)) * f, Lf = [], Rt = [];
+  for(let i = 0; i < pts.length; i++){ const p = pts[i], q = pts[Math.min(pts.length - 1, i + 1)], r = pts[Math.max(0, i - 1)], dx = q.x - r.x, dy = q.y - r.y, l = Math.hypot(dx, dy) || 1, w = i === pts.length - 1 ? 0 : wd(p.s);
+    Lf.push([p.x - dy / l * w, p.y + dx / l * w]); Rt.push([p.x + dy / l * w, p.y - dx / l * w]) }
+  c.beginPath(); Lf.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); for(let i = Rt.length - 1; i >= 0; i--) c.lineTo(Rt[i][0], Rt[i][1]); c.closePath();
+  return pts[pts.length - 1];
+}
+function santDrawCracks(c, cr, x, gD, gL){
+  c.save();
+  c.fillStyle = `rgba(38,22,6,${.6 * gD})`; cr.forEach(k => { c.save(); c.translate(0, 1); santCrackPoly(c, k, x, 2.6) && c.fill(); c.restore() });
+  c.fillStyle = `rgba(52,32,10,${.6 * gD})`; cr.forEach(k => k.chips.forEach(h => { if(h.t > x) return; c.beginPath(); c.moveTo(h.x + Math.cos(h.a) * h.r, h.y + Math.sin(h.a) * h.r); c.lineTo(h.x + Math.cos(h.a + 2.2) * h.r * .7, h.y + Math.sin(h.a + 2.2) * h.r * .7); c.lineTo(h.x + Math.cos(h.a + 4) * h.r * .8, h.y + Math.sin(h.a + 4) * h.r * .8); c.fill() }));
+  c.globalCompositeOperation = 'lighter';
+  [[5, '255,200,100', .14], [2.2, '255,220,140', .26], [.75, '255,238,190', .85], [.32, '255,255,248', 1]].forEach(([f, col, a]) => { c.fillStyle = `rgba(${col},${a * gL})`; cr.forEach(k => santCrackPoly(c, k, x, f) && c.fill()) });
+  cr.forEach(k => { const tip = k.pts[k.pts.length - 1]; if(x > tip.t || x < k.pts[0].t) return; const e = santCrackPoly(c, k, x, .01); if(e) glow(c, e.x, e.y, k.w0 * 5, '255,245,215', .9 * gL) });
+  c.restore();
+}
+
 // ================= ingressi per l'app =================
 const ORDER = ['forgia', 'selva', 'abisso', 'cripta', 'santuario', 'mox'];
 let LOADED = 0, LOADING = null;
@@ -7715,9 +7910,11 @@ function aimEnd(over){
 // il colpo: a attacca v con dmg punti. Torna il messaggio da mandare all'altro telefono (H&O)
 function strike(a, v, dmg){
   const th = SET.theme; if(!on(th)) return null;
-  if(ACT && Q.length) return null;   // un colpo alla volta
+  if((ACT && Q.length) || SANT.on) return null;   // un colpo alla volta
   const net = NV();
   const kind = TH[th].big && (dmg >= 8 || R() < 1 / 8) ? (TH[th].big2 && R() < .5 ? 'b2' : 'b') : th === 'forgia' && R() < 1 / 8 ? 'g' : 'n';
+  // Santuario, colpo grosso sul tavolo comune: parte dal bottone centrale e la spada arriva dal tappeto di fronte (motore a parte)
+  if(!net && th === 'santuario' && kind === 'b'){ if(ACT) reset(); return santTableBig(a, v) ? {th, k:'b', w:0} : null }
   if(!setup(a, v, net ? 'A' : 'AV', !net && kind === 'g')) return null;   // il goblin corre dritto sul tavolo
   if(net) SCR.A.tile = port(NET.me, v, SCR.A.tile);
   TK = th;

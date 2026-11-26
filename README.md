@@ -70,6 +70,13 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.2.7 (prerelease, da compilare)
+Solo per Federico. Codice pronto, APK non ancora compilata: si compila quando lo dice lui.
+- **Santuario, colpo grosso sul tavolo comune (un telefono)**: parte dal bottone centrale. Il bottone si accende di luce, l'aureola si allarga dal centro ed esplode svanendo; poi la spada viene evocata. Arriva dal tappeto di fronte a quello colpito (con 4 giocatori 1↔2 e 4↔3; con 3 i due tappeti in alto si guardano, e se è colpito il tappeto intero la spada arriva da uno dei due a caso; con 2 l'uno di fronte all'altro).
+- **Nuvole**: ferme, sul bordo dello schermo dalla parte di sopra di chi è colpito. Con 2 giocatori e sul tappeto intero del 3 sono grandi e larghe come lo schermo, un po' spostate verso il tappeto da cui arriva il colpo; con 4 e nei mezzi campi del 3 stanno sopra il tappeto di fronte. Al colpo lo spostamento d'aria le apre in due e le spazza via.
+- **La spada** è quella di H&O: scende dalle nuvole e si pianta inclinata nel tappeto colpito, senza rimbalzi. L'urto lo danno uno scossone secco del tappeto colpito, il lampo, la luce e le crepe nuove: poco estese, a raggiera dal foro e ad anelli, con la luce che esce dalle fessure. Gli effetti sono centrati sul tappeto colpito e sbordano sfumando, senza tagli. La vita scende quando la spada arriva.
+- H&O e gli altri temi non cambiano. Prova: `node prove/santuario-tavolo.js`.
+
 ### v2.2.6 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
 - **Tavolo virtuale (H&O, da 3 a 6 giocatori)**: nel menu di collegamento il principale sceglie la forma del tavolo (quadrato, rettangolare, rotondo) e vede i posti disegnati attorno, in senso orario; trascina ogni telefono al posto di chi lo usa. La forma arriva a tutti i telefoni.
