@@ -45,6 +45,12 @@ Il messaggio del colpo tra i telefoni non cambia: ognuno sa già chi attacca chi
 | Qualcuno cambia posto o si collega dopo | il principale lo sposta nel disegno del tavolo; i telefoni ricalcolano |
 | Seduti non in ordine di turno | si mettono i posti come sono davvero: la direzione segue i posti, non il turno |
 
+## Continuità del colpo da un telefono all'altro
+- **Direzione**: uscita ed entrata nascono dalla stessa retta sul tavolo (da chi attacca a chi è colpito). Il colpo lascia il telefono di chi attacca dal bordo rivolto verso l'avversario ed entra in quello colpito dal bordo rivolto verso chi attacca: a occhio è un colpo che attraversa il tavolo.
+- **Tempi**: già oggi il messaggio del colpo porta il tempo di lancio (`w`) e il telefono colpito fa arrivare il colpo quando sull'altro è uscito. Si aggiunge un piccolo **tempo di volo** in base alla distanza tra i posti (un vicino subito, chi sta di fronte un attimo dopo).
+- **Aspetto**: stessa velocità, grandezza e colore del colpo in uscita e in entrata; la «coda» che esce da un telefono è quella che entra nell'altro.
+- **Limiti**: il ritardo del collegamento tra telefoni (Nearby, di solito un decimo di secondo, a volte di più) e schermi di misure diverse. Non sarà perfetto, ma a occhio torna.
+
 ## Restano scoperti
 - Tavoli di forma strana o giocatori sparsi: si sceglie la forma più vicina. Con 4 giocatori l'errore è piccolo, con 6 si può notare.
 - Telefono girato in orizzontale o lontano dal giocatore: la direzione la dà il posto, non il telefono.
