@@ -6335,29 +6335,37 @@ function moxTableShot(){
   // e si gira (specchiato) dalla parte del bersaglio; allo sparo passa all'immagine con il fumo e si schiaccia per il rinculo
   const A = SCR.A, V = SCR.V, nm = A.hubEl ? rectC(A.hubEl) : rectC(A.cell), vr = V.cell.getBoundingClientRect(), Wv = W_(), U = Math.min(innerWidth, innerHeight);
   const tg = [vr.left + vr.width * (.35 + R() * .3), vr.top + vr.height * (.35 + R() * .3)], ang = Math.atan2(tg[1] - nm.y, tg[0] - nm.x), dist = Math.hypot(tg[0] - nm.x, tg[1] - nm.y);
-  const ra = rotDeg(+A.cell.dataset.i) * PI / 180, lx = Math.cos(ra) * (tg[0] - nm.x) + Math.sin(ra) * (tg[1] - nm.y), flip = lx < 0 ? -1 : 1, MS = U * .34;
+  const ra = rotDeg(+A.cell.dataset.i) * PI / 180, lx = Math.cos(ra) * (tg[0] - nm.x) + Math.sin(ra) * (tg[1] - nm.y), flip = lx < 0 ? -1 : 1, MS = U * .29;
   const m1 = I('mox', 'mortar', 0), m2 = I('mox', 'mortar2', 0), mh = ok(m1) ? MS * ih(m1) / iw(m1) : MS;
   // centro del mortaio un po' sopra il nome (verso l'alto di chi lancia); la bocca in alto, dalla parte del bersaglio
   const ctr = [nm.x + Math.sin(ra) * mh * .45, nm.y - Math.cos(ra) * mh * .45], mo = [(.62 - .5) * MS * flip, (.14 - .5) * mh];
   const mouth = [ctr[0] + Math.cos(ra) * mo[0] - Math.sin(ra) * mo[1], ctr[1] + Math.sin(ra) * mo[0] + Math.cos(ra) * mo[1]];
   const pop = spr(0, 240, 12), rc = spr(0, 300, 10), spin = sgn() * (6 + R() * 6);
-  const AIM = .35, FL = clamp(dist / 900, .55, .9), END = AIM + FL, lift = dist * .32 + U * .08, bs = Wv * .24;
+  const AIM = .42, FL = clamp(dist / 900, .55, .9), END = AIM + FL, lift = dist * .32 + U * .08, bs = Wv * .24 * .72, cell = A.cell, kick = spr(0, 380, 9);
   const scr = c => c.setTransform(DPR, 0, 0, DPR, 0, 0);
   let fired = false; pop.t = 1;
   add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .7) return false;
-    if(x > END + .2) pop.t = 0; stepS(pop, dt); stepS(rc, dt);
+    if(x > END + .2) pop.t = 0; stepS(pop, dt); stepS(rc, dt); stepS(kick, dt);
+    cell.style.translate = Math.abs(kick.x) > .05 ? `${(-Math.sin(ra) * kick.x).toFixed(1)}px ${(Math.cos(ra) * kick.x).toFixed(1)}px` : '';
+    if(x > END + .65) cell.style.translate = '';
     c.save(); scr(c);
-    if(x >= AIM && !fired){ fired = true; rc.v = 10; if(navigator.vibrate) try{ navigator.vibrate([30, 20, 15]) }catch(e){}
-      for(let i = 0; i < 10; i++){ const a = -PI / 2 + ra + (R() - .5) * 1.2, v = 60 + R() * 120; pt(FX.pX, {k:'smoke', x:mouth[0], y:mouth[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2, r:U * (.03 + R() * .03), grow:2.2, life:1 + R() * .5, col:'150,150,155', al:.7}) }
-      for(let i = 0; i < 16; i++){ const a = -PI / 2 + ra + (R() - .5) * 1.6, v = 200 + R() * 300; pt(FX.pX, {k:'spark', x:mouth[0], y:mouth[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:4, life:.35, r:1.3, col:R() < .5 ? '255,210,120' : '170,250,255'}) }
-      pt(FX.pX, {k:'ripple', x:mouth[0], y:mouth[1], r:U * .03, grow:U * .12, life:.35, col:'170,250,255', lw:2}) }
+    if(x >= AIM && !fired){ fired = true; rc.v = 18; kick.v = U * .9; if(navigator.vibrate) try{ navigator.vibrate([40, 20, 25]) }catch(e){}
+      const up = -PI / 2 + ra + flip * .35;   // la bocca guarda in alto, un po' verso il bersaglio
+      FX.sX.push(sp({im:I('mox', 'muzzle', 0), x:mouth[0] + Math.cos(up) * U * .06, y:mouth[1] + Math.sin(up) * U * .06, w:U * .3, rot:up, life:.28, fin:.01, fout:.7, grow:.6, blend:'lighter'}));
+      for(let i = 0; i < 16; i++){ const a = up + (R() - .5) * 1, v = 120 + R() * 260; pt(FX.pX, {k:'smoke', x:mouth[0], y:mouth[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2.4, r:U * (.025 + R() * .035), grow:2.6, life:1 + R() * .6, col:pick(['150,150,155', '120,122,128', '185,185,190']), al:.75}) }
+      for(let i = 0; i < 8; i++){ const a = R() * TAU, v = 60 + R() * 60; pt(FX.pX, {k:'smoke', x:ctr[0] + Math.cos(a) * MS * .3, y:ctr[1] + Math.sin(a) * mh * .3, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:2, r:U * .03, grow:1.8, life:.8, col:'140,140,145', al:.45}) }
+      for(let i = 0; i < 30; i++){ const a = up + (R() - .5) * 1.8, v = 250 + R() * 450; pt(FX.pX, {k:'spark', x:mouth[0], y:mouth[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:3.5, life:.4 + R() * .2, r:1.4, col:R() < .5 ? '255,210,120' : '170,250,255'}) }
+      for(let i = 0; i < 6; i++){ const a = up + (R() - .5) * 2, v = 120 + R() * 160; FX.sX.push(sp({im:I('mox', 'steam'), x:mouth[0], y:mouth[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:1.6, w:U * (.08 + R() * .05), rot:a, spin:(R() - .5) * 1.5, life:.9 + R() * .4, grow:1, fin:.04, fout:.6, alpha:.8})) }
+      pt(FX.pX, {k:'ripple', x:mouth[0], y:mouth[1], r:U * .03, grow:U * .2, life:.4, col:'170,250,255', lw:3}); pt(FX.pX, {k:'ripple', x:ctr[0], y:ctr[1] + mh * .3, r:MS * .3, grow:MS * .5, life:.35, col:'255,220,150', lw:2, sq:.4}) }
     // il mortaio: dritto per chi lancia, specchiato verso il bersaglio; rinculo = si schiaccia e si allarga un attimo
-    const sc = Math.max(0, pop.x), rk = Math.max(0, rc.x) * .012, firing = fired && x < AIM + .45;
-    if(sc > .02){ c.save(); c.translate(ctr[0], ctr[1]); c.rotate(ra); c.translate(0, mh * .45 * (1 - sc)); c.scale(flip * sc * (1 + rk), sc * (1 - rk * 1.4));
+    // prima dello sparo trema e il cristallo si carica; allo sparo rinculo forte (si schiaccia e viene spinto giù)
+    const sc = Math.max(0, pop.x), rk = Math.max(0, rc.x) * .02, firing = fired && x < AIM + .45, ch = clamp((x - .12) / (AIM - .12)), sh = !fired ? ch * ch * MS * .025 : 0;
+    if(!fired && ch > 0) glow(c, ctr[0], ctr[1], MS * (.2 + .25 * ch), '170,250,255', .7 * ch);
+    if(sc > .02){ c.save(); c.translate(ctr[0] + (R() - .5) * sh, ctr[1] + (R() - .5) * sh); c.rotate(ra + (R() - .5) * sh * .004); c.translate(0, mh * .45 * (1 - sc) + rk * mh * 1.6); c.scale(flip * sc * (1 + rk), sc * (1 - rk * 1.4));
       const im = firing && ok(m2) ? m2 : m1; if(ok(im)) c.drawImage(im, -MS / 2, -mh / 2, MS, mh);
       c.restore(); glow(c, ctr[0], ctr[1], MS * .35, '160,250,255', .25 * sc + (firing ? .4 : 0)) }
     // la bomba in volo: esce dalla bocca, l'ombra corre dritta sul tavolo, la bomba sale e scende sopra di lei e cresce in alto
-    if(x >= AIM && x < END){ const u = (x - AIM) / FL, gx = lerp(mouth[0], tg[0], u), gy = lerp(mouth[1], tg[1], u), hgt = Math.sin(PI * u) * lift, sz = lerp(bs * .55, bs, u) * (1 + .7 * Math.sin(PI * u));
+    if(x >= AIM && x < END){ const u0 = (x - AIM) / FL, u = 1 - Math.pow(1 - u0, 1.4), gx = lerp(mouth[0], tg[0], u), gy = lerp(mouth[1], tg[1], u), hgt = Math.sin(PI * u) * lift, sz = lerp(bs * .55, bs, u) * (1 + .7 * Math.sin(PI * u));
       c.globalAlpha = .35 * (1 - .5 * Math.sin(PI * u)); c.fillStyle = '#000'; c.beginPath(); c.ellipse(gx, gy + sz * .25, sz * .4, sz * .16, 0, 0, TAU); c.fill(); c.globalAlpha = 1;
       img(c, I('mox', 'bomb', 0), gx, gy - hgt, sz, (x - AIM) * spin); glow(c, gx, gy - hgt, sz * .6, '160,250,255', .5) }
     c.restore(); return true });
@@ -6447,7 +6455,7 @@ TH.mox = {
     const W = W_(), H = pV.clientHeight, fb = fieldBox(pV);
     if(RM){ flash('#E8FFFF', .9, .9, true); damage(); return }
     // fisica della bomba: posizione a terra (x, y), altezza z; cade dall'alto come capita, rimbalza, rotola, sbatte sui bordi
-    const r = W * .12, yL = fb.y + fb.h * (.3 + R() * .4);
+    const BK = land ? .72 : 1, r = W * .12 * BK, yL = fb.y + fb.h * (.3 + R() * .4);   // tavolo comune: bomba un po' più piccola
     const B = {x:clamp(tx + (R() - .5) * W * .12, fb.x + r, fb.x + fb.w - r), y:yL, z:yL + W * .25, vx:(W / 2 - tx) * (1 + R()) + (R() - .5) * W * .5, vy:(R() - .5) * W * .9, vz:-150 - R() * 200, rot:R() * TAU, spin:(R() - .5) * 16, rest:.3 + R() * .25, land:null, boom:null};
     // tavolo comune: la bomba arriva in volo dal cannoncino di chi lancia e tocca terra qui, con la velocità del volo
     if(land) Object.assign(B, {x:clamp(land.x, fb.x + r, fb.x + fb.w - r), y:clamp(land.y, fb.y + r, fb.y + fb.h - r), z:W * .04, vx:land.vx, vy:land.vy, vz:-700});
@@ -6466,7 +6474,7 @@ TH.mox = {
       if(B.boom == null && x > 2.6) B.boom = x;
       // il nucleo lampeggia sempre più veloce fino all'esplosione
       const pr = B.boom != null ? clamp((x - B.land) / Math.max(.05, B.boom - B.land)) : 0, bk = Math.pow(.5 + .5 * Math.sin(x * (6 + 40 * pr * pr)), 3) * (.3 + .7 * pr);
-      const sh = 1 - Math.min(1, B.z / H), bs = W * .24 * (1 + B.z / H * .7);
+      const sh = 1 - Math.min(1, B.z / H), bs = W * .24 * BK * (1 + B.z / H * .7);
       c.save(); c.globalAlpha = .45 * sh; c.fillStyle = '#000'; c.beginPath(); c.ellipse(B.x + B.z * .1, B.y + r * .55, r * (.5 + .5 * sh), r * .22 * (.5 + .5 * sh), 0, 0, TAU); c.fill(); c.restore();
       // pulsazione prima dello scoppio: la bomba si gonfia e si stringe due volte, il nucleo batte forte e manda un anello
       const left = B.boom != null ? B.boom - x : 9, pul = left < .38 && left > .08 ? Math.pow(Math.sin((.38 - left) / .3 * PI * 2), 2) : 0;
