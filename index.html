@@ -6362,7 +6362,9 @@ function moxTableShot(){
     const sc = Math.max(0, pop.x), rk = Math.max(0, rc.x) * .02, firing = fired && x < AIM + .45, ch = clamp((x - .12) / (AIM - .12)), sh = !fired ? ch * ch * MS * .025 : 0;
     if(!fired && ch > 0) glow(c, ctr[0], ctr[1], MS * (.2 + .25 * ch), '170,250,255', .7 * ch);
     if(sc > .02){ c.save(); c.translate(ctr[0] + (R() - .5) * sh, ctr[1] + (R() - .5) * sh); c.rotate(ra + (R() - .5) * sh * .004); c.translate(0, mh * .45 * (1 - sc) + rk * mh * 1.6); c.scale(flip * sc * (1 + rk), sc * (1 - rk * 1.4));
-      const im = firing && ok(m2) ? m2 : m1; if(ok(im)) c.drawImage(im, -MS / 2, -mh / 2, MS, mh);
+      // nell'immagine che spara il mortaio è disegnato più piccolo (c'è il fumo): la ingrandisco e la allineo alla base di quello a riposo (misurate sulle immagini)
+      if(firing && ok(m2)){ const k2 = 1.229, w2 = MS * k2, h2 = mh * k2; c.drawImage(m2, -MS / 2 + .4831 * MS - .4657 * w2, -mh / 2 + .9968 * mh - .9936 * h2, w2, h2) }
+      else if(ok(m1)) c.drawImage(m1, -MS / 2, -mh / 2, MS, mh);
       c.restore(); glow(c, ctr[0], ctr[1], MS * .35, '160,250,255', .25 * sc + (firing ? .4 : 0)) }
     // la bomba in volo: esce dalla bocca, l'ombra corre dritta sul tavolo, la bomba sale e scende sopra di lei e cresce in alto
     if(x >= AIM && x < END){ const u0 = (x - AIM) / FL, u = 1 - Math.pow(1 - u0, 1.4), gx = lerp(mouth[0], tg[0], u), gy = lerp(mouth[1], tg[1], u), hgt = Math.sin(PI * u) * lift, sz = lerp(bs * .55, bs, u) * (1 + .7 * Math.sin(PI * u));
