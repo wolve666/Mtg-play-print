@@ -61,7 +61,7 @@ const check = (ok, msg) => { log((ok ? 'OK   ' : 'FAIL ') + msg); if(!ok) fails+
   await shot(B, '02-ospite-partite-trovate');
   await B.click('[data-na="join"]');
   await A.waitForSelector('[data-na="yes"]', {timeout:5000});
-  const codeA = await A.textContent('.nlReq span'), codeB = await B.textContent('.nlCode');
+  const codeA = await A.textContent('.nlReq .nlCode'), codeB = await B.textContent('.nlCode');
   check(codeA.includes(codeB), `stesso codice di controllo sui due telefoni (${codeB})`);
   await shot(A, '03-principale-richiesta');
   await shot(B, '04-ospite-codice');

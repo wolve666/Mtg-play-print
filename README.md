@@ -70,6 +70,12 @@ Struttura:
 
 ## Registro delle modifiche
 
+### v2.2.6 (prerelease)
+Solo per Federico (APK tra gli allegati della compilazione).
+- **Tavolo virtuale (H&O, da 3 a 6 giocatori)**: nel menu di collegamento il principale sceglie la forma del tavolo (quadrato, rettangolare, rotondo) e vede i posti disegnati attorno, in senso orario; trascina ogni telefono al posto di chi lo usa. La forma arriva a tutti i telefoni.
+- **Direzioni vere**: ogni telefono sa da che parte siede ogni altro giocatore. I quadratini in alto sono in ordine di posto (da sinistra a destra come li vedi al tavolo). Si mira sempre con il bottone sul quadratino, ma il colpo esce verso il posto vero di chi è colpito (di lato per i vicini, in alto per chi sta di fronte) ed entra dal lato di chi attacca. Con 2 giocatori non cambia nulla.
+- **Menu di collegamento**: la partita aperta è un riquadro ben visibile (pallino che pulsa, formato, giocatori, telefoni collegati); chi chiede di entrare compare in cima, evidenziato, con il codice grande e i tasti Accetta e Rifiuta grandi. Per chi si unisce, le partite trovate sono riquadri con «Entra».
+
 ### v2.2.5 (prerelease)
 Solo per Federico (APK tra gli allegati della compilazione).
 - **Numeri della vita sempre leggibili**: nessuna animazione copre più il numero della vita e i + e −. Sopra di loro gli effetti diventano quasi trasparenti (se ne vede poco più di un decimo), con il bordo sfumato. Vale per i colpi dei temi, per gli effetti della Forgia e della Selva e per le scintille di Mana, sul tavolo e in H&O.

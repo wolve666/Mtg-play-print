@@ -1,7 +1,7 @@
 # H&O: posti al tavolo e direzione dei colpi
 
 Analisi del 26 novembre 2026, chiesta da Federico. Schema con tutti i casi: https://claude.ai/artifact/2xxaKP7F3ADJMk86i9AZ1m (pagina privata di Federico).
-**Niente di questo è ancora nel codice**: si decide prima, poi si fa.
+**Fatto nella 2.2.6** (decisione di Federico: tavolo virtuale, niente sensori): forma quadrato, rettangolare o rotondo da 3 a 6 giocatori; i posti girano in senso orario in ordine di numero partendo in alto; rettangolare con un numero dispari: uno in testa a destra. Si mira con il bottone sul quadratino, il colpo esce verso il posto vero. Codice: `TABS`, `tabSeats`, `netAng`, `netEdge` (fulmine e radici), `port` nel modulo dei colpi (colpi dipinti), ordine dei quadratini in `renderNetBar`. Forma di partenza: quadrato fino a 4 giocatori, rettangolare da 5.
 
 ## Il problema
 - Ogni telefono mette i quadratini degli altri sempre in **ordine di numero** (1, 2, 3, 4…), qualunque sia il suo posto (`renderNetBar`).

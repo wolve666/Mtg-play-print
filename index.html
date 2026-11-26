@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.2.5', APPN = 8;
+var APPV = '2.2.6', APPN = 8;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -682,14 +682,35 @@ body.netv .cell.pp .strip{height:64px}
 .nlDot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:var(--danger);vertical-align:middle}
 .nlDot.on{background:var(--ok)}
 .nlErr{color:var(--danger)}
-.nlReq{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface);margin-bottom:8px}
-.nlReq div{flex:1;display:grid;gap:2px;min-width:0}.nlReq span{font-size:13px;color:var(--muted)}
-.nlTable{display:grid;gap:6px;height:min(44vh,300px);margin:0 0 10px}
-.nlTable.n2{grid-template:1fr 1fr / 1fr}
-.nlTable.n3{grid-template:1.4fr 1fr / 1fr 1fr}.nlTable.n3 .nlSeat:nth-child(3){grid-column:1 / 3}
-.nlTable.n4{grid-template:1fr 1fr / 1fr 1fr}
-.nlTable.n5{grid-template:1fr 1fr .9fr / 1fr 1fr}.nlTable.n5 .nlSeat:nth-child(5){grid-column:1 / 3}
-.nlTable.n6{grid-template:1fr 1fr 1fr / 1fr 1fr}
+
+.nlTable{position:relative;display:block;height:min(52vh,340px);margin:0 0 10px}
+.nlTable .nlSeat{position:absolute;width:31%;height:21%;transform:translate(-50%,-50%);z-index:1}
+.nlTable.n5 .nlSeat,.nlTable.n6 .nlSeat{width:22%;height:19%;padding:4px}
+.nlTable.n5 .nlSeat b,.nlTable.n6 .nlSeat b{font-size:12px}
+.nlBoard{position:absolute;inset:20% 22%;border-radius:14px;background:color-mix(in srgb,var(--ok) 16%,var(--surface));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--ok) 35%,transparent);display:grid;place-items:center}
+.nlBoard span{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.nlTable.k-r .nlBoard{inset:22% 10%}
+.nlTable.k-r.n3 .nlSeat,.nlTable.k-r.n4 .nlSeat{width:27%;height:18%}
+.nlTable.k-t .nlBoard{inset:16%;left:50%;right:auto;width:min(68%,calc(min(52vh,340px) * .68));aspect-ratio:1;top:50%;bottom:auto;transform:translate(-50%,-50%);border-radius:50%}
+.nlTable.k-d .nlBoard{inset:26% 30%}
+.nlShapes{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.nlLive{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--ok) 15%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ok) 55%,transparent)}
+.nlLive.off{background:color-mix(in srgb,var(--danger) 14%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--danger) 55%,transparent)}
+.nlLive > div{flex:1;display:grid;gap:2px;min-width:0}
+.nlLive b{font-size:18px;font-weight:800;letter-spacing:.02em}
+.nlLive span{font-size:13px;color:var(--muted)}
+.nlPulse{position:relative;flex:none;width:12px;height:12px;border-radius:50%;background:var(--ok)}
+.nlLive.off .nlPulse{background:var(--danger)}
+.nlPulse::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--ok);opacity:0;animation:nlPing 1.6s ease-out infinite}
+.nlLive.off .nlPulse::after{border-color:var(--danger)}
+@keyframes nlPing{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+.nlReqs h3{color:var(--gold)}
+.nlReq{display:grid;gap:8px;justify-items:center;text-align:center;padding:14px;border-radius:14px;background:color-mix(in srgb,var(--gold) 14%,var(--surface));box-shadow:inset 0 0 0 2px var(--gold);margin-bottom:10px;animation:nlReqIn .5s cubic-bezier(.2,.9,.3,1.2) both, nlReqGlow 2s ease-in-out .5s infinite}
+@keyframes nlReqIn{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+@keyframes nlReqGlow{0%,100%{box-shadow:inset 0 0 0 2px var(--gold),0 0 0 0 color-mix(in srgb,var(--gold) 0%,transparent)}50%{box-shadow:inset 0 0 0 2px var(--gold),0 0 18px 2px color-mix(in srgb,var(--gold) 45%,transparent)}}
+.nlReqT{display:grid;gap:2px}.nlReqT b{font-size:20px;font-weight:800}.nlReqT span{font-size:13px;color:var(--muted)}
+.nlReqB{display:flex;gap:8px;width:100%}.nlReqB .btn{flex:1;margin:0}
+@media (prefers-reduced-motion:reduce){ .nlPulse::after,.nlReq{animation:none} }
 .nlSeat{border-radius:12px;background:var(--pc);color:var(--pt);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px;min-height:0;transition:box-shadow .15s}
 .nlSeat b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nlSeat.hl,.nlPool.hl{box-shadow:inset 0 0 0 4px #fff}
@@ -701,7 +722,9 @@ body.netv .cell.pp .strip{height:64px}
 .nlGhost{position:fixed;z-index:200;pointer-events:none;transform:translate(-50%,-70%) scale(1.1)}
 .nlFree{font-size:12px;opacity:.7}
 .nlPool{display:flex;flex-wrap:wrap;gap:8px;min-height:50px;padding:10px;border-radius:12px;border:1.5px dashed var(--line);align-items:center}
-.nlGame{display:grid;gap:2px;width:100%;text-align:left;padding:14px;border-radius:12px;background:var(--surface);margin-bottom:8px}
+.nlGame{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--ok) 15%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ok) 55%,transparent);margin-bottom:8px;color:inherit}
+.nlGame > div{flex:1;display:grid;gap:2px;min-width:0}.nlGame b{font-size:18px;font-weight:800}
+.nlGame em{font-style:normal;font-weight:800;padding:6px 12px;border-radius:999px;background:var(--ok);color:#fff}
 .nlGame span,.nlJoin span{font-size:13px;color:var(--muted)}
 .nlJoin{display:grid;gap:6px;justify-items:center;text-align:center;padding:16px;border-radius:12px;background:var(--surface)}
 .nlCode{font-size:40px;font-weight:800;letter-spacing:.15em;font-variant-numeric:tabular-nums;color:var(--gold)}
@@ -1662,9 +1685,9 @@ const NT = (()=>{
 
 // stato della partita condivisa: la parte che resta dopo un riavvio dell'app, più quella che vive solo finché l'app è aperta
 const NETK = 'smtg-net', SOLOK = 'smtg-state-solo';
-const NET_KEEP = ['role','gid','me','seats','names','acks','seq','pend','base','hostName'];
+const NET_KEEP = ['role','gid','me','seats','names','acks','seq','pend','base','hostName','tab'];
 const NET_RUN = () => ({eps:{}, ids:{}, on:{}, pr:{}, prSent:null, reqs:[], found:{}, hostEp:null, online:false, joining:null, shadow:null, sent:null, parts:{}, kick:0, adv:false, scanning:false, pick:null, err:''});
-const NET_EMPTY = () => ({role:null, gid:'', me:null, seats:{}, names:{}, acks:{}, seq:0, pend:[], base:null, hostName:''});
+const NET_EMPTY = () => ({role:null, gid:'', me:null, seats:{}, names:{}, acks:{}, seq:0, pend:[], base:null, hostName:'', tab:''});
 const NET = Object.assign(NET_EMPTY(), load(NETK) || {}, NET_RUN());
 if(!SET.netId){ SET.netId = Math.random().toString(36).slice(2, 10); saveSet() }
 const NID = () => SET.netId;
@@ -1765,7 +1788,7 @@ function netPush(){
     for(const id in NET.seats) if(NET.seats[id] >= S.count){ delete NET.seats[id]; lost = true }
     NET.me = NET.seats[NID()] ?? null;
     NET.sent = {pl:S.players.map(p => JSON.stringify(netPl(p))), meta, acks, last};
-    if(sn) netSend(netEps(), {t:'full', S:netState(), seats:NET.seats, names:NET.names, on:netOn(), acks:NET.acks, gid:NET.gid});
+    if(sn) netSend(netEps(), {t:'full', S:netState(), seats:NET.seats, names:NET.names, on:netOn(), acks:NET.acks, gid:NET.gid, tab:NET.tab});
     if(lost){ renderBoard(); renderNet() }
     return;
   }
@@ -1779,7 +1802,40 @@ function netPush(){
   if(any) netSend(netEps(), up);
 }
 const netOn = () => Object.assign({}, NET.on, {[NID()]:true});
-function netSeatsOut(){ netSend(netEps(), {t:'seats', seats:NET.seats, names:NET.names, on:netOn()}) }
+// ---- Tavolo virtuale (H&O, da 3 a 6 giocatori). Il principale sceglie la forma; i posti girano in senso orario
+// in ordine di numero, partendo in alto. Ogni telefono sa così da che parte sta ogni altro giocatore rispetto a sé
+// (0° davanti, negativo a sinistra, positivo a destra): da lì l'ordine dei quadratini e il lato da cui escono ed entrano i colpi.
+const TABS = {q:'Quadrato', r:'Rettangolare', t:'Rotondo'};
+const tabKind = () => TABS[NET.tab] ? NET.tab : S.count >= 5 ? 'r' : 'q';
+function tabSeats(n, k){
+  const P = [];
+  if(n < 3){ P.push({x:.5, y:.12, fx:0, fy:1}, {x:.5, y:.88, fx:0, fy:-1}); return P }
+  if(k === 't'){ for(let i = 0; i < n; i++){ const a = -Math.PI / 2 - Math.PI / n + 2 * Math.PI * i / n; P.push({x:.5 + .4 * Math.cos(a), y:.5 + .4 * Math.sin(a), fx:-Math.cos(a), fy:-Math.sin(a)}) } return P }
+  if(k === 'r'){ const side = Math.floor(n / 2);   // lati lunghi; con un numero dispari uno siede in testa, a destra
+    for(let i = 0; i < side; i++) P.push({x:.2 + .6 * (i + .5) / side, y:.12, fx:0, fy:1});
+    if(n % 2) P.push({x:.9, y:.5, fx:-1, fy:0});
+    for(let i = 0; i < side; i++) P.push({x:.8 - .6 * (i + .5) / side, y:.88, fx:0, fy:-1});
+    return P }
+  for(let i = 0; i < n; i++){ const a = -Math.PI / 2 + 2 * Math.PI * i / n, c = Math.cos(a), sn = Math.sin(a);
+    if(Math.abs(sn) >= Math.abs(c) - 1e-9) P.push({x:.5 + .36 * c / Math.abs(sn), y:sn < 0 ? .12 : .88, fx:0, fy:sn < 0 ? 1 : -1});
+    else P.push({x:c < 0 ? .12 : .88, y:.5 + .36 * sn / Math.abs(c), fx:c < 0 ? 1 : -1, fy:0}) }
+  return P;
+}
+function netAng(me, o){
+  if(S.count < 3 || me == null || o == null || me === o) return 0;
+  const P = tabSeats(S.count, tabKind()), a = P[me], b = P[o]; if(!a || !b) return 0;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  return Math.atan2(dx * -a.fy + dy * a.fx, dx * a.fx + dy * a.fy) * 180 / Math.PI;
+}
+window.netAng = netAng;
+// punto appena fuori dal bordo dello schermo, partendo da x0,y0 nella direzione «ang» (0° in alto, negativo a sinistra)
+function netEdge(x0, y0, ang, m = 40){
+  const r = ang * Math.PI / 180, dx = Math.sin(r), dy = -Math.cos(r), W = innerWidth, H = innerHeight; let t = 1e9;
+  if(dx > 1e-6) t = Math.min(t, (W + m - x0) / dx); if(dx < -1e-6) t = Math.min(t, (-m - x0) / dx);
+  if(dy < -1e-6) t = Math.min(t, (-m - y0) / dy); if(dy > 1e-6) t = Math.min(t, (H + m - y0) / dy);
+  return {x:x0 + dx * t, y:y0 + dy * t};
+}
+function netSeatsOut(){ netSend(netEps(), {t:'seats', seats:NET.seats, names:NET.names, on:netOn(), tab:NET.tab}) }
 // modifiche arrivate da un altro telefono: le applico come se le avessi fatte qui
 function netHostOps(id, m){
   if(!(m.seq > (NET.acks[id] || 0))) return;
@@ -1829,7 +1885,7 @@ function netHostMsg(ep, m){
       if(m.id !== inf.id) return;
       NET.names[inf.id] = netClean(m.name) || inf.name;
       NET.on[inf.id] = true; NET.eps[inf.id] = ep;
-      netSend([ep], {t:'full', S:netState(), seats:NET.seats, names:NET.names, on:netOn(), acks:NET.acks, gid:NET.gid});
+      netSend([ep], {t:'full', S:netState(), seats:NET.seats, names:NET.names, on:netOn(), acks:NET.acks, gid:NET.gid, tab:NET.tab});
       // modifiche fatte mentre era scollegato
       if(m.gid === NET.gid) (Array.isArray(m.pend) ? m.pend : []).forEach(b => netHostOps(inf.id, b));
       netSave(); netSeatsOut(); renderNet(); renderNetBar();
@@ -1908,7 +1964,7 @@ function netClientMsg(ep, m){
 }
 function netAck(acks){ const a = acks?.[NID()] || 0; NET.pend = NET.pend.filter(b => b.seq > a) }
 function netSeats(m, quiet){
-  NET.seats = m.seats || {}; NET.names = m.names || {}; NET.on = m.on || {};
+  NET.seats = m.seats || {}; NET.names = m.names || {}; NET.on = m.on || {}; NET.tab = TABS[m.tab] ? m.tab : '';
   const was = NET.me; NET.me = NET.seats[NID()] ?? null;
   netSave();
   if(quiet) return;
@@ -5073,8 +5129,8 @@ function fgStrike(a, v, dmg = 0, now = false){
   // H&O: il fulmine parte da me, attraversa il quadratino ed esce dal bordo in alto; esplode sul telefono di chi è colpito
   if(NV() && v !== NET.me){
     const f = fgFrom(a), tile = $(`.ntile[data-i="${v}"]`), again = fgAgain();
-    if(f && tile){ const t = fgC(tile);
-      EMB.bolt({x1:f.x, y1:f.y, x2:t.x + (Math.random() - .5) * t.w * .3, y2:-40, life:again ? .22 : .4, br:again ? 1 : 3, w:again ? .9 : 1.25, every:.05});
+    if(f && tile){ const t = fgC(tile), e = netEdge(f.x, f.y, netAng(a, v));
+      EMB.bolt({x1:f.x, y1:f.y, x2:e.x, y2:e.y, life:again ? .22 : .4, br:again ? 1 : 3, w:again ? .9 : 1.25, every:.05});
       if(!again) EMB.flash(.12);
       tile.animate([{translate:'0 0'},{translate:'-3px 2px'},{translate:'2px -2px'},{translate:'0 0'}], {duration:160, delay:40});
       buzz(again ? 10 : 20) }
@@ -5091,8 +5147,8 @@ function fgStrike(a, v, dmg = 0, now = false){
 function svStrike(a, v, again){
   const f = fgFrom(a); if(!f) return;
   if(NV() && v !== NET.me){
-    const tile = $(`.ntile[data-i="${v}"]`); if(tile){ const t = fgC(tile);
-      EMB.root({x1:f.x, y1:f.y, x2:t.x + (Math.random() - .5) * t.w * .3, y2:-30, life:again ? .55 : .8, grow:again ? .18 : .26, ret:.3, br:again ? 1 : 2, w:again ? .8 : 1});
+    const tile = $(`.ntile[data-i="${v}"]`); if(tile){ const t = fgC(tile), e = netEdge(f.x, f.y, netAng(a, v), 30);
+      EMB.root({x1:f.x, y1:f.y, x2:e.x, y2:e.y, life:again ? .55 : .8, grow:again ? .18 : .26, ret:.3, br:again ? 1 : 2, w:again ? .8 : 1});
       setTimeout(()=>{ EMB.burst(t.x, t.y + t.h * .3, {n:again ? 4 : 8, speed:200, life:1, cols:PAL.selva.spark, drag:2, leaf:true}); tile.animate([{translate:'0 0'},{translate:'-3px 2px'},{translate:'2px -2px'},{translate:'0 0'}], {duration:160}) }, 160);
       buzz(again ? 10 : 20) }
     netZap(a, v, again);
@@ -5121,8 +5177,7 @@ function svGrip(t, small, fromX){
 function svIncoming(a, small){
   if(RMOT || document.hidden) return;
   const t = fgTo(NET.me); if(!t) return;
-  const tile = $(`.ntile[data-i="${a}"]`), sx = tile ? fgC(tile).x : innerWidth / 2;
-  svGrip(t, small, sx);
+  svGrip(t, small, netEdge(t.x, t.y, netAng(NET.me, a)).x);
 }
 // graffio d'artiglio: tre segni paralleli sulla scheda, lampo verde, la scheda trema
 function svClaw(cell){
@@ -5139,8 +5194,8 @@ function svClaw(cell){
 function fgIncoming(a, small){
   if(RMOT || document.hidden) return;
   const t = fgTo(NET.me); if(!t) return;
-  const tile = $(`.ntile[data-i="${a}"]`), sx = tile ? fgC(tile).x : innerWidth / 2;
-  EMB.bolt({x1:sx, y1:-40, x2:t.x, y2:t.y, life:small ? .22 : .42, br:small ? 1 : 3, w:small ? .9 : 1.3, every:.05});
+  const e = netEdge(t.x, t.y, netAng(NET.me, a));
+  EMB.bolt({x1:e.x, y1:e.y, x2:t.x, y2:t.y, life:small ? .22 : .42, br:small ? 1 : 3, w:small ? .9 : 1.3, every:.05});
   if(!small) EMB.flash(.18);
   setTimeout(()=>fgZap(t, small), 60);
 }
@@ -5503,7 +5558,8 @@ function renderNetBar(){
   if(!nv){ bar.innerHTML = ''; return }
   const ok = NET.role === 'host' || NET.online;
   bar.innerHTML = `<button class="nline ${ok ? 'on' : 'off'}" data-net aria-label="Partita condivisa"><i></i></button>` +
-    S.players.map((_, i) => i === NET.me ? '' : `<button class="ntile" data-i="${i}">${netTileHTML(i)}</button>`).join('');
+    S.players.map((_, i) => i).filter(i => i !== NET.me).sort((x, y) => netAng(NET.me, x) - netAng(NET.me, y))
+      .map(i => `<button class="ntile" data-i="${i}">${netTileHTML(i)}</button>`).join('');
   bar.querySelectorAll('.ntile').forEach(el => netTileCls(el, +el.dataset.i));
 }
 // aggiorna un quadratino solo (si chiama da updateCell, quando il campo di quel giocatore non è sullo schermo)
@@ -5550,31 +5606,42 @@ function netScanStop(){
   NET.scanning = false; NT.stopDiscover().catch(()=>{});
 }
 const netChip = id => `<span class="nlChip${NET.pick === id ? ' sel' : ''}${id !== NID() && !NET.on[id] ? ' off' : ''}" data-id="${esc(id)}">${esc(id === NID() ? 'Questo telefono' : NET.names[id] || 'Telefono')}</span>`;
+// i posti disegnati attorno al tavolo virtuale, in senso orario (lo stesso disegno con cui i telefoni calcolano le direzioni)
 function netTable(edit){
-  const ids = netSeatIds();
-  return `<div class="nlTable n${S.count}">${S.players.map((p, i) => {
-    const c = COLORS[p.color], id = ids[i];
-    return `<div class="nlSeat${edit ? ' ed' : ''}${id === NID() ? ' me' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg}"><b>${esc(p.name)}</b>${id ? (edit ? netChip(id) : `<span class="nlChip">${esc(id === NID() ? 'Tu' : NET.names[id] || 'Telefono')}</span>`) : '<span class="nlFree">libero</span>'}</div>`;
+  const ids = netSeatIds(), n = S.count, k = tabKind(), P = tabSeats(n, k);
+  return `<div class="nlTable n${n} k-${n < 3 ? 'd' : k}"><div class="nlBoard"><span>${n < 3 ? 'di fronte' : 'giro ↻'}</span></div>${S.players.map((p, i) => {
+    const c = COLORS[p.color], id = ids[i], q = P[i] || {x:.5, y:.5};
+    return `<div class="nlSeat${edit ? ' ed' : ''}${id === NID() ? ' me' : ''}" data-i="${i}" style="--pc:${c.bg};--pt:${c.fg};left:${(q.x * 100).toFixed(1)}%;top:${(q.y * 100).toFixed(1)}%"><b>${esc(p.name)}</b>${id ? (edit ? netChip(id) : `<span class="nlChip">${esc(id === NID() ? 'Tu' : NET.names[id] || 'Telefono')}</span>`) : '<span class="nlFree">libero</span>'}</div>`;
   }).join('')}</div>`;
+}
+// forma del tavolo: solo da 3 giocatori in su (in due si è sempre di fronte)
+const netShapes = edit => S.count < 3 ? '' : `<div class="nlShapes">${Object.entries(TABS).map(([k, l]) => edit
+  ? `<button class="chip${tabKind() === k ? ' sel' : ''}" data-na="tab" data-v="${k}">${l}</button>` : tabKind() === k ? `<span class="chip sel">${l}</span>` : '').join('')}</div>`;
+// stato della partita condivisa, ben in vista
+function netLive(on, title, sub, extra = ''){
+  return `<div class="nlLive ${on ? 'on' : 'off'}"><i class="nlPulse"></i><div><b>${title}</b><span>${sub}</span></div>${extra}</div>`;
 }
 function renderNet(){
   const body = $('#netBody'); if(!body || !stack.includes('net')) return;
   const err = NET.err ? `<p class="note nlErr">${esc(NET.err)}</p>` : '';
   if(NET.role === 'host'){
     const free = Object.keys(NET.names).filter(id => NET.seats[id] == null && (id === NID() || NET.on[id]));
+    const conn = 1 + Object.keys(NET.names).filter(id => id !== NID() && NET.on[id]).length;
     body.innerHTML = `
+    ${NET.reqs.length ? `<div class="sec nlReqs"><h3>${NET.reqs.length === 1 ? 'Chiede di unirsi' : `Chiedono di unirsi (${NET.reqs.length})`}</h3>${NET.reqs.map(r => `
+      <div class="nlReq"><div class="nlReqT"><b>${esc(r.name)}</b><span>Controlla che sul suo telefono ci sia lo stesso codice</span></div>
+      <div class="nlCode">${esc(r.digits)}</div>
+      <div class="nlReqB"><button class="btn" data-na="no" data-ep="${esc(r.ep)}">Rifiuta</button><button class="btn primary" data-na="yes" data-ep="${esc(r.ep)}">Accetta</button></div></div>`).join('')}</div>` : ''}
     <div class="sec"><h3>Partita condivisa</h3>
-      <div class="row"><span class="lbl"><i class="nlDot ${NET.adv ? 'on' : 'off'}"></i>${NET.adv ? 'Visibile ai telefoni vicini' : 'Non visibile'}</span>${NET.adv ? '' : '<button class="chip" data-na="adv">Riprova</button>'}</div>
+      ${netLive(NET.adv, NET.adv ? 'Partita aperta' : 'Partita non visibile', `${esc(FORMATS[S.format].label)} · ${S.count} giocatori · ${conn} ${conn === 1 ? 'telefono collegato' : 'telefoni collegati'}`, NET.adv ? '' : '<button class="chip" data-na="adv">Riprova</button>')}
       ${err}
       <p class="note">Questo è il telefono principale: tiene la partita. Sugli altri telefoni apri l'app e tocca «Unisciti a una partita».</p>
     </div>
-    ${NET.reqs.length ? `<div class="sec"><h3>Vogliono unirsi</h3>${NET.reqs.map(r => `
-      <div class="nlReq"><div><b>${esc(r.name)}</b><span>Codice ${esc(r.digits)}: deve essere uguale sul suo telefono</span></div>
-      <button class="chip" data-na="no" data-ep="${esc(r.ep)}">Rifiuta</button><button class="chip sel" data-na="yes" data-ep="${esc(r.ep)}">Accetta</button></div>`).join('')}</div>` : ''}
     <div class="sec"><h3>Posti al tavolo</h3>
+      ${netShapes(true)}
       ${netTable(true)}
       <div class="nlPool" data-pool>${free.length ? free.map(netChip).join('') : '<span class="note" style="margin:0">Tutti i telefoni collegati hanno un posto.</span>'}</div>
-      <p class="note">Trascina ogni telefono al posto di chi lo usa (oppure tocca il telefono e poi il posto). Serve anche a far partire i colpi dal lato giusto. Riportalo qui sotto per togliergli il posto.</p>
+      <p class="note">${S.count >= 3 ? 'Scegli la forma del tavolo più simile al vostro. ' : ''}Trascina ogni telefono al posto di chi lo usa, come siete seduti davvero (oppure tocca il telefono e poi il posto): da qui i colpi partono e arrivano dal lato giusto. Riportalo qui sotto per togliergli il posto.</p>
     </div>
     <button class="btn primary" data-na="done">Torna al tavolo</button>
     <button class="btn danger" data-na="leave">Chiudi la partita condivisa</button>`;
@@ -5584,11 +5651,11 @@ function renderNet(){
     const seat = NET.me != null ? S.players[NET.me] : null;
     body.innerHTML = `
     <div class="sec"><h3>Partita condivisa</h3>
-      <div class="row"><span class="lbl"><i class="nlDot ${NET.online ? 'on' : 'off'}"></i>${NET.online ? `Collegato a ${esc(NET.hostName)}` : NET.joining ? 'Mi ricollego…' : `Cerco ${esc(NET.hostName)}…`}</span></div>
+      ${netLive(NET.online, NET.online ? `Collegato a ${esc(NET.hostName)}` : NET.joining ? 'Mi ricollego…' : `Cerco ${esc(NET.hostName)}…`, NET.online ? `${esc(FORMATS[S.format].label)} · ${S.count} giocatori` : 'Il telefono principale deve avere l\'app aperta')}
       ${err}
       <p class="note">${seat ? `Il tuo posto: <b>${esc(seat.name)}</b>.` : 'Aspetta: chi tiene il telefono principale ti assegna un posto al tavolo.'}</p>
     </div>
-    <div class="sec"><h3>Posti al tavolo</h3>${netTable(false)}</div>
+    <div class="sec"><h3>Posti al tavolo</h3>${netShapes(false)}${netTable(false)}</div>
     ${seat ? '<button class="btn primary" data-na="done">Torna al tavolo</button>' : ''}
     <button class="btn danger" data-na="leave">Esci dalla partita condivisa</button>`;
     return;
@@ -5602,7 +5669,7 @@ function renderNet(){
   <div class="sec"><h3>Unisciti a una partita</h3>
     ${j ? `<div class="nlJoin"><b>${esc(j.name)}</b><span>${j.state === 'ask' ? 'Chiedo di entrare…' : j.state === 'ok' ? 'Entro nella partita…' : 'Aspetto che il telefono principale accetti'}</span>
       ${j.digits ? `<div class="nlCode">${esc(j.digits)}</div><span>Sul telefono principale deve comparire lo stesso codice.</span>` : ''}</div>`
-    : games.length ? games.map(([ep, g]) => `<button class="nlGame" data-na="join" data-ep="${esc(ep)}"><b>${esc(g.name)}</b><span>${esc(FORMATS[g.fmt]?.label || '')}${g.n ? `, ${g.n} giocatori` : ''}</span></button>`).join('')
+    : games.length ? games.map(([ep, g]) => `<button class="nlGame" data-na="join" data-ep="${esc(ep)}"><i class="nlPulse"></i><div><b>${esc(g.name)}</b><span>Partita aperta · ${esc(FORMATS[g.fmt]?.label || '')}${g.n ? `, ${g.n} giocatori` : ''}</span></div><em>Entra</em></button>`).join('')
     : `<p class="note">${NET.scanning ? 'Cerco le partite vicine… Sul telefono principale deve essere aperta una partita condivisa.' : 'Ricerca ferma.'}</p>`}
     ${!j && !NET.scanning ? '<button class="btn" data-na="scan">Cerca di nuovo</button>' : ''}
     ${err}
@@ -5623,6 +5690,7 @@ $('#netBody').addEventListener('click', e => {
     case 'join': { const g = NET.found[b.dataset.ep]; if(g) netConnect(b.dataset.ep, g); break }
     case 'scan': NET.err = ''; netScan(); break;
     case 'adv': netAdvertise(); break;
+    case 'tab': if(NET.role === 'host' && TABS[b.dataset.v]){ NET.tab = b.dataset.v; netSave(); netSeatsOut(); renderNet(); renderNetBar() } break;
     case 'yes': netAccept(b.dataset.ep, true); break;
     case 'no': netAccept(b.dataset.ep, false); break;
     case 'done': closeAllOv(); break;
@@ -7562,13 +7630,21 @@ function reset(){
   SCR.A = SCR.V = null; SHOW.A = SHOW.V = false; ACT = null;
 }
 // prepara i due schermi del colpo a → v; vedo: 'AV' (un telefono), 'A' (chi attacca in H&O), 'V' (chi è colpito in H&O)
+// tavolo virtuale: il colpo esce verso il posto vero di chi è colpito (ed entra da quello di chi attacca).
+// I colpi dipinti partono e arrivano da un quadratino in alto: lo sposto lungo il bordo in alto, verso quel lato
+// (tutto a sinistra per chi siede alla mia sinistra, al centro per chi sta di fronte); per i vicini scende lungo il bordo, così il colpo esce di lato.
+function port(me, o, real){
+  if(!window.netAng || !real) return real;
+  const W = innerWidth, sn = Math.sin(netAng(me, o) * Math.PI / 180);
+  return {x:Math.max(0, Math.min(W - real.w, W / 2 + sn * W * .5 - real.w / 2)), y:real.y + Math.pow(Math.abs(sn), 3) * innerHeight * .3, w:real.w, h:real.h};
+}
 function setup(a, v, see, upright){
   if(ACT) reset();
   const net = NV(), tb = net ? null : tableScreens(a, v, upright);
   const A = net ? screenOf(NET.me, see === 'A' ? v : a, 'A') : tb && tb.A;
   const V = net ? screenOf(NET.me, see === 'A' ? v : a, 'V') : tb && tb.V;
   if(!A || !V) return false;
-  if(net && see === 'V'){ const t = $(`.ntile[data-i="${a}"]`); if(t){ const r = t.getBoundingClientRect(); A.tile = V.tile = {x:r.left, y:r.top, w:r.width, h:r.height} } }
+  if(net && see === 'V'){ const t = $(`.ntile[data-i="${a}"]`); if(t){ const r = t.getBoundingClientRect(); A.tile = V.tile = port(NET.me, a, {x:r.left, y:r.top, w:r.width, h:r.height}) } }
   SCR.A = A; SCR.V = V; SHOW.A = see.includes('A'); SHOW.V = see.includes('V');
   FLD.V = SHOW.V && net ? fieldFor('V', V) : null;   // il tappeto vivo solo in H&O: sul tavolo comune le sezioni reagiscono da sole
   FLD.A = null;   // chi attacca non ha il tappeto vivo: su un telefono faceva un riquadro sulla sua scheda
@@ -7643,6 +7719,7 @@ function strike(a, v, dmg){
   const net = NV();
   const kind = TH[th].big && (dmg >= 8 || R() < 1 / 8) ? (TH[th].big2 && R() < .5 ? 'b2' : 'b') : th === 'forgia' && R() < 1 / 8 ? 'g' : 'n';
   if(!setup(a, v, net ? 'A' : 'AV', !net && kind === 'g')) return null;   // il goblin corre dritto sul tavolo
+  if(net) SCR.A.tile = port(NET.me, v, SCR.A.tile);
   TK = th;
   AIM = null; HITV = net ? null : v;
   const tr = tileRect(pA), d = {th, t0:T - 1.4, p:[tr.x + tr.w / 2, tr.y + tr.h / 2], auto:true};
