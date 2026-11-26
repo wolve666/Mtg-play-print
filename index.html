@@ -7117,12 +7117,14 @@ function criptaTableBig(a, v){
       if(R() < dt * 10 * k) pt(P, {k:'mote', x:tx, y:ty, vx:(R() - .5) * 30, vy:-30 - R() * 40, r:1 + R(), life:.6, col:'255,170,120', al:.8}) });
     return true });
   // 3. sul tappeto colpito: pentacolo piccolo, nebbia nera che si chiude, il teschio dritto per chi è colpito
-  const BL = Array.from({length:30}, (_, i) => ({a:R() * TAU, r:.2 + R() * .9, s:SMALL * (.8 + R() * .8), col:i % 4 ? pick(['12,5,20', '22,10,34', '8,3,14']) : pick(CDARK), sp:(R() - .5) * .25, ph:R() * TAU}));
+  // nebbia che avvolge tutto il tappeto colpito (sbuffi sparsi su tutta la sua superficie e un po' oltre i bordi, verso gli altri)
+  const BL = Array.from({length:42}, (_, i) => ({u:(R() - .5) * 1.25, w:(R() - .5) * 1.25, a:R() * TAU, s:Math.min(fw, fh) * (.35 + R() * .35), col:i % 4 ? pick(['12,5,20', '22,10,34', '8,3,14']) : pick(CDARK), sp:(R() - .5) * .25, ph:R() * TAU}));
   add(function(c, dt){ this.a += dt; const x = this.a; if(x > END) return false;
     const pp = ph(x, PEN), f = ph(x, FOG), f2 = f * f * (3 - 2 * f), sv = ph(x, SKULL);
     c.save(); c.translate(tc[0], tc[1]); c.rotate(ang);
     if(pp > 0) pentacle(c, 0, 0, SMALL, WP * .7, pp, GL, 0);
-    if(f > 0) BL.forEach(b => { const rr = b.r * (1.6 - .6 * f2), aa = b.a + b.sp * x, s2 = b.s * (1 + .06 * Math.sin(x * .7 + b.ph)); c.globalAlpha = Math.min(1, f2 * 1.1) * .9; c.drawImage(smk(b.col), Math.cos(aa) * SMALL * rr * 1.7 - s2, Math.sin(aa) * SMALL * rr * 1.2 - s2, s2 * 2, s2 * 2) });
+    if(f > 0) BL.forEach(b => { const k = 1.7 - .7 * f2, aa = b.a + b.sp * x, s2 = b.s * (1 + .06 * Math.sin(x * .7 + b.ph)), bx = b.u * fw * k + Math.cos(aa) * fw * .03, by = b.w * fh * k + Math.sin(aa) * fh * .03;
+      c.globalAlpha = Math.min(1, f2 * 1.2) * .92; c.drawImage(smk(b.col), bx - s2, by - s2, s2 * 2, s2 * 2) });
     c.globalAlpha = 1;
     if(sv > 0 && ok(sk)){ const grow = x < HIT ? eo((x - SKULL[0]) / (HIT - SKULL[0])) : 1 + .08 * eo((x - HIT) / .3), sz = SMALL * (1.1 + .5 * grow), y = -SMALL * .1, skh = sz * ih(sk) / iw(sk);
       img(c, sk, 0, y, sz, Math.sin(x * 1.7) * .03, sv * .95);
