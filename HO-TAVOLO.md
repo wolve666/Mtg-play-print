@@ -52,6 +52,14 @@ Il messaggio del colpo tra i telefoni non cambia: ognuno sa già chi attacca chi
 - Per sapere i posti serve comunque l'ordine in cui si è seduti e la forma del tavolo (vedi sopra): con il tavolo due per lato il «precedente nel turno» può essere di fronte e non di lato.
 - Consigliato anche mettere i quadratini nell'ordine dei posti, così la linea della mira e la direzione del colpo vanno dalla stessa parte; non è obbligatorio.
 
+## Capire da soli dove sono i telefoni? (domanda di Federico)
+- **Bluetooth (forza del segnale)**: dà solo una distanza molto approssimativa (sbaglia di uno-due metri in casa) e nessuna direzione. A un tavolo, dove tutti sono entro un metro e mezzo, non distingue un vicino da chi sta di fronte. Non serve.
+- **UWB (banda ultralarga)**: misura distanza e direzione tra due telefoni con buona precisione, ma ce l'hanno pochi modelli di fascia alta, e serve su tutti e due. Non si può contare.
+- **Bussola del telefono**: ogni telefono sa da che parte punta il suo lato alto. Telefoni sullo stesso lato del tavolo puntano uguale, quelli di fronte al contrario, quelli sui lati corti di traverso. Unita all'ordine dei posti, la bussola dice **da sola la forma del tavolo** (due per lato, uno per lato, tondo) e chi sta di lato, di fronte o in diagonale. Funziona dal browser dell'app (orientamento assoluto), senza codice nativo.
+  - Limiti: sbaglia di 10–20 gradi, di più vicino a tavoli o gambe di metallo, casse, caricatori; serve il telefono appoggiato o tenuto più o meno piano; qualche telefono economico non ha la bussola.
+  - Uso proposto: all'inizio della partita H&O ogni telefono manda al principale la sua direzione; il principale propone il disegno del tavolo già compilato e chiede solo «Va bene così?». Se la bussola manca o non è sicura, si sceglie a mano come nella proposta sopra.
+  - Da provare sui telefoni veri prima di decidere.
+
 ## Continuità del colpo da un telefono all'altro
 - **Direzione**: uscita ed entrata nascono dalla stessa retta sul tavolo (da chi attacca a chi è colpito). Il colpo lascia il telefono di chi attacca dal bordo rivolto verso l'avversario ed entra in quello colpito dal bordo rivolto verso chi attacca: a occhio è un colpo che attraversa il tavolo.
 - **Tempi**: già oggi il messaggio del colpo porta il tempo di lancio (`w`) e il telefono colpito fa arrivare il colpo quando sull'altro è uscito. Si aggiunge un piccolo **tempo di volo** in base alla distanza tra i posti (un vicino subito, chi sta di fronte un attimo dopo).
