@@ -5928,7 +5928,9 @@ function renderF(F, punch, t){
 // luce sul campo (intensità negativa = buio), onda d'urto sul campo
 function lit(ph, x, y, r, col, i){ const F = FLD[ph]; if(F && i) F.lights.push([x, y, r, i, col]) }
 function wave(ph, x, y, r, amp, w){ const F = FLD[ph]; if(F && amp) F.waves.push([x, y, r, amp, w]) }
-const st = ph => FLD[ph] ? FLD[ph].st : {rip:[], heat:[], sh:[], pin:[], sw:[], fl:[0, 0, 0, 0], with:0, dark:0, chr:0};
+// tavolo comune: il tappeto vivo non c'è (solo H&O), ma la stretta e il buio del tappeto colpito si tengono qui e si fanno sulla scheda (vedi frame)
+const TSTV = {rip:[0, 0, 0, 0], heat:[0, 0, 0], sh:[0, 0, 0, 0], pin:[0, 0, 0, 1], sw:[0, 0, 0, 1], fl:[0, 0, 0, 0], with:0, dark:0, chr:0};
+const st = ph => FLD[ph] ? FLD[ph].st : ph === 'V' && TAV() ? TSTV : {rip:[], heat:[], sh:[], pin:[], sw:[], fl:[0, 0, 0, 0], with:0, dark:0, chr:0};
 function lightAt(F, x, y){ const o = [0, 0, 0]; if(!F) return o; F.lights.forEach(l => { const d = Math.hypot(x - l[0], y - l[1]) / l[2], k = l[3] / (1 + d * d * 6) * (1 - clamp((d - .6) / 1)); o[0] += l[4][0] * k; o[1] += l[4][1] * k; o[2] += l[4][2] * k }); return o }
 
 // ---------- molle
@@ -6543,7 +6545,16 @@ TH.mox = {
       lit('A', hb.x, hb.y, Wa * .9, [.5, .95, 1.3], .25 + 1.1 * ck * ck + 1.4 * on * (.8 + .2 * Math.sin(x * 50)));
       if(x > CH && !fired){ fired = 1; rc.v = 7; SP.aHub.v -= 3; SP.aPunch.v -= 1.2; flash('#E0FAFF', .55, .2); if(navigator.vibrate) try{ navigator.vibrate([60, 20, 200]) }catch(e){} }
       // il laser verso il campo avversario (in alto)
-      if(tav){ const e = LH.p ? toA(LH.p[0], LH.p[1]) : oA; UP += Math.atan2(Math.sin(Math.atan2(e[1] - hb.y, e[0] - hb.x) - UP), Math.cos(Math.atan2(e[1] - hb.y, e[0] - hb.x) - UP)) * Math.min(1, dt * 10) }
+      if(tav){
+        // entrata energica: lampo, anello e scintille quando la torretta sbuca dal bottone
+        if(!this.ent){ this.ent = 1; const r = rectC($('#tokenBtn')), Pm = pal(); EMB.ring(r.x, r.y, Pm.hubRing, Wa * .55, .5, 9); EMB.burst(r.x, r.y, {n:60, speed:520, life:.6, cols:Pm.hub, drag:2.6, size:1.8}); SP.aHub.v -= 2.5; vib([20, 20, 30]) }
+        if(x < .35) glow(c, hb.x, hb.y, Wa * (.25 + .3 * eo(x / .35)), '200,250,255', 1 - x / .35);
+        // la base non riesce a tenere tutta la corrente: scintille e archi che scappano dal bordo, sempre di più con la carica e con lo sparo
+        const lk = x < SW0 ? .15 : x < OFF + .3 ? .3 + .7 * Math.max(clamp((x - SW1) / (CH - SW1)), x > CH && x < OFF ? 1 : 0) : Math.max(0, 1 - (x - OFF - .3) * 2), br = Wa * .14 * KT * csz(cs);
+        if(br > 1 && R() < dt * 70 * lk){ const a = R() * TAU, v = 120 + R() * 260 * lk; pt(FX.pA, {k:'spark', x:hb.x + Math.cos(a) * br, y:hb.y + Math.sin(a) * br, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:3, life:.25 + R() * .25, r:1 + R(), col:R() < .6 ? '170,250,255' : '255,240,200'}) }
+        if(br > 1 && R() < dt * 16 * lk){ const a = R() * TAU, l = br * (.5 + R() * .9), pts = [[hb.x + Math.cos(a) * br * .9, hb.y + Math.sin(a) * br * .9]]; for(let j = 1; j <= 4; j++){ const q = j / 4; pts.push([pts[0][0] + Math.cos(a) * l * q + (R() - .5) * l * .35, pts[0][1] + Math.sin(a) * l * q + (R() - .5) * l * .35]) } pt(FX.pA, {k:'arc', pts, life:.09, fout:1}) }
+        if(lk > .3) glow(c, hb.x, hb.y, br * 1.6, '160,240,255', .25 * lk * (.7 + .3 * Math.sin(x * 37)));
+        const e = LH.p ? toA(LH.p[0], LH.p[1]) : oA; UP += Math.atan2(Math.sin(Math.atan2(e[1] - hb.y, e[0] - hb.x) - UP), Math.cos(Math.atan2(e[1] - hb.y, e[0] - hb.x) - UP)) * Math.min(1, dt * 10) }
       if(on){ const k = Math.min(1, (x - CH) / .08) * Math.min(1, (OFF - x) / .15), wb = Wa * KT * (.11 + .015 * Math.sin(x * 47));
         if(tav){ const e = LH.p ? toA(LH.p[0], LH.p[1]) : oA, hd = eo((x - CH) / .15); laserBeam(c, mz[0], mz[1], lerp(mz[0], e[0], hd), lerp(mz[1], e[1], hd), wb * k, x, k) }
         else laserBeam(c, mz[0], mz[1], mz[0] + Math.cos(UP) * Ha * 1.5, mz[1] + Math.sin(UP) * Ha * 1.5, wb * k, x, k);
@@ -8030,7 +8041,7 @@ function frame(now){
     for(let i = Q.length - 1; i >= 0; i--) if(Q[i].t <= T){ const f = Q[i].f; Q.splice(i, 1); f() }
     for(const k in SP) stepS(SP[k], dt);
     const A = SCR.A, V = SCR.V, ending = !busy();
-    if(FLD.A) resetF(FLD.A); if(FLD.V) resetF(FLD.V);
+    if(FLD.A) resetF(FLD.A); if(FLD.V) resetF(FLD.V); TSTV.pin[1] = 0; TSTV.dark = 0;
     if(!NV()) fixedCv('cpA'), fixedCv('cpG');   // ordine delle tele: la mira sotto, poi la terra, poi il resto
     const cA = A && SHOW.A ? fitFix(fixedCv('cpA'), A) : dummyCtx;
     if(FLD.A) gndCtx(FLD.A);
@@ -8060,7 +8071,13 @@ function frame(now){
       tf(V.life, `scale(${SP.vLife.x.toFixed(3)}) rotate(${SP.vLifeR.x.toFixed(2)}deg)`);
       if(NV()) $('#tokenBtn').style.scale = SP.vHub.x.toFixed(3);
       if(wither){ wither.a += dt; const k = env(wither.a, .7, 1.6, 1); if(FLD.V) st('V').with = k; else V.cell.style.filter = k > 0 ? `saturate(${1 - .8 * k}) brightness(${1 - .4 * k})` : ''; if(wither.a > 3.4){ wither = null; V.cell.style.filter = '' } }
-      if(FLD.V && !ending){ FLD.V.a = Math.min(1, FLD.V.a + dt * 8); renderF(FLD.V, SP.vPunch.x, T); lightLife(FLD.V, V) } else V.cell.style.scale = SP.vPunch.x.toFixed(3);
+      if(FLD.V && !ending){ FLD.V.a = Math.min(1, FLD.V.a + dt * 8); renderF(FLD.V, SP.vPunch.x, T); lightLife(FLD.V, V) }
+      else if(V.table && (TSTV.pin[1] > .005 || TSTV.dark > .005)){
+        // il tappeto stritolato (Selva): le spire lo schiacciano di lato e lo allungano un po' nell'altro verso, e si scurisce; il tutto nel verso della scheda
+        const q = TSTV.pin[1], side = (rotDeg(+V.cell.dataset.i) % 180) !== 0, across = TSTV.pin[3] >= 0, pul = 1 + .08 * Math.sin(T * 9), sx = 1 - .32 * q * pul, sy = 1 + .06 * q, p = SP.vPunch.x;
+        const ax = across !== side ? sx : sy, ay = across !== side ? sy : sx;
+        V.cell.style.scale = `${(p * ax).toFixed(3)} ${(p * ay).toFixed(3)}`; V.cell.style.filter = TSTV.dark > .005 ? `brightness(${(1 - .55 * TSTV.dark).toFixed(3)}) saturate(${(1 - .4 * TSTV.dark).toFixed(3)})` : '' }
+      else { V.cell.style.scale = SP.vPunch.x.toFixed(3); if(V.table && !wither) V.cell.style.filter = '' }
     } else { if(rumble){ rumble.a += dt; if(rumble.a > rumble.dur) rumble = null } if(wither){ wither.a += dt; if(wither.a > 3.4) wither = null } }
     if(A && SHOW.A){
       if(A.hubEl) A.hubEl.style.scale = SP.aHub.x.toFixed(3);
