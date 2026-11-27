@@ -68,6 +68,8 @@ Struttura:
 - `native/`: la parte Java (Bluetooth classico, dettatura, esclusione dei gesti di sistema, telefoni collegati con Nearby Connections). Quando cambia, va alzato `APPN` in `index.html`.
 - `icon-512.png`: l'icona dell'app.
 
+- **Prova privata** (`uscita: prova-privata`, con i giorni di validità): come la prova generale, l'app scade dopo N giorni e si blocca, ma l'APK resta solo tra gli allegati della compilazione, niente vetrina. Contro l'orologio portato indietro l'app ricorda l'ora più avanti che ha visto (e l'ora della compilazione) e, con internet, chiede l'ora vera.
+
 ## Registro delle modifiche
 
 ### v2.2.7 (prerelease, da compilare)

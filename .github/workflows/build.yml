@@ -3,6 +3,7 @@ name: Compila APK
 # - push su main: versione definitiva, release nella vetrina (repository pubblico con sole APK, niente codice)
 # - a mano con «beta» o «prova-generale»: pre-release nella vetrina che scade dopo N giorni; chi ha la definitiva non la riceve
 # - a mano con «solo-allegato»: nessuna release, l'APK resta tra gli allegati della compilazione
+# - a mano con «prova-privata»: come la prova generale (scade dopo N giorni) ma niente vetrina, l'APK resta solo tra gli allegati
 on:
   push:
     branches: [main]
@@ -11,7 +12,7 @@ on:
       uscita:
         description: Cosa fare dell'APK
         type: choice
-        options: [solo-allegato, beta, prova-generale]
+        options: [solo-allegato, beta, prova-generale, prova-privata]
         default: solo-allegato
       giorni:
         description: "Beta o prova generale: giorni prima della scadenza"
@@ -45,15 +46,16 @@ jobs:
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then KIND=definitiva; TAG="v$VER"
           elif [ "$USCITA" = "beta" ]; then KIND=prova; LABEL=beta; TAG="v$VER-beta"
           elif [ "$USCITA" = "prova-generale" ]; then KIND=prova; LABEL=prova; TAG="v$VER-prova"
+          elif [ "$USCITA" = "prova-privata" ]; then KIND=privata; LABEL=privata; TAG=""
           else KIND=allegato; TAG=""; fi
           DAYS=$(echo "${GIORNI:-30}" | tr -cd '0-9'); DAYS=${DAYS:-30}
-          EXP=0; [ "$KIND" = prova ] && EXP=$(( ($(date +%s) + DAYS * 86400) * 1000 ))
+          EXP=0; { [ "$KIND" = prova ] || [ "$KIND" = privata ]; } && EXP=$(( ($(date +%s) + DAYS * 86400) * 1000 ))
           echo "kind=$KIND" >> $GITHUB_OUTPUT; echo "tag=$TAG" >> $GITHUB_OUTPUT; echo "exp=$EXP" >> $GITHUB_OUTPUT; echo "label=${LABEL:-}" >> $GITHUB_OUTPUT
           [ "$LABEL" = beta ] && echo "nome=beta" >> $GITHUB_OUTPUT || echo "nome=prova generale" >> $GITHUB_OUTPUT
-          [ "$KIND" = prova ] && echo "scade=$(date -u -d "@$((EXP / 1000))" +%d/%m/%Y)" >> $GITHUB_OUTPUT
+          { [ "$KIND" = prova ] || [ "$KIND" = privata ]; } && echo "scade=$(date -u -d "@$((EXP / 1000))" +%d/%m/%Y)" >> $GITHUB_OUTPUT
           echo "Uscita: $KIND $TAG (scadenza: $EXP)"
       - name: Serve il segreto della vetrina
-        if: steps.c.outputs.kind != 'allegato'
+        if: steps.c.outputs.kind != 'allegato' && steps.c.outputs.kind != 'privata'
         env:
           TOKEN: ${{ secrets.VETRINA_TOKEN }}
         run: |
@@ -69,8 +71,8 @@ jobs:
           [ -d colpi ] && cp -r colpi www/ || true
       - name: Collego gli aggiornamenti alla vetrina (e scadenza della prova generale)
         run: |
-          CH=stable; [ "${{ steps.c.outputs.kind }}" = prova ] && CH=test
-          echo "window.APP_REPO='$VETRINA';window.APP_CHANNEL='$CH';window.APP_EXPIRES=${{ steps.c.outputs.exp }};window.APP_LABEL='${{ steps.c.outputs.label }}';" > www/app-config.js
+          CH=stable; { [ "${{ steps.c.outputs.kind }}" = prova ] || [ "${{ steps.c.outputs.kind }}" = privata ]; } && CH=test
+          echo "window.APP_REPO='$VETRINA';window.APP_CHANNEL='$CH';window.APP_EXPIRES=${{ steps.c.outputs.exp }};window.APP_LABEL='${{ steps.c.outputs.label }}';window.APP_BUILT=$(( $(date +%s) * 1000 ));" > www/app-config.js
       - run: npm install
       - run: npx cap add android
       - name: Android 12 come minimo (deciso il 20 novembre 2026)
@@ -114,9 +116,18 @@ jobs:
         with:
           name: MagicPlayPrint-${{ steps.v.outputs.ver }}
           path: MagicPlayPrint-${{ steps.v.outputs.ver }}.apk
+      - name: APK della prova privata (scade il ${{ steps.c.outputs.scade }})
+        if: steps.c.outputs.kind == 'privata'
+        run: cp MagicPlayPrint.apk MagicPlayPrint-${{ steps.v.outputs.ver }}-prova-privata.apk
+      - name: Allego l'APK della prova privata
+        if: steps.c.outputs.kind == 'privata'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MagicPlayPrint-${{ steps.v.outputs.ver }}-prova-privata
+          path: MagicPlayPrint-${{ steps.v.outputs.ver }}-prova-privata.apk
       # la pagina dell'app va nella vetrina con l'etichetta della versione: l'app la scarica per aggiornarsi senza APK
       - name: Pagina dell'app nella vetrina
-        if: steps.c.outputs.kind != 'allegato'
+        if: steps.c.outputs.kind != 'allegato' && steps.c.outputs.kind != 'privata'
         env:
           TOKEN: ${{ secrets.VETRINA_TOKEN }}
           TAG: ${{ steps.c.outputs.tag }}

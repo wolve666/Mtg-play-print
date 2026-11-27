@@ -1473,7 +1473,7 @@ const REPO = window.APP_REPO === 'wolve666/Mtg-play-print' ? VETRINA : window.AP
 const CHANNEL = window.APP_CHANNEL === 'test' ? 'test' : 'stable';
 const EXPIRES = CHANNEL === 'test' ? +window.APP_EXPIRES || 0 : 0;
 // uscite per i tester: «beta» (la V2 da mostrare) oppure la vecchia «prova» generale
-const TESTL = window.APP_LABEL === 'beta' ? 'beta' : 'prova', TESTN = TESTL === 'beta' ? 'beta' : 'prova generale';
+const TESTL = window.APP_LABEL === 'beta' ? 'beta' : 'prova', TESTN = TESTL === 'beta' ? 'beta' : window.APP_LABEL === 'privata' ? 'prova privata' : 'prova generale';
 const APK_URL = REPO ? `https://github.com/${REPO}/releases/latest/download/MagicPlayPrint.apk` : '';
 'use strict';
 const VERSION = APPV, NATIVE_REV = APPN;
@@ -5515,9 +5515,22 @@ async function applyUpdate(){
   try{ localStorage.setItem('smtg-lastver', VERSION) }catch(e){}
 })();
 // prova generale: dopo la scadenza l'app si ferma e porta alla versione definitiva, se è già uscita
+// Contro l'orologio portato indietro (27 novembre): l'app ricorda l'ora più avanti che ha mai visto (e quella della compilazione),
+// e quando c'è internet chiede l'ora vera; il tempo che conta è il più avanti tra questi, quindi tornare indietro con la data non serve.
+const EXPK = 'smtg-expseen';
+function expNow(){ let seen = 0; try{ seen = +JSON.parse(localStorage.getItem(EXPK)) || 0 }catch(e){}
+  const now = Math.max(Date.now(), seen, +window.APP_BUILT || 0); if(now > seen) try{ localStorage.setItem(EXPK, JSON.stringify(now)) }catch(e){} return now }
+function expNet(){
+  if(!EXPIRES || !navigator.onLine || expNet.busy) return; expNet.busy = true;
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000), seen = t => { if(t > 1.6e12){ try{ const s = +JSON.parse(localStorage.getItem(EXPK)) || 0; if(t > s) localStorage.setItem(EXPK, JSON.stringify(t)) }catch(e){} expCheck() } };
+  fetch('https://worldtimeapi.org/api/timezone/Etc/UTC', {signal:ctl.signal, cache:'no-store'}).then(r => r.json()).then(j => seen(j.unixtime * 1000))
+    .catch(() => fetch('https://timeapi.io/api/Time/current/zone?timeZone=UTC', {signal:ctl.signal, cache:'no-store'}).then(r => r.json()).then(j => seen(Date.parse(j.dateTime + 'Z'))).catch(() => {}))
+    .finally(() => { clearTimeout(to); expNet.busy = false });
+}
 function expCheck(){
   if(!EXPIRES) return;
-  const left = EXPIRES - Date.now(), day = 86400000, when = new Date(EXPIRES).toLocaleDateString('it-IT', {day:'numeric', month:'long'});
+  if(!expCheck.net){ expCheck.net = true; expNet(); addEventListener('online', expNet); document.addEventListener('visibilitychange', () => { if(!document.hidden){ expNet(); expCheck() } }) }
+  const left = EXPIRES - expNow(), day = 86400000, when = new Date(EXPIRES).toLocaleDateString('it-IT', {day:'numeric', month:'long'});
   if(left > 0){
     if(left < 5 * day){
       const k = 'smtg-expwarn', today = new Date().toDateString();
