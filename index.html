@@ -6330,47 +6330,65 @@ function cannon(c, x, y, s, ang, recoil, gk, pw = 0){
 // Ora dal nome di chi lancia spunta la torretta fionda (vista dall'alto), tende l'elastico e scocca; la bomba vola ad arco
 // sopra il tavolo (più grande in alto, con l'ombra che corre sotto), atterra sul tappeto colpito e lì rimbalza, lampeggia ed esplode come in H&O.
 // Torna quanto dura il volo e dove atterra (nello spazio del tappeto colpito, con la velocità con cui arriva).
+// la torretta fionda vista dall'alto (immagini di Federico, 27 novembre): si può girare liberamente verso il bersaglio senza prospettive storte.
+// Le due bande elastiche le disegno io. Punti misurati sulle immagini (frazioni): anelli della forcella, anelli della sacca.
+const SL_RING = [[.2775, .0997], [.7209, .0997]], SL_PR = [[.1069, .4936], [.8907, .4936]];
+function slingGeo(){ const A = SCR.A, nm = A.hubEl ? rectC(A.hubEl) : rectC(A.cell), U = Math.min(innerWidth, innerHeight), ra = rotDeg(+A.cell.dataset.i) * PI / 180, TS = U * .3;
+  return {A, nm, U, ra, TS, ctr:[nm.x + Math.sin(ra) * TS * .55, nm.y - Math.cos(ra) * TS * .55], max:TS * .55, rest:(.0997 - .5) * TS + TS * .02} }
+// disegna la fionda (coordinate dello schermo): a = verso (le punte guardano a - PI/2), pull = quanto è tirata la sacca, sc = grandezza, vib = vibrazione delle bande, ch = carica del cristallo
+function slingDraw(c, g, a, pull, sc, vib, ch, bomb, t){
+  const {TS, ctr} = g, sl = I('mox', 'sling', 0), po = I('mox', 'pouch', 0), WP = TS * .56, cs = Math.cos(a), sn = Math.sin(a), toS = p => [ctr[0] + (p[0] * cs - p[1] * sn) * sc, ctr[1] + (p[0] * sn + p[1] * cs) * sc];
+  if(sc <= .02) return toS([0, g.rest + pull]);
+  c.save(); c.translate(ctr[0], ctr[1]); c.rotate(a); c.scale(sc, sc); if(ok(sl)) c.drawImage(sl, -TS / 2, -TS / 2, TS, TS); c.restore();
+  const cry = toS([0, (.44 - .5) * TS]); if(ch > 0) glow(c, cry[0], cry[1], TS * (.15 + .2 * ch), '170,250,255', .9 * ch * (.8 + .2 * Math.sin(t * 30)));
+  const py = g.rest + pull, pc = toS([vib, py]), pl = toS([(SL_PR[0][0] - .5) * WP + vib, py]), pr = toS([(SL_PR[1][0] - .5) * WP + vib, py]);
+  const rl = toS([(SL_RING[0][0] - .5) * TS, (SL_RING[0][1] - .5) * TS]), rr = toS([(SL_RING[1][0] - .5) * TS, (SL_RING[1][1] - .5) * TS]), bw = TS * (.05 - .022 * clamp(pull / g.max)) * sc;
+  [[rl, pl], [rr, pr]].forEach(([p0, p1]) => { c.lineCap = 'round'; c.strokeStyle = 'rgba(30,22,18,.95)'; c.lineWidth = bw; c.beginPath(); c.moveTo(p0[0], p0[1]); c.lineTo(p1[0], p1[1]); c.stroke();
+    c.strokeStyle = 'rgba(170,125,80,.65)'; c.lineWidth = bw * .35; c.beginPath(); c.moveTo(p0[0], p0[1]); c.lineTo(p1[0], p1[1]); c.stroke() });
+  if(ok(po)){ c.save(); c.translate(pc[0], pc[1]); c.rotate(a); c.scale(sc, sc); c.drawImage(po, -WP / 2, -WP * SL_PR[0][1], WP, WP); c.restore() }
+  if(bomb) img(c, I('mox', 'bomb', 0), pc[0], pc[1], TS * .2 * sc, a);
+  return pc;
+}
+// mira sul tavolo comune: la torretta si gira verso il dito e la sacca si tende dalla parte opposta, tanto più quanto il dito si allontana
+let SLAIM = null;
+function slingAim(c, d, dt){
+  const g = slingGeo(), m = SCR.A.m, fx = m[0] * d.p[0] + m[2] * d.p[1] + m[4], fy = m[1] * d.p[0] + m[3] * d.p[1] + m[5], on = overTile(d.p), tr = tileRect(pA);
+  const tx = on ? m[0] * (tr.x + tr.w / 2) + m[2] * (tr.y + tr.h / 2) + m[4] : fx, ty = on ? m[1] * (tr.x + tr.w / 2) + m[3] * (tr.y + tr.h / 2) + m[5] : fy;
+  const want = Math.atan2(fy - g.ctr[1], fx - g.ctr[0]) + PI / 2, dd = Math.hypot(fx - g.ctr[0], fy - g.ctr[1]);
+  if(!d.sl){ d.sl = {a:g.ra, pop:spr(0, 240, 12), pull:spr(0, 220, 16)}; d.sl.pop.t = 1 }
+  const S = d.sl; let df = want - S.a; S.a += Math.atan2(Math.sin(df), Math.cos(df)) * Math.min(1, dt * 12);
+  S.pull.t = clamp((dd - g.TS * .3) / (g.TS * 2.2)) * g.max; stepS(S.pull, dt); stepS(S.pop, dt);
+  c.save(); c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // la traiettoria a puntini verso il bersaglio (o verso il dito)
+  const pc0 = [g.ctr[0], g.ctr[1]], lift = Math.hypot(tx - pc0[0], ty - pc0[1]) * .32 + g.U * .08;
+  for(let i = 0; i < 22; i++){ const u = ((i + T * 3) % 22) / 22, x = lerp(pc0[0], tx, u), y = lerp(pc0[1], ty, u) - Math.sin(PI * u) * lift, r = g.TS * .025 * (.6 + .6 * Math.sin(PI * u));
+    c.globalAlpha = (.3 + .6 * Math.sin(PI * u)) * clamp(S.pull.x / (g.max * .3)); c.fillStyle = i % 2 ? '#C9A45A' : '#9FF3FF'; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill() }
+  c.globalAlpha = 1;
+  slingDraw(c, g, S.a, Math.max(0, S.pull.x), Math.max(0, S.pop.x), 0, clamp(S.pull.x / g.max), true, T);
+  c.restore();
+  if(!d.auto) SLAIM = {a:S.a, pull:Math.max(0, S.pull.x), t:performance.now()};   // i fotogrammi di mira «invisibili» del colpo senza trascinamento non contano
+}
 function moxTableShot(){
-  // la torretta fionda vista dall'alto (immagini di Federico, 27 novembre): si può girare liberamente verso il bersaglio senza prospettive storte.
-  // Le due bande elastiche le disegno io: la sacca con la bomba viene tirata indietro mentre il cristallo si carica, poi scatta;
-  // le bande vibrano e la bomba parte ad arco sopra il tavolo fino al tappeto colpito. Punti misurati sulle immagini (460×460, frazioni).
-  const A = SCR.A, V = SCR.V, nm = A.hubEl ? rectC(A.hubEl) : rectC(A.cell), vr = V.cell.getBoundingClientRect(), Wv = W_(), U = Math.min(innerWidth, innerHeight);
-  const tg = [vr.left + vr.width * (.35 + R() * .3), vr.top + vr.height * (.35 + R() * .3)], ra = rotDeg(+A.cell.dataset.i) * PI / 180;
-  const TS = U * .3, ctr = [nm.x + Math.sin(ra) * TS * .55, nm.y - Math.cos(ra) * TS * .55], ang = Math.atan2(tg[1] - ctr[1], tg[0] - ctr[0]), dist = Math.hypot(tg[0] - ctr[0], tg[1] - ctr[1]);
-  const sl = I('mox', 'sling', 0), po = I('mox', 'pouch', 0), RING = [[.2775, .0997], [.7209, .0997]], PR = [[.1069, .4936], [.8907, .4936]], WP = TS * .56;   // sacca larga quanto la forcella: i suoi anelli cadono sotto quelli delle punte
-  const pop = spr(0, 240, 12), rot = spr(-PI / 2 + ra + PI / 2, 120, 14), pull = spr(0, 60, 9), kick = spr(0, 380, 9), spin = sgn() * (6 + R() * 6), cell = A.cell;
-  const AIM = .75, FL = clamp(dist / 900, .55, .9), END = AIM + FL, lift = dist * .32 + U * .08, bs = Wv * .24 * .72, bIn = TS * .2;
-  const scr = c => c.setTransform(DPR, 0, 0, DPR, 0, 0);   // dalla punta degli anelli alla sacca a riposo
-  // coordinate locali della fionda: centro dell'immagine, y negativa verso il bersaglio
-  const loc = (u, v) => [(u - .5) * TS, (v - .5) * TS], ringL = RING.map(p => loc(p[0], p[1])), pouchRest = loc(.5, .0997)[1] + TS * .02;
-  let fired = false, rel = 0, launchP = null; pop.t = 1; rot.t = ang + PI / 2;
+  // il colpo: se si è appena mirato, la fionda è già tesa e scocca subito da lì; altrimenti si gira, si tende da sola e scocca
+  const g = slingGeo(), {A, U, TS, ctr} = g, V = SCR.V, vr = V.cell.getBoundingClientRect(), Wv = W_(), cell = A.cell;
+  const tg = [vr.left + vr.width * (.35 + R() * .3), vr.top + vr.height * (.35 + R() * .3)], ang = Math.atan2(tg[1] - ctr[1], tg[0] - ctr[0]), dist = Math.hypot(tg[0] - ctr[0], tg[1] - ctr[1]);
+  const aimed = SLAIM && performance.now() - SLAIM.t < 1500 ? SLAIM : null; SLAIM = null;
+  const pop = spr(aimed ? 1 : 0, 240, 12), pull = spr(aimed ? aimed.pull : 0, 60, 9), kick = spr(0, 380, 9), spin = sgn() * (6 + R() * 6);
+  const AIM = aimed ? .12 : .75, P0 = aimed ? aimed.pull : 0, FL = clamp(dist / 900, .55, .9), END = AIM + FL, lift = dist * .32 + U * .08, bs = Wv * .24 * .72, bIn = TS * .2;
+  let fired = false, launchP = null, ra = aimed ? aimed.a : g.ra; pop.t = 1;
   add('V2', function(c, dt){ this.a += dt; const x = this.a; if(x > END + .8) return false;
     if(x > END + .25) pop.t = 0; stepS(pop, dt); stepS(kick, dt);
-    // si gira verso il bersaglio; la sacca si tende piano mentre il cristallo si carica, al rilascio scatta in avanti e oscilla
-    { let d = rot.t - rot.x; rot.x += Math.atan2(Math.sin(d), Math.cos(d)) * Math.min(1, dt * 10) }
-    if(!fired){ pull.x = TS * .55 * eo(clamp((x - .2) / (AIM - .25))); pull.v = 0 } else stepS(pull, dt);
+    { const want = ang + PI / 2, d = want - ra; ra += Math.atan2(Math.sin(d), Math.cos(d)) * Math.min(1, dt * 12) }
+    if(!fired){ pull.x = lerp(P0, g.max, eo(clamp((x - (aimed ? 0 : .2)) / Math.max(.05, AIM - (aimed ? 0 : .25))))); pull.v = 0 } else stepS(pull, dt);
     cell.style.translate = Math.abs(kick.x) > .05 ? `${(-Math.cos(ang) * kick.x).toFixed(1)}px ${(-Math.sin(ang) * kick.x).toFixed(1)}px` : '';
     if(x > END + .75) cell.style.translate = '';
-    const sc = Math.max(0, pop.x), a = rot.x, cs = Math.cos(a), sn = Math.sin(a), toS = p => [ctr[0] + (p[0] * cs - p[1] * sn) * sc, ctr[1] + (p[0] * sn + p[1] * cs) * sc];
-    const py = pouchRest + pull.x, ch = !fired ? clamp((x - .2) / (AIM - .2)) : Math.max(0, 1 - (x - AIM) * 4), vib = fired ? Math.sin((x - AIM) * 55) * Math.exp(-(x - AIM) * 6) * TS * .06 : 0;
-    const pc = toS([vib, py]), pl = toS([(PR[0][0] - .5) * WP + vib, py]), prr = toS([(PR[1][0] - .5) * WP + vib, py]);
+    const ch = !fired ? clamp(pull.x / g.max) : Math.max(0, 1 - (x - AIM) * 4), vib = fired ? Math.sin((x - AIM) * 55) * Math.exp(-(x - AIM) * 6) * TS * .06 : 0;
+    c.save(); c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const pc = slingDraw(c, g, ra, pull.x, Math.max(0, pop.x), vib, ch, !fired, x);
     if(x >= AIM && !fired){ fired = true; pull.t = 0; pull.v = -TS * 6; kick.v = U * .7; launchP = pc; if(navigator.vibrate) try{ navigator.vibrate([25, 15, 40]) }catch(e){}
       for(let i = 0; i < 18; i++){ const q = ang + (R() - .5) * 1.4, v = 200 + R() * 350; pt(FX.pX, {k:'spark', x:pc[0], y:pc[1], vx:Math.cos(q) * v, vy:Math.sin(q) * v, drag:3.5, life:.35, r:1.3, col:R() < .5 ? '255,210,120' : '170,250,255'}) }
       pt(FX.pX, {k:'ripple', x:pc[0], y:pc[1], r:TS * .08, grow:TS * .5, life:.35, col:'170,250,255', lw:2.5});
       for(let i = 0; i < 6; i++){ const q = ang + PI + (R() - .5) * 2, v = 40 + R() * 60; pt(FX.pX, {k:'smoke', x:ctr[0], y:ctr[1], vx:Math.cos(q) * v, vy:Math.sin(q) * v, drag:2, r:TS * .1, grow:1.6, life:.7, col:'150,150,155', al:.4}) } }
-    c.save(); scr(c);
-    if(sc > .02){
-      // la torretta, la carica del cristallo
-      c.save(); c.translate(ctr[0], ctr[1]); c.rotate(a); c.scale(sc, sc); if(ok(sl)) c.drawImage(sl, -TS / 2, -TS / 2, TS, TS); c.restore();
-      const cry = toS(loc(.5, .44)); if(ch > 0) glow(c, cry[0], cry[1], TS * (.15 + .2 * ch), '170,250,255', .9 * ch * (.8 + .2 * Math.sin(x * 30)));
-      // le bande elastiche: dagli anelli della forcella agli anelli della sacca (più sottili quando sono tese)
-      const rl = toS(ringL[0]), rr = toS(ringL[1]), bw = TS * (.045 - .02 * clamp(pull.x / (TS * .55))) * sc;
-      [[rl, pl], [rr, prr]].forEach(([p0, p1]) => { c.lineCap = 'round'; c.strokeStyle = 'rgba(30,22,18,.95)'; c.lineWidth = bw; c.beginPath(); c.moveTo(p0[0], p0[1]); c.lineTo(p1[0], p1[1]); c.stroke();
-        c.strokeStyle = 'rgba(160,120,80,.6)'; c.lineWidth = bw * .35; c.beginPath(); c.moveTo(p0[0], p0[1]); c.lineTo(p1[0], p1[1]); c.stroke() });
-      // la sacca e, finché non parte, la bomba dentro
-      if(ok(po)){ c.save(); c.translate(pc[0], pc[1]); c.rotate(a); c.scale(sc, sc); c.drawImage(po, -WP / 2, -WP * PR[0][1], WP, WP); c.restore() }
-      if(!fired) img(c, I('mox', 'bomb', 0), pc[0], pc[1], bIn * sc, a);
-    }
     // la bomba in volo: l'ombra corre dritta sul tavolo, la bomba sale e scende sopra di lei e cresce in alto
     if(fired && x < END){ const u0 = (x - AIM) / FL, u = 1 - Math.pow(1 - u0, 1.4), st = launchP, gx = lerp(st[0], tg[0], u), gy = lerp(st[1], tg[1], u), hgt = Math.sin(PI * u) * lift, sz = lerp(bIn, bs, u) * (1 + .7 * Math.sin(PI * u));
       c.globalAlpha = .35 * (1 - .5 * Math.sin(PI * u)); c.fillStyle = '#000'; c.beginPath(); c.ellipse(gx, gy + sz * .25, sz * .4, sz * .16, 0, 0, TAU); c.fill(); c.globalAlpha = 1;
@@ -6427,6 +6445,7 @@ TH.mox = {
   name:'Mox', sub:'Incolore · artefatti e macchine', col:'#9FE7F0',
   desc:'Bomba a orologeria. Trascinando, dal centro del bottone spunta un cannoncino di ottone che ruota verso il dito; traiettoria a puntini e mirino. Al rilascio fa fuoco (rinculo, vampata, fumo) e la bomba vola ad arco rimpicciolendo in prospettiva. Da Federico cade come capita, rimbalza e rotola come metallo pesante, il nucleo lampeggia sempre più veloce ed esplode quando vuole lei: anche a mezz\'aria o mentre rotola. Poi il tappeto si rompe e si ricompone.',
   aim(c, d, dt){
+    if(TAV()) return slingAim(c, d, dt);   // tavolo comune: la fionda, tesa dalla parte opposta al dito
     const W = pA.clientWidth, hb = hubBox(pA), on = overTile(d.p), tr = tileRect(pA), e = on ? [tr.x + tr.w / 2, tr.y + tr.h / 2] : d.p;
     d.cs = d.cs || spr(0, 240, 9); d.cs.t = 1; stepS(d.cs, dt);
     if(d.ca == null){ d.ca = -PI / 2; SP.aHub.v -= 2 }
