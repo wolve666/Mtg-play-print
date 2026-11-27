@@ -6517,9 +6517,13 @@ TH.mox = {
   bigName:'Colpo grosso: il laserone',
   // colpo grosso: la torretta sbuca, cambia testa, si carica e spara un laserone fisso nel tappeto di Federico, tracciando una riga che lascia un solco bruciato e metallo fuso
   big(){
-    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), Wa = pA.clientWidth, Ha = pA.clientHeight, hb = hubBox(pA);
+    const W = W_(), H = pV.clientHeight, fb = fieldBox(pV), o = fieldO(pV), Wa = pA.clientWidth, Ha = pA.clientHeight, tav = TAV(), KT = tav ? .9 : 1;
+    // tavolo comune (Federico, 27 novembre): la torretta esce dal bottone centrale e il laser parte da lì, un fascio solo che arriva sul tappeto colpito
+    const hb = tav ? (() => { const r = rectC($('#tokenBtn')), q = SCR.A.toS(r.x, r.y); return {x:q[0], y:q[1], w:r.w, h:r.h} })() : hubBox(pA);
+    const LH = {p:null}, vM = SCR.V.m, aS = SCR.A, toA = (x, y) => aS.toS(vM[0] * x + vM[2] * y + vM[4], vM[1] * x + vM[3] * y + vM[5]);
     if(RM){ flash('#DFF8FF', .95, 1); damage(8); return }
-    const trA = tileRect(pA), UP = Math.atan2(trA.y + trA.h / 2 - hb.y, trA.x + trA.w / 2 - hb.x), POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x + Math.cos(UP) * Wa * MOXL, hb.y + Math.sin(UP) * Wa * MOXL];
+    const trA = tileRect(pA), oA = tav ? toA(o.x, o.y) : null; let UP = tav ? Math.atan2(oA[1] - hb.y, oA[0] - hb.x) : Math.atan2(trA.y + trA.h / 2 - hb.y, trA.x + trA.w / 2 - hb.x);
+    const POP = .45, SW0 = .55, SW1 = 1.05, CH = 2.15, FIRE = 2.0, OFF = CH + FIRE, BACK = OFF + .9, mzA = () => [hb.x + Math.cos(UP) * Wa * MOXL * KT, hb.y + Math.sin(UP) * Wa * MOXL * KT];
     // 1. sul mio tappeto: la torretta sbuca, cambia testa, si carica e spara verso l'alto
     const cs = spr(0, 240, 10), rc = spr(0, 300, 8); let pw = 0, steamed = 0, fired = 0;
     // delle due sfere di carica disegnate ne prendo una a caso per ogni colpo
@@ -6539,13 +6543,15 @@ TH.mox = {
       lit('A', hb.x, hb.y, Wa * .9, [.5, .95, 1.3], .25 + 1.1 * ck * ck + 1.4 * on * (.8 + .2 * Math.sin(x * 50)));
       if(x > CH && !fired){ fired = 1; rc.v = 7; SP.aHub.v -= 3; SP.aPunch.v -= 1.2; flash('#E0FAFF', .55, .2); if(navigator.vibrate) try{ navigator.vibrate([60, 20, 200]) }catch(e){} }
       // il laser verso il campo avversario (in alto)
-      if(on){ const k = Math.min(1, (x - CH) / .08) * Math.min(1, (OFF - x) / .15), wb = Wa * (.11 + .015 * Math.sin(x * 47));
-        laserBeam(c, mz[0], mz[1], mz[0] + Math.cos(UP) * Ha * 1.5, mz[1] + Math.sin(UP) * Ha * 1.5, wb * k, x, k);
-        img(c, I('mox', 'lmouth', 0), mz[0], mz[1], Wa * .62 * (1 + .05 * Math.sin(x * 60)), UP, k, 'lighter', .2, .5);
+      if(tav){ const e = LH.p ? toA(LH.p[0], LH.p[1]) : oA; UP += Math.atan2(Math.sin(Math.atan2(e[1] - hb.y, e[0] - hb.x) - UP), Math.cos(Math.atan2(e[1] - hb.y, e[0] - hb.x) - UP)) * Math.min(1, dt * 10) }
+      if(on){ const k = Math.min(1, (x - CH) / .08) * Math.min(1, (OFF - x) / .15), wb = Wa * KT * (.11 + .015 * Math.sin(x * 47));
+        if(tav){ const e = LH.p ? toA(LH.p[0], LH.p[1]) : oA, hd = eo((x - CH) / .15); laserBeam(c, mz[0], mz[1], lerp(mz[0], e[0], hd), lerp(mz[1], e[1], hd), wb * k, x, k) }
+        else laserBeam(c, mz[0], mz[1], mz[0] + Math.cos(UP) * Ha * 1.5, mz[1] + Math.sin(UP) * Ha * 1.5, wb * k, x, k);
+        img(c, I('mox', 'lmouth', 0), mz[0], mz[1], Wa * KT * .62 * (1 + .05 * Math.sin(x * 60)), UP, k, 'lighter', .2, .5);
         if(R() < dt * 50){ const a = UP + PI + (R() - .5) * 2.4, v = 150 + R() * 300; pt(FX.pA, {k:'spark', x:mz[0], y:mz[1], vx:Math.cos(a) * v, vy:Math.sin(a) * v, vz:60 + R() * 100, gz:1000, drag:2.5, life:.3 + R() * .3, r:1.2, col:R() < .6 ? '170,240,255' : '255,255,255'}) }
         if(R() < dt * 30) SP.aPunch.v -= .05 }
-      cannon(c, hb.x, hb.y, csz(cs), UP, Math.max(0, rc.x), .3 + .7 * ck + on, pw);
-      if(x > SW1 && x < OFF){ const r = Wa * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, chI, mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
+      cannon(c, hb.x, hb.y, csz(cs) * KT, UP, Math.max(0, rc.x), .3 + .7 * ck + on, pw);
+      if(x > SW1 && x < OFF){ const r = Wa * KT * (.04 + .09 * ck + .05 * on) * (1 + .1 * Math.sin(x * 40)); img(c, chI, mz[0], mz[1], r * 2, x * 6, .4 + .6 * Math.max(ck, on), 'lighter'); glow(c, mz[0], mz[1], r * 1.8, '170,240,255', .6 + .4 * on) }
       // dopo lo sparo la canna sfiata vapore
       if(x > OFF && x < OFF + .6 && R() < dt * 14) FX.sA.push(sp({im:I('mox', 'steam'), x:mz[0] + (R() - .5) * Wa * .05, y:mz[1], vx:(R() - .5) * 40, vy:-40 - R() * 40, drag:1, w:Wa * (.1 + R() * .06), rot:R() * TAU, spin:(R() - .5), life:1, grow:1, fin:.05, fout:.6, alpha:.7}));
       return true });
@@ -6566,9 +6572,9 @@ TH.mox = {
     add('V2', function(c, dt){ this.a += dt; const x = this.a - F0; if(x > F1 - F0 + .2) return false; if(x < 0) return true;
       const sw = clamp((x - DROP) / SWP), u = sw * sw * (3 - 2 * sw), T0 = [lerp(A0[0], A1[0], u), lerp(A0[1], A1[1], u)], hd = eo(x / DROP), on = x > F1 - F0 ? 1 - (x - (F1 - F0)) / .2 : 1;
       const hx = lerp(SRC[0], T0[0], hd), hy = lerp(SRC[1], T0[1], hd), wb = W * (.12 + .015 * Math.sin(this.a * 47)) * on;
-      laserBeam(c, SRC[0], SRC[1], hx, hy, wb, this.a, on);
+      if(tav) LH.p = T0; else laserBeam(c, SRC[0], SRC[1], hx, hy, wb, this.a, on);
       if(hd < .99) return true;
-      if(!hit){ hit = true; impact(PI / 2, 1.6, T0[0], T0[1]); SP.vPunch.v -= 1.6; flash('#FFFFFF', .7, .18, true); flash('#BFF4FF', .35, .8); if(navigator.vibrate) try{ navigator.vibrate([80, 30, 260]) }catch(e){}
+      if(!hit){ hit = true; if(tav && ACT){ const vv = ACT.v; splashOut('mox', vv, true); after(1, () => splashOut('mox', vv, false)) } impact(PI / 2, 1.6, T0[0], T0[1]); SP.vPunch.v -= 1.6; flash('#FFFFFF', .7, .18, true); flash('#BFF4FF', .35, .8); if(navigator.vibrate) try{ navigator.vibrate([80, 30, 260]) }catch(e){}
         FX.sV2.push(sp({im:I('mox', 'molten'), x:T0[0], y:T0[1], w:W * .3, life:.01})) }
       // il punto d'impatto: metallo che fonde, luce bianca e azzurra, scintille, schizzi di metallo fuso, fumo
       img(c, I('mox', 'limp', 0), T0[0], T0[1], W * .44 * (1 + .06 * Math.sin(this.a * 39)), this.a * 2, on);
@@ -8407,7 +8413,7 @@ function strike(a, v, dmg){
   else { w = .08; after(w, () => { const t = tileRect(pV); TH[th].hit(t.x + t.w / 2) }) }
   // un telefono: gli schizzi del tema arrivano anche sugli altri tappeti
   // (il drago della Forgia li lancia da sé quando il fuoco tocca il tappeto)
-  if(!net && !(th === 'forgia' && kind === 'b')){ if(kind === 'n') after(.75, () => splashOut(th, v, false)); else { after(1.3 + hubD, () => splashOut(th, v, true)); after(2.6 + hubD, () => splashOut(th, v, false)) } }
+  if(!net && !((th === 'forgia' || th === 'mox') && kind === 'b')){ if(kind === 'n') after(.75, () => splashOut(th, v, false)); else { after(1.3 + hubD, () => splashOut(th, v, true)); after(2.6 + hubD, () => splashOut(th, v, false)) } }
   kick();
   return {th, k:kind, w:+w.toFixed(2)};
 }
