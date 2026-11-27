@@ -6333,8 +6333,10 @@ function cannon(c, x, y, s, ang, recoil, gk, pw = 0){
 // la torretta fionda vista dall'alto (immagini di Federico, 27 novembre): si può girare liberamente verso il bersaglio senza prospettive storte.
 // Le due bande elastiche le disegno io. Punti misurati sulle immagini (frazioni): anelli della forcella, anelli della sacca.
 const SL_RING = [[.2775, .0997], [.7209, .0997]], SL_PR = [[.1069, .4936], [.8907, .4936]];
-function slingGeo(){ const A = SCR.A, nm = A.hubEl ? rectC(A.hubEl) : rectC(A.cell), U = Math.min(innerWidth, innerHeight), ra = rotDeg(+A.cell.dataset.i) * PI / 180, TS = U * .3;
-  return {A, nm, U, ra, TS, ctr:[nm.x + Math.sin(ra) * TS * .55, nm.y - Math.cos(ra) * TS * .55], max:TS * .55, rest:(.0997 - .5) * TS + TS * .02} }
+function slingGeo(){ const A = SCR.A, nm = A.hubEl ? rectC(A.hubEl) : rectC(A.cell), U = Math.min(innerWidth, innerHeight), ra = rotDeg(+A.cell.dataset.i) * PI / 180, TS = U * .27;
+  // la torretta sta centrata sul nome del giocatore (Federico, 27 novembre), spostata solo quel tanto che serve a non uscire dallo schermo
+  const mg = TS * .48;
+  return {A, nm, U, ra, TS, ctr:[clamp(nm.x, mg, innerWidth - mg), clamp(nm.y, mg, innerHeight - mg)], max:TS * .55, rest:(.0997 - .5) * TS + TS * .02} }
 // disegna la fionda (coordinate dello schermo): a = verso (le punte guardano a - PI/2), pull = quanto è tirata la sacca, sc = grandezza, vib = vibrazione delle bande, ch = carica del cristallo
 function slingDraw(c, g, a, pull, sc, vib, ch, bomb, t){
   const {TS, ctr} = g, sl = I('mox', 'sling', 0), po = I('mox', 'pouch', 0), WP = TS * .56, cs = Math.cos(a), sn = Math.sin(a), toS = p => [ctr[0] + (p[0] * cs - p[1] * sn) * sc, ctr[1] + (p[0] * sn + p[1] * cs) * sc];
