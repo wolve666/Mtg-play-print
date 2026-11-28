@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // versione di questo file e della parte nativa (APPN si alza solo quando cambia il codice Java)
-var APPV = '2.2.7', APPN = 9;
+var APPV = '2.2.7', APPN = 10;
 // aggiornamenti in app: se è stata scaricata una versione più nuova e compatibile, parte quella al posto di questa
 (function(){
   if(window.__LIVE) return;
@@ -3038,6 +3038,8 @@ function renderMenu(){
     <p class="note">Misura quanto è fluida l'app su questo telefono. Attivala, usa l'app normalmente, poi tocca «Esporta i dati raccolti» e mandami il file.</p>
     <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
     <div class="row"><span class="lbl">Salva anche l'audio delle richieste</span>${tog('clips', SET.clips)}</div>
+    ${NATIVE ? `<div class="row"><span class="lbl">Dettatura sul telefono, anche senza rete</span>${tog('vdev', SET.voiceDev !== false)}</div>
+    <p class="note">Se il telefono ha il riconoscimento vocale italiano scaricato, uso quello e gli do i nomi delle pedine da preferire. Spenta: uso sempre il servizio di Google in rete.</p>` : ''}
     <p class="note">Il microfono si accende solo mentre tieni premuto. Salvo cosa è stato sentito, cosa ho capito, cosa hai scelto e le correzioni scritte: ${VLOG.length} voci sul telefono, finché non le esporti.</p>
     <div style="height:10px"></div>
     <button class="btn" data-act="suggest">Lascia un suggerimento</button>
@@ -3111,6 +3113,7 @@ async function menuClick(e){
     case 'vlog': SET.voiceLog = !SET.voiceLog; saveSet(); break;
     case 'sound': SET.sound = !SET.sound; saveSet(); if(SET.sound) sfx('found'); break;
     case 'clips': SET.clips = !SET.clips; saveSet(); break;
+    case 'vdev': SET.voiceDev = SET.voiceDev === false; saveSet(); break;
     case 'diag': SET.diag = DIAG.on = !SET.diag; saveSet(); document.body.classList.toggle('diag', DIAG.on); if(DIAG.on) toast('Diagnostica attiva: usa l\'app normalmente, poi esporta i dati', 3500); break;
     case 'intro': SET.intro = !SET.intro; saveSet(); break;
     case 'theme': if(!TNAME[v]){ toast(`Tema ${v[0].toUpperCase() + v.slice(1)}: in arrivo`); break }
@@ -3494,6 +3497,213 @@ function openLog(){
   openOv('log');
 }
 
+/* ================= Nomi delle pedine e confronto «a orecchio» ================= */
+// elenco dei nomi inglesi (pedine, emblemi, tipi, planeswalker): lo rigenera strumenti/nomi-pedine.js
+/*NOMI:INIZIO*/
+// generato da strumenti/nomi-pedine.js (Scryfall, 2026-11-28): non modificare a mano
+const NOMI_PEDINE = {"v":"2026-11-28","tipi":["Adventure","Advisor","Aenar","Aetherborn","Alien","Ally","Andorian","Android","Angel","Antelope","Ape","Arcane","Archer","Archon","Armadillo","Army","Artifact","Artificer","Assassin","Assembly-Worker","Astartes","Atog","Attraction","Aura","Aurochs","Automaton","Avatar","Azra","Background","Badger","Bajoran","Balloon","Barbarian","Bard","Basic","Basilisk","Bat","Battle","Bear","Beast","Beaver","Beeble","Beholder","Berserker","Betazoid","Bird","Bison","Blinkmoth","Blood","Boar","Bobblehead","Bolian","Book","Borg","Boss","Brainiac","Brikar","Bringer","Brushwagg","C'tan","Caitian","Camarid","Camel","Capybara","Cardassian","Caribou","Carrier","Cartouche","Case","Cat","Cave","Centaur","Chicken","Child","Chimera","Chorus","Citizen","Class","Cleric","Cloud","Clown","Clue","Cockatrice","Communicator","Conspiracy","Construct","Contraption","Coward","Coyote","Crab","Creature","Crocodile","Curse","Custodes","Cyberman","Cyclops","Dalek","Dauthi","Demigod","Demon","Denobulan","Desert","Deserter","Detective","Devil","Dinosaur","Djinn","Doctor","Dog","Dragon","Drake","Dreadnought","Drix","Drone","Druid","Dryad","Dungeon","Dwarf","Echidna","Edosian","Efreet","Egg","El-Aurian","Elder","Eldrazi","Elemental","Elephant","Elf","Elite","Elk","Emblem","Employee","Enchantment","Equipment","Eternal","Event","Excalbian","Eye","Faerie","Ferengi","Ferret","Fish","Flagbearer","Food","Forest","Fortification","Fox","Fractal","Frog","Fungus","Gamer","Gamma","Gargoyle","Gate","Germ","Giant","Giraffe","Gith","Glimmer","Gnoll","Gnome","Goat","Goblin","God","Gold","Golem","Gorgon","Gorn","Graveborn","Gremlin","Griffin","Guest","Hag","Halfling","Hamster","Harpy","Head","Hedgehog","Hellion","Hero","Hippo","Hippogriff","Hirogen","Homarid","Homunculus","Horror","Horse","Human","Hydra","Hyena","Illusion","Illyrian","Imp","Incarnation","Incubator","Infinity","Inhuman","Inkling","Inquisitor","Insect","Instant","Island","Jackal","Jellyfish","Jem'Hadar","Juggernaut","Junk","Kangaroo","Kavu","Kelpien","Kindred","Kirin","Kithkin","Klingon","Knight","Kobold","Kor","Kraken","Kree","Kwejian","Lair","Lamia","Lammasu","Land","Lanthanite","Leech","Legendary","Lemur","Lesson","Leviathan","Lhurgoyf","Licid","Lizard","Llama","Lobster","Locus","Manticore","Map","Masticore","Medusan","Melkotian","Mercenary","Merfolk","Metathran","Mindless-One","Mine","Minion","Minotaur","Mite","Mole","Monger","Mongoose","Monk","Monkey","Moogle","Moonfolk","Mount","Mountain","Mouse","Mutant","Myr","Mystic","Na'kuhl","Naga","Nautilus","Necron","Nephilim","Nightmare","Nightstalker","Ninja","Noble","Noggle","Nomad","Nymph","Ocampa","Octopus","Officer","Ogre","Omen","Ongoing","Ooze","Orb","Orc","Orgg","Orion","Otter","Ouphe","Ox","Oyster","Pangolin","Peasant","Pegasus","Pentavite","Performer","Pest","Phelddagrif","Phenomenon","Phoenix","Phyrexian","Pilot","Pincher","Pirate","Plains","Plan","Plane","Planeswalker","Planet","Plant","Platypus","Porcupine","Possum","Power-Plant","Powerstone","Praetor","Primarch","Prism","Processor","Q","Qu","Rabbit","Raccoon","Ranger","Rat","Rebel","Reflection","Reveler","Rhino","Rigger","Robot","Rogue","Role","Romulan","Room","Rukh","Rune","Sable","Saga","Salamander","Samurai","Sand","Saproling","Satyr","Scarecrow","Scheme","Scientist","Scion","Scorpion","Scout","Sculpture","Seal","Serf","Serpent","Servo","Shade","Shaman","Shapeshifter","Shard","Shark","Sheep","Shi'ar","Shrine","Siege","Siren","Skeleton","Skrull","Skunk","Slith","Sliver","Sloth","Slug","Snail","Snake","Snow","Soldier","Soltari","Sorcerer","Sorcery","Spacecraft","Spawn","Specter","Spellshaper","Sphere","Sphinx","Spider","Spike","Spirit","Splinter","Sponge","Spy","Squid","Squirrel","Starfish","Stone","Surrakar","Survivor","Swamp","Symbiote","Synth","Talaxian","Talosian","Tamarian","Teddy","Tellarite","Tentacle","Terminus","Tetravite","Thalakos","Tholian","Thopter","Thrull","Tiefling","Time Lord","Token","Tosk","Tower","Town","Toy","Trap","Treasure","Treefolk","Tribble","Trill","Trilobite","Triskelavite","Troll","Turtle","Tyranid","Unicorn","Urza's","Urzan","Utrom","Vampire","Vanguard","Varmint","Vau-N'Akat","Vedalken","Vehicle","Villain","Volver","Vorta","Vulcan","Wall","Walrus","Warlock","Warrior","Weasel","Weird","Werewolf","Whale","Wizard","Wolf","Wolverine","Wombat","World","Worm","Wraith","Wurm","Xindi","Yeti","Zombie","Zubera"],"tp":["Aetherborn","Alien","Ally","Angel","Ape","Army","Assassin","Assembly-Worker","Astartes","Aura","Automaton","Avatar","Badger","Balloon","Bat","Bear","Beast","Beeble","Berserker","Bird","Blood","Boar","Borg","Brainiac","Cat","Centaur","Citizen","Cleric","Clown","Clue","Construct","Crab","Cyberman","Dalek","Demon","Detective","Devil","Dinosaur","Djinn","Dog","Dragon","Drake","Drone","Druid","Dryad","Dwarf","Egg","Elder","Eldrazi","Elemental","Elephant","Elf","Elk","Employee","Equipment","Faerie","Fish","Food","Forest","Fox","Fractal","Frog","Fungus","Gargoyle","Germ","Giant","Glimmer","Gnome","Goat","Goblin","God","Gold","Golem","Graveborn","Gremlin","Griffin","Halfling","Hamster","Harpy","Head","Hellion","Hero","Hippo","Homunculus","Horror","Horse","Human","Hydra","Illusion","Imp","Incubator","Inkling","Insect","Jackal","Junk","Kavu","Kithkin","Klingon","Knight","Kobold","Kor","Kraken","Leviathan","Lhurgoyf","Lizard","Manticore","Map","Mercenary","Merfolk","Mindless-One","Minion","Minotaur","Mite","Monk","Monkey","Moogle","Moonfolk","Mouse","Mutant","Myr","Naga","Necron","Nightmare","Ninja","Noble","Nymph","Octopus","Officer","Ogre","Ooze","Orc","Otter","Ox","Pegasus","Pentavite","Performer","Pest","Phyrexian","Pilot","Pirate","Planet","Plant","Possum","Powerstone","Rabbit","Raccoon","Rat","Rebel","Reflection","Reveler","Rhino","Robot","Rogue","Role","Romulan","Rukh","Salamander","Samurai","Sand","Saproling","Satyr","Scarecrow","Scientist","Scion","Scorpion","Scout","Sculpture","Serf","Serpent","Servo","Shaman","Shapeshifter","Shard","Shark","Sheep","Shrine","Skeleton","Sliver","Slug","Snail","Snake","Soldier","Sorcerer","Spacecraft","Spawn","Sphinx","Spider","Spirit","Spy","Squid","Squirrel","Survivor","Teddy","Tentacle","Thopter","Thrull","Toy","Treasure","Treefolk","Tribble","Triskelavite","Troll","Turtle","Tyranid","Urzan","Vampire","Varmint","Vehicle","Villain","Wall","Warlock","Warrior","Weird","Whale","Wizard","Wolf","Worm","Wraith","Wurm","Zombie"],"pw":["Abian","Ajani","Aminatou","Angrath","Arlinn","Arzakon","Ashiok","B.O.B.","Bahamut","Basri","Bolas","Calix","Chandra","Comet","Dack","Dakkon","Daretti","Davriel","Deb","Dellian","Dihada","Domri","Dovin","Duck","Dungeon","Dyfed","Ellywick","Elminster","Elspeth","Ersta","Estrid","Explainer","Feroz","Freyalise","Garruk","Gideon","Greensleeves","Grist","Guff","Huatli","Inzerva","Jace","Jared","Jaya","Jeska","Kaito","Karn","Kasmina","Kaya","Kiora","Koth","Liliana","Lolth","Lukka","Luxior","Master","Minsc","Monopoly","Mordenkainen","Nahiri","Narset","Niko","Nissa","Nixilis","Oko","Quintorius","Ral","Rowan","Saheeli","Samut","Sarkhan","Serra","Sifa","Sivitri","Sorin","Svega","Szat","Tamiyo","Tasha","Teferi","Teyo","Tezzeret","Thomil","Tibalt","Tyvar","Ugin","Urza","Venser","Vivien","Vraska","Vronos","Wanderer","Will","Windgrace","Worzel","Wrenn","Xenagos","Yanggu","Yanling","Zariel"],"pedine":["A Mysterious Creature","Adorned Pouncer","Aetherborn","Agate Instigator","Ajani's Pridemate","Alien","Alien Angel","Alien Insect","Alien Rhino","Alien Salamander","Alien Warrior","Ally","Angel","Angel Warrior","Angel of Sanctions","Angelo","Anointer Priest","Ape","Ape Villain","Arco-Flagellant","Artifact Zombie","Ashaya, the Awoken World","Assassin","Assembly-Worker","Astartes Warrior","Avacyn","Avatar","Aven Initiate","Aven Wind Guide","Axe","Badger","Ballistic Boulder","Balloon","Bat","Bear","Beast","Beau","Beeble","Bird","Bird Illusion","Bird Soldier","Blood","Blue Horror","Boar","Boo","Borg","Brainiac","Bushy Bodyguard","Butterfly","Cadet","Carnivore","Cat","Cat Beast","Cat Bird","Cat Dragon","Cat Soldier","Cat Warrior","Centaur","Champion of Wits","Cherubael","Citizen","Cleric","Cloud Sprite","Clown Robot","Clue","Construct","Contortionist","Contract","Copy","Cordyceps Infected","Coruscation Mage","Council of Reeds","Crab","Cragflame","Cursed","Cyberman","Dalek","Darkstar","Darkstar Augur","Demon","Demon Berserker","Detective","Devil","Dinosaur","Dinosaur Beast","Dinosaur Cat","Dinosaur Dragon","Dinosaur Egg","Dinosaur Soldier","Djinn Monk","Dog","Dog Illusion","Doombot","Dragon","Dragon Egg","Dragon Elemental","Dragon Illusion","Dragon Spirit","Drake","Dreamstealer","Drone","Dwarf","Dwarf Berserker","Earthshaker Khenra","Ecstatic Piper","Egg","Eldrazi","Eldrazi Angel","Eldrazi Horror","Eldrazi Scion","Eldrazi Spawn","Elemental","Elemental Bird","Elemental Shaman","Elephant","Elf","Elf Druid","Elf Knight","Elf Warrior","Elk","Etherium Cell","Everywhere","Faerie","Faerie Dragon","Faerie Rogue","Faerie Spy","Fanatic of Rhonas","Feather","Finch Formation","First Mate Ragavan","Fish","Flowerfoot Swordmaster","Food","Foot Disciple","Foot Enforcer","Foot Skirmisher","Forest Dryad","Forest Tentacle","Fox","Fractal","Frog","Frog Lizard","Fungus","Fungus Beast","Fungus Dinosaur","Galactus","Gargoyle","Germ","Giant","Giant Teddy Bear","Giant Warrior","Giant Wizard","Gingerbrute Token","Glimmer","Glyph Keeper","Gnome","Gnome Soldier","Goat","Goblin","Goblin Army","Goblin Construct","Goblin Rogue","Goblin Shaman","Goblin Soldier","Goblin Warrior","Goblin Wizard","Gold","Golem","Graveborn","Gremlin","Griffin","Guenhwyvar","Halfling","Hamster","Harpy","Heart-Piercer Manticore","Heartwood","Hellion","Hero","Hippo","Homunculus","Honored Hydra","Hornet","Horror","Horse","Human","Human Citizen","Human Cleric","Human Knight","Human Monk","Human Noble","Human Rogue","Human Soldier","Human Warrior","Human Wizard","Hydra","Hydra Head","Icingdeath, Frost Tongue","Icy Manalith","Illusion","Illusion Villain","Imp","Incubator","Inkling","Insect","Insect Warrior","Intrepid Rabbit","Iridescent Vinelasher","Jace","Junk","Karox Bladewing","Kavu","Keimi","Kithkin","Kithkin Soldier","Klingon Warrior","Knight","Knight Ally","Kobolds of Kher Keep","Koma's Coil","Kor Ally","Kor Soldier","Kor Warrior","Kraken","Labyrinth Guardian","Land Mine","Lander","Laserbeak","Leviathan","Lightning Rager","Lizard","Llanowar Elves","Lotus","Maddened Oread","Manifest","Manifold Mouse","Map","Marit Lage","Mark of the Rani","Mask","Mechtitan","Mercenary","Merfolk","Merfolk Wizard","Metallic Sliver","Meteorite","Mindless-One","Minion","Minotaur","Minotaur Goreseeker","Minotaur Younghorn","Mishra's Warform","Mogis's Chosen","Moloid","Monk","Monster","Moogle","Moonfolk","Morph","Mouse","Mowu","Munitions","Murf","Mutagen","Mutant","Mutavault","Myr","Nalaar Aetherjet","Necron Warrior","Neuroflux Heirloom","New Planet","Nightmare","Nightmare Horror","Ninja","Ninja Turtle Spirit","Octopus","Officer","Ogre","Ogre Warrior","Oketra's Attendant","Ooze","Orc Army","Ornithopter","Osgood, Operation Double","Otter","Ox","Pawpatch Recruit","Pegasus","Pentavite","Pest","Pheres-Band Revelers","Phoberos Reaver","Phobos","Phyrexian","Phyrexian Beast","Phyrexian Germ","Phyrexian Goblin","Phyrexian Golem","Phyrexian Horror","Phyrexian Hydra","Phyrexian Insect","Phyrexian Minion","Phyrexian Mite","Phyrexian Myr","Phyrexian Saproling","Phyrexian Wurm","Pilot","Pirate","Plaguebearer of Nurgle","Plant","Plant Warrior","Porthos","Powerstone","Primo, the Indivisible","Prosperous Bandit","Proven Combatant","Rabbit","Raccoon","Ragavan","Rat","Rat Rogue","Ravage","Rebel","Reckless Minotaur","Redwing","Reflection","Reliquary Dragon","Replicated Ring","Resilient Khenra","Rhino","Rhino Warrior","Robot","Robot Hero","Robot Villain","Robot Warrior","Rock","Rogue","Rollicking Throng","Romulan","Royal","Rukh","Rust-Shield Rampager","Sacred Cat","Salamander Warrior","Samurai","Sand Warrior","Saproling","Satyr","Scarecrow","Scion of the Deep","Scorpion Dragon","Scrap","Sculpture","Sculpture Treasure","Serf","Serpent Dancers","Servo","Settlement","Shapeshifter","Shard","Shark","Sheep","Shrine","Sicarian Infiltrator","Sinuous Striker","Skeleton","Skeleton Pirate","Sliver","Sliver Army","Slug","Smaug","Smoke Blessing","Snail","Snake","Soldier","Soldier Ally","Sorcerer","Space Marine Devastator","Spacecraft Illusion","Spark Elemental","Spawn","Spellgorger Weird","Sphinx","Spider","Spirit","Spirit Cleric","Spirit Sorcerer","Spirit Warrior","Splash Lasher","Squid","Squirrel","Stangg Twin","Starscape Cleric","Steadfast Sentinel","Steampath Charger","Steelburr Champion","Stone Boulder","Stoneforged Blade","Storm Crow","Sturdy Shield","Sunscourge Champion","Survivor","Sword","Tah-Crop Skirmisher","Tamiyo's Notebook","Tarmogoyf","Teddy Bear","Temmet, Vizier of Naktamun","Tender Wildguide","Tentacle","The Atropal","The Blackjack","The Hollow Sentinel","The Tiger God","The Void","Thopter","Thornplate Intimidator","Thrull","Thundertrap Trainer","Timeless Dragon","Timeless Witness","Tiny","Toy","Treasure","Treefolk","Treefolk Shaman","Treefolk Warrior","Tribble","Triskelavite","Troll Warrior","Trueheart Duelist","Tuktuk the Returned","Tyranid","Tyranid Gargoyle","Tyranid Warrior","Ultramarines Honour Guard","Unwavering Initiate","Urzan Automaton","Vampire","Vampire Demon","Vampire Knight","Vampire Rogue","Vanguard Suppressor","Varmint","Vecna","Vehicle","Vibranium","Villain","Virtuous","Vizier of Many Faces","Voja","Voja Fenstalker","Voja, Friend to Elves","Volo's Journal","Walker","Wall","Warren Warleader","Warrior","Wasp","Wasteland Survival Guide","Weird","Whale","Wicked","Wild Maenads","Wizard","Wolf","Worm","Wraith","Wurm","Young Hero","Zabu","Zephyrim","Zombie","Zombie Army","Zombie Berserker","Zombie Druid","Zombie Employee","Zombie Giant","Zombie Horror","Zombie Knight","Zombie Mutant","Zombie Rogue","Zombie Warrior","Zombie Wizard"],"emblemi":[["Ajani","Ajani Resolute","595a628e-218b-4df2-8bd2-d84ad22d302f","1789735284","Reality Fracture Tokens"],
+["Ajani","Ajani Steadfast","e9f9aebc-6eb8-4325-801f-ad2fbbf391b2","1783915229","Commander Masters Tokens"],
+["Ajani","Ajani, Adversary of Tyrants","1c97e5b2-a024-4aa7-a9b8-45f441aad138","1783934462","Core Set 2019 Tokens"],
+["Ajani","Ajani, Sleeper Agent","ae9ee46d-b2f4-4710-bf7d-1d7a5ec0aefe","1783921123","Dominaria United Tokens"],
+["Arlinn","Arlinn, Embraced by the Moon","89040321-0d64-4631-a80e-5bd585d6fa51","1783907963","Innistrad Remastered Tokens"],
+["Basri","Basri Ket","0d37b555-5931-4084-8f83-e9853e14eccf","1783930588","Core Set 2021 Tokens"],
+["Chandra","Chandra, Awakened Inferno","02347c41-407f-4388-9d9b-263ddf8b4e11","1783915228","Commander Masters Tokens"],
+["Chandra","Chandra, Chill of Compliance","ce0ece65-ba13-4243-b343-b4da443fceff","1789735299","Reality Fracture Tokens"],
+["Chandra","Chandra, Dressed to Kill","c8437d0b-e4f9-4986-be20-ecd9bf238730","1783907962","Innistrad Remastered Tokens"],
+["Chandra","Chandra, Roaring Flame","a43fa669-961d-4ec5-a7c8-67e55a4e54f2","1783913133","The List"],
+["Chandra","Chandra, Spark Hunter","343d2622-a5a6-4195-ab41-c6bd17e334a2","1783907677","Aetherdrift Tokens"],
+["Chandra","Chandra, Torch of Defiance","5fdc53ba-e023-4ee4-bb14-fd8c52955ee9","1789735329","Reality Fracture Tokens"],
+["Dack","Dack Fayden","c80136c2-7230-4fe5-b7dc-37ee32f1bd8e","1783934212","Mythic Edition Tokens"],
+["Daretti","Daretti, Scrap Savant","64ace1f4-51b5-4a6a-a730-859717efbd6d","1783915242","Commander Masters Tokens"],
+["Domri","Domri Rade","b9e8b1fe-7a73-4a04-84fa-f0e4696c9121","1783913148","Ravnica Remastered Tokens"],
+["Domri","Domri, Chaos Bringer","44717d19-d8c2-45ba-9904-00c0c79ee0c3","1783933602","Ravnica Allegiance Tokens"],
+["Dovin","Dovin Baan","a76ccde7-c78d-4f4a-9fe4-ad6986e2cb8e","1783937237","Kaladesh Tokens"],
+["Ellywick","Ellywick Tumblestrum","289bd243-8754-49f8-a4f9-0be477c84ee1","1783926341","Adventures in the Forgotten Realms Tokens"],
+["Elspeth","Elspeth, Knight-Errant","6a62619f-a432-4314-b018-7eacda9252a7","1783934209","Mythic Edition Tokens"],
+["Elspeth","Elspeth, Sun's Champion","dffbc23b-23d3-4cc5-9ea2-fa3aab785ffe","1783915225","Commander Masters Tokens"],
+["Ajani","Essence of Ajani","7d5329a8-b3bd-498d-98c0-ba8b11ff7ddd","1783910536","Mystery Booster 2"],
+["Garruk","Garruk, Apex Predator","31745fa9-5f11-490f-8dba-a5033a604bc0","1783911121","Modern Horizons 3 Commander Tokens"],
+["Garruk","Garruk, Caller of Beasts","d16429cb-9b00-4411-9ffc-252b38ad0b8c","1783939878","Magic 2014 Tokens"],
+["Garruk","Garruk, Cursed Huntsman","d6c65749-1774-4b36-891e-abf762c95cec","1783932476","Throne of Eldraine Tokens"],
+["Garruk","Garruk, Unleashed","b572a46c-8bd0-4af8-bc76-2c65841c27b9","1783930590","Core Set 2021 Tokens"],
+["Gideon","Gideon of the Trials","cbebd89c-0b29-44c7-bc99-53dd4b836520","1783936409","Amonkhet Tokens"],
+["Gideon","Gideon, Ally of Zendikar","cd8be597-f402-4fb0-9135-897c4a0946f6","1783938118","Battle for Zendikar Tokens"],
+["Huatli","Huatli, Radiant Champion","859f645b-24e0-4c34-ae82-ba0ae9854377","1783935214","Rivals of Ixalan Tokens"],
+["Jace","Jace, Telepath Unbound","6f5ae536-3ef6-41cb-b33b-0ac458d77a56","1783913134","The List"],
+["Jace","Jace, Unraveler of Secrets","e5797bac-bf43-4c96-9f84-60db130a15bb","1783907962","Innistrad Remastered Tokens"],
+["Jaya","Jaya Ballard","a02ffa48-e414-493c-af51-1400913f8af4","1783934207","Mythic Edition Tokens"],
+["Jaya","Jaya, Fiery Negotiator","243a5830-d7a0-46c9-98c0-4d1dfc3ebc8c","1783921122","Dominaria United Tokens"],
+["Kaito","Kaito Shizuki","df296190-e51b-44a7-ae83-279fee3151a5","1783923710","Kamigawa: Neon Dynasty Tokens"],
+["Kaito","Kaito, Bane of Nightmares","435e707c-2b1d-48a7-ba75-c3c67824b50d","1783909259","Duskmourn: House of Horror Tokens"],
+["Kaito","Kaito, Cunning Infiltrator","bfe4b1d5-f252-48fe-b4a1-7fbbc2523cf1","1783908587","Foundations Tokens"],
+["Kaya","Kaya the Inexorable","2b149bbf-5d2a-4f7e-aa87-23edd5848cde","1783928077","Kaldheim Tokens"],
+["Kiora","Kiora, Master of the Depths","55952cc8-09d8-4260-8387-284df7223d74","1783938117","Battle for Zendikar Tokens"],
+["Kiora","Kiora, the Crashing Wave","e45f7850-2ebb-4530-9859-f87b4e0e27be","1783939513","Born of the Gods Tokens"],
+["Koth","Koth of the Hammer","89afdaa4-3555-4adf-b3c4-63f905710c76","1783940750","Duel Decks: Venser vs. Koth Tokens"],
+["Koth","Koth, Fire of Resistance","4746f904-67f3-450d-93f6-172b3fd50057","1783918166","Phyrexia: All Will Be One Tokens"],
+["Liliana","Liliana of the Dark Realms","f327de6e-c9f1-478d-9940-b500df8cef10","1783939881","Magic 2014 Tokens"],
+["Liliana","Liliana, Defiant Necromancer","2aee1ed1-a435-4a9a-aad0-d0a90468f040","1783913133","The List"],
+["Liliana","Liliana, the Last Hope","fb88493c-293b-4b89-8571-712dcf110df5","1783921673","Double Masters 2022 Tokens"],
+["Liliana","Liliana, Waker of the Dead","968f207e-8e60-4dad-935c-71e0267c2399","1783930589","Core Set 2021 Tokens"],
+["Lolth","Lolth, Spider Queen","c34001fd-0e9b-445b-9c0b-381721dfebc2","1783926340","Adventures in the Forgotten Realms Tokens"],
+["Lukka","Lukka, Wayward Bonder","28427ccd-d106-4388-835b-aee29288fc40","1783913137","The List"],
+["Mordenkainen","Mordenkainen","7c63f14a-db47-46aa-addf-7c6fc40169b9","1783926340","Adventures in the Forgotten Realms Tokens"],
+["Yanling","Mu Yanling, Sky Dancer","cdc0849c-3a2b-4666-8fa9-755f3ea27706","1783932852","Core Set 2020 Tokens"],
+["Narset","Narset of the Ancient Way","c6ea709d-2470-4552-92b3-25d617155e51","1783915227","Commander Masters Tokens"],
+["Narset","Narset Transcendent","4a70dfe0-874c-473a-a26e-1f88a842df41","1783938559","Dragons of Tarkir Tokens"],
+["Nissa","Nissa, Vital Force","54986eaa-1bbb-4d34-ae09-fa7de2627ba0","1783937237","Kaladesh Tokens"],
+["Nissa","Nissa, Who Shakes the World","56b191fe-7a92-4d08-91a4-036699d08bc4","1783933348","War of the Spark Tokens"],
+["Nixilis","Ob Nixilis of the Black Oath","f3b4bd21-2ab7-48cf-bc46-b67093b99421","1783915241","Commander Masters Tokens"],
+["Nixilis","Ob Nixilis Reignited","e817a5d7-0d65-4f23-be3d-74838764765c","1783918570","Starter Commander Deck Tokens"],
+["Oko","Oko, Shadowmoor Scion","0d9d6611-bc46-4fc1-8e39-460f56236ceb","1783904323","Lorwyn Eclipsed Tokens"],
+["Dellian","Professor Dellian Fel","5472cdbf-eec2-40fe-a1f5-1a4eb74126c0","1783903561","Secrets of Strixhaven Tokens"],
+["Ral","Ral, Crackling Wit","2c4c9934-fe82-4560-b0bf-0ebc863ff0d1","1783909761","Bloomburrow Tokens"],
+["Ral","Ral, Izzet Viceroy","03580d3a-4c02-4f2e-b667-f82028ccde0b","1783934061","Guilds of Ravnica Tokens"],
+["Rowan","Rowan Kenrith","5b2f81ee-f258-40c4-abc6-0c80421b0837","1783922302","Battle for Baldur's Gate Tokens"],
+["Rowan","Rowan, Scholar of Sparks","cc18b93e-b590-4fbb-be47-d63a25cde811","1783927189","Strixhaven: School of Mages Tokens"],
+["Master","Saheeli, Filigree Master","9020571d-97fb-4f46-85ec-6cb3141bfc87","1783919903","The Brothers' War Tokens"],
+["Sarkhan","Sarkhan, the Dragonspeaker","02a68eab-27bc-434b-b19d-316d1db9434c","1783918571","Starter Commander Deck Tokens"],
+["Sephiroth","Sephiroth, One-Winged Angel","03165625-1cb9-4e7b-85be-df400adc4487","1783906129","Final Fantasy Tokens"],
+["Serra","Serra the Benevolent","87dbb0b0-d898-491a-8ed9-efefca04e6e6","1783933218","Modern Horizons Tokens"],
+["Sorin","Sorin, Lord of Innistrad","f6719a3f-4bd1-4f4f-b4c2-0d1fa7694732","1783913611","The Lost Caverns of Ixalan Commander Tokens"],
+["Sorin","Sorin, Solemn Visitor","8f6e8950-5b1e-48b6-8d32-2a463455499d","1783939035","Khans of Tarkir Tokens"],
+["Tamiyo","Tamiyo, Field Researcher","e01bb7a6-0aec-4c70-bb8c-05b3ad904944","1783907961","Innistrad Remastered Tokens"],
+["Tamiyo","Tamiyo, Seasoned Scholar","c88e2bea-9c95-447e-bc9d-7d7f8ea40567","1783911108","Modern Horizons 3 Tokens"],
+["Tamiyo","Tamiyo, the Moon Sage","a23051f6-b2e6-42b2-86ea-ed8535ba0922","1783934207","Mythic Edition Tokens"],
+["Teferi","Teferi Akosa of Zhalfir","33aefd66-d1d2-44fd-a2cc-8661291c407e","1783916664","March of the Machine Tokens"],
+["Teferi","Teferi, Hero of Dominaria","3caeb24f-b4b3-4ede-9bee-4b4272b2bbcd","1783934206","Mythic Edition Tokens"],
+["Teferi","Teferi, Temporal Archmage","72db0562-982a-43df-b7b3-4a51c4710757","1783915240","Commander Masters Tokens"],
+["Teferi","Teferi, Who Slows the Sunset","a970bebc-08e1-4125-a4c5-8883dfd5a5ca","1783925219","Innistrad: Midnight Hunt Tokens"],
+["Teferi","Teferi's Talent","a21250a0-8c87-4f0d-805b-5500a254dfbf","1783916641","March of the Machine Commander Tokens"],
+["Tezzeret","Tezzeret the Schemer","5f136537-1ebe-4018-b406-44ef32ceef04","1783936709","Aether Revolt Tokens"],
+["Tezzeret","Tezzeret, Artifice Master","faa83538-e94d-4842-ba9c-812187ecfa0b","1783934463","Core Set 2019 Tokens"],
+["Tezzeret","Tezzeret, Betrayer of Flesh","bdb4fa32-18dd-4530-a529-5477e45413dd","1783923709","Kamigawa: Neon Dynasty Tokens"],
+["Tezzeret","Tezzeret, Cruel Captain","b97ae026-a3d3-4130-bf6f-aeeb3a1ab520","1783905782","Edge of Eternities Tokens"],
+["Capitoline Triad","The Capitoline Triad","05402b51-8cf9-4f69-aa12-8a9d5981f8b1","1783910885","Assassin's Creed Tokens"],
+["Tibalt","Tibalt, Cosmic Impostor","3ab2afd6-db73-4d8e-9ab6-7e035f679d59","1783913129","The List"],
+["Tyvar","Tyvar Kell","53162f62-5327-4f2d-8f34-e90de2a1c818","1783928075","Kaldheim Tokens"],
+["Venser","Venser, the Sojourner","c9ad6e7a-8ad8-4a35-b6c9-151720d88af9","1783940750","Duel Decks: Venser vs. Koth Tokens"],
+["Vivien","Vivien Reid","a804d502-1092-4ff3-93d9-d1b0ac0f07d5","1783908586","Foundations Tokens"],
+["Vraska","Vraska, Golgari Queen","d81478ee-1ddf-44f5-98a0-df6d4eecad7e","1783934060","Guilds of Ravnica Tokens"],
+["Will","Will Kenrith","3de08752-9fc4-4e6b-b30b-2d9d33a1e37b","1783922302","Battle for Baldur's Gate Tokens"],
+["Wrenn","Wrenn and Realmbreaker","0aa8ebb6-26dc-41eb-ae40-47c8e7b040a6","1783916662","March of the Machine Tokens"],
+["Wrenn","Wrenn and Seven","09890a52-06f6-4f43-954c-64af3578abe3","1783907963","Innistrad Remastered Tokens"],
+["Wrenn","Wrenn and Six","35578c3f-e818-4887-83c4-dc3a89e28ed4","1783921672","Double Masters 2022 Tokens"],
+["Zariel","Zariel, Archduke of Avernus","c36520c3-627a-40b9-a5c7-42cc4c813b67","1783926340","Adventures in the Forgotten Realms Tokens"]]};
+/*NOMI:FINE*/
+const NOMI = typeof NOMI_PEDINE === 'object' ? NOMI_PEDINE : {tipi:[], tp:[], pw:[], pedine:[], emblemi:[]};
+// chiave di pronuncia comune ai due modi di scrivere: C = «ci», G = «gi», X = «sci», k = «ca», niente h né doppie
+const unacc = w => w.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]/g, '');
+const undouble = w => w.replace(/(.)\1+/g, '$1');
+// un nome inglese letto come lo direbbe un italiano (Phyrexian → fireksian, Tezzeret → tezeret, Thopter → topter)
+function phEn(w){
+  w = unacc(w).replace(/x/g, 'ks').replace(/ph/g, 'f').replace(/th/g, 't').replace(/sch|sh/g, 'X').replace(/tch|ch/g, 'C')
+    .replace(/ck|q/g, 'k').replace(/ee|ea|ie(?=[^aeiou]|$)/g, 'i').replace(/oo/g, 'u')
+    .replace(/c(?=[eiy])/g, 's').replace(/c/g, 'k').replace(/g(?=[eiy])/g, 'G').replace(/j/g, 'G')
+    .replace(/y/g, 'i').replace(/w/g, 'u').replace(/h/g, '');
+  if(w.length > 4) w = w.replace(/([^aeiouCGX])e$/, '$1'); // la e muta in fondo (Shade, Saproling no)
+  return undouble(w);
+}
+// una parola scritta da Android in italiano, letta come si legge in italiano (ferexiano → fereksiano, tesserette → teserete)
+function phIt(w){
+  w = unacc(w).replace(/x/g, 'ks').replace(/gli/g, 'li').replace(/gn/g, 'ni')
+    .replace(/sci(?=[aou])/g, 'X').replace(/sc(?=[ei])/g, 'X').replace(/ch/g, 'k').replace(/gh/g, 'g')
+    .replace(/ci(?=[aou])/g, 'C').replace(/c(?=[ei])/g, 'C').replace(/c/g, 'k')
+    .replace(/gi(?=[aou])/g, 'G').replace(/g(?=[ei])/g, 'G').replace(/q/g, 'k')
+    .replace(/h/g, '').replace(/j|y/g, 'i').replace(/w/g, 'u');
+  return undouble(w);
+}
+// distanza «a orecchio» tra due chiavi: vocali simili, consonanti sorde e sonore, vocale finale aggiunta costano poco
+const VOW = /[aeiou]/, NEAR = new Set(['sz','zs','td','dt','kg','gk','pb','bp','fv','vf','CG','GC','Xs','sX','XC','CX','mn','nm','zC','Cz','zG','Gz']);
+function phDist(a, b){
+  const n = a.length, m = b.length, ind = (ch, i, len) => VOW.test(ch) ? (i === len - 1 ? .25 : .5) : ch === 'r' ? .7 : 1;
+  let prev = new Array(m + 1), cur = new Array(m + 1);
+  prev[0] = 0; for(let j = 1; j <= m; j++) prev[j] = prev[j - 1] + ind(b[j - 1], j - 1, m);
+  for(let i = 1; i <= n; i++){
+    cur[0] = prev[0] + ind(a[i - 1], i - 1, n);
+    for(let j = 1; j <= m; j++){
+      const x = a[i - 1], y = b[j - 1];
+      const sub = x === y ? 0 : VOW.test(x) && VOW.test(y) ? ((x + y).match(/ei|ie|ou|uo/) ? .3 : .5) : NEAR.has(x + y) ? .4 : 1;
+      cur[j] = Math.min(prev[j - 1] + sub, prev[j] + ind(x, i - 1, n), cur[j - 1] + ind(y, j - 1, m));
+    }
+    [prev, cur] = [cur, prev];
+  }
+  return prev[m];
+}
+const phSim = (a, b) => 1 - phDist(a, b) / Math.max(a.length, b.length);
+// pronunce all'italiana che le regole non ricavano (le vocali inglesi): come le scriverebbe Android sentendole
+const SAY = {Jace:'geis', Ajani:'agiani', Ugin:'iughin', Garruk:'garuk', Karn:'carn', Sarkhan:'sarcan', Saheeli:'saili', Huatli:'uatli',
+  Tyvar:'taivar', Freyalise:'freialis', Kaya:'caia', Kiora:'kiora', Ashiok:'asciok', Xenagos:'zenagos', Wrenn:'ren', Will:'uil',
+  Kaito:'caito', Liliana:'liliana', Nahiri:'naiiri', Dihada:'diada', Kytheon:'chiteon', Tibalt:'tibalt', Tamiyo:'tamio',
+  Gideon:'ghideon', Myr:'mir mair', Wurm:'uorm', Thopter:'topter tottero', Phyrexian:'fairexian ferexian', Eldrazi:'eldrazi',
+  Squirrel:'scuirrel', Wraith:'reit', Shade:'sceid', Knight:'nait', Faerie:'feiri', Satyr:'saitir', Sphinx:'sfinx',
+  Drake:'dreik', Golem:'golem', Spawn:'spon', Scion:'saion', Construct:'construct', Hydra:'aidra', Phoenix:'finix'};
+// parole italiane comuni che non devono somigliare a nessun nome
+const NOSAY = new Set('come cosa che chi poi anche altro altra altri ancora questo questa quello quella sono ho hai vuoi voglio metti aggiungi nuovo nuova ciao stai ok grazie mille prego bene male allora adesso subito ecco tutto tutti'.split(' '));
+// vocabolario: ogni nome con la sua chiave (le parole del nome attaccate: «Marit Lage» → maritlag)
+let LEX = null;
+function lexicon(){
+  if(LEX) return LEX;
+  const L = [], seen = new Set(), tipi = new Set(NOMI.tipi);
+  const add = (en, kind, more) => {
+    const k = en.split(/[\s-]+/).map(phEn).join(''), id = kind + ':' + en;
+    if(k.length >= 3 && !seen.has(id)){ seen.add(id); L.push(Object.assign({en, kind, k}, more)) }
+    // più le pronunce scritte a mano, come chiavi in più dello stesso nome
+    (SAY[en] || '').split(' ').filter(Boolean).forEach(w => L.push(Object.assign({en, kind, k:phIt(w)}, more)));
+  };
+  NOMI.tp.forEach(t => add(t, 'tipo'));
+  NOMI.tipi.forEach(t => add(t, 'tipo', {raro:true}));            // tipi mai visti sulle pedine: valgono un po' meno
+  NOMI.pedine.forEach(p => tipi.has(p) || add(p.replace(/[,'’]/g, ''), 'nome', {name:p}));
+  NOMI.pw.forEach(p => add(p.replace(/\./g, ''), 'pw', {name:p}));
+  NOMI.emblemi.forEach(e => add(e[1].replace(/[,'’]/g, ''), 'emblema', {name:e[1], pw:e[0]}));
+  return LEX = L;
+}
+// cerca tra le parole rimaste i nomi dell'elenco: pezzi di 1–3 parole, scritti all'italiana o all'inglese
+function fuzzyFind(words, kinds, sure){
+  const L = lexicon().filter(e => kinds.includes(e.kind)), cand = [];
+  for(let i = 0; i < words.length; i++) for(let len = 1; len <= 3 && i + len <= words.length; len++){
+    const span = words.slice(i, i + len);
+    if(NOSAY.has(span[0]) || NOSAY.has(span[span.length - 1])) continue;
+    const keys = [...new Set([span.map(phIt).join(''), span.map(phEn).join('')])];
+    if(keys[0].length < 3) continue;
+    let best = null;
+    for(const e of L){
+      if(Math.abs(e.k.length - keys[0].length) > 4) continue;
+      let s = Math.max(...keys.map(k => phSim(k, e.k)));
+      if(e.raro) s -= .04;
+      // nomi corti: quasi uguali, altrimenti troppe parole italiane somigliano a qualcosa;
+      // un planeswalker detto senza «emblema» deve somigliare di più (sure)
+      const need = Math.max(e.k.length <= 4 ? .88 : .82, (e.kind === 'pw' || e.kind === 'emblema') && sure ? sure : 0);
+      if(s >= need && (!best || s > best.s)) best = {i, len, e, s, heard:span.join(' ')};
+    }
+    if(best) cand.push(best);
+  }
+  // i migliori, senza sovrapposizioni; a parità vince il pezzo più lungo
+  cand.sort((a, b) => b.s - a.s || b.len - a.len);
+  const used = new Set(), out = [];
+  for(const c of cand){
+    const idx = Array.from({length:c.len}, (_, k) => c.i + k);
+    if(idx.some(x => used.has(x))) continue;
+    idx.forEach(x => used.add(x)); out.push(c);
+  }
+  return {hits:out, rest:words.filter((_, k) => !used.has(k))};
+}
+// i nomi da dare ad Android come parole da preferire (Android 13+)
+let BIAS = null;
+const biasWords = () => BIAS || (BIAS = [...new Set([...NOMI.pw, ...NOMI.tp, ...NOMI.pedine, ...NOMI.emblemi.map(e => e[1])])]);
+// emblemi dall'elenco, con le immagini di Scryfall (dall'archivio sul telefono se non c'è rete)
+const scryImg = (size, id, ts) => `https://cards.scryfall.io/${size}/front/${id[0]}/${id[1]}/${id}.jpg${ts ? '?' + ts : ''}`;
+function emblemsOf(r){
+  const pw = (r.pw || '').toLowerCase();
+  return NOMI.emblemi.filter(e => r.emblem ? e[1] === r.emblem : e[0].toLowerCase() === pw).map(([who, base, id, ts, set]) => (
+    {id, name:base + ' Emblem', type_line:'Emblem — ' + who, set, small:scryImg('small', id, ts), large:scryImg('large', id, ts), print:scryImg('border_crop', id, ts)}));
+}
+async function emblemResults(r){
+  const E = emblemsOf(r);
+  if(online() || !ARC.ready) return E;
+  return Promise.all(E.map(t => { const e = ARC.list.find(x => x.ok && (x.id === t.id || x.n === t.name)); return e ? arcTk(e) : t }));
+}
+
 /* ================= Riconoscimento della richiesta ================= */
 const NUMW = {zero:0,un:1,uno:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7,otto:8,nove:9,dieci:10,undici:11,dodici:12,venti:20};
 // italiano -> tipo inglese su Scryfall
@@ -3560,11 +3770,38 @@ function parseRequest(raw){
   for(const [re, en, how] of DICT){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.type = en; out.typeIt = mm[1]; out.byName = how === 'n'; s = s.replace(r,' '); break } }
   out.free = s.replace(FILLER,' ').replace(/\s+/g,' ').trim();
   out.qty = Math.max(1, Math.min(10, out.qty));
+  // le parole che il dizionario italiano non conosce: le confronto «a orecchio» con i nomi inglesi dell'elenco
+  out.sub = []; out.fz = [];
+  if(out.free && !out.byName){
+    const emb = out.type === 'Emblem';
+    const F = fuzzyFind(out.free.split(' '), emb ? ['emblema', 'pw'] : out.type ? ['tipo'] : ['tipo', 'nome', 'pw', 'emblema'], emb ? 0 : .9);
+    for(const h of F.hits){
+      const e = h.e; out.fz.push({heard:h.heard, en:e.name || e.en, kind:e.kind, s:+h.s.toFixed(2)});
+      if(e.kind === 'emblema'){ out.type = 'Emblem'; out.typeIt = 'emblema'; out.emblem = e.name; out.pw = e.pw }
+      else if(e.kind === 'pw'){ if(!out.type){ out.type = 'Emblem'; out.typeIt = 'emblema' } out.pw = out.pw || e.name }
+      else if(e.kind === 'nome'){ if(out.type) continue; out.type = e.name; out.typeIt = e.name; out.byName = true; out.exact = e.name }
+      else if(!out.type){ out.type = e.en; out.typeIt = e.en }
+      else if(e.en !== out.type) out.sub.push(e.en);
+    }
+    out.free = F.rest.join(' ');
+  }
   return out;
+}
+// tutte le trascrizioni di Android (fino a 5): vince quella che si abbina meglio all'elenco dei nomi
+function pickRequest(alts){
+  let best = null;
+  alts.forEach((a, i) => {
+    const p = parseRequest(a), left = p.free ? p.free.split(' ').length : 0;
+    const sc = (p.type ? 1 : 0) + p.fz.reduce((t, h) => t + h.s, 0) + (p.pw ? .3 : 0) - .4 * left - .05 * i;
+    if(!best || sc > best.sc) best = {req:p, alt:a, sc};
+  });
+  return best;
 }
 function describe(r){
   const cn = {W:'bianco',U:'blu',B:'nero',R:'rosso',G:'verde',C:'incolore'};
   let s = r.type ? r.typeIt.charAt(0).toUpperCase() + r.typeIt.slice(1) : (r.free ? '«' + r.free + '»' : 'pedina');
+  if(r.type === 'Emblem' && (r.emblem || r.pw)) s = 'Emblema di ' + (r.emblem || r.pw);
+  if(r.sub && r.sub.length) s += ' ' + r.sub.join(' ');
   if(r.pow !== null) s += ' ' + r.pow + '/' + r.tou;
   if(r.colors.length) s += ' ' + r.colors.map(c=>cn[c]).join(' e ');
   if(r.kwIt.length) s += ', ' + r.kwIt.join(', ').replace(/rapidita/g, 'rapidità');
@@ -3572,9 +3809,14 @@ function describe(r){
 }
 function buildQueries(r){
   const base = r.type === 'Emblem' ? [] : ['t:token']; // gli emblemi su Scryfall non sono «token»
-  if(r.type && r.byName) base.push('name:' + r.type.toLowerCase());
+  if(r.exact) base.push(`!"${r.exact}"`);
+  else if(r.type && r.byName) base.push('name:' + r.type.toLowerCase());
   else if(r.type) base.push('t:' + r.type.toLowerCase());
-  if(r.type === 'Emblem' && r.free) base.push('t:' + r.free.split(' ')[0]); // «emblema di Elspeth»
+  (r.sub || []).forEach(t => base.push(`t:"${t.toLowerCase()}"`));
+  // «emblema di Elspeth»: gli emblemi recenti hanno solo «Emblem» come tipo, il planeswalker è nel nome
+  const who = r.type === 'Emblem' && (r.emblem || r.pw || (r.free || '').split(' ')[0]);
+  if(r.emblem) base.push(`!"${r.emblem} Emblem"`);
+  else if(who) base.push(`(t:"${who.toLowerCase()}" or name:"${who.toLowerCase()}")`);
   else if(r.free) base.push(r.free.includes(' ') ? `name:"${r.free}"` : `(t:${r.free} or name:${r.free})`);
   if(r.artifact) base.push('t:artifact');
   const col = r.colors.length ? ['c=' + r.colors.join('')] : [];
@@ -3643,14 +3885,17 @@ function startCaptureNat(btn, silent){
   btn.classList.add('listening'); if(!silent) showPTT('Ti ascolto… rilascia per inviare'); buzz(15); sfx('listen');
   const end = () => { if(ended) return; ended = true; btn.classList.remove('listening'); hs.forEach(h => Promise.resolve(h).then(x => x.remove()).catch(()=>{})); if(cb) deliver() };
   hs.push(SP.addListener('partial', d => { if(!mine(d)) return; interim = d.text || ''; if(!silent) showPTT(interim || 'Ti ascolto…') }));
-  hs.push(SP.addListener('result', d => { if(!mine(d)) return; matches = d.matches || []; end() }));
+  hs.push(SP.addListener('result', d => { if(!mine(d)) return; matches = d.matches || []; lastRec = {dev:!!d.dev, n:matches.length}; end() }));
   const t0 = Date.now(); let retried = false;
   hs.push(SP.addListener('error', d => {
     if(!mine(d)) return;
     // 5, 8, 11 = riconoscitore ancora impegnato con la richiesta di prima: riparto una volta
-    if(!retried && [5,8,11].includes(d.code) && Date.now() - t0 < 1500 && !cb){ retried = true; setTimeout(()=>SP.start({lang:'it-IT', sid}).catch(()=>{}), 250); return }
+    if(!retried && [5,8,11].includes(d.code) && Date.now() - t0 < 1500 && !cb){ retried = true; setTimeout(()=>SP.start(opt).catch(()=>{}), 250); return }
     err = d.code; end() }));
-  SP.start({lang:'it-IT', sid}).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
+  // i nomi delle pedine come parole da preferire (Android 13+) e, se c'è, il riconoscimento sul telefono (anche senza rete)
+  const opt = {lang:'it-IT', sid, bias:biasWords(), dev:SET.voiceDev !== false};
+  lastRec = null;
+  SP.start(opt).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
   function deliver(){
     hidePTT(); if(cancelled || !cb) return;
     const c = cb; cb = null;
@@ -3731,7 +3976,7 @@ function kbFallback(msg){
   setTimeout(()=>{ const i = $('#tkInput'); i.focus(); toast(msg, 3200) }, 360);
 }
 /* ================= Pedine: interfaccia ================= */
-let lastReq = null, results = [], curEntry = null, lastVoice = null;
+let lastReq = null, results = [], curEntry = null, lastVoice = null, lastRec = null;
 function openTokens(){
   $('#heard').textContent = ''; $('#understood').textContent = ''; $('#tkInput').value = '';
   tkCollapse(true); renderRecent(); renderMenu(); openOv('tokens'); updatePrinterUI();
@@ -3778,7 +4023,9 @@ function logRequest(source, alts, req, query, found, note){
   const now = Date.now();
   if(source === 'testo' && lastVoice && now - lastVoice.t < 90000 && !lastVoice.printed) lastVoice.correctedTo = alts[0];
   const en = {t:now, kind:'richiesta', source, heard:alts, understood:req && (req.type || req.free) ? describe(req) : null,
-              parsed:req ? {type:req.type, word:req.typeIt, qty:req.qty, pow:req.pow, tou:req.tou, colors:req.colors, kw:req.kw, free:req.free} : null,
+              parsed:req ? {type:req.type, word:req.typeIt, qty:req.qty, pow:req.pow, tou:req.tou, colors:req.colors, kw:req.kw, free:req.free,
+                            sub:req.sub, pw:req.pw, emblem:req.emblem, exact:req.exact, fuzzy:req.fz && req.fz.length ? req.fz : undefined} : null,
+              rec:source === 'voce' && lastRec ? lastRec : undefined,
               query, found, relaxed:note || null};
   if(source === 'voce' && pendingClip){ const pc = pendingClip; pendingClip = null; en.clip = true; pc.then(b=>{ if(b) clipPut(en.t, b); else { en.clip = false; saveVlog() } }) }
   VLOG.push(en); if(source === 'voce') lastVoice = en; saveVlog();
@@ -3788,9 +4035,8 @@ function logRequest(source, alts, req, query, found, note){
 async function runRequest(alternatives, source){
   alternatives = alternatives.filter(a => a && a.trim());
   if(!alternatives.length) return;
-  let req = null;
-  for(const a of alternatives){ const p = parseRequest(a); if(p.type){ req = p; $('#heard').textContent = '«' + a + '»'; break } }
-  if(!req){ req = parseRequest(alternatives[0]); $('#heard').textContent = '«' + alternatives[0] + '»' }
+  const pick = pickRequest(alternatives), req = pick.req;
+  $('#heard').textContent = '«' + pick.alt + '»';
   if(!req.type && !req.free){
     $('#understood').textContent = 'Non ho capito quale pedina. Riprova dicendo il tipo, es. «goblin».';
     curEntry = logRequest(source, alternatives, req, null, 0); return;
@@ -3798,6 +4044,17 @@ async function runRequest(alternatives, source){
   lastReq = req;
   $('#understood').textContent = 'Cerco: ' + describe(req);
   $('#tkResults').innerHTML = '<p class="empty">Ricerca…</p>';
+  // «emblema di Tezzeret»: tutti gli emblemi di quel planeswalker, dall'elenco nell'app, con le immagini
+  if(req.type === 'Emblem' && (req.pw || req.emblem)){
+    const E = await emblemResults(req);
+    if(E.length){
+      results = E; curEntry = logRequest(source, alternatives, req, '[emblemi]', E.length);
+      if(E.length === 1){ renderRecent(); openDetail(E[0], req.qty); return }
+      $('#tkResults').innerHTML = `<div class="sec"><h3>${E.length} emblemi di ${esc(req.pw || req.emblem)}: scegli quello da stampare</h3><div class="grid">${
+        E.map((t,i)=>`<button data-g="${i}"><img src="${t.small}" alt="${esc(t.name)}" loading="lazy"></button>`).join('')}</div></div>`;
+      return;
+    }
+  }
   const offline = async () => {
     const L = arcSearch(req);
     results = await Promise.all(L.res.slice(0, 60).map(arcTk));
@@ -3976,14 +4233,20 @@ async function quickToken(alts){
   $('#ov-modal').classList.add('open'); stack.push('modal'); history.pushState({ov:'modal'}, '');
   if(fgOn()) requestAnimationFrame(fgTokStart);
   tmSet('loading', 'Cerco la pedina…', '«' + alts[0] + '»');
-  let req = null;
-  for(const a of alts){ const p = parseRequest(a); if(p.type){ req = p; break } }
-  if(!req) req = parseRequest(alts[0]);
+  const pick = pickRequest(alts), req = pick.req;
+  $('#tmName').textContent = '«' + pick.alt + '»';
   const fail = msg => { if(seq !== TM.seq) return; TM.phase = 'msg'; tmSet('', msg); sfx('cancel'); TM.timer = setTimeout(()=>{ if(seq === TM.seq) tmClose() }, 2600) };
   if(!req.type && !req.free){ TM.entry = logRequest('voce', alts, req, null, 0); fail('Non ho capito quale pedina. Tocca per chiudere.'); return }
   let data = [], used = '', note = '', tk = null;
+  // emblemi di un planeswalker: se sono più d'uno si sceglie guardando le immagini, nel pannello delle pedine
+  if(req.type === 'Emblem' && (req.pw || req.emblem)){
+    const E = await emblemResults(req);
+    if(seq !== TM.seq) return;
+    if(E.length > 1){ tmClose(); setTimeout(()=>{ openTokens(); $('#tkInput').value = pick.alt; runRequest(alts, 'voce') }, 60); return }
+    if(E.length === 1){ tk = E[0]; data = E; used = '[emblemi]' }
+  }
   // prima l'archivio sul telefono (istantaneo, anche senza rete), poi Scryfall
-  if(ARC.ready){ const L = arcSearch(req); if(L.res.length){ tk = await arcTk(L.res[0]); data = L.res; used = '[archivio]'; note = L.note } }
+  if(!tk && ARC.ready){ const L = arcSearch(req); if(L.res.length){ tk = await arcTk(L.res[0]); data = L.res; used = '[archivio]'; note = L.note } }
   if(!tk){
     try{
       for(const t of buildQueries(req)){ used = t.q.join(' '); data = await scry(used); if(data.length){ note = t.note; break } await new Promise(r=>setTimeout(r,100)) }
@@ -4577,7 +4840,9 @@ async function arcResolve(t){
 const recentOf = t => t.local ? {...t, small:t.rs, large:t.rl, print:t.rp, local:false} : t;
 function arcSearch(r){
   const tl = e => e.t.toLowerCase(), fr = (r.free || '').toLowerCase();
-  const typeOk = r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : r.type === 'Emblem' && fr ? e => re.test(tl(e)) && tl(e).includes(fr.split(' ')[0]) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? (w => e => w.test(e.n) || w.test(tl(e)))(new RegExp('\\b' + fr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')) : () => true;
+  const who = r.type === 'Emblem' && (r.pw || fr.split(' ')[0]).toLowerCase(), subs = (r.sub || []).map(t => new RegExp('\\b' + t.toLowerCase() + '\\b'));
+  const typeOk0 = r.exact ? e => e.n === r.exact : r.emblem ? e => e.n === r.emblem + ' Emblem' : r.type ? (re => r.byName ? e => re.test(e.n.toLowerCase()) : who ? e => re.test(tl(e)) && (tl(e) + ' ' + e.n.toLowerCase()).includes(who) : e => re.test(tl(e)))(new RegExp('\\b' + r.type.toLowerCase() + '\\b')) : fr ? (w => e => w.test(e.n) || w.test(tl(e)))(new RegExp('\\b' + fr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')) : () => true;
+  const typeOk = e => typeOk0(e) && subs.every(x => x.test(tl(e)));
   const cols = r.colors.filter(c => c !== 'C').sort().join(''), colorless = r.colors.includes('C') && !cols;
   const pt = e => r.pow === null || (e.p === String(r.pow) && e.o === String(r.tou));
   const col = e => !r.colors.length || (colorless ? e.c === '' : e.c === cols);
