@@ -49,6 +49,10 @@ const CASI = [
   [['emblema di iughin'], {type:'Emblem', pw:'Ugin'}],
   [['un mir'], {type:'Myr'}],
   [['una spia'], {type:'Spy'}],
+  [['un soldato'], {type:'Soldier', sub:[]}],
+  [['gatto soldato'], {type:'Cat', sub:['Soldier']}],
+  [['un soldato umano bianco'], {type:'Soldier', sub:['Human']}],
+  [['un guerriero elfo'], {type:'Warrior', sub:['Elf']}],
   // non devono somigliare a niente
   [['ciao come stai'], {type:null}],
   [['veleno'], {type:null}],

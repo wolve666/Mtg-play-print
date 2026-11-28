@@ -3767,11 +3767,20 @@ function parseRequest(raw){
 
   for(const [re, code] of COLW){ const r = new RegExp('\\b(' + re + ')\\b'); if(r.test(s)){ out.colors.push(code); s = s.replace(r,' ') } }
   for(const [re, k] of KW){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.kw.push(k); out.kwIt.push(mm[1]); s = s.replace(r,' ') } }
-  for(const [re, en, how] of DICT){ const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(mm){ out.type = en; out.typeIt = mm[1]; out.byName = how === 'n'; s = s.replace(r,' '); break } }
+  // il primo tipo detto è quello della pedina, gli altri si aggiungono («gatto soldato» → Cat Soldier):
+  // prima restavano come testo libero e la ricerca non trovava niente
+  out.sub = []; out.fz = [];
+  const at = re => { const m = s.match(new RegExp('\\b(' + re + ')\\b')); return m ? m.index : -1 };
+  for(const [re, en, how] of DICT.map(d => [d[0], d[1], d[2], at(d[0])]).filter(d => d[3] >= 0).sort((a, b) => a[3] - b[3]).map(d => d.slice(0, 3))){
+    const r = new RegExp('\\b(' + re + ')\\b'), mm = s.match(r); if(!mm) continue;
+    if(!out.type){ out.type = en; out.typeIt = mm[1]; out.byName = how === 'n' }
+    else if(how !== 'n' && !out.byName && en !== out.type && !out.sub.includes(en)){ out.sub.push(en); out.typeIt += ' ' + mm[1] }
+    else continue;
+    s = s.replace(r, ' ');
+  }
   out.free = s.replace(FILLER,' ').replace(/\s+/g,' ').trim();
   out.qty = Math.max(1, Math.min(10, out.qty));
   // le parole che il dizionario italiano non conosce: le confronto «a orecchio» con i nomi inglesi dell'elenco
-  out.sub = []; out.fz = [];
   if(out.free && !out.byName){
     const emb = out.type === 'Emblem';
     const F = fuzzyFind(out.free.split(' '), emb ? ['emblema', 'pw'] : out.type ? ['tipo'] : ['tipo', 'nome', 'pw', 'emblema'], emb ? 0 : .9);
@@ -3781,7 +3790,7 @@ function parseRequest(raw){
       else if(e.kind === 'pw'){ if(!out.type){ out.type = 'Emblem'; out.typeIt = 'emblema' } out.pw = out.pw || e.name }
       else if(e.kind === 'nome'){ if(out.type) continue; out.type = e.name; out.typeIt = e.name; out.byName = true; out.exact = e.name }
       else if(!out.type){ out.type = e.en; out.typeIt = e.en }
-      else if(e.en !== out.type) out.sub.push(e.en);
+      else if(e.en !== out.type && !out.sub.includes(e.en)){ out.sub.push(e.en); (out.subFz = out.subFz || []).push(e.en) }
     }
     out.free = F.rest.join(' ');
   }
@@ -3801,7 +3810,7 @@ function describe(r){
   const cn = {W:'bianco',U:'blu',B:'nero',R:'rosso',G:'verde',C:'incolore'};
   let s = r.type ? r.typeIt.charAt(0).toUpperCase() + r.typeIt.slice(1) : (r.free ? '«' + r.free + '»' : 'pedina');
   if(r.type === 'Emblem' && (r.emblem || r.pw)) s = 'Emblema di ' + (r.emblem || r.pw);
-  if(r.sub && r.sub.length) s += ' ' + r.sub.join(' ');
+  if(r.sub && r.sub.length) s += (r.subFz || []).length ? ' ' + r.subFz.join(' ') : '';
   if(r.pow !== null) s += ' ' + r.pow + '/' + r.tou;
   if(r.colors.length) s += ' ' + r.colors.map(c=>cn[c]).join(' e ');
   if(r.kwIt.length) s += ', ' + r.kwIt.join(', ').replace(/rapidita/g, 'rapidità');
@@ -4076,7 +4085,9 @@ async function runRequest(alternatives, source){
     }
     results = data.map(c => { const f = faceOf(c, req.type); return f && {
       id:c.id, name:f.name, type_line:f.type_line, set:c.set_name,
-      small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large } }).filter(Boolean).slice(0, 60);
+      small:f.img.small, large:f.img.large, print:f.img.border_crop || f.img.large } }).filter(Boolean)
+      // anche nella griglia prima le pedine generiche («Soldier»), poi quelle con un nome proprio («Ajani's Pridemate»)
+      .map((t, i) => [t, i]).sort((a, b) => (genScore(b[0].name, req.type) - genScore(a[0].name, req.type)) || a[1] - b[1]).map(x => x[0]).slice(0, 60);
     curEntry = logRequest(source, alternatives, req, used, results.length, note);
     if(!results.length){ $('#tkResults').innerHTML = '<p class="empty">Nessuna pedina ufficiale trovata. Prova a dire solo il tipo, ad esempio «soldato».</p>'; return }
     if(note) $('#understood').textContent += ' (' + note + ')';
