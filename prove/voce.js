@@ -53,6 +53,15 @@ const CASI = [
   [['gatto soldato'], {type:'Cat', sub:['Soldier']}],
   [['un soldato umano bianco'], {type:'Soldier', sub:['Human']}],
   [['un guerriero elfo'], {type:'Warrior', sub:['Elf']}],
+  // prova sul telefono del 28 novembre (S21, dettatura sul telefono)
+  [['soldato direxiano'], {type:'Soldier', sub:['Phyrexian']}],
+  [['pirexano'], {type:'Phyrexian'}],
+  [['soldato pyrexano'], {type:'Soldier', sub:['Phyrexian']}],
+  [['file exiano'], {type:'Phyrexian'}],
+  [['thezareth emblema'], {type:'Emblem', pw:'Tezzeret'}],
+  [['sahili emblema'], {type:'Emblem', pw:'Saheeli'}],
+  [['tesserete Cruel Captain'], {type:'Emblem', emblem:'Tezzeret, Cruel Captain'}],
+  [['Go'], {type:null, free:''}],
   // non devono somigliare a niente
   [['ciao come stai'], {type:null}],
   [['veleno'], {type:null}],

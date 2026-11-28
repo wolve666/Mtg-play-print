@@ -3038,8 +3038,8 @@ function renderMenu(){
     <p class="note">Misura quanto è fluida l'app su questo telefono. Attivala, usa l'app normalmente, poi tocca «Esporta i dati raccolti» e mandami il file.</p>
     <div class="row"><span class="lbl">Raccogli le richieste vocali</span>${tog('vlog', SET.voiceLog)}</div>
     <div class="row"><span class="lbl">Salva anche l'audio delle richieste</span>${tog('clips', SET.clips)}</div>
-    ${NATIVE ? `<div class="row"><span class="lbl">Dettatura sul telefono, anche senza rete</span>${tog('vdev', SET.voiceDev !== false)}</div>
-    <p class="note">Se il telefono ha il riconoscimento vocale italiano scaricato, uso quello e gli do i nomi delle pedine da preferire. Spenta: uso sempre il servizio di Google in rete.</p>` : ''}
+    ${NATIVE ? `<div class="row"><span class="lbl">Dettatura senza rete</span>${tog('vdev', SET.voiceDev !== false)}</div>
+    <p class="note">Senza rete, se il telefono ha il riconoscimento vocale italiano scaricato, detto le pedine con quello. Con la rete uso sempre il servizio di Google, che capisce meglio.</p>` : ''}
     <p class="note">Il microfono si accende solo mentre tieni premuto. Salvo cosa è stato sentito, cosa ho capito, cosa hai scelto e le correzioni scritte: ${VLOG.length} voci sul telefono, finché non le esporti.</p>
     <div style="height:10px"></div>
     <button class="btn" data-act="suggest">Lascia un suggerimento</button>
@@ -3728,7 +3728,7 @@ const DICT = [
   ['elefant[ei]','Elephant'],['rinoceront[ei]','Rhino'],['polp[oi]|piovr[ae]','Octopus'],['granch[io]|granchi','Crab'],['anguill[ae]','Eel'],
   ['tartarug[ae]|tartarughe','Turtle'],['mur[oi]|muri','Wall'],['gnom[oi]','Gnome'],['gigant[ei]','Giant'],['ogre|orch[ei]ssa','Ogre'],
   ['troll','Troll'],['minotaur[oi]','Minotaur'],['centaur[oi]','Centaur'],['satir[oi]','Satyr'],['ninf[ae]','Nymph'],['sfing[ei]','Sphinx'],
-  ['fenic[ei]','Phoenix'],['phyrexian[oi]|ferexian[oi]|pirexian[oi]|firexian[oi]','Phyrexian'],['unicorn[oi]','Unicorn'],['falc(o|hi)|falchi','Bird'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
+  ['fenic[ei]','Phoenix'],['(ph|p|f|d)[iye]?r[eiy]x(i)?an[oi]|phyrexian','Phyrexian'],['unicorn[oi]','Unicorn'],['falc(o|hi)|falchi','Bird'],['gargoyl[ei]|gargoyle|doccion[ei]','Gargoyle'],['spettr[oi]','Wraith'],
   ['ombr[ae]','Shade'],['diavol[oi]','Devil'],['diavolett[oi]|imp','Imp'],['melm[ae]|ooze','Ooze'],['mutant[ei]','Mutant'],['robot','Robot'],
   ['mercenari[oi]?','Mercenary'],['furfant[ei]','Rogue'],['mutaform[ae]','Shapeshifter'],['verm[ei]','Worm'],['calamar[oi]|seppi[ae]','Squid'],
   ['stell[ae] marin[ae]','Starfish'],['aquil[ae]','Bird'],['vigliacc[oi]|codard[oi]','Coward'],['sopravvissut[oi]','Survivor'],
@@ -3779,6 +3779,7 @@ function parseRequest(raw){
     s = s.replace(r, ' ');
   }
   out.free = s.replace(FILLER,' ').replace(/\s+/g,' ').trim();
+  if(out.free.replace(/ /g, '').length < 3) out.free = '';
   out.qty = Math.max(1, Math.min(10, out.qty));
   // le parole che il dizionario italiano non conosce: le confronto «a orecchio» con i nomi inglesi dell'elenco
   if(out.free && !out.byName){
@@ -3816,6 +3817,11 @@ function describe(r){
   if(r.kwIt.length) s += ', ' + r.kwIt.join(', ').replace(/rapidita/g, 'rapidità');
   return s + (r.qty > 1 ? ', ' + r.qty + ' copie' : '');
 }
+function subFallback(r){
+  const all = [r.type, ...r.sub].join(' '), last = r.sub[r.sub.length - 1];
+  return [[`nessun ${all}: mostro i ${last}`, {...r, type:last, sub:[], byName:false, exact:null}],
+          [`nessun ${all}: mostro i ${r.type}`, {...r, sub:[]}]];
+}
 function buildQueries(r){
   const base = r.type === 'Emblem' ? [] : ['t:token']; // gli emblemi su Scryfall non sono «token»
   if(r.exact) base.push(`!"${r.exact}"`);
@@ -3837,6 +3843,8 @@ function buildQueries(r){
     {q:[...base, ...pt], note:'senza colore e abilità'},
     {q:[...base], note:'mostro tutte le versioni del tipo'},
   ];
+  // più tipi che insieme non esistono («soldato phyrexiano»): prima le pedine del tipo più particolare, poi del primo tipo
+  if(r.sub && r.sub.length) for(const [x, nr] of subFallback(r)) tries.push(...buildQueries(nr).map(t => ({q:t.q, note:x + (t.note ? ', ' + t.note : '')})));
   const seen = new Set();
   return tries.filter(t => { const k = t.q.join(' '); if(seen.has(k)) return false; seen.add(k); return true });
 }
@@ -3901,8 +3909,9 @@ function startCaptureNat(btn, silent){
     // 5, 8, 11 = riconoscitore ancora impegnato con la richiesta di prima: riparto una volta
     if(!retried && [5,8,11].includes(d.code) && Date.now() - t0 < 1500 && !cb){ retried = true; setTimeout(()=>SP.start(opt).catch(()=>{}), 250); return }
     err = d.code; end() }));
-  // i nomi delle pedine come parole da preferire (Android 13+) e, se c'è, il riconoscimento sul telefono (anche senza rete)
-  const opt = {lang:'it-IT', sid, bias:biasWords(), dev:SET.voiceDev !== false};
+  // i nomi delle pedine come parole da preferire (Android 13+); il riconoscimento sul telefono solo senza rete:
+  // prova del 28 novembre, sull'S21 dava una trascrizione sola e spesso tagliata («sol», «pirex», «file exi»)
+  const opt = {lang:'it-IT', sid, bias:biasWords(), dev:SET.voiceDev !== false && !online()};
   lastRec = null;
   SP.start(opt).catch(e => { err = String(e.message || e); if(err === 'perm') toast('Consenti il microfono per dettare le richieste'); else if(err === 'riprova') toast('Microfono attivato: tieni premuto di nuovo e parla'); else toast('Dettatura: ' + err, 3500); cancelled = true; hidePTT(); end() });
   function deliver(){
@@ -4864,6 +4873,7 @@ function arcSearch(r){
     const res = ARC.list.filter(e => base(e) && fs.every(f => f(e)));
     if(res.length) return {res:res.sort((a, b) => (genScore(b.n, r.type) - genScore(a.n, r.type)) || (/token/i.test(b.t) - /token/i.test(a.t)) || (b.r || '').localeCompare(a.r || '')), note};
   }
+  if(r.sub && r.sub.length) for(const [x, nr] of subFallback(r)){ const L = arcSearch(nr); if(L.res.length) return {res:L.res, note:x + (L.note ? ', ' + L.note : '')} }
   return {res:[], note:''};
 }
 const arcJunk = c => (c.type_line || '').split('//').every(p => ['Card', ''].includes(p.trim()));

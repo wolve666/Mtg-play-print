@@ -87,6 +87,7 @@ public class SpeechPlugin extends Plugin {
         sr = onDev ? SpeechRecognizer.createOnDeviceSpeechRecognizer(getContext()) : SpeechRecognizer.createSpeechRecognizer(getContext());
         final SpeechRecognizer me = sr;
         final boolean[] heard = { false };
+        final String[] last = { null }; // l'ultima trascrizione parziale: quella sul telefono a volte chiude con un risultato vuoto
         sr.setRecognitionListener(new RecognitionListener() {
             public void onReadyForSpeech(Bundle b) {}
             public void onBeginningOfSpeech() { heard[0] = true; }
@@ -106,11 +107,12 @@ public class SpeechPlugin extends Plugin {
             }
             public void onPartialResults(Bundle b) {
                 ArrayList<String> m = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if (m != null && !m.isEmpty()) { heard[0] = true; JSObject o = new JSObject(); o.put("text", m.get(0)); o.put("sid", sid); notifyListeners("partial", o); }
+                if (m != null && !m.isEmpty()) { heard[0] = true; last[0] = m.get(0); JSObject o = new JSObject(); o.put("text", m.get(0)); o.put("sid", sid); notifyListeners("partial", o); }
             }
             public void onResults(Bundle b) {
                 ArrayList<String> m = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                JSArray a = new JSArray(); if (m != null) for (String x : m) a.put(x);
+                JSArray a = new JSArray(); if (m != null) for (String x : m) if (x != null && !x.trim().isEmpty()) a.put(x);
+                if (a.length() == 0 && last[0] != null) a.put(last[0]);
                 JSObject o = new JSObject(); o.put("matches", a); o.put("sid", sid); o.put("dev", onDev);
                 notifyListeners("result", o);
                 free(); // libero il riconoscitore: altrimenti la richiesta dopo trova il microfono occupato
